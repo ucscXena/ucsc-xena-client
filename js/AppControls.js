@@ -4,7 +4,6 @@ import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
 var _ = require('./underscore_ext').default;
 import AppBar from 'react-toolbox/lib/app_bar';
-var konami = require('./konami');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
@@ -14,6 +13,7 @@ import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
 import Tooltip from 'react-toolbox/lib/tooltip';
+import {hidden} from './nav';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -50,8 +50,6 @@ function download([fields, rows]) {
 	a.click();
 	document.body.removeChild(a);
 }
-
-var asciiB = 66;
 
 var TTIcon = Tooltip(props => <i {..._.omit(props, 'theme')} />);
 var icon = (i, tooltip, onClick, disabled) =>
@@ -101,13 +99,15 @@ function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 // XXX drop this.props.style? Not sure it's used.
 export class AppControls extends PureComponent {
 	componentWillMount() {
-		this.nsub = konami(asciiB).subscribe(() => {
-			this.props.callback(['notifications-enable']);
+		hidden.create('help', 'Reset help', {
+			onClick: () => {
+				this.props.callback(['notifications-enable']);
+			}
 		});
 	}
 
 	componentWillUnmount() {
-		this.nsub.unsubscribe();
+		hidden.delete('help');
 	}
 
 	onSearchHistory = search => {

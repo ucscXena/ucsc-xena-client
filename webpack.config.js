@@ -27,7 +27,7 @@ var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 
 module.exports = {
 	mode: 'development',
-	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register', bookmarks: './js/admin/bookmarks.js'},
+	entry: {heatmap: './js/main', docs: './js/docs', bookmarks: './js/admin/bookmarks.js'},
 	output: {
 		path: __dirname + "/build",
 		publicPath: "../",

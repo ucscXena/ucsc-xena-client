@@ -28,8 +28,11 @@
 	</script>
 	<!--#include file="config.js" -->
 	<script type="text/javascript">
-		var ga_id = (window.localStorage && window.localStorage.noga) ?
-				undefined : config.ga_id;
+		var noga;
+		try {
+			noga = JSON.parse(window.localStorage.hidden).noga;
+		} catch (err) {}
+		var ga_id = noga ? undefined : config.ga_id;
 		if (ga_id) {
 			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -60,8 +63,7 @@
 					docs: <%=JSON.stringify(templateParams.compilation.namedChunks.get('docs').files)%>,
 					bookmarks: <%=JSON.stringify(templateParams.compilation.namedChunks.get('bookmarks').files)%>,
 					<% } %>
-					heatmap: <%=JSON.stringify(templateParams.compilation.namedChunks.get('heatmap').files)%>,
-					register: <%=JSON.stringify(templateParams.compilation.namedChunks.get('register').files)%>,
+					heatmap: <%=JSON.stringify(templateParams.compilation.namedChunks.get('heatmap').files)%>
 				},
 				path = document.location.pathname,
 				page = (function () {

@@ -19,3 +19,15 @@
 	margin-left: 4px;
 	margin-top: 30px;
 }
+
+/* hidden menu */
+.menu {
+	z-index: 2000 !important;
+}
+/* hidden option */
+.selected::before {
+	position: absolute;
+	left: 0;
+	font-family: 'Material Icons';
+	content: "done";
+}

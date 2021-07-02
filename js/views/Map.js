@@ -3,7 +3,7 @@ import Dialog from 'react-toolbox/lib/dialog';
 import {Component} from 'react';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {a, canvas, div, el, label, option, p, select, textNode}
+import {canvas, div, el, label, option, p, select, textNode}
 	from '../chart/react-hyper.js';
 import * as THREE from 'three/build/three';
 import {OrbitControls} from './OrbitControls';
@@ -16,12 +16,16 @@ import Rx from '../rx';
 import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
 var {rxEvents} = require('../react-utils');
-var konami = require('../konami');
+import {hidden} from '../nav';
 
 var debug = false;
 var radeon = false;
 
+
+
 var drawing = false; // XXX singleton
+var dumpIntelPicker;
+var dumpRadeonPicker; //eslint-disable-line no-unused-vars
 
 function particles(sprite, size, vertices, color) {
 	const geometry = new THREE.BufferGeometry();
@@ -136,6 +140,9 @@ var toColor = (column, scale) => {
 	return colors;
 };
 
+var loaded;
+var loader = new Promise(resolve => loaded = resolve);
+
 function points(el, props) {
 	var {height, width} = el.getBoundingClientRect(); // XXX is this correct?
 	var resolution = new THREE.Vector2(width, height),
@@ -146,7 +153,6 @@ function points(el, props) {
 		twoD,
 		size;
 
-	var mouse = new THREE.Vector2();
 	var sprite = new THREE.TextureLoader().load(disc);
 	var pickingSprite = new THREE.TextureLoader().load(picker);
 	var scene = new THREE.Scene();
@@ -165,42 +171,68 @@ function points(el, props) {
 
 	el.style.touchAction = 'none'; // XXX render this in react?
 
-	function pick() {
+	function pick(x, y) {
 		camera.setViewOffset(renderer.domElement.width, renderer.domElement.height,
-			mouse.x * window.devicePixelRatio | 0,
-			mouse.y * window.devicePixelRatio | 0, 1, 1 );
+			x * window.devicePixelRatio | 0,
+			y * window.devicePixelRatio | 0, 1, 1 );
 		renderer.setRenderTarget(pickingTarget);
 		renderer.render(pickingScene, camera);
 
 		camera.clearViewOffset(); // clear the view offset
 		const pixelBuffer = new Uint8Array(4); // single pixel
 		renderer.readRenderTargetPixels(pickingTarget, 0, 0, 1, 1, pixelBuffer);
-
-		//interpret the pixel as an ID
-		const id = pixelBuffer[0] << 16 | pixelBuffer[1] << 8 | pixelBuffer[2];
 		renderer.setRenderTarget(null);
-		return id;
+
+		return pixelBuffer;
 	}
 
-	function pickRadeon() {
-		var pickingTarget = new THREE.WebGLRenderTarget(~~width, ~~height); // allocate elsewhere
-		renderer.setRenderTarget(pickingTarget);
+	var radeonPickingTarget = new THREE.WebGLRenderTarget(~~width, ~~height);
+	function pickRadeon(mx, my) {
+		renderer.setRenderTarget(radeonPickingTarget);
 		renderer.render(pickingScene, camera);
 
 		const pixelBuffer = new Uint8Array(4);
-		var y = ~~(height - mouse.y * window.devicePixelRatio);
-		var x = mouse.x * window.devicePixelRatio | 0;
-		renderer.readRenderTargetPixels(pickingTarget, x, y, 1, 1, pixelBuffer);
-
-		//interpret the pixel as an ID
-		const id = pixelBuffer[0] << 16 | pixelBuffer[1] << 8 | pixelBuffer[2];
+		var y = ~~(height - my * window.devicePixelRatio);
+		var x = mx * window.devicePixelRatio | 0;
+		renderer.readRenderTargetPixels(radeonPickingTarget, x, y, 1, 1, pixelBuffer);
 		renderer.setRenderTarget(null);
-		return id;
+
+		return pixelBuffer;
 	}
+
+	//interpret the pixel as an ID
+	var lookupId = buff => buff[0] << 16 | buff[1] << 8 | buff[2];
+
+	function dumpPicker(picker) {
+		var width = 200, height = 200;
+		var el = document.createElement('canvas');
+		el.width = width;
+		el.height = height;
+		var ctx = el.getContext('2d'),
+			id = ctx.getImageData(0, 0, width, height),
+			b;
+
+		for (var y = 0; y < height; ++y) {
+			for (var x = 0; x < width; ++x) {
+				b = picker(x, y);
+				id.data[(y * width + x) * 4 + 0] = b[0];
+				id.data[(y * width + x) * 4 + 1] = b[1];
+				id.data[(y * width + x) * 4 + 2] = b[2];
+				id.data[(y * width + x) * 4 + 3] = b[3];
+			}
+		}
+		ctx.putImageData(id, 0, 0);
+		var link = document.createElement('a');
+		link.download = 'filename.png';
+		link.href = el.toDataURL();
+		link.click();
+	}
+	dumpRadeonPicker = () => dumpPicker(pickRadeon);
+	dumpIntelPicker = () => dumpPicker(pick);
 
 	var toggle = false;
 	function render() {
-		if (toggle) {
+		if (debug && toggle) {
 			renderer.render(pickingScene, camera);
 		} else {
 			renderer.render(scene, camera);
@@ -236,9 +268,8 @@ function points(el, props) {
 
 	function onClick(ev)  {
 		var rect = ev.target.getBoundingClientRect();
-
-		mouse.x = ev.clientX - rect.left;
-		mouse.y = ev.clientY - rect.top;
+		var x = ev.clientX - rect.left;
+		var y = ev.clientY - rect.top;
 
 		var color = pointGroups[0].geometry.getAttribute('color').array;
 		if (lastColor) {
@@ -248,7 +279,7 @@ function points(el, props) {
 			lastColor = undefined;
 		}
 
-		var i = radeon ? pickRadeon() : pick();
+		var i = lookupId((radeon ? pickRadeon : pick)(x, y));
 		if (i != null) {
 			lastColorI = i;
 			lastColor = [
@@ -297,7 +328,7 @@ function points(el, props) {
 		var min = _.minnull(props.data.columns.map(_.minnull)),
 			max = _.maxnull(props.data.columns.map(_.maxnull));
 
-		size = (max - min) / 50;
+		size = (max - min) / 50; // XXX this is probably wrong
 
 		setGroups(props);
 
@@ -382,6 +413,7 @@ function points(el, props) {
 	// initial draw must wait for loading
 	THREE.DefaultLoadingManager.onLoad = () => {
 		animate();
+		loaded();
 	};
 
 	return update;
@@ -451,13 +483,70 @@ function mapSelector(availableMaps, value, onChange) {
 			label(textNode('Map')), div(sel)));
 }
 
-export class SideBar extends PureComponent {
-	state = {
-		radeon
+class RadeonTest extends PureComponent {
+	shouldComponentUpdate() {
+		return false;
 	}
-	onRadeon = () => {
-		this.setState({radeon: !radeon});
-		radeon = !radeon;
+	componentDidMount() {
+		var el = this.refs.canvas;
+		var width = 100, height = 100;
+
+		el.width = width;
+		el.height = height;
+		var renderer = new THREE.WebGLRenderer({canvas: el, antialias: true});
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(width, height, {updateStyle: false});
+
+		var scene = new THREE.Scene();
+		scene.background = new THREE.Color(0xffffff);
+		var sprite = new THREE.TextureLoader().load(disc);
+
+		var material = new THREE.PointsMaterial({size: 30,
+			color: 0xff0000,
+			map: sprite,
+			transparent: false,
+			alphaTest: 0.5});
+		var geometry = new THREE.BufferGeometry();
+		geometry.setAttribute('position',
+			new THREE.Float32BufferAttribute([0, 20, 0, 0, 0, 0, 20, 20, 0], 3));
+		scene.add(new THREE.Points(geometry, material));
+
+		var camera = new THREE.PerspectiveCamera(perspective, width / height, 2, 4000);
+		camera.position.set(0, 0, 39);
+		camera.lookAt(new THREE.Vector3(0, 0, 0));
+		loader.then(() => {
+			renderer.render(scene, camera);
+		});
+		Rx.Observable.fromEvent(el, 'mousemove')
+			.filter(ev => ev.shiftKey)
+			.subscribe(ev => {
+				var pos = camera.position.toArray();
+				pos[0] -= ev.movementX;
+				pos[1] += ev.movementY;
+				camera.position.fromArray(pos);
+				renderer.render(scene, camera);
+			});
+	}
+	render() {
+		return canvas({ref: 'canvas', style: {width: 100, height: 100, display: 'block', border: '1px solid black'}});
+	}
+}
+
+var radeonTest = el(RadeonTest);
+
+class SideBar extends PureComponent {
+	state = {
+		showRadeonTest: false
+	}
+	componentWillMount() {
+		var showRadeonTest = hidden.create('showRadeonTest', 'Radeon test', {
+			onChange: v => this.setState({showRadeonTest: v}),
+			default: false
+		});
+		this.setState({showRadeonTest});
+	}
+	componentWillUnmount() {
+		hidden.delete('showRadeonTest');
 	}
 	onColor = ev => {
 		this.props.onColor(ev.currentTarget.value);
@@ -471,8 +560,7 @@ export class SideBar extends PureComponent {
 		return div({className: styles.sideBar},
 			mapSelector(maps, mapValue, this.onMap),
 			colorSelector(state, this.onColor),
-			a({onClick: this.onRadeon},
-				(radeon ? 'Disable' : 'Enable') + ' radeon'),
+			this.state.showRadeonTest ? radeonTest() : null,
 			tooltip && p(`Sample ${tooltip.sampleID}`),
 			tooltip && tooltip.valTxt ? p(`Value: ${tooltip.valTxt}`) : null);
 	}
@@ -485,13 +573,24 @@ export class Map extends PureComponent {
 		tooltip: null
 	}
 	componentWillMount() {
-		var asciiC = 67;
-		this.ksub = konami(asciiC).subscribe(() => {
-			debug = true;
+		debug = hidden.create('mapDebug', 'Show pick map', {
+			onChange: v => debug = v,
+			default: false
 		});
+		radeon = hidden.create('radeon', 'Use radeon picker', {
+			onChange: v => radeon = v,
+			default: false
+		});
+		hidden.create('intelPicker', 'Dump intel picker',
+			{onClick: () => dumpIntelPicker()});
+		hidden.create('radeonPicker', 'Dump radeon picker',
+			{onClick: () => dumpRadeonPicker()});
 	}
 	componentWillUnmount() {
-		this.ksub.unsubscribe();
+		hidden.delete('mapDebug');
+		hidden.delete('radeon');
+		hidden.delete('intelPicker');
+		hidden.delete('radeonPicker');
 	}
 	onMove = pos => {
 		this.props.callback(['map-view', pos]);

@@ -4,7 +4,6 @@ import Link from 'react-toolbox/lib/link';
 import Tooltip from 'react-toolbox/lib/tooltip';
 import {getColumns} from '../columnsParam';
 import {getHeatmap} from '../heatmapParam';
-var konami = require('../konami');
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
@@ -12,6 +11,7 @@ var {createBookmark, getRecent, setRecent} = require('../bookmark');
 
 var compStyles = require('./BookmarkMenu.module.css');
 var gaEvents = require('../gaEvents');
+import {hidden} from '../nav';
 
 // XXX This is a horrible work-around for react-toolbox menu limitations.
 // We want the Bookmark MenuItem to not close the menu. Menu closes when
@@ -29,18 +29,20 @@ var TooltipNoCloseMenuItem = Tooltip(NoCloseMenuItem);
 
 var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead';
 
-var linking = false;
+var linking; // XXX move to state?
 
 class BookmarkMenu extends React.Component {
 	state = {loading: false, open: false, recent: false};
 
 	componentWillMount() {
-		var asciiC = 67;
-		this.ksub = konami(asciiC).subscribe(() => {linking = true;});
+		linking = hidden.create('linking', 'Links in Bookmarks', {
+			onChange: val => linking = val,
+			default: false
+		});
 	}
 
 	componentWillUnmount() {
-		this.ksub.unsubscribe();
+		hidden.delete('linking');
 	}
 
 	// RTB positions and clips the menu content according
