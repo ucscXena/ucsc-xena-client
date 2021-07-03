@@ -25,6 +25,7 @@ var BookmarkMenu = require('./views/BookmarkMenu');
 var {servers: {localHub}} = require('./defaultServers');
 import * as store from './hiddenOpts';
 import Rx from './rx';
+var meta = require('./meta');
 
 // Styles
 var compStyles = require('./nav.module.css');
@@ -205,7 +206,7 @@ class XenaNav extends React.Component {
 	}
 
 	onClick = ev => {
-		if (ev.shiftKey && ev.ctrlKey) {
+		if (ev.shiftKey && ev[meta.key]) {
 			ev.preventDefault();
 			this.menuRef.show();
 		}
