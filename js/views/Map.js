@@ -144,9 +144,7 @@ var loaded;
 var loader = new Promise(resolve => loaded = resolve);
 
 function points(el, props) {
-	var {height, width} = el.getBoundingClientRect(); // XXX is this correct?
-	var resolution = new THREE.Vector2(width, height),
-		pointGroups = [], // zero or one, like a 'maybe'.
+	var pointGroups = [], // zero or one, like a 'maybe'.
 		pickingGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
 		labels = [],
@@ -154,6 +152,8 @@ function points(el, props) {
 		size;
 
 	var sprite = new THREE.TextureLoader().load(disc);
+	// XXX move picking stuff into separate contexts, and only
+	// instantiate one of them.
 	var pickingSprite = new THREE.TextureLoader().load(picker);
 	var scene = new THREE.Scene();
 	var pickingScene = new THREE.Scene();
@@ -162,8 +162,17 @@ function points(el, props) {
 	scene.background = new THREE.Color(0xffffff);
 
 	var renderer = new THREE.WebGLRenderer({canvas: el, antialias: true});
+	_.Let(({clientWidth, clientHeight} = el) => {
+		renderer.setSize(clientWidth, clientHeight, {updateStyle: false});
+	});
+	// See discussion https://github.com/mrdoob/three.js/issues/16747
 	renderer.setPixelRatio(window.devicePixelRatio);
-	renderer.setSize(width, height, {updateStyle: false});
+	var {width, height} = _.Let((size = new THREE.Vector2()) => {
+		renderer.getDrawingBufferSize(size);
+		return size;
+	});
+	var resolution = new THREE.Vector2(width, height);
+
 
 	var camera = new THREE.PerspectiveCamera(perspective, width / height, 2, 4000);
 	var controls = new OrbitControls(camera, renderer.domElement);
@@ -172,9 +181,9 @@ function points(el, props) {
 	el.style.touchAction = 'none'; // XXX render this in react?
 
 	function pick(x, y) {
-		camera.setViewOffset(renderer.domElement.width, renderer.domElement.height,
-			x * window.devicePixelRatio | 0,
-			y * window.devicePixelRatio | 0, 1, 1 );
+		camera.setViewOffset(width, height,
+			~~(x * window.devicePixelRatio),
+			~~(y * window.devicePixelRatio), 1, 1 );
 		renderer.setRenderTarget(pickingTarget);
 		renderer.render(pickingScene, camera);
 
@@ -186,15 +195,15 @@ function points(el, props) {
 		return pixelBuffer;
 	}
 
-	var radeonPickingTarget = new THREE.WebGLRenderTarget(~~width, ~~height);
-	function pickRadeon(mx, my) {
+	var radeonPickingTarget = new THREE.WebGLRenderTarget(width, height);
+	function pickRadeon(x, y) {
 		renderer.setRenderTarget(radeonPickingTarget);
 		renderer.render(pickingScene, camera);
 
 		const pixelBuffer = new Uint8Array(4);
-		var y = ~~(height - my * window.devicePixelRatio);
-		var x = mx * window.devicePixelRatio | 0;
-		renderer.readRenderTargetPixels(radeonPickingTarget, x, y, 1, 1, pixelBuffer);
+		renderer.readRenderTargetPixels(radeonPickingTarget,
+			~~(x * window.devicePixelRatio),
+			~~(height - y * window.devicePixelRatio), 1, 1, pixelBuffer);
 		renderer.setRenderTarget(null);
 
 		return pixelBuffer;
