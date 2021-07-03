@@ -160,6 +160,7 @@ function points(el, props) {
 	var pickingTarget = new THREE.WebGLRenderTarget(1, 1);
 
 	scene.background = new THREE.Color(0xffffff);
+	pickingScene.background = new THREE.Color(0xffffff);
 
 	var renderer = new THREE.WebGLRenderer({canvas: el, antialias: true});
 	_.Let(({clientWidth, clientHeight} = el) => {
@@ -289,7 +290,7 @@ function points(el, props) {
 		}
 
 		var i = lookupId((radeon ? pickRadeon : pick)(x, y));
-		if (i != null) {
+		if (i <= color.length) {
 			lastColorI = i;
 			lastColor = [
 				color[i * 3],
