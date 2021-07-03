@@ -175,8 +175,10 @@ class XenaNav extends React.Component {
 		this.sub.unsubscribe();
 	}
 
-	onToggle = ev => {
-		hidden.update(ev.currentTarget.id);
+	// have to early-bind id because MenuItem
+	// events are broken in prod.
+	onToggle = id => () => {
+		hidden.update(id);
 	}
 
 	setMenuRef = ref => {
@@ -195,9 +197,9 @@ class XenaNav extends React.Component {
 		return (
 			<Menu innerRef={this.setMenuRef} theme={{menu: compStyles.menu}} position='topLeft'>
 				{_.map(items, ({label, onClick, onChange, value}, key) =>
-					onChange ? <MenuItem key={key} id={key} selected={value}
-						theme={{selected: compStyles.selected}}
-						onClick={this.forceClose(this.onToggle)} caption={label}/> :
+					onChange ? <MenuItem key={key}
+						className={value ? compStyles.selected : ''}
+						onClick={this.forceClose(this.onToggle(key))} caption={label}/> :
 					<MenuItem key={key} onClick={this.forceClose(onClick)} caption={label}/>)}
 			</Menu>);
 	}
