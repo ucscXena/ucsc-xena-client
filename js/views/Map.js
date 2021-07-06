@@ -17,6 +17,7 @@ import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
 var {rxEvents} = require('../react-utils');
 import {hidden} from '../nav';
+import spinner from '../ajax-loader.gif';
 
 var debug = false;
 
@@ -601,7 +602,8 @@ export class Map extends PureComponent {
 					theme: {wrapper: styles.dialogWrapper,
 						overlay: styles.dialogOverlay}},
 				div({className: styles.content},
-					data ? mapDrawing({onTooltip, onMove, data}) : 'spin spin spin',
+					data ? mapDrawing({onTooltip, onMove, data}) :
+					div({className: styles.loading}, <img src={spinner}/>),
 					sideBar({tooltip, state, maps: availableMaps, mapValue, onColor, onMap})));
 	}
 }

@@ -50,3 +50,13 @@ div.mainDialog {
 	margin-top: 40px;
 	max-width: 200px;
 }
+
+.loading {
+	flex-grow: 1;
+	margin: auto;
+}
+
+.loading img {
+	display: block;
+	margin: auto;
+}
