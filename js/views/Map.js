@@ -19,13 +19,9 @@ var {rxEvents} = require('../react-utils');
 import {hidden} from '../nav';
 
 var debug = false;
-var radeon = false;
-
-
 
 var drawing = false; // XXX singleton
-var dumpIntelPicker;
-var dumpRadeonPicker; //eslint-disable-line no-unused-vars
+var dumpRadeonPicker;
 
 function particles(sprite, size, vertices, color) {
 	const geometry = new THREE.BufferGeometry();
@@ -116,12 +112,6 @@ function labelz(txt, min, max) {
 		.rotateY(Math.PI / 2);
 }
 
-// threshold for mouse clicks
-var thresh = 2;
-var near = ([ev0, ev1]) =>
-	Math.abs(ev0.clientX - ev1.clientX) < thresh &&
-		Math.abs(ev0.clientY - ev1.clientY) < thresh;
-
 //var maxZoom = 100; // for 2d orthographic view
 
 var perspective = 55;
@@ -148,6 +138,7 @@ function points(el, props) {
 		pickingGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
 		labels = [],
+		mouse = new THREE.Vector2(),
 		twoD,
 		size;
 
@@ -157,7 +148,6 @@ function points(el, props) {
 	var pickingSprite = new THREE.TextureLoader().load(picker);
 	var scene = new THREE.Scene();
 	var pickingScene = new THREE.Scene();
-	var pickingTarget = new THREE.WebGLRenderTarget(1, 1);
 
 	scene.background = new THREE.Color(0xffffff);
 	pickingScene.background = new THREE.Color(0xffffff);
@@ -180,21 +170,6 @@ function points(el, props) {
 	controls.enableDamping = true;
 
 	el.style.touchAction = 'none'; // XXX render this in react?
-
-	function pick(x, y) {
-		camera.setViewOffset(width, height,
-			~~(x * window.devicePixelRatio),
-			~~(y * window.devicePixelRatio), 1, 1 );
-		renderer.setRenderTarget(pickingTarget);
-		renderer.render(pickingScene, camera);
-
-		camera.clearViewOffset(); // clear the view offset
-		const pixelBuffer = new Uint8Array(4); // single pixel
-		renderer.readRenderTargetPixels(pickingTarget, 0, 0, 1, 1, pixelBuffer);
-		renderer.setRenderTarget(null);
-
-		return pixelBuffer;
-	}
 
 	var radeonPickingTarget = new THREE.WebGLRenderTarget(width, height);
 	function pickRadeon(x, y) {
@@ -237,8 +212,8 @@ function points(el, props) {
 		link.href = el.toDataURL();
 		link.click();
 	}
+
 	dumpRadeonPicker = () => dumpPicker(pickRadeon);
-	dumpIntelPicker = () => dumpPicker(pick);
 
 	var toggle = false;
 	function render() {
@@ -253,60 +228,29 @@ function points(el, props) {
 		controls.update();
 	}
 
+	function onChange()  {
+		var color = pointGroups[0].geometry.getAttribute('color').array;
+
+		var i = lookupId(pickRadeon(mouse.x, mouse.y));
+		props.onTooltip(i <= color.length ? i : null);
+	}
+
 	function animate() {
 		drawing = false;
 		var point1 = new THREE.Vector3();
 		var point2 = new THREE.Vector3();
 		point1.setFromMatrixPosition(camera.matrixWorld);
-//		if (!twoD) {
-			labels.forEach(label => {
-				label.updateMatrix();
-				point2.setFromMatrixPosition(label.matrixWorld);
-				var dist = point1.distanceTo(point2);
-				var s = dist / 3000;
-				label.scale.set(s, s, s);
-				label.updateMatrix();
-			});
-//		}
+		labels.forEach(label => {
+			label.updateMatrix();
+			point2.setFromMatrixPosition(label.matrixWorld);
+			var dist = point1.distanceTo(point2);
+			var s = dist / 3000;
+			label.scale.set(s, s, s);
+			label.updateMatrix();
+		});
 
 		render();
-	}
-
-	var lastColor;
-	var lastColorI;
-	var black = new THREE.Color(0x000000);
-
-	function onClick(ev)  {
-		var rect = ev.target.getBoundingClientRect();
-		var x = ev.clientX - rect.left;
-		var y = ev.clientY - rect.top;
-
-		var color = pointGroups[0].geometry.getAttribute('color').array;
-		if (lastColor) {
-			color[lastColorI * 3] = lastColor[0];
-			color[lastColorI * 3 + 1] = lastColor[1];
-			color[lastColorI * 3 + 2] = lastColor[2];
-			lastColor = undefined;
-		}
-
-		var i = lookupId((radeon ? pickRadeon : pick)(x, y));
-		if (i <= color.length) {
-			lastColorI = i;
-			lastColor = [
-				color[i * 3],
-				color[i * 3 + 1],
-				color[i * 3 + 2]];
-			color[i * 3] = black.r;
-			color[i * 3 + 1] = black.g;
-			color[i * 3 + 2] = black.b;
-
-			props.onTooltip(i);
-		} else {
-			props.onTooltip(null);
-		}
-		pointGroups[0].geometry.getAttribute('color').needsUpdate = true;
-
-		animate();
+		onChange();
 	}
 
 	function setGroups(props) {
@@ -334,6 +278,9 @@ function points(el, props) {
 	}
 
 	function init(props) {
+		// XXX We should be scaling the data to a size that works
+		// with webgl. Currently the render will fail if the data domain
+		// is inappropriate for webgl.
 		twoD = props.data.columns.length === 2;
 		var min = _.minnull(props.data.columns.map(_.minnull)),
 			max = _.maxnull(props.data.columns.map(_.maxnull));
@@ -388,7 +335,6 @@ function points(el, props) {
 	function update(newProps) {
 		if (_.isEqual(newProps.data.columns, props.data.columns)) {
 			if (!_.isEqual(newProps.data.colorColumn, props.data.colorColumn)) {
-				lastColor = undefined; // XXX this is pretty horrible, as state management.
 				setGroups(newProps);
 			}
 			if (!_.isEqual(newProps.data.view, props.data.view)) {
@@ -409,16 +355,13 @@ function points(el, props) {
 		props.onMove({position: camera.position.toArray(), target: controls.target.toArray()});
 	});
 
-	// 'onclick' event will fire even if there is a drag, which
-	// aliases with camera navigation controls. So, we have to spin
-	// our own click event from mouse up & down.
-	var md = Rx.Observable.fromEvent(el, 'pointerdown'), // XXX pointer vs mouse?
-		mu = Rx.Observable.fromEvent(el, 'pointerup');
-
-	var click = md.flatMap((down) => mu.map(up => [down, up]))
-		.filter(near).map(([, up]) => up);
-
-	click.subscribe(onClick);
+	var mm = Rx.Observable.fromEvent(el, 'mousemove');
+	var mmSub = mm.subscribe(ev => {
+		var rect = ev.target.getBoundingClientRect(); // XXX cache this?
+		mouse.x = ev.clientX - rect.left;
+		mouse.y = ev.clientY - rect.top;
+		onChange();
+	});
 
 	// initial draw must wait for loading
 	THREE.DefaultLoadingManager.onLoad = () => {
@@ -426,7 +369,7 @@ function points(el, props) {
 		loaded();
 	};
 
-	return update;
+	return {update, mm: mmSub};
 }
 
 class MapDrawing extends Component {
@@ -441,7 +384,8 @@ class MapDrawing extends Component {
 			.debounceTime(1000)
 			.subscribe(onMove);
 
-		this.update = points(this.refs.map, {onTooltip, onMove: this.on.move, data});
+		// set this.update and this.mm
+		_.extend(this, points(this.refs.map, {onTooltip, onMove: this.on.move, data}));
 	}
 
 	componentWillReceiveProps(newProps) {
@@ -454,6 +398,7 @@ class MapDrawing extends Component {
 	componentWillUnmount() {
 		drawing = false; // XXX is this necessary?
 		this.move.unsubscribe();
+		this.mm.unsubscribe();
 	}
 
 	render() {
@@ -587,19 +532,11 @@ export class Map extends PureComponent {
 			onChange: v => debug = v,
 			default: false
 		});
-		radeon = hidden.create('radeon', 'Use radeon picker', {
-			onChange: v => radeon = v,
-			default: false
-		});
-		hidden.create('intelPicker', 'Dump intel picker',
-			{onClick: () => dumpIntelPicker()});
 		hidden.create('radeonPicker', 'Dump radeon picker',
 			{onClick: () => dumpRadeonPicker()});
 	}
 	componentWillUnmount() {
 		hidden.delete('mapDebug');
-		hidden.delete('radeon');
-		hidden.delete('intelPicker');
 		hidden.delete('radeonPicker');
 	}
 	onMove = pos => {
