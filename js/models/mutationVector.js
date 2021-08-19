@@ -83,17 +83,17 @@ function impactLegend(colorMap, valsInData) {
 }
 
 var impact = {
-		//destroy protein
+		//destroy protein, color red
 		'Nonsense': 4,
 		'stop_gained': 4,
 		'Frameshift': 4,
 		'Frame_Shift': 4,
 		'De_novo_Start_OutOfFrame': 4,
 
-		//splice related
+		//splice related, color orange
 		'splice': 3,
 
-		//modify protein
+		//modify protein, color blue
 		'missense': 2,
 		'NON_SYNONYMOUS': 2,
 		'NONSYNONYMOUS': 2,
@@ -113,13 +113,13 @@ var impact = {
 		'In_Frame': 2,
 		'CODON': 2,
 
-		//do not modify protein
+		//do not modify protein, color green
 		'Synonymous': 1,
 		'Silent': 1,
 		'stop_retained': 1,
 		'TF_BINDING_SITE': 1,
 
-		//mutations effect we don't know
+		//mutations effect we don't know, default color grey
 		'lincRNA': 0,
 		'RNA': 0,
 		'exon_variant': 0,
