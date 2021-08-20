@@ -86,7 +86,7 @@ var labelMaterial = (txt, sz = 12) => _.Let((map = textTexture(txt, sz)) => [map
 // we should measure from the canvas.
 // Resolution is set by canvas resolution, which depends on
 // font size: larger font size for more pixels.
-var lHeight = 180;
+var lHeight = 90;
 function labelx(txt, min, max, twoD) {
 	var [aspect, material] = labelMaterial(txt, 24);
 	var geometry = new THREE.BoxGeometry(lHeight * aspect, lHeight, 1)
