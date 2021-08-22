@@ -9,14 +9,6 @@
 	box-sizing: border-box;
 }
 
-div.dialogWrapper {
-	display: block;
-	position: absolute;
-	height: calc(100% - 179px);
-	width: 100%;
-	top: 64px;
-}
-
 div.dialogOverlay {
 	position: absolute;
 	width: 100%;
@@ -24,31 +16,52 @@ div.dialogOverlay {
 	top: 0;
 }
 
+.dialogBody {
+	height: 100%;
+	padding: 10px;
+}
+
 div.mainDialog {
 	width: 90vw;
 	/* 64px for top bar, 10px margins */
-	max-height: calc(100vh - 64px - 10px - 10px);
+	height: calc(100vh - 64px - 10px - 10px);
 	padding-top: 10px;
 	margin: auto;
 	margin-top: 10px;
 }
 
 .content {
+	height: 100%;
 	display: flex;
 	flex-direction: row;
 }
 
 .graph {
-	width: 100%;
-	height: 100%;
 	cursor: url(cursor.png) 12 12, crosshair;
-	/* don't allow graph size to change */
-/*	flex: 0 0 auto; */
+	margin-right: 5px;
+	border: 1px solid black;
 }
 
 .sideBar {
-	margin-top: 40px;
+	display: flex;
+	flex-direction: column;
 	max-width: 200px;
+	height: 100%;
+}
+
+.sideBar * {
+	flex-grow: 0;
+	max-width: 100%;
+}
+
+.mapSelector {
+	padding-top: 40px;
+}
+
+.legend {
+	flex-grow: 1;
+	min-height: 0;
+	overflow-y: auto;
 }
 
 .loading {

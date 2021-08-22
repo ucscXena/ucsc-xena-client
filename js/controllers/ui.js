@@ -148,6 +148,9 @@ var controls = {
 	},
 	'map-color': (state, column) =>
 		_.assocIn(state, ['spreadsheet', 'map', 'colorColumn'], column),
+	'map-hide-codes': (state, hidden) =>
+		_.assocIn(state, ['spreadsheet', 'map', 'hidden',
+			state.spreadsheet.map.colorColumn], hidden),
 	'map-view': (state, view) =>
 		_.assocIn(state, ['spreadsheet', 'map', 'view'], view)
 };

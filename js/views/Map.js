@@ -18,6 +18,8 @@ import * as colorScales from '../colorScales';
 var {rxEvents} = require('../react-utils');
 import {hidden} from '../nav';
 import spinner from '../ajax-loader.gif';
+import widgets from '../columnWidgets';
+import {item} from './Legend.module.css';
 
 var debug = false;
 
@@ -335,7 +337,8 @@ function points(el, props) {
 
 	function update(newProps) {
 		if (_.isEqual(newProps.data.columns, props.data.columns)) {
-			if (!_.isEqual(newProps.data.colorColumn, props.data.colorColumn)) {
+			if (!_.isEqual(newProps.data.colorColumn, props.data.colorColumn) ||
+				!_.isEqual(newProps.data.colors, props.data.colors)) {
 				setGroups(newProps);
 			}
 			if (!_.isEqual(newProps.data.view, props.data.view)) {
@@ -435,7 +438,7 @@ function mapSelector(availableMaps, value, onChange) {
 			...opts.map(getOpt));
 
 	return (
-		div({className: styles.column},
+		div({className: styles.mapSelector},
 			label(textNode('Map')), div(sel)));
 }
 
@@ -490,6 +493,18 @@ class RadeonTest extends PureComponent {
 
 var radeonTest = el(RadeonTest);
 
+function firstMatch(el, selector) {
+	return el.matches(selector) ? el :
+		el.parentElement ? firstMatch(el.parentElement, selector) :
+		null;
+}
+
+function getColorColumn(state) {
+	var colorId = _.getIn(state, ['map', 'colorColumn']);
+	return _.contains(state.columnOrder, colorId) ? colorId : null;
+}
+
+var nbsp = '\u00A0';
 class SideBar extends PureComponent {
 	state = {
 		showRadeonTest: false
@@ -510,19 +525,45 @@ class SideBar extends PureComponent {
 	onMap = ev => {
 		this.props.onMap(this.props.maps[ev.currentTarget.value]);
 	}
+	onClick = ev => {
+		var i = _.getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
+		if (i != null) {
+			this.props.onCode(parseInt(i, 10));
+		}
+	}
 	render() {
-		var {tooltip, maps, mapValue, state} = this.props;
+		var {tooltip, maps, mapValue, state} = this.props,
+			id = getColorColumn(state),
+			column = id && state.columns[id],
+			data = _.getIn(state, ['data', id]);
 
-		return div({className: styles.sideBar},
+		return div({className: styles.sideBar, onClick: this.onClick},
 			mapSelector(maps, mapValue, this.onMap),
 			colorSelector(state, this.onColor),
 			this.state.showRadeonTest ? radeonTest() : null,
-			tooltip && p(`Sample ${tooltip.sampleID}`),
-			tooltip && tooltip.valTxt ? p(`Value: ${tooltip.valTxt}`) : null);
+			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
+			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
+			column ? div({className: styles.legend},
+				widgets.legend({column, data, clickable: true})) : null);
 	}
 }
 var sideBar = el(SideBar);
 
+var gray = '#F0F0F0';
+function setHidden(state) {
+	var mapState = _.get(state, 'map'),
+		colorId = getColorColumn(state),
+		hideColors = _.getIn(mapState, ['hidden', colorId], []),
+		// first element of a color spec is the type. Get the type of the first
+		// color scale.
+		scaleType = _.getIn(state, ['columns', colorId, 'colors', 0, 0]);
+
+	return colorId && scaleType === 'ordinal' ?
+		// third element of an ordinal scale is the custom color setting
+		_.assocIn(state, ['columns', colorId, 'colors', 0, 2],
+			_.object(hideColors, hideColors.map(_.constant(gray)))) :
+		state;
+}
 
 export class Map extends PureComponent {
 	state = {
@@ -550,7 +591,7 @@ export class Map extends PureComponent {
 		}
 		var {state} = this.props;
 		var sampleID = state.cohortSamples[i];
-		var colorID = state.map.colorColumn || 'none';
+		var colorID = getColorColumn(state) || 'none';
 		var value, valTxt;
 		if (colorID !== 'none') {
 			value = state.data[colorID].req.values[0][i];
@@ -566,6 +607,15 @@ export class Map extends PureComponent {
 	onMap = map => {
 		this.props.callback(['map-select', map]);
 	}
+	onCode = i => {
+		var {state} = this.props,
+			color = state.map.colorColumn,
+			hidden = _.getIn(state.map, ['hidden', color], []),
+			has = _.contains(hidden, i),
+			next = has ? _.without(hidden, i) : hidden.concat([i]);
+
+		this.props.callback(['map-hide-codes', next]);
+	}
 	onHide = () => {
 		this.props.callback(['map', false]);
 	}
@@ -576,34 +626,38 @@ export class Map extends PureComponent {
 				className: styles.mainDialogClose,
 				onClick: this.onHide
 			}],
-			{onTooltip, onMove, onColor, onMap, state: {tooltip}, props: {state}} = this;
+			{onTooltip, onMove, onColor, onCode, onMap, state: {tooltip}} = this;
 
-		var mapState = _.get(state, 'map'),
+		var state = setHidden(this.props.state),
+			mapState = _.get(state, 'map'),
 			[dsID, params] = _.get(mapState, 'map', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
 			columns = _.get(params, 'dimension')
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
-			colorId = _.get(mapState, 'colorColumn'),
+			colorId = getColorColumn(state),
 			colorColumn = _.getIn(state, ['data', colorId,
 				'req', 'values', 0]),
+			hideColors = _.getIn(mapState, ['hidden', colorColumn]),
 			colors = _.getIn(state, ['columns', colorId, 'colors', 0]),
-			availableMaps = state.map.available,
+			availableMaps = mapState.available,
 			mapValue = _.findIndex(availableMaps,
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
 			view = _.get(mapState, 'view'),
 			labels = _.get(params, 'dimension', []);
 
 		var data = _.every(columns, _.identity) ?
-			{columns, colorColumn, colors, labels, view} : undefined;
+			{columns, colorColumn, colors, hideColors, labels, view} : undefined;
 
 		return dialog({active: true, actions, onEscKeyDown: this.onHide,
 					onOverlayClick: this.onHide,
 					className: styles.mainDialog,
-					theme: {wrapper: styles.dialogWrapper,
-						overlay: styles.dialogOverlay}},
+					theme: {overlay: styles.dialogOverlay,
+						body: styles.dialogBody
+					}},
 				div({className: styles.content},
 					data ? mapDrawing({onTooltip, onMove, data}) :
 					div({className: styles.loading}, <img src={spinner}/>),
-					sideBar({tooltip, state, maps: availableMaps, mapValue, onColor, onMap})));
+					sideBar({tooltip, state, maps: availableMaps, mapValue,
+						onColor, onMap, onCode})));
 	}
 }
