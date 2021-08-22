@@ -20,11 +20,14 @@ import {hidden} from '../nav';
 import spinner from '../ajax-loader.gif';
 import widgets from '../columnWidgets';
 import {item} from './Legend.module.css';
+import {Button} from 'react-toolbox/lib/button';
 
 var debug = false;
 
 var drawing = false; // XXX singleton
 var dumpRadeonPicker;
+
+var button = el(Button);
 
 function particles(sprite, size, vertices, color) {
 	const geometry = new THREE.BufferGeometry();
@@ -501,7 +504,7 @@ function firstMatch(el, selector) {
 
 function getColorColumn(state) {
 	var colorId = _.getIn(state, ['map', 'colorColumn']);
-	return _.contains(state.columnOrder, colorId) ? colorId : null;
+	return state.columns[colorId] ? colorId : null;
 }
 
 var nbsp = '\u00A0';
@@ -534,7 +537,7 @@ class SideBar extends PureComponent {
 	render() {
 		var {tooltip, maps, mapValue, state} = this.props,
 			id = getColorColumn(state),
-			column = id && state.columns[id],
+			column = state.columns[id],
 			data = _.getIn(state, ['data', id]);
 
 		return div({className: styles.sideBar, onClick: this.onClick},
@@ -543,6 +546,9 @@ class SideBar extends PureComponent {
 			this.state.showRadeonTest ? radeonTest() : null,
 			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
 			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
+			column ? p({className: styles.actions},
+				button({label: 'Hide all', onClick: this.props.onHideAll}),
+				button({label: 'Show all', onClick: this.props.onShowAll})) : null,
 			column ? div({className: styles.legend},
 				widgets.legend({column, data, clickable: true})) : null);
 	}
@@ -616,6 +622,15 @@ export class Map extends PureComponent {
 
 		this.props.callback(['map-hide-codes', next]);
 	}
+	onHideAll = () => {
+		var {state} = this.props,
+			colorId = state.map.colorColumn,
+			count = state.data[colorId].codes.length;
+		this.props.callback(['map-hide-codes', _.range(count)]);
+	}
+	onShowAll = () => {
+		this.props.callback(['map-hide-codes', []]);
+	}
 	onHide = () => {
 		this.props.callback(['map', false]);
 	}
@@ -626,7 +641,8 @@ export class Map extends PureComponent {
 				className: styles.mainDialogClose,
 				onClick: this.onHide
 			}],
-			{onTooltip, onMove, onColor, onCode, onMap, state: {tooltip}} = this;
+			{onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
+				state: {tooltip}} = this;
 
 		var state = setHidden(this.props.state),
 			mapState = _.get(state, 'map'),
@@ -658,6 +674,6 @@ export class Map extends PureComponent {
 					data ? mapDrawing({onTooltip, onMove, data}) :
 					div({className: styles.loading}, <img src={spinner}/>),
 					sideBar({tooltip, state, maps: availableMaps, mapValue,
-						onColor, onMap, onCode})));
+						onColor, onMap, onCode, onHideAll, onShowAll})));
 	}
 }

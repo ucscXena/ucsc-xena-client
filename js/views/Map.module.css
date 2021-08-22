@@ -54,6 +54,12 @@ div.mainDialog {
 	max-width: 100%;
 }
 
+.actions button {
+	font-size: 80%;
+	height: 30px;
+	line-height: 30px;
+}
+
 .mapSelector {
 	padding-top: 40px;
 }
