@@ -571,6 +571,25 @@ function setHidden(state) {
 		state;
 }
 
+function getStatusView(loading, error, onReload) {
+	if (loading) {
+		return (
+			<div className={styles.status}>
+				<img style={{textAlign: 'center'}} src={spinner}/>
+			</div>);
+	}
+	if (error) {
+		return (
+			<div className={styles.status}>
+				<i onClick={onReload}
+				   title='Error loading data. Click to reload.'
+				   aria-hidden='true'
+				   className={'material-icons'}>warning</i>
+			</div>);
+	}
+	return null;
+}
+
 export class Map extends PureComponent {
 	state = {
 		tooltip: null
@@ -634,6 +653,9 @@ export class Map extends PureComponent {
 	onHide = () => {
 		this.props.callback(['map', false]);
 	}
+	onReload = () => {
+		this.props.callback(['map', true]);
+	}
 	render() {
 		var actions = [
 			{
@@ -648,7 +670,10 @@ export class Map extends PureComponent {
 			mapState = _.get(state, 'map'),
 			[dsID, params] = _.get(mapState, 'map', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
-			columns = _.get(params, 'dimension')
+			status = params.dimension.map(d => _.getIn(mapData, [d, 'status'])),
+			loading = _.any(status, s => s === 'loading'),
+			error = _.any(status, s => s === 'error'),
+			columns = params.dimension
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
 			colorId = getColorColumn(state),
 			colorColumn = _.getIn(state, ['data', colorId,
@@ -671,8 +696,8 @@ export class Map extends PureComponent {
 						body: styles.dialogBody
 					}},
 				div({className: styles.content},
-					data ? mapDrawing({onTooltip, onMove, data}) :
-					div({className: styles.loading}, <img src={spinner}/>),
+					div(getStatusView(loading, error, this.onReload),
+						data ? mapDrawing({onTooltip, onMove, data}) : null),
 					sideBar({tooltip, state, maps: availableMaps, mapValue,
 						onColor, onMap, onCode, onHideAll, onShowAll})));
 	}

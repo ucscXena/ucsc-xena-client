@@ -48,6 +48,15 @@ var setLoadingState = (state, params) =>
 	_.any(['bookmark', 'inlineState', 'columns'], p => _.get(params, p)) ?
 		_.assoc(state, 'loadPending', true) : state;
 
+var setMapLoading = state => _.Let(([dsID, {dimension}] = state.spreadsheet.map.map) =>
+	state.spreadsheet.map.open ?
+		_.updateIn(state, ['spreadsheet', 'map', 'data', dsID], data =>
+			dimension.filter(dim => _.getIn(state.spreadsheet.map,
+				['data', dsID, dim, 'status']) !== 'loaded')
+			.reduce((data, dim) => _.assocIn(data, [dim, 'status'], 'loading'),
+				data)) :
+		state);
+
 function fetchState(serverBus) {
 	serverBus.next(['inlineState', fetchInlineState()]);
 }
@@ -130,19 +139,18 @@ var controls = {
 	// ui will open map... requires selected map information, and any
 	// settings. Also need the data
 	'map': (state, open) =>
-		_.updateIn(state, ['spreadsheet', 'map'], (mapState = {}) =>
+		setMapLoading(_.updateIn(state, ['spreadsheet', 'map'], (mapState = {}) =>
 			_.merge(_.assoc(mapState, 'open', open),
 				open ? defaultMap(state.spreadsheet.cohort,
-					state.wizard.cohortDatasets, mapState) : {})),
+					state.wizard.cohortDatasets, mapState) : {}))),
 	'map-post!': (serverBus, state, newState, open) => {
-		if (open && !_.getIn(newState.spreadsheet.map,
-				['data', newState.spreadsheet.map.map[0]])) {
+		if (open) {
 			fetchMap(serverBus, newState);
 		}
 	},
-	'map-select': (state, map) => _.assocIn(state,
+	'map-select': (state, map) => setMapLoading(_.assocIn(state,
 		['spreadsheet', 'map', 'map'], map,
-		['spreadsheet', 'map', 'view'], undefined),
+		['spreadsheet', 'map', 'view'], undefined)),
 	'map-select-post!': (serverBus, state, newState) => {
 		fetchMap(serverBus, newState);
 	},
@@ -170,9 +178,10 @@ var spreadsheetControls = {
 	searchHistory: (state, search) => _.updateIn(state, ['searchHistory'],
 			// put at front, limit length, and make unique
 			history => _.uniq([search].concat((history || [])).slice(0, 20))),
-	sampleFilter: (state, sampleFilter) => _.assoc(state,
-			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
-			'survival', null),
+	sampleFilter: (state, sampleFilter) => _.assocIn(state,
+			['cohort', 'sampleFilter'], sampleFilter,
+			['map', 'data'], null,
+			['survival'], null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
 	'addColumnAddHover': (state, hovering) => _.assoc(state, 'addColumnAddHover', hovering),

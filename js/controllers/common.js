@@ -272,8 +272,10 @@ function fetchSurvival(serverBus, state) {
 function fetchMap(serverBus, state) {
 	var {spreadsheet: {cohortSamples}} = state,
 		[dsID, params] = state.spreadsheet.map.map,
-		dims = params.dimension,
-		queries = _.map(dims, name => fetch(probeFieldSpec({dsID, name}), cohortSamples));
+		dims = params.dimension.filter(dim => _.getIn(state.spreadsheet.map,
+			['data', dsID, dim, 'status']) !== 'loaded'),
+		queries = _.map(dims, name => fetch(probeFieldSpec({dsID, name}),
+			cohortSamples));
 
 	serverBus.next(['map-data', Rx.Observable.zipArray(...queries), dsID, dims]);
 }
