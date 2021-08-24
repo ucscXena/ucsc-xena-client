@@ -42,10 +42,15 @@ div.mainDialog {
 
 .graph {
 	cursor: url(cursor.png) 12 12, crosshair;
-	margin-right: 5px;
-	border: 1px solid black;
 	width: 100%;
 	height: 100%;
+}
+
+/* required to set width of the status overlay */
+.graphWrapper {
+	position: relative;
+	margin-right: 5px;
+	border: 1px solid black;
 }
 
 .sideBar {
@@ -83,7 +88,7 @@ div.mainDialog {
 	width: 100%;
 	height: 100%;
 	background-color: #00000020;
-	position: relative;
+	position: absolute;
 }
 
 .status img, .status i {

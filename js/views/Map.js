@@ -162,6 +162,9 @@ function points(el, props) {
 	_.Let(({clientWidth, clientHeight} = el) => {
 		renderer.setSize(clientWidth, clientHeight, {updateStyle: false});
 	});
+	renderer.setClearColor(new THREE.Color(1, 1, 1));
+	renderer.clear();
+
 	// See discussion https://github.com/mrdoob/three.js/issues/16747
 	renderer.setPixelRatio(window.devicePixelRatio);
 	var {width, height} = _.Let((size = new THREE.Vector2()) => {
@@ -384,6 +387,17 @@ class MapDrawing extends Component {
 		return false;
 	}
 
+	startOrUpdate(props) {
+		if (_.every(props.data.columns, _.identity)) {
+			if (this.update) {
+				this.update(props);
+			} else {
+				// set this.update and this.mm
+				_.extend(this, points(this.refs.map, props));
+			}
+		}
+	}
+
 	componentDidMount() {
 		var {onTooltip, onMove, data} = this.props;
 		var events = rxEvents(this, 'move');
@@ -391,21 +405,22 @@ class MapDrawing extends Component {
 			.debounceTime(1000)
 			.subscribe(onMove);
 
-		// set this.update and this.mm
-		_.extend(this, points(this.refs.map, {onTooltip, onMove: this.on.move, data}));
+		this.startOrUpdate({onTooltip, onMove: this.on.move, data});
 	}
 
 	componentWillReceiveProps(newProps) {
 		var {onTooltip, data} = newProps;
 		if (!_.isEqual(this.props, newProps)) {
-			this.update({onTooltip, onMove: this.on.move, data});
+			this.startOrUpdate({onTooltip, onMove: this.on.move, data});
 		}
 	}
 
 	componentWillUnmount() {
 		drawing = false; // XXX is this necessary?
 		this.move.unsubscribe();
-		this.mm.unsubscribe();
+		if (this.mm) {
+			this.mm.unsubscribe();
+		}
 	}
 
 	render() {
@@ -622,7 +637,6 @@ export class Map extends PureComponent {
 			value = state.data[colorID].req.values[0][i];
 			valTxt = _.get(state.data[colorID].codes, value, String(value));
 		}
-		// XXX dimensions
 
 		this.setState({tooltip: {sampleID, valTxt}});
 	}
@@ -684,10 +698,8 @@ export class Map extends PureComponent {
 			mapValue = _.findIndex(availableMaps,
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
 			view = _.get(mapState, 'view'),
-			labels = _.get(params, 'dimension', []);
-
-		var data = _.every(columns, _.identity) ?
-			{columns, colorColumn, colors, hideColors, labels, view} : undefined;
+			labels = _.get(params, 'dimension', []),
+			data = {columns, colorColumn, colors, hideColors, labels, view};
 
 		return dialog({active: true, actions, onEscKeyDown: this.onHide,
 					onOverlayClick: this.onHide,
@@ -696,8 +708,9 @@ export class Map extends PureComponent {
 						body: styles.dialogBody
 					}},
 				div({className: styles.content},
-					div(getStatusView(loading, error, this.onReload),
-						data ? mapDrawing({onTooltip, onMove, data}) : null),
+					div({className: styles.graphWrapper},
+						getStatusView(loading, error, this.onReload),
+						mapDrawing({onTooltip, onMove, data})),
 					sideBar({tooltip, state, maps: availableMaps, mapValue,
 						onColor, onMap, onCode, onHideAll, onShowAll})));
 	}
