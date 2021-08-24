@@ -120,7 +120,8 @@ function labelz(txt, min, max) {
 
 //var maxZoom = 100; // for 2d orthographic view
 
-var perspective = 55;
+// https://gamedev.stackexchange.com/questions/53601/why-is-90-horz-60-vert-the-default-fps-field-of-view
+var perspective = 60;
 
 // XXX This is not the best for performance. Would be better
 // to use the scale.rgb methods. For ordinal, we would need
@@ -136,6 +137,17 @@ var toColor = (column, scale) => {
 	return colors;
 };
 
+function twoDInitialDistance(width, height, centroids, mins) {
+	// compute distance from z = 0 if data fills screen in x
+	// or y dimension, and take the larger distance (so all data
+	// fits on screen).
+	var maxdx = (centroids[0] - mins[0]) /
+			Math.tan((perspective * width / height / 2) / 180 * Math.PI),
+		maxdy = (centroids[1] - mins[1]) /
+			Math.tan((perspective / 2) / 180 * Math.PI);
+	return Math.max(maxdx, maxdy);
+}
+
 var loaded;
 var loader = new Promise(resolve => loaded = resolve);
 
@@ -145,7 +157,6 @@ function points(el, props) {
 		axes = [],
 		labels = [],
 		mouse = new THREE.Vector2(),
-		twoD,
 		size;
 
 	var sprite = new THREE.TextureLoader().load(disc);
@@ -173,7 +184,7 @@ function points(el, props) {
 	});
 	var resolution = new THREE.Vector2(width, height);
 
-
+	// We reset camera near & far params in init(), after inspecting the data.
 	var camera = new THREE.PerspectiveCamera(perspective, width / height, 2, 4000);
 	var controls = new OrbitControls(camera, renderer.domElement);
 	controls.enableDamping = true;
@@ -287,10 +298,11 @@ function points(el, props) {
 	}
 
 	function init(props) {
-		// XXX We should be scaling the data to a size that works
-		// with webgl. Currently the render will fail if the data domain
-		// is inappropriate for webgl.
-		twoD = props.data.columns.length === 2;
+		var twoD = props.data.columns.length === 2;
+		var mins = props.data.columns.map(_.minnull),
+			maxs = props.data.columns.map(_.maxnull),
+			centroids =  maxs.map((max, i) => (max + mins[i]) / 2);
+
 		var min = _.minnull(props.data.columns.map(_.minnull)),
 			max = _.maxnull(props.data.columns.map(_.maxnull));
 
@@ -308,10 +320,21 @@ function points(el, props) {
 			(label, fn) => fn(label, min, max, twoD));
 		labels.forEach(l => scene.add(l));
 
-		var c = (max + min) / 2;
+		// Compute max distance, initial distance, min distance, frustrum near,
+		// frustrum far.
+		// Initial distance should put all data on screen. Max distance
+		// should be a bit more, possibly putting the axes on screen.
+		// Frustrum far should be max distance, or slightly more.
+		// Min distance should allow, say, 50x zoom. Near frustrum should
+		// support min distance, so should be the same, or slightly smaller
+		// so it doesn't clip at max zoom.
+		var initialDistance;
 		if (twoD) {
-			controls.maxDistance =  2 * (max - min);
-			controls.minDistance = .10 * (max - min);
+			initialDistance = twoDInitialDistance(width, height, centroids, mins);
+			controls.maxDistance = initialDistance * 1.1;
+			controls.minDistance = controls.maxDistance / 50;
+			camera.far = controls.maxDistance * 1.05; // add 5% buffer behind data
+			camera.near = controls.minDistance * 0.9;
 		} else {
 			controls.maxDistance =  2 * (max - min);
 			controls.minDistance = .25 * (max - min);
@@ -320,17 +343,19 @@ function points(el, props) {
 			setView(props.data.view);
 		} else {
 			if (twoD) {
-				camera.position.z = c + (max - min);
-				camera.position.y = c;
-				camera.position.x = c;
+				camera.position.x = centroids[0];
+				camera.position.y = centroids[1];
+				camera.position.z = initialDistance;
 			} else {
 				camera.position.z = min + 2 * (max - min);
 				camera.position.y = max + (max - min);
 				camera.position.x = max + (max - min);
 			}
 
-			controls.target = new THREE.Vector3(c, c, twoD ? 0 : c);
+			controls.target = new THREE.Vector3(centroids[0], centroids[1],
+				twoD ? 0 : centroids[2]);
 		}
+		camera.updateProjectionMatrix();
 		controls.enableRotate = !twoD;
 
 		controls.update();
