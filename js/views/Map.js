@@ -178,7 +178,7 @@ function twoDInitialDistance(width, height, centroids, mins) {
 var projectedSize = (height, distance, size) =>
 	(height / 2) * size / (distance * Math.tan(perspective / 2 / 180 * Math.PI));
 
-function makeImage({path, size, image_scalef: scale}) {
+function makeImage({path, size, offset = [0, 0], image_scalef: scale}) {
 	var dsize = size.map(s => s / scale),
 		texture = new THREE.TextureLoader().load(path),
 		material = new THREE.MeshBasicMaterial({map: texture}),
@@ -186,7 +186,7 @@ function makeImage({path, size, image_scalef: scale}) {
 		mesh = new THREE.Mesh(geo, material);
 	// PlaneGeometry is positioned by its center, so shift it by
 	// half. Also, move it behind the data.
-	geo.translate(dsize[0] / 2, dsize[1] / 2, -1);
+	geo.translate(dsize[0] / 2 - offset[0], dsize[1] / 2 - offset[1], -1);
 	texture.flipY = false;
 	return mesh;
 }
