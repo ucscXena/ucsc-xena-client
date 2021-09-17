@@ -292,7 +292,8 @@ var spreadsheetControls = {
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	'sortDirection': (state, id, newDir) =>
 		_.assocIn(state, ['columns', id, 'sortDirection'], newDir),
-	'allowOverSamples': (state, aos) => _.assoc(state, 'allowOverSamples', aos),
+	'allowOverSamples': (state, aos) => _.assocIn(state, ['allowOverSamples'], aos,
+		['map', 'data'], null),
 	'allowOverSamples-post!': (serverBus, state, newState, aos) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, aos),
 	showWelcome: (state, show) => _.assoc(state, 'showWelcome', show),

@@ -29,12 +29,39 @@ var dumpRadeonPicker;
 
 var button = el(Button);
 
+var ringTexture = (function () {
+	const ctx = document.createElement('canvas').getContext('2d');
+	ctx.canvas.width = 32;
+	ctx.canvas.height = 32;
+	ctx.fillStyle = '#FFF';
+	ctx.arc(16, 16, 15.62, 0, Math.PI * 2, false);
+	ctx.arc(16, 16, 13, 0, Math.PI * 2, true);
+	ctx.fill();
+
+	return new THREE.CanvasTexture(ctx.canvas);
+}());
+
+var circleTexture = (function () {
+	const ctx = document.createElement('canvas').getContext('2d');
+	ctx.canvas.width = 32;
+	ctx.canvas.height = 32;
+	ctx.fillStyle = '#FFF';
+	ctx.arc(16, 16, 15.62, 0, Math.PI * 2, false);
+	ctx.fill();
+
+	return new THREE.CanvasTexture(ctx.canvas);
+}());
+
+// https://gamedev.stackexchange.com/questions/53601/why-is-90-horz-60-vert-the-default-fps-field-of-view
+var perspective = 60;
+
 function particles(sprite, size, vertices, color) {
 	const geometry = new THREE.BufferGeometry();
 
+	var nsize = size / Math.tan(perspective / 2 / 180 * Math.PI);
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
-	var material = new THREE.PointsMaterial({size,
+	var material = new THREE.PointsMaterial({size: nsize,
 		map: sprite,
 		transparent: false,
 		alphaTest: 0.5,
@@ -120,9 +147,6 @@ function labelz(txt, min, max) {
 
 //var maxZoom = 100; // for 2d orthographic view
 
-// https://gamedev.stackexchange.com/questions/53601/why-is-90-horz-60-vert-the-default-fps-field-of-view
-var perspective = 60;
-
 // XXX This is not the best for performance. Would be better
 // to use the scale.rgb methods. For ordinal, we would need
 // to implement an rgb method, which would need to ahead-of-time walk the
@@ -148,6 +172,25 @@ function twoDInitialDistance(width, height, centroids, mins) {
 	return Math.max(maxdx, maxdy);
 }
 
+// height of viewport, distance from camera, size of object. Used to
+// get projected height of rendered marker, so we can change it for different
+// zooms.
+var projectedSize = (height, distance, size) =>
+	(height / 2) * size / (distance * Math.tan(perspective / 2 / 180 * Math.PI));
+
+function makeImage({path, size, image_scalef: scale}) {
+	var dsize = size.map(s => s / scale),
+		texture = new THREE.TextureLoader().load(path),
+		material = new THREE.MeshBasicMaterial({map: texture}),
+		geo = new THREE.PlaneGeometry(...dsize),
+		mesh = new THREE.Mesh(geo, material);
+	// PlaneGeometry is positioned by its center, so shift it by
+	// half. Also, move it behind the data.
+	geo.translate(dsize[0] / 2, dsize[1] / 2, -1);
+	texture.flipY = false;
+	return mesh;
+}
+
 var loaded;
 var loader = new Promise(resolve => loaded = resolve);
 
@@ -156,12 +199,12 @@ function points(el, props) {
 		pickingGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
 		labels = [],
+		image = [],
 		mouse = new THREE.Vector2(),
 		size;
 
-	var sprite = new THREE.TextureLoader().load(disc);
-	// XXX move picking stuff into separate contexts, and only
-	// instantiate one of them.
+	var sprite;
+	// XXX move picking stuff into separate context
 	var pickingSprite = new THREE.TextureLoader().load(picker);
 	var scene = new THREE.Scene();
 	var pickingScene = new THREE.Scene();
@@ -288,6 +331,7 @@ function points(el, props) {
 		pointGroups.forEach(g => scene.add(g));
 
 		pickingGroups.forEach(g => pickingScene.remove(g));
+		// XXX do we need to update size?
 		pickingGroups = pointGroups.map(pickingClone(pickingSprite, columns[0].length));
 		pickingGroups.forEach(g => pickingScene.add(g));
 	}
@@ -306,7 +350,8 @@ function points(el, props) {
 		var min = _.minnull(props.data.columns.map(_.minnull)),
 			max = _.maxnull(props.data.columns.map(_.maxnull));
 
-		size = (max - min) / 50; // XXX this is probably wrong
+		sprite = props.data.image ? ringTexture : new THREE.TextureLoader().load(disc);
+		size = props.data.size || (max - min) / 50; // XXX this is probably wrong
 
 		setGroups(props);
 
@@ -319,6 +364,10 @@ function points(el, props) {
 		labels = _.mmap(props.data.labels, [labelx, labely, labelz],
 			(label, fn) => fn(label, min, max, twoD));
 		labels.forEach(l => scene.add(l));
+
+		image.forEach(i => scene.remove(i));
+		image = props.data.image ? [makeImage(props.data.image)] : [];
+		image.forEach(i => scene.add(i));
 
 		// Compute max distance, initial distance, min distance, frustrum near,
 		// frustrum far.
@@ -387,7 +436,26 @@ function points(el, props) {
 			requestAnimationFrame(animate);
 			drawing = true;
 		}
-		props.onMove({position: camera.position.toArray(), target: controls.target.toArray()});
+
+		if (props.data.image) {
+			let [, , z] = camera.position.toArray(),
+				dotHeight = projectedSize(height, z, props.data.size);
+
+			pointGroups.forEach(points => {
+				if (dotHeight < 10 && points.material.map === ringTexture) {
+					sprite = points.material.map = circleTexture;
+					points.material.needsUpdate = true;
+				} else if (dotHeight > 10 && points.material.map === circleTexture) {
+					sprite = points.material.map = ringTexture;
+					points.material.needsUpdate = true;
+				}
+			});
+		}
+
+		if (props.onMove) {
+			props.onMove({position: camera.position.toArray(),
+				target: controls.target.toArray()});
+		}
 	});
 
 	var mm = Rx.Observable.fromEvent(el, 'mousemove');
@@ -630,6 +698,11 @@ function getStatusView(loading, error, onReload) {
 	return null;
 }
 
+function setHost(dsID, image) {
+	var {host} = JSON.parse(dsID);
+	return image && _.assoc(image, 'path', host + '/download/' + image.path);
+}
+
 export class Map extends PureComponent {
 	state = {
 		tooltip: null
@@ -646,8 +719,23 @@ export class Map extends PureComponent {
 		hidden.delete('mapDebug');
 		hidden.delete('radeonPicker');
 	}
-	onMove = pos => {
-		this.props.callback(['map-view', pos]);
+	onMove = view => {
+		// The threejs controls will emit an event when they are changed
+		// programmatically. The emitted event can't be blocked by temporarily
+		// silencing the callback. Maybe it's async. Also, the target
+		// can't be round-tripped accurately: if you set the target to the
+		// position passed in the event, it will generate a new event with
+		// a position that is different by a few low bits. To avoid an echo
+		// in the state, then, we do a fuzzy floating point compare, and drop
+		// events that are close.
+		var thresh = 10e-7,
+			{position: pos0, target: targ0} = this.props.state.map.view || {};
+
+		if (!pos0 || !targ0 || _.any(view.position, (v, i) => Math.abs(v - pos0[i]) > thresh)
+				|| _.any(view.target, (v, i) => Math.abs(v - targ0[i]) > thresh)) {
+
+			this.props.callback(['map-view', view]);
+		}
 	}
 	onTooltip = i => {
 		if (i === null) {
@@ -722,9 +810,13 @@ export class Map extends PureComponent {
 			availableMaps = mapState.available,
 			mapValue = _.findIndex(availableMaps,
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
-			view = _.get(mapState, 'view'),
+			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			data = {columns, colorColumn, colors, hideColors, labels, view};
+			size = params.spot_diameter,
+			// don't create an image parameter while doing this
+			image = setHost(dsID, _.getIn(params, ['image', 0])),
+			data = {columns, colorColumn, size, colors,
+				hideColors, labels, view, image};
 
 		return dialog({active: true, actions, onEscKeyDown: this.onHide,
 					onOverlayClick: this.onHide,
