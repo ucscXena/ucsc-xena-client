@@ -186,7 +186,7 @@ function makeImage({path, size, offset = [0, 0], image_scalef: scale}) {
 		mesh = new THREE.Mesh(geo, material);
 	// PlaneGeometry is positioned by its center, so shift it by
 	// half. Also, move it behind the data.
-	geo.translate(dsize[0] / 2 - offset[0], dsize[1] / 2 - offset[1], -1);
+	geo.translate(dsize[0] / 2 - offset[0] / scale, dsize[1] / 2 - offset[1] / scale, -1);
 	texture.flipY = false;
 	return mesh;
 }
