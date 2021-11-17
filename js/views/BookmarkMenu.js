@@ -177,7 +177,7 @@ class BookmarkMenu extends React.Component {
 						<p className={compStyles.warning}>
 							Note: bookmarks are only guaranteed for 3 months after creation
 						</p>) : null}
-					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
+					<input className={compStyles.bookmarkInput} readOnly={true} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
 				<Menu onSelect={this.onViewBookmark}
