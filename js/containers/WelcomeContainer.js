@@ -34,7 +34,7 @@ var refresh = 5000; // ms between link switch
 class WelcomeContainer extends PureComponent {
 	state = {link: 0};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseover', 'mouseout', 'bulletover');
 		var {mouseover, mouseout, bulletover} = events;
 

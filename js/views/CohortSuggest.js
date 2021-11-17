@@ -29,7 +29,7 @@ export class CohortSuggest extends PureComponent {
 		this.setState({suggestions: []});
 	};
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		var value = this.state.value || props.cohort || "";
 		this.setState({
 			value,

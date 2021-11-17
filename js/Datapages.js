@@ -595,7 +595,7 @@ var binSize = 1000;
 class ListPage extends React.Component {
 	state = {};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'list');
 		var chunks = events.list
 			.startWith(this.props.list)
@@ -616,7 +616,7 @@ class ListPage extends React.Component {
 		this.sub.unsubscribe();
 	}
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		this.on.list(props.list);
 	}
 

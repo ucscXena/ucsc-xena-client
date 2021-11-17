@@ -38,7 +38,7 @@ class Transcripts extends React.Component {
 	    updateButton: false
 	};
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		var newGene = _.getIn(props.state, ['transcripts', 'gene']);
 		if (newGene) {
 			this.setState({input: newGene});

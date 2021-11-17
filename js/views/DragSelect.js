@@ -47,7 +47,7 @@ class DragSelect extends React.Component {
 	// we will invoke onSelect with a zero-length selection.
 	static defaultProps = {enabled: () => true, allowClick: false};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var mousedown = new Rx.Subject();
 		var mousedrag = mousedown.flatMap((down) => {
 			var target = down.currentTarget,

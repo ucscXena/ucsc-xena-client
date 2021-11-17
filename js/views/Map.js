@@ -501,7 +501,7 @@ class MapDrawing extends Component {
 		this.startOrUpdate({onTooltip, onMove: this.on.move, data});
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		var {onTooltip, data} = newProps;
 		if (!_.isEqual(this.props, newProps)) {
 			this.startOrUpdate({onTooltip, onMove: this.on.move, data});
@@ -620,7 +620,7 @@ class SideBar extends PureComponent {
 	state = {
 		showRadeonTest: false
 	}
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var showRadeonTest = hidden.create('showRadeonTest', 'Radeon test', {
 			onChange: v => this.setState({showRadeonTest: v}),
 			default: false
@@ -707,7 +707,7 @@ export class Map extends PureComponent {
 	state = {
 		tooltip: null
 	}
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		debug = hidden.create('mapDebug', 'Show pick map', {
 			onChange: v => debug = v,
 			default: false

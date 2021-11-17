@@ -139,7 +139,7 @@ function tooltip(id, fieldType, layout, nodes, samples, sampleFormat, zoom, gene
 }
 
 var SegmentedColumn = hotOrNot(class extends PureComponent {
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.

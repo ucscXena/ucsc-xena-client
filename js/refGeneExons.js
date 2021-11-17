@@ -423,7 +423,7 @@ export function drawRefGeneExons(vg, props) {
 
 
 class RefGeneDrawing extends React.Component {
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -454,7 +454,7 @@ class RefGeneDrawing extends React.Component {
 		return false;
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
@@ -539,7 +539,7 @@ class RefGeneHighlight extends PureComponent {
 
 export default class RefGeneAnnotation extends PureComponent {
 	state = {probe: undefined};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.sub = this.props.tooltip.subscribe(ev => {
 			if (_.getIn(ev, ['data', 'id']) === this.props.id) {
 				this.setState({

@@ -484,7 +484,7 @@ export default class Column extends PureComponent {
 		}
 	};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.initSubColumnIndex();
 	}
 

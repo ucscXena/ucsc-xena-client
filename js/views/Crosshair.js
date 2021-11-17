@@ -22,7 +22,7 @@ var frozen = (props, state) => !props.interactive || state.frozen;
 class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.sub = this.props.tooltip.subscribe(ev => {
 			var {frozen} = ev;
 			this.setState({frozen});
@@ -36,7 +36,7 @@ class Crosshair extends PureComponent {
 	componentWillUnmount() {
 		this.sub.unsubscribe();
 	}
-	componentWillReceiveProps(nextProps) {
+	UNSAFE_componentWillReceiveProps(nextProps) {//eslint-disable-line camelcase
 		if (!frozen(nextProps, this.state)) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}

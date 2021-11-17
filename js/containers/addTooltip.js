@@ -11,7 +11,7 @@ function addTooltip(Component) {
 	return class extends PureComponent {
 		static displayName = 'SpreadsheetTooltip';
 
-		componentWillMount() {
+		UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 			var events = this.ev = rxEvents(this, 'tooltip', 'click', 'close');
 
 			var toggle = events.click.filter(ev => ev[meta.key])

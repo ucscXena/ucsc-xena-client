@@ -1108,7 +1108,7 @@ class HighchartView extends PureComponent {
 		callDrawChart(this.props.xenaState, this.props.drawProps);
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (!_.isEqual(newProps, this.props)) {
 			callDrawChart(newProps.xenaState, newProps.drawProps);
 		}

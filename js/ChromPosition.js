@@ -108,7 +108,7 @@ class ChromPosition extends React.Component {
 		this.draw(width, scaleHeight, layout, mode);
 	}
 
-	/*componentWillReceiveProps() {
+	/*UNSAFE_componentWillReceiveProps() {//eslint-disable-line camelcase
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.draw(width, scaleHeight, layout, mode);
 	},*/

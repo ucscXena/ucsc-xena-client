@@ -213,7 +213,7 @@ class Search extends PureComponent {
 		this.sub.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.state.value === this.props.value) {
 			this.setState({value: newProps.value});
 		}

@@ -9,7 +9,7 @@ var compStyles = require('./bookmarks.module.css');
 
 class Weekly extends Component {
 	state = {weeks: null};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		Rx.Observable.ajax({
 			url: '/api/bookmarks/weekly',
 			method: 'GET'
@@ -37,7 +37,7 @@ class Weekly extends Component {
 
 class Week extends Component {
 	state = {list: null};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var {week} = this.props;
 		Rx.Observable.ajax({
 			url: `/api/bookmarks/weekof?week=${encodeURIComponent(week)}`,
