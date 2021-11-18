@@ -275,8 +275,13 @@ const sendMessage = msg => {
 		// should this 'localize' be here or in the notebook?
 		var localizedMsg = _.assoc(msg, 'url', msg.url.replace(/^notebook:/, 'http://localhost:7222'));
 		window.opener.postMessage({msg: localizedMsg, id}, "*"); // XXX fix *
-		// XXX need a timeout, or something, here
-		return notebookObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data);
+		// XXX This timeout slows everything down, and potentially breaks
+		// notebooks if the response is long. Need some sort of ping,
+		// instead, so we only wait for a response if we know something
+		// is listening.
+		return notebookObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data)
+			.timeoutWith(1000,
+				Rx.Observable.of({status: 0, response: ''}, Rx.Scheduler.asap));
 	}
 	return Rx.Observable.of({status: 0, response: ''}, Rx.Scheduler.asap);
 };
