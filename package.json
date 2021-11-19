@@ -1,6 +1,6 @@
 {
   "name": "ucsc-xena-client",
-  "version": "2.91.1",
+  "version": "2.91.2",
   "description": "UCSC Xena Client. Functional genomics visualizations.",
   "homepage": "https://xena.ucsc.edu",
   "main": "index.js",
