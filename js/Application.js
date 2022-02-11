@@ -1,4 +1,5 @@
 import React from 'react';
+import {MuiThemeProvider} from '@material-ui/core';
 import PureComponent from './PureComponent';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
@@ -10,10 +11,11 @@ var _ = require('./underscore_ext').default;
 import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
-import { ThemeProvider } from 'react-css-themr';
+import { ThemeProvider as ReactCSSThemr } from 'react-css-themr';
 import appTheme from './appTheme';
 import nav from './nav';
 var gaEvents = require('./gaEvents');
+import xenaTheme from './xenaTheme';
 //var Perf = require('react-dom/lib/ReactPerf');
 
 const stepperSteps = [
@@ -148,9 +150,11 @@ class Application extends PureComponent {
 
 const ThemedApplication = (props) => {
 	return (
-		<ThemeProvider theme={appTheme}>
-			<Application {...props}/>
-		</ThemeProvider>);
+		<MuiThemeProvider theme={xenaTheme}>
+			<ReactCSSThemr theme={appTheme}>
+				<Application {...props}/>
+			</ReactCSSThemr>
+		</MuiThemeProvider>);
 };
 
 module.exports = ThemedApplication;

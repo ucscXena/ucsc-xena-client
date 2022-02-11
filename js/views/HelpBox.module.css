@@ -21,7 +21,7 @@
 	background-color: #ffffff;
 	border-radius: 2px;
 	box-shadow: 0 19px 75px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* based on <Dialog>, updated spread to 75px (from 60px) to provide shadow for triangles */
-	z-index: 3; /* to cover the Stepper if required */
+	z-index: 2000; /* to cover the nav AppBar if required */
 }
 
 .helpBelow {
