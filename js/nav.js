@@ -3,32 +3,56 @@
  * http://xena.ucsc.edu
  *
  * Navigation component.
- *
- * This is a light wrapper component around React Toolbox's AppBar component.
  */
 
-
-import {GENESETS_VIEWER_URL} from "./views/GeneSetViewDialog";
-
 // Core dependencies, components
+import {
+	AppBar,
+	Button,
+	Box,
+	Link,
+	Menu,
+	MenuItem,
+	MuiThemeProvider,
+	createTheme,
+	Icon
+} from '@material-ui/core';
 var React = require('react');
 var ReactDOM = require('react-dom');
 var _ = require('./underscore_ext').default;
-import AppBar from 'react-toolbox/lib/app_bar';
-import Navigation from 'react-toolbox/lib/navigation';
-import {ThemeProvider} from 'react-css-themr';
-import Link from 'react-toolbox/lib/link';
-import {Menu, MenuItem} from 'react-toolbox/lib/menu';
-import {Button} from 'react-toolbox/lib/button';
-var navTheme = require('./navTheme');
-var BookmarkMenu = require('./views/BookmarkMenu');
 var {servers: {localHub}} = require('./defaultServers');
 import * as store from './hiddenOpts';
 import Rx from './rx';
 var meta = require('./meta');
+var BookmarkMenu = require('./views/BookmarkMenu');
+import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
+import {xenaColor} from './xenaColor';
+import xenaTheme from './xenaTheme';
 
 // Styles
-var compStyles = require('./nav.module.css');
+var sxNav = {
+	alignItems: 'stretch',
+	color: xenaColor.ACCENT,
+	columnGap: 32,
+	display: 'flex',
+	justifyContent: 'flex-start'
+};
+var sxNavLink = {
+	alignItems: 'center',
+	cursor: 'pointer',
+	display: 'flex',
+	textTransform: 'uppercase',
+	whiteSpace: 'nowrap',
+};
+var sxXenaBar = {
+	alignItems: 'center',
+	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+	columnGap: 80,
+	display: 'flex',
+	flex: 1,
+	minHeight: 64,
+	padding: '0 24px',
+};
 
 // Images
 import logoSantaCruzImg from '../images/logoSantaCruz.png';
@@ -87,27 +111,34 @@ class MoreToolsMenu extends React.Component {
 
 	handleSelect = (url) => {
 		window.open(url);
+		this.handleClose();
 	};
 
 	render() {
 		let {anchorEl} = this.state;
 
 		return (
-				<div style={{display: "inline", position: 'relative'}}>
-					<Button
-						onClick={this.onClick}>
-						More Tools
-					</Button>
-					<Menu position='topLeft'
-						active={Boolean(anchorEl)}
-						onHide={this.handleClose}
-						className={compStyles.menu}
-					>
-						<MenuItem onClick={this.handleSelect.bind(this, publicationLink.href)} caption={publicationLink.label}/>
-						<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)} caption={pythonLink.label}/>
-						<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)} caption={geneSetsLink.label}/>
-					 </Menu>
-				</div>
+			<>
+				<Button color='secondary' onClick={this.onClick}>More Tools</Button>
+				<Menu
+					anchorEl={anchorEl}
+					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
+					elevation={2}
+					getContentAnchorEl={null}
+					onClose={this.handleClose}
+					open={Boolean(anchorEl)}
+				>
+					<MenuItem onClick={this.handleSelect.bind(this, publicationLink.href)}>
+						{publicationLink.label}
+					</MenuItem>
+					<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)}>
+						{pythonLink.label}
+					</MenuItem>
+					<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)}>
+						{geneSetsLink.label}
+					</MenuItem>
+				 </Menu>
+			</>
 		);
 	}
 }
@@ -159,7 +190,8 @@ export var hidden = {
 
 class XenaNav extends React.Component {
 	state = {
-		options: {}
+		options: {},
+		showHiddenMenu: false,
 	}
 	componentDidMount() {
 		this.sub = hiddenOpts.subscribe(options => {
@@ -182,33 +214,39 @@ class XenaNav extends React.Component {
 		hidden.update(id);
 	}
 
-	setMenuRef = ref => {
-		this.menuRef = ref;
+	onCloseHiddenMenu = () => {
+		this.setState({showHiddenMenu: false});
 	}
 
-	// RT MenuItem identity check fails in dev, leaving the
-	// menu open after selection. Force it closed here.
-	forceClose = cb => process.env.NODE_ENV === 'production' ? cb :
+	forceClose = cb =>
 		(...args) => {
-			this.menuRef.hide();
+			this.onCloseHiddenMenu();
 			return cb(...args);
 		}
 
 	hiddenMenu(items) {
 		return (
-			<Menu innerRef={this.setMenuRef} theme={{menu: compStyles.menu}} position='topLeft'>
+			<Menu
+				anchorReference='anchorPosition'
+				anchorPosition={{left: 16, top: 16}}
+				elevation={2}
+				onClose={this.onCloseHiddenMenu}
+				open={this.state.showHiddenMenu}
+			>
 				{_.map(items, ({label, onClick, onChange, value}, key) =>
-					onChange ? <MenuItem key={key}
-						className={value ? compStyles.selected : ''}
-						onClick={this.forceClose(this.onToggle(key))} caption={label}/> :
-					<MenuItem key={key} onClick={this.forceClose(onClick)} caption={label}/>)}
+					onChange ?
+						<MenuItem key={key} onClick={this.forceClose(this.onToggle(key))}>
+							<Icon color='secondary'>{value ? 'done' : 'none'}</Icon>
+							{label}
+						</MenuItem> :
+						<MenuItem key={key} onClick={this.forceClose(onClick)}>{label}</MenuItem>)}
 			</Menu>);
 	}
 
 	onClick = ev => {
 		if (ev.shiftKey && ev[meta.key]) {
 			ev.preventDefault();
-			this.menuRef.show();
+			this.setState({showHiddenMenu: true});
 		}
 	}
 	render() {
@@ -219,15 +257,30 @@ class XenaNav extends React.Component {
 			return {...others, onClick, active: active(l, activeLink)};
 		});
 		var logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
+		var NavLink = ({active, ...props}) => {
+			return <Link color='secondary' style={{color: active ? xenaColor.PRIMARY_CONTRAST : undefined}} variant='body1' {...props}/>;
+		};
 		return (
-			<AppBar className={compStyles.NavAppBar}>
-				<a onClick={this.onClick} href='http://xena.ucsc.edu/' className={compStyles.logoXena}><img title={window.ga ? '' : 'no analytics'} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
-				{this.hiddenMenu(this.state.options)}
-				<Navigation type="horizontal" routes={routes}>
-					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
-					<Link {...helpLink} />
-					<MoreToolsMenu/>
-				</Navigation>
+			<AppBar color='default' elevation={0} position='relative'>
+				<Box sx={sxXenaBar}>
+					<Box component={'a'} onClick={this.onClick} href='http://xena.ucsc.edu/' sx={{lineHeight: 0}}>
+						<Box
+							component={'img'}
+							alt='Xena Logo'
+							title={window.ga ? '' : 'no analytics'}
+							src={logoSantaCruzImg}
+							srcSet={logoSrcSet}
+							sx={{maxWidth: 139}}/>
+					</Box>
+					{this.hiddenMenu(this.state.options)}
+					<Box component='nav' sx={sxNav}>
+						{routes.map(({label, ...routeProps}) =>
+							<Box component={NavLink} key={label} sx={sxNavLink} {...routeProps}>{label}</Box>)}
+						{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
+						<Box component={NavLink} href={helpLink.href} sx={sxNavLink} target={helpLink.target}>Help</Box>
+						<MoreToolsMenu/>
+					</Box>
+				</Box>
 			</AppBar>
 		);
 	}
@@ -235,10 +288,34 @@ class XenaNav extends React.Component {
 
 class ThemedNav extends React.Component {
 	render() {
+		const navTheme = createTheme({
+			...xenaTheme,
+			overrides: {
+				...xenaTheme.overrides,
+				MuiButton: {
+					root: {
+						...xenaTheme.overrides.MuiButton.root,
+						...xenaTheme.typography.body1,
+						fontWeight: 500,
+						height: 36,
+					},
+					text: {
+						padding: '0 12px'
+					},
+				},
+				MuiDivider: {
+					root: {
+						...xenaTheme.overrides.MuiDivider.root,
+						margin: '12px 0',
+					},
+				},
+			},
+		});
 		return (
-			<ThemeProvider theme={navTheme}>
+			<MuiThemeProvider theme={navTheme}>
 				<XenaNav {...this.props}/>
-			</ThemeProvider>);
+			</MuiThemeProvider>
+		);
 	}
 }
 

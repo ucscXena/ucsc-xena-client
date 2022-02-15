@@ -1,13 +1,4 @@
 
-/* Bookmark icon */
-.iconBookmark {
-	margin-left: 4px;
-	/* Using !important, because I can't out why the css ordering is wrong */
-	z-index: 1060 !important; /* in front of KmPlot dialog */
-	margin-top: 30px; /* let the menu do not overlay the "bookmark" icon */
-}
-
-
 /* Copy bookmark input */
 .bookmarkInput {
 	bottom: 0;
@@ -20,28 +11,4 @@
 /* Import input */
 .importInput[type='file'] {
 	display: none;
-}
-
-.placeholder {
-	visibility: hidden;
-}
-
-.warning {
-	font-size: 80%;
-	padding: 0 16px;
-	margin: 0;
-	white-space: normal;
-	width: 100%;
-}
-
-/* position above the app */
-.wrapper {
-	margin: 5;
-	position: absolute;
-	right: 0;
-	top: 0;
-}
-
-.help {
-	justify-content: flex-end;
 }
