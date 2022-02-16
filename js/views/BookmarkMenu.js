@@ -140,7 +140,6 @@ class BookmarkMenu extends React.Component {
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-					elevation={2}
 					getContentAnchorEl={null}
 					onClose={this.handleMenuHide}
 					open={open}>
@@ -186,7 +185,6 @@ class BookmarkMenu extends React.Component {
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-					elevation={2}
 					getContentAnchorEl={null}
 					onClose={this.onRecentHide}
 					open={recent && recentBookmarks.length > 0}>
