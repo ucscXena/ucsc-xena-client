@@ -9,12 +9,12 @@
 
 
 // Core dependencies, components
+import {Tooltip} from '@material-ui/core';
 var React = require('react');
 var _ = require('./underscore_ext').default;
 
 // App dependencies
 var SheetStatus = require('./views/SheetStatus');
-import Tooltip from 'react-toolbox/lib/tooltip';
 
 // Styles
 var compStyles = require('./SheetControls.module.css');
@@ -31,12 +31,11 @@ class SheetControls extends React.Component {
 			zoomed = count !== appState.samples.length,
 			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
 			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'None',
-			zoomStatus = (<SheetStatus className={compStyles.zoomAnimate} disabled={statusDisabled} label={zoomLabel} sheetState={zoomState}/>),
-			ZoomTooltip = Tooltip('div');
+			ZoomStatus = <SheetStatus disabled={statusDisabled} label={zoomLabel} sheetState={zoomState}/>;
 		return (
 			<div className={compStyles.sheetControls}>
-				{mode === "chart" ? null : <div className={compStyles.sheetStatus}>
-					{zoomed ? zoomStatus : <ZoomTooltip tooltip='Click and drag to zoom'>{zoomStatus}</ZoomTooltip>}
+				{mode === 'chart' ? null : <div className={compStyles.sheetStatus}>
+					{zoomed ? ZoomStatus : <Tooltip title='Click and drag to zoom'>{ZoomStatus}</Tooltip>}
 					{zoomed ? <div className={classNames(compStyles.zoomActions, compStyles.zoomAnimate)}>
 						<span className={compStyles.action} onClick={zoomOut}>Zoom Out</span>
 						<span className={compStyles.action} onClick={clearZoom}>Clear Zoom</span>

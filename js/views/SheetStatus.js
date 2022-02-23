@@ -18,9 +18,9 @@ var compStyles = require('./SheetStatus.module.css');
 class SheetStatus extends React.Component {
 
 	render() {
-		var {disabled, label, sheetState} = this.props;
+		var {className, disabled, label, sheetState, ...statusProps} = this.props;
 		return (
-			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled}, {[compStyles.zoomAnimation]: sheetState !== 'None'})}>
+			<div className={classNames(className, compStyles.status, {[compStyles.disabled]: disabled}, {[compStyles.zoomAnimation]: sheetState !== 'None'})} {...statusProps}>
 				{label ? <div className={compStyles.label}>{label}</div> : null}
 				<div className={compStyles.state}>{sheetState}</div>
 			</div>
