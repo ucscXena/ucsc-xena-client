@@ -8,14 +8,15 @@
 // Core dependencies, components
 import {
 	AppBar,
-	Button,
 	Box,
+	Button,
+	createGenerateClassName,
+	Icon,
 	Link,
 	Menu,
 	MenuItem,
 	MuiThemeProvider,
-	createTheme,
-	Icon
+	StylesProvider
 } from '@material-ui/core';
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -27,7 +28,7 @@ var meta = require('./meta');
 var BookmarkMenu = require('./views/BookmarkMenu');
 import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
 import {xenaColor} from './xenaColor';
-import xenaTheme from './xenaTheme';
+import {xenaNavTheme} from "./xenaThemeNav";
 
 // Styles
 var sxNav = {
@@ -119,11 +120,10 @@ class MoreToolsMenu extends React.Component {
 
 		return (
 			<>
-				<Button color='secondary' onClick={this.onClick}>More Tools</Button>
+				<Button onClick={this.onClick}>More Tools</Button>
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-					elevation={2}
 					getContentAnchorEl={null}
 					onClose={this.handleClose}
 					open={Boolean(anchorEl)}
@@ -229,7 +229,6 @@ class XenaNav extends React.Component {
 			<Menu
 				anchorReference='anchorPosition'
 				anchorPosition={{left: 16, top: 16}}
-				elevation={2}
 				onClose={this.onCloseHiddenMenu}
 				open={this.state.showHiddenMenu}
 			>
@@ -261,7 +260,7 @@ class XenaNav extends React.Component {
 			return <Link color='secondary' style={{color: active ? xenaColor.PRIMARY_CONTRAST : undefined}} variant='body1' {...props}/>;
 		};
 		return (
-			<AppBar color='default' elevation={0} position='relative'>
+			<AppBar>
 				<Box sx={sxXenaBar}>
 					<Box component={'a'} onClick={this.onClick} href='http://xena.ucsc.edu/' sx={{lineHeight: 0}}>
 						<Box
@@ -288,33 +287,12 @@ class XenaNav extends React.Component {
 
 class ThemedNav extends React.Component {
 	render() {
-		const navTheme = createTheme({
-			...xenaTheme,
-			overrides: {
-				...xenaTheme.overrides,
-				MuiButton: {
-					root: {
-						...xenaTheme.overrides.MuiButton.root,
-						...xenaTheme.typography.body1,
-						fontWeight: 500,
-						height: 36,
-					},
-					text: {
-						padding: '0 12px'
-					},
-				},
-				MuiDivider: {
-					root: {
-						...xenaTheme.overrides.MuiDivider.root,
-						margin: '12px 0',
-					},
-				},
-			},
-		});
 		return (
-			<MuiThemeProvider theme={navTheme}>
-				<XenaNav {...this.props}/>
-			</MuiThemeProvider>
+			<StylesProvider generateClassName={createGenerateClassName({seed: 'Nav'})} injectFirst>
+				<MuiThemeProvider theme={xenaNavTheme}>
+					<XenaNav {...this.props}/>
+				</MuiThemeProvider>
+			</StylesProvider>
 		);
 	}
 }

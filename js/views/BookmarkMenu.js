@@ -1,6 +1,6 @@
 import {getColumns} from '../columnsParam';
 import {getHeatmap} from '../heatmapParam';
-import {Box, Button, Divider, Link, Menu, MenuItem, Tooltip, Typography} from '@material-ui/core';
+import {Box, Button, createGenerateClassName, Divider, Link, Menu, MenuItem, StylesProvider, Tooltip, Typography} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
@@ -135,12 +135,12 @@ class BookmarkMenu extends React.Component {
 			recentBookmarks = getRecent();
 
 		return (
-			<>
-				<Button color='secondary' onClick={this.onClick}>Bookmark</Button>
+			/* StylesProvider required; prevents duplication of styles 'counter' for Mui Box components in nav. */
+			<StylesProvider generateClassName={createGenerateClassName({seed: "Bookmark"})}>
+				<Button onClick={this.onClick}>Bookmark</Button>
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-					elevation={2}
 					getContentAnchorEl={null}
 					onClose={this.handleMenuHide}
 					open={open}>
@@ -186,7 +186,6 @@ class BookmarkMenu extends React.Component {
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-					elevation={2}
 					getContentAnchorEl={null}
 					onClose={this.onRecentHide}
 					open={recent && recentBookmarks.length > 0}>
@@ -196,7 +195,7 @@ class BookmarkMenu extends React.Component {
 						</MenuItem>
 					))}
 				</Menu>
-			</>);
+			</StylesProvider>);
 	}
 }
 
