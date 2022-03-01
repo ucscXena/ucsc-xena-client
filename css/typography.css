@@ -11,6 +11,9 @@
  * components.
  */
 
+/**
+ * @deprecated - supersede with xenaTheme once Mui conversion is complete and index.css cleanup is completed (#509).
+ */
 a {
 	text-decoration: none;
 	font-weight: 400;

@@ -37,6 +37,9 @@
  * CSS files that make use of the mixins defined below (as per usage example above).
  */
 
+/**
+ * @deprecated - supersede with xenaTheme once Mui conversion is complete and index.css cleanup is completed (#509).
+ */
 .mdDisplay4 {
 	font-size: 112px;
 	font-weight: 300;
