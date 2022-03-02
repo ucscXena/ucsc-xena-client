@@ -108,7 +108,7 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onRecent = () => {
-		this.setState({open: false, recent: true});
+		this.setState({bookmark: null, open: false, recent: true});
 	};
 
 	onRecentHide = () => {
