@@ -122,10 +122,6 @@ export const xenaTheme = createTheme(theme, {
 					cursor: 'pointer', /* TODO(cc) check we want this - check Mui Link specification */
 					fontWeight: 400,
 					textDecoration: 'none',
-					// WebkitTransition: 'border-bottom 0.35s',
-					// MozTransition: 'border-bottom 0.35s',
-					// OTransition: 'border-bottom 0.35s',
-					// -ms-transition: border-bottom 0.35s,
 					transition: 'border-bottom 0.35s',
 				},
 				'h1, h2, h3, h4, h5, h6': {

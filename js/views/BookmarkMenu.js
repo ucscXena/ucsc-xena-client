@@ -1,6 +1,6 @@
 import {getColumns} from '../columnsParam';
 import {getHeatmap} from '../heatmapParam';
-import {Box, Button, createGenerateClassName, Divider, Link, Menu, MenuItem, StylesProvider, Tooltip, Typography} from '@material-ui/core';
+import {Box, Button, Divider, Link, Menu, MenuItem, Tooltip, Typography} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
@@ -19,13 +19,11 @@ var sxHelpLink = {
 };
 var sxMenuLink = {
 	alignItems: 'center',
-	display: 'flex',
 	height: 48,
 	padding: '0 16px'
 };
 var sxWarning = {
 	color: `${xenaColor.PRIMARY_CONTRAST} !important`,
-	display: 'block',
 	padding: '0 16px',
 	maxWidth: 220,
 };
@@ -135,13 +133,13 @@ class BookmarkMenu extends React.Component {
 			recentBookmarks = getRecent();
 
 		return (
-			/* StylesProvider required; prevents duplication of styles 'counter' for Mui Box components in nav. */
-			<StylesProvider generateClassName={createGenerateClassName({seed: "Bookmark"})}>
+			<>
 				<Button onClick={this.onClick}>Bookmark</Button>
 				<Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
 					getContentAnchorEl={null}
+					keepMounted /* required; prevents duplication of styles 'counter' for Mui Box components in nav. */
 					onClose={this.handleMenuHide}
 					open={open}>
 					{isPublic ? <MenuItem onClick={this.onBookmark}>Bookmark</MenuItem> :
@@ -155,13 +153,12 @@ class BookmarkMenu extends React.Component {
 					<MenuItem onClick={this.onRecent}>Recent bookmarks</MenuItem>}
 					<MenuItem onClick={this.onExport}>Export</MenuItem>
 					<MenuItem onClick={this.onImport}>Import</MenuItem>
-					{linking &&
 					<Box
 						component={Link}
 						href={`${location.href.replace(/heatmap.*/, 'heatmap')}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`}
 						onClick={this.handleMenuHide}
-						sx={sxMenuLink}
-						target='_blank'>Link</Box>}
+						sx={{...sxMenuLink, display: linking ? 'flex' : 'none'}}
+						target='_blank'>Link</Box>
 					<Box
 						component={Link}
 						href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks'
@@ -175,11 +172,10 @@ class BookmarkMenu extends React.Component {
 						disabled={!bookmark}>
 						{bookmark ? 'Copy Bookmark' : 'Your Bookmark is Loading'}
 					</MenuItem>}
-					{bookmark &&
 					<Box
 						component={Typography}
-						sx={sxWarning}
-						variant='caption'>Note: bookmarks are only guaranteed for 3 months after creation</Box>}
+						sx={{...sxWarning, display: bookmark ? 'block' : 'none'}}
+						variant='caption'>Note: bookmarks are only guaranteed for 3 months after creation</Box>
 					<input className={compStyles.bookmarkInput} readOnly={true} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
@@ -195,7 +191,7 @@ class BookmarkMenu extends React.Component {
 						</MenuItem>
 					))}
 				</Menu>
-			</StylesProvider>);
+			</>);
 	}
 }
 
