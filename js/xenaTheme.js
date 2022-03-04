@@ -272,6 +272,55 @@ export const xenaTheme = createTheme(theme, {
 				borderRadius: 2,
 			}
 		},
+		MuiStep: {
+			horizontal: {
+				paddingLeft: 0,
+				paddingRight: 0,
+			},
+			root: {
+				alignItems: 'center',
+				display: 'flex',
+			},
+		},
+		MuiStepConnector: {
+			root: {
+				marginLeft: 8,
+				marginRight: 8,
+				position: 'relative',
+				top: 1,
+			},
+		},
+		MuiStepIcon: {
+			root: {
+				color: xenaColor.BLACK_38,
+				fontSize: 24,
+				'&$active': {
+					color: theme.palette.secondary.main,
+				},
+				'&$completed': {
+					color: theme.palette.secondary.main,
+				},
+			},
+		},
+		MuiStepLabel: {
+			label: {
+				color: theme.palette.text.hint,
+				fontWeight: theme.typography.body1.fontWeight,
+				'&$active': {
+					fontWeight: theme.typography.body1.fontWeight,
+				},
+				'&$completed': {
+					color: theme.palette.text.hint,
+					fontWeight: theme.typography.body1.fontWeight,
+				}
+			},
+		},
+		MuiStepper: {
+			root: {
+				padding: 0,
+				width: '100%',
+			},
+		},
 		MuiTooltip: {
 			tooltip: {
 				borderRadius: 2,
