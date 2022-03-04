@@ -9,12 +9,8 @@
  * Styles shared by both below and right help boxes.
  */
 
-@value black54 from '../../css/variables.css';
-
 /* Main help box wrapper element, used by both below and right help boxes */
 .HelpBox {
-	composes: mdSubhead from '../../css/typography.module.css';
-	color: black54;
 	position: absolute;
 
 	/* formerly on helpBoxBounds */

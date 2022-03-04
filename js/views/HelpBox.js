@@ -31,9 +31,9 @@
 
 
 // Core dependencies, components
+import {Button, Typography} from '@material-ui/core';
 var React = require('react');
 var classNames = require('classnames');
-import {Button} from 'react-toolbox/lib/button';
 
 // Styles
 var compStyles = require('./HelpBox.module.css');
@@ -68,11 +68,11 @@ class HelpBox extends React.Component {
 		var {children, ...boxProps} = this.props;
 		return (
 			<Box {...boxProps}>
-				<div className={compStyles.helpBoxContent}>
+				<Typography className={compStyles.helpBoxContent} color='textSecondary' component='div' variant='subtitle2'>
 					{children}
-				</div>
+				</Typography>
 				<div className={compStyles.buttonContainer}>
-					<Button accent onClick={this.onClose}>GOT IT</Button>
+					<Button onClick={this.onClose}>GOT IT</Button>
 				</div>
 			</Box>
 		);
