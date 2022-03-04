@@ -12,6 +12,7 @@ const theme = createTheme({
 		},
 		text: {
 			primary: xenaColor.BLACK_87,
+			secondary: xenaColor.BLACK_54,
 		},
 	},
 	spacing: 4,
