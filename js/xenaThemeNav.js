@@ -1,5 +1,6 @@
 import {createTheme} from '@material-ui/core';
-import {xenaTheme} from "./xenaTheme";
+import {xenaColor} from './xenaColor';
+import {xenaTheme} from './xenaTheme';
 
 export const xenaNavTheme = createTheme(xenaTheme, {
 	overrides: {
@@ -16,6 +17,7 @@ export const xenaNavTheme = createTheme(xenaTheme, {
 		},
 		MuiDivider: {
 			root: {
+				backgroundColor: xenaColor.GRAY,
 				margin: '12px 0',
 			},
 		},

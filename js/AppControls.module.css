@@ -3,23 +3,7 @@
  * http://xena.ucsc.edu
  *
  * Rules necessary for styling Xena App Control.
- *
  */
-
-@value black12 from '../css/variables.css';
-@value black38 from '../css/variables.css';
-@value black87 from '../css/variables.css';
-
-i.overWarning.hidden {
-	display: none;
-}
-
-i.overWarning {
-	vertical-align: sub;
-	display: inline;
-	font-size: 17px;
-	color: #8d0000 !important;
-}
 
 .appliedFilter {
 	cursor: pointer
@@ -29,95 +13,25 @@ i.overWarning {
 	text-decoration: line-through;
 }
 
-.appBarContainer {
-	align-items: center;
-	display: flex;
-	height: 100%;
-}
-
-.appBarContainer i {
-	color: black87;
-	cursor: pointer;
-	padding: 6px; /* Match padding of bookmark (ie RTB MenuIcon) */
-}
-
-.appBarContainer i {
-	margin-left: 4px;
-}
-
-/* Handle disabled pdf menu icon. RTB does not have this functionality out of the box so we have to hand roll here. */
-i.disabled {
-	color: black12;
-	cursor: default;
-}
-
 /* Left-hand container, displaying cohort name, sample count and refresh/reload icons */
 .cohort {
-	border-right: 1px solid black12;
-	padding-right: 10px;
-	width: 452px; /* Matches min (default) width of wizard columns, snapped at 1280px */
+	padding-right: 16px;
 	transition: width 500ms;
+	width: 452px; /* Matches min (default) width of wizard columns, snapped at 1280px */
 }
 
 .picking.cohort {
 	width: 120px;
 }
 
-/* Positions the first and any other i after the title and subtitle to the end of the left container */
-.cohort i:first-of-type {
-	margin-left: auto;
-}
-
 .titleContainer {
+	flex: 1;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.title {
-	composes: mdTitle from '../css/typography.module.css';
-	color: black87;
-}
-
-.subtitle {
-	composes: mdCaption from '../css/typography.module.css';
-	color: black38;
-	display: block;
-	line-height: 16px;
-}
-
-/* Right-hand container, containing filter and download etc icons */
-.tools {
-	border-right: 1px solid black12;
-	display: flex;
-	flex: 1;
-	padding-left: 16px;
-}
-
-/* Filter section, inside tools */
-.filter {
-	align-items: center;
-	display: flex;
-}
-
-/* Actions section, inside tools eg chart/visualization toggle, download, PDF, bookmark */
-.actions {
-	display: flex;
-	margin-left: auto;
-}
-
-div.inner {
-	/* 24px for left padding, plus 10 for right scrollbar */
-	width: calc(100vw - 34px) !important;
-}
-
-/* Help icon */
-.appBarContainer a {
-	line-height: 0;
-	text-decoration: none;
-}
-
-.ties i {
+.ties span {
 	background: linear-gradient(to bottom right, red, yellow, blue, orange);
 	-webkit-text-fill-color: transparent;
 	-webkit-background-clip: text;

@@ -3,6 +3,9 @@ import {xenaColor} from './xenaColor';
 
 const theme = createTheme({
 	palette: {
+		action: {
+			disabled: xenaColor.BLACK_12,
+		},
 		primary: {
 			main: xenaColor.PRIMARY,
 			contrastText: xenaColor.WHITE,
@@ -11,8 +14,13 @@ const theme = createTheme({
 			main: xenaColor.ACCENT,
 		},
 		text: {
+			disabled: xenaColor.BLACK_38,
+			hint: xenaColor.BLACK_38,
 			primary: xenaColor.BLACK_87,
 			secondary: xenaColor.BLACK_54,
+		},
+		warning: {
+			main: xenaColor.WARNING,
 		},
 	},
 	spacing: 4,
@@ -48,6 +56,7 @@ const theme = createTheme({
 			fontSize: 20,
 			fontWeight: 500,
 			letterSpacing: '.005em',
+			lineHeight: undefined,
 		},
 		subtitle2: {
 			fontSize: 16,
@@ -161,14 +170,74 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiDivider: {
 			root: {
-				backgroundColor: xenaColor.GRAY,
+				backgroundColor: xenaColor.BLACK_12,
+			},
+		},
+		MuiFormHelperText: {
+			root: {
+				color: theme.palette.text.hint,
+				marginTop: 0,
+				overflow: 'hidden',
+				textOverflow: 'ellipsis',
+				whiteSpace: 'nowrap',
 			},
 		},
 		MuiIcon: {
+			fontSizeLarge: {
+				fontSize: 24,
+				height: 24,
+				width: 24,
+			},
 			root: {
 				fontSize: 16,
 				height: 16,
 				width: 16,
+			},
+		},
+		MuiIconButton: {
+			edgeEnd: {
+				marginRight: -6,
+			},
+			root: {
+				color: xenaColor.BLACK_87,
+				padding: 6,
+				'&:hover': {
+					backgroundColor: 'transparent',
+				},
+				'&$disabled': {
+					color: theme.palette.action.disabled,
+					cursor: 'default',
+					pointerEvents: 'none',
+				},
+			},
+		},
+		MuiInput: {
+			root: {
+				fontSize: theme.typography.subtitle2.fontSize,
+				letterSpacing: theme.typography.subtitle2.letterSpacing,
+				lineHeight: theme.typography.subtitle2.lineHeight,
+			},
+			underline: {
+				'&:after': {
+					borderBottom: 'none',
+				},
+				'&:before': {
+					borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+				},
+				'&:hover:not($disabled):before': {
+					borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+				},
+			},
+		},
+		MuiInputBase: {
+			input: {
+				height: 'unset',
+				padding: '6px 0',
+				textOverflow: 'ellipsis',
+				'&::placeholder': {
+					color: theme.palette.text.secondary,
+					opacity: 1,
+				},
 			},
 		},
 		MuiLink: {
@@ -193,6 +262,14 @@ export const xenaTheme = createTheme(theme, {
 					minHeight: undefined, /* Maintains min height specification at default 48px */
 				},
 			},
+			dense: {
+				...theme.typography.body1,
+				display: 'block',
+				lineHeight: '32px',
+				overflow: 'hidden',
+				textOverflow: 'ellipsis',
+				whiteSpace: 'nowrap',
+			}
 		},
 		MuiPaper: {
 			rounded: {
@@ -221,6 +298,12 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiButton: {
 			color: 'secondary',
+		},
+		MuiIcon: {
+			fontSize: 'large',
+		},
+		MuiIconButton: {
+			disableRipple: true,
 		},
 		MuiLink: {
 			underline: 'none',
