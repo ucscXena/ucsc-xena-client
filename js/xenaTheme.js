@@ -106,6 +106,9 @@ export const xenaTheme = createTheme(theme, {
 				height: 36,
 				minWidth: 90,
 				whiteSpace: 'nowrap',
+				'&$disabled': {
+					color: xenaColor.BLACK_26,
+				},
 			},
 			text: {
 				...theme.typography.body2,
@@ -122,6 +125,61 @@ export const xenaTheme = createTheme(theme, {
 		MuiButtonBase: {
 			root: {
 				fontFamily: theme.typography.fontFamily,
+			},
+		},
+		MuiCard: {
+			root: {
+				overflow: 'visible',
+			},
+		},
+		MuiCardActions: {
+			root: {
+				justifyContent: 'flex-end',
+				padding: '16px 8px 8px',
+				'& .MuiButton-text': {
+					minWidth: 0,
+					padding: '0 8px',
+				},
+			},
+		},
+		MuiCardContent: {
+			root: {
+				padding: '24px 16px',
+				'& p': {
+					...theme.typography.body1,
+					letterSpacing: 0,
+					margin: 0,
+					whiteSpace: 'normal', /* overriding whitespace from .Columns class */ /* TODO(cc) confirm required */
+				},
+			},
+		},
+		MuiCardHeader: {
+			action: {
+				alignSelf: 'center',
+				display: 'flex',
+				marginRight: 0,
+				marginTop: 0,
+			},
+			avatar: {
+				marginRight: 0,
+			},
+			root: {
+				padding: '8px 16px',
+			},
+			subheader: {
+				...theme.typography.body2,
+				color: xenaColor.BLACK_54,
+				marginBottom: 0,
+				marginTop: -4,
+				'&.MuiTypography-colorError': {
+					color: xenaColor.ERROR,
+					fontSize: 12,
+					lineHeight: '12px',
+				},
+			},
+			title: {
+				...theme.typography.body2,
+				margin: 0,
 			},
 		},
 		MuiCheckbox: {
@@ -359,6 +417,9 @@ export const xenaTheme = createTheme(theme, {
 			}
 		},
 		MuiTypography: {
+			colorError: {
+				color: xenaColor.ERROR,
+			},
 			root: {
 				margin: undefined,
 			},
