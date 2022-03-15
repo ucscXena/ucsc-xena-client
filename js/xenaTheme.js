@@ -183,15 +183,11 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiIcon: {
-			fontSizeLarge: {
-				fontSize: 24,
-				height: 24,
-				width: 24,
+			fontSizeSmall: {
+				fontSize: 16,
 			},
 			root: {
-				fontSize: 16,
-				height: 16,
-				width: 16,
+				fontSize: 24,
 			},
 		},
 		MuiIconButton: {
@@ -298,9 +294,6 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiButton: {
 			color: 'secondary',
-		},
-		MuiIcon: {
-			fontSize: 'large',
 		},
 		MuiIconButton: {
 			disableRipple: true,

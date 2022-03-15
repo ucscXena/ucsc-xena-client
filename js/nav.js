@@ -235,7 +235,7 @@ class XenaNav extends React.Component {
 				{_.map(items, ({label, onClick, onChange, value}, key) =>
 					onChange ?
 						<MenuItem key={key} onClick={this.forceClose(this.onToggle(key))}>
-							<Icon color='secondary'>{value ? 'done' : 'none'}</Icon>
+							<Icon color='secondary' fontSize='small'>{value ? 'done' : 'none'}</Icon>
 							{label}
 						</MenuItem> :
 						<MenuItem key={key} onClick={this.forceClose(onClick)}>{label}</MenuItem>)}
