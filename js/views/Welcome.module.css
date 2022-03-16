@@ -77,7 +77,7 @@ button.closeIcon {
 		overflow: hidden;
 		padding-left: 0;
 		position: relative;
-		max-width: 475px; /* Snap at max width of image */
+		max-width: 476px; /* Snap at max width of image */
 	}
 
 	.imgXena {
@@ -85,6 +85,7 @@ button.closeIcon {
 		left: 50%;
 		position: absolute;
 		transform: translateX(-50%);
+		width: 100%;
 	}
 
 	.bulletWrapper {
