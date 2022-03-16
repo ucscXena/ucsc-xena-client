@@ -8,8 +8,6 @@
 @value appMinWidth from '../../css/variables.css';
 
 .Welcome {
-	background-color: var(--color-primary);
-	color: white;
 	display: flex;
 	position: relative;
 }
@@ -53,13 +51,10 @@
 	color: white;
 }
 
-.closeIcon {
-	cursor: pointer;
-	font-size: 24px;
-	height: 24px;
+button.closeIcon {
 	position: absolute;
-	right: 8px;
-	top: 16px;
+	right: 2px;
+	top: 10px;
 }
 
 /**
@@ -97,9 +92,9 @@
 		transform: translateX(-50%);
 	}
 
-		.closeIcon {
-		right: 24px;
-		top: 24px;
+	button.closeIcon {
+		right: 18px;
+		top: 18px;
 	}
 }
 
