@@ -36,10 +36,13 @@ function isCustomVariant(classes, variant) {
 }
 
 const XTypography = ({children, classes, className, variant, ...props}) => {
-	const custom = isCustomVariant(classes, variant);
-	Object.assign(props, {className: classNames(className, classes[variant])});
+	const customVariant = isCustomVariant(classes, variant);
+	if (!customVariant) {
+		console.log("Selected custom typography variant is undefined.");
+	}
+	const xTyopgraphyProps = {...props, className: classNames(className, classes[variant])};
 	return (
-		custom ? <Box {...props}>{children}</Box> : null
+		customVariant ? <Box {...xTyopgraphyProps}>{children}</Box> : null
 	);
 };
 
