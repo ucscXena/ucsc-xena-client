@@ -9,7 +9,11 @@
 
 
 // Core dependencies, components
+import {Box, Typography} from '@material-ui/core';
 var React = require('react');
+
+// App dependencies
+import {xenaColor} from '../xenaColor';
 
 // Styles
 var classNames = require('classnames');
@@ -18,12 +22,15 @@ var compStyles = require('./SheetStatus.module.css');
 class SheetStatus extends React.Component {
 
 	render() {
-		var {disabled, label, sheetState} = this.props;
+		var {className, disabled, label, sheetState, ...statusProps} = this.props;
 		return (
-			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled}, {[compStyles.zoomAnimation]: sheetState !== 'None'})}>
-				{label ? <div className={compStyles.label}>{label}</div> : null}
-				<div className={compStyles.state}>{sheetState}</div>
-			</div>
+			<Box
+				className={classNames(className, compStyles.status, {[compStyles.disabled]: disabled}, {[compStyles.zoomAnimation]: sheetState !== 'None'})}
+				bgcolor={xenaColor.BLACK_3}
+				{...statusProps}>
+				{label ? <Typography className={compStyles.label} variant='caption'>{label}</Typography> : null}
+				<Typography className={compStyles.state} variant='caption'>{sheetState}</Typography>
+			</Box>
 		);
 	}
 }

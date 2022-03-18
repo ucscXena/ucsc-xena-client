@@ -20,6 +20,7 @@ const theme = createTheme({
 		allVariants: {
 			fontFamily: "'Roboto', sans-serif",
 		},
+		fontFamily: "'Roboto', sans-serif",
 		h1: {
 			fontSize: '3.400rem',
 			fontWeight: 400,
@@ -107,6 +108,11 @@ export const xenaTheme = createTheme(theme, {
 				'&:hover': {
 					backgroundColor: 'rgba(76,201,192,.2)',
 				},
+			},
+		},
+		MuiButtonBase: {
+			root: {
+				fontFamily: theme.typography.fontFamily,
 			},
 		},
 		MuiCssBaseline: {
