@@ -124,6 +124,13 @@ export const xenaTheme = createTheme(theme, {
 				fontFamily: theme.typography.fontFamily,
 			},
 		},
+		MuiCheckbox: {
+			root: {
+				color: xenaColor.BLACK_38,
+				padding: 0,
+				transform: 'scale(1.6)',
+			},
+		},
 		MuiCssBaseline: {
 			'@global': {
 				html: {
@@ -169,8 +176,25 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiDivider: {
+			light: {
+				backgroundColor: xenaColor.BLACK_6,
+			},
 			root: {
 				backgroundColor: xenaColor.BLACK_12,
+			},
+		},
+		MuiFormControlLabel: {
+			label: {
+				fontSize: 16,
+				lineHeight: '18px',
+				minWidth: 0,
+				paddingLeft: 16,
+			},
+			root: {
+				marginLeft: undefined,
+				marginRight: undefined,
+				marginTop: 16,
+				width: '100%',
 			},
 		},
 		MuiFormHelperText: {
@@ -180,6 +204,13 @@ export const xenaTheme = createTheme(theme, {
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap',
+			},
+		},
+		MuiFormLabel: {
+			root: {
+				color: theme.palette.text.primary,
+				lineHeight: undefined,
+				padding: undefined,
 			},
 		},
 		MuiIcon: {

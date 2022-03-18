@@ -9,26 +9,22 @@
 
 
 // Core dependencies, components
-import {Box, ButtonBase, Paper, Tooltip} from '@material-ui/core';
+import {Box, Paper, Tooltip} from '@material-ui/core';
 var React = require('react');
 var _ = require('./underscore_ext').default;
 
 // App dependencies
 var SheetStatus = require('./views/SheetStatus');
+import XActionButton from './views/XActionButton';
 import {xenaColor} from './xenaColor';
 
 // Styles
 var compStyles = require('./SheetControls.module.css');
 var classNames = require('classnames');
 var sxActionButton = {
-	color: xenaColor.ACCENT,
-	fontSize: 12,
 	letterSpacing: '0.75px',
 	lineHeight: '24px',
 	height: 24, /* Required to maintain centered buttons when status chips wrap to new line */
-	'&:disabled': {
-		color: xenaColor.BLACK_12,
-	},
 };
 var sxSheetControls = {
 	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
@@ -51,15 +47,15 @@ class SheetControls extends React.Component {
 				{mode === 'chart' ? null : <div className={compStyles.sheetStatus}>
 					{zoomed ? ZoomStatus : <Tooltip title='Click and drag to zoom'>{ZoomStatus}</Tooltip>}
 					{zoomed ? <div className={classNames(compStyles.zoomActions, compStyles.zoomAnimate)}>
-						<Box component={ButtonBase} disableRipple onClick={zoomOut} sx={sxActionButton}>Zoom Out</Box>
-						<Box component={ButtonBase} disableRipple onClick={clearZoom} sx={sxActionButton}>Clear Zoom</Box>
+						<XActionButton onClick={zoomOut} sx={sxActionButton}>Zoom Out</XActionButton>
+						<XActionButton onClick={clearZoom} sx={sxActionButton}>Clear Zoom</XActionButton>
 					</div> : null}
 					{/*{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}*/}
 				</div> }
 				{/*<div className={compStyles.sheetActions}>
-					<Box component={ButtonBase} disabled={actionsDisabled} sx={sxActionButton}>Show Gene Zoom</Box>
-					<Box component={ButtonBase} disabled={actionsDisabled} sx={sxActionButton}>Hide Null Data</Box>
+					<XActionButton disabled={actionsDisabled} sx={sxActionButton}>Show Gene Zoom</XActionButton>
+					<XActionButton disabled={actionsDisabled} sx={sxActionButton}>Hide Null Data</XActionButton>
 				</div>*/}
 			</Box>
 		);

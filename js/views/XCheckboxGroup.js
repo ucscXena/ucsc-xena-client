@@ -2,8 +2,7 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Standard Xena checkbox group, with UI/UX based on Material Design's full-width inputs. This is a light wrapper
- * component around React Toolbox's Checkbox (applies custom class name for styling checkbox group).
+ * Standard Xena checkbox group, with UI/UX based on Material Design's full-width inputs.
  *
  * State
  * -----
@@ -20,44 +19,104 @@
 
 
 // Core dependencies, components
+import {
+	Box,
+	Checkbox,
+	Divider,
+	FormControlLabel,
+	FormGroup,
+	FormLabel,
+	Typography
+} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 
 var React = require('react');
-import {Checkbox} from 'react-toolbox/lib/checkbox';
 
 var _ = require('../underscore_ext').default;
+import XFormControl from "./XFormControl";
 var XInputToolbar = require('./XInputToolbar');
-var classNames = require('classnames');
 
 // Styles
-var compStyles = require('./XCheckboxGroup.module.css');
+var sxAssembly = {
+	display: 'block',
+	fontSize: 11,
+	fontWeight: 500,
+	marginTop: -4,
+};
+var sxControlLabel = {
+	textOverflow: 'ellipsis',
+	overflow: 'hidden',
+	whiteSpace: 'nowrap',
+	'&:hover': {
+		overflow: 'visible',
+	},
+};
+var sxFormLabel = {
+	display: 'block',
+	overflow: 'hidden',
+	padding: '32px 0 8px 0',
+	textOverflow: 'ellipsis',
+	whiteSpace: 'nowrap',
+	width: '100%', /* required for ellipsis */
+	'&:hover': {
+		overflow: 'visible',
+	},
+	'&:first-of-type': {
+		paddingTop: 8,
+	},
+};
 
 class XCheckboxGroup extends PureComponent {
-	onChange = (isOn, ev) => {
-		var value = ev.target.dataset.value;
+	onChange = (ev, isOn) => {
+		var value = ev.target.value;
 		this.props.onChange(value, isOn);
 	};
+
+	/**
+	 * Returns form control label with associated assembly badge (if badge is not hidden).
+	 * @param label
+	 * @param badge
+	 * @param hideBadge
+	 * @returns {JSX.Element}
+	 */
+	renderFormControlLabel = (label, badge, hideBadge) => {
+		const showBadge = !hideBadge && badge;
+		return (
+			<Box sx={{marginBottom: showBadge ? -12 : undefined}}>
+				<Box component='span' display='block' sx={sxControlLabel}>{label}</Box>
+				{showBadge &&
+				<Typography variant='caption'>
+					<Box component='span' sx={{...sxAssembly, ...badge.style}}>{badge.label}</Box>
+				</Typography>}
+			</Box>
+		);
+	}
 
 	render() {
 		var {additionalAction, label, onAdditionalAction, options, hideBadge} = this.props;
 		return (
-			<div className={classNames(compStyles.XCheckboxGroup, hideBadge && compStyles.hideBadge)}>
+			<>
+			<XFormControl>
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
-				{_.map(options, group => [
-					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => (<span>
-							<Checkbox className={o.badge ? compStyles.withBadge : null}
-								children={o.badge ?
-									<div className={compStyles.badge}
-										style={o.badge.style}>{o.badge.label}</div> :
-									[]}
-								data-value={o.value}
+				<FormGroup>
+					{_.map(options, group => [
+						group.label ?
+							<React.Fragment key={group.label}>
+								<Box component={FormLabel} sx={sxFormLabel}>
+									<Box fontWeight={700}>{group.label}</Box>
+								</Box>
+								<Divider light/>
+							</React.Fragment> : null,
+						_.map(group.options, o => (
+						<FormControlLabel
+								control={<Checkbox checked={o.checked || false} onChange={this.onChange} value={o.value}/>}
 								key={o.label}
-								label={o.label}
-								checked={o.checked}
-								onChange={this.onChange}/></span>))
-				])}
-			</div>
+								label={this.renderFormControlLabel(o.label, o.badge, hideBadge)}/>))
+					])}
+				</FormGroup>
+			</XFormControl>
+			<Divider/>
+			</>
 		);
 	}
 }
