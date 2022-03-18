@@ -1,42 +1,40 @@
+import {
+	Box,
+	FormControl,
+	FormHelperText,
+	Icon,
+	IconButton,
+	Input,
+	Link,
+	Menu,
+	MenuItem,
+	Tooltip
+} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 var React = require('react');
-import Input from 'react-toolbox/lib/input';
-import {IconMenu, Menu, MenuItem} from 'react-toolbox/lib/menu';
-import {IconButton} from 'react-toolbox/lib/button';
-var classNames = require('classnames');
 var Rx = require('../rx').default;
-import Tooltip from 'react-toolbox/lib/tooltip';
 import {createVignette} from '../containers/vignette';
 import HelpBox from '../views/HelpBox';
-
-var TooltipInput = Tooltip(({inputRef, ...props}) =>
-		<Input innerRef={inputRef} {...props}/>);
-var TooltipI = Tooltip('i');
-var TooltipIconButton = Tooltip(IconButton);
-
-// The Tooltip component will get mouse enter/leave events on menu children,
-// causing the tooltip to display in front of the menu when it is open. There's
-// no way to disable the Tooltip while the menu is open. This is a workaround
-// that intercepts the onMouseEnter method that is injected by the Tooltip
-// component, and filters events based on the event target type.
-class IconMenuWrapper extends PureComponent {
-	onMouseEnter = ev => {
-		if (ev.target.type === 'button') {
-			this.props.onMouseEnter(ev);
-		}
-	}
-	render() {
-		var {onMouseEnter, ...props} = this.props; //eslint-disable-line no-unused-vars
-		return <IconMenu onMouseEnter={this.onMouseEnter} {...props}/>;
-	}
-}
-
-
-var TooltipIconMenu = Tooltip(IconMenuWrapper);
-
+import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./SampleSearch.module.css');
+var sxHistoryButton = {
+	position: 'absolute',
+	right: 0,
+	top: -12,
+};
+var sxSamplePicker = {
+	marginLeft: 4,
+	'&:hover': {
+		backgroundColor: 'transparent',
+	},
+};
+var sxSamplePickerPicking = {
+	backgroundColor: xenaColor.BLACK_38,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_38,
+	},
+};
 
 //var SampleIDInput = React.createClass({
 //	getInitialState() {
@@ -137,43 +135,49 @@ var placeholder = {
 
 var input = comp => {
 	var {matches, mode, history, pickSamples} = comp.props,
-		{value} = comp.state,
+		{historyOpen, value} = comp.state,
 		hasHistory = history.length > 0,
 		noshow = (mode !== "heatmap");
+	const showHistoryButton = !noshow && hasHistory;
+	const formWidth = pickSamples ? 800 : 400;
 
-	return (<TooltipInput key='input'
-			className={classNames(compStyles.inputContainer, pickSamples && compStyles.picking)}
-			tooltip={tooltips.input}
-			onKeyUp={comp.onCaret}
-			onClick={comp.onCaret}
-			onFocus={comp.onCaret}
-			onBlur={comp.onHideCaret}
-			inputRef={comp.setRef}
-			spellCheck={false}
-			type='text'
-			value={value || ''}
-			placeholder={placeholder[pickSamples]}
-			onChange={comp.onChange}
-			disabled={noshow}>
-		<TooltipI tooltip={tooltips.history} onClick={hasHistory && !noshow ? comp.onOpenHistory : null}
-				className={classNames(compStyles.dropDownArrow,
-					!noshow && hasHistory && compStyles.hasHistory, 'material-icons')}>
-				arrow_drop_down</TooltipI>
-
-		<Menu theme={{static: compStyles.history, active: compStyles.historyActive}}
-				onShow={comp.onShowHistory} onHide={comp.onHideHistory}
-				position='static' active={comp.state.historyOpen}>
-			{history.map((b, i) =>
-					// Note that Menu onSelect is broken in dev because of component
-					// identity comparisons, and MenuItem events are broken in prod
-					// because of RT deferring callbacks with a setState call, thus
-					// allowing currentTarget to be nulled, so our only option here
-					// is to create closures on every render. Very annoying.
-					<MenuItem className={compStyles.menuItem} onClick={() => comp.onHistory(b)}
-						data-value={b} key={i} value={b} caption={b}/>)}
-		</Menu>
-		<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
-	</TooltipInput>);
+	return (
+		<>
+			<Box component={FormControl} sx={{marginLeft: 4, marginRight: 4, transition: 'width 500ms', width: formWidth}}>
+				<Tooltip title={tooltips.input}>
+					<Input
+						disabled={noshow}
+						inputRef={comp.setRef}
+						margin='none'
+						onBlur={comp.onHideCaret}
+						onChange={comp.onSearchChange}
+						onClick={comp.onCaret}
+						onFocus={comp.onCaret}
+						onKeyUp={comp.onCaret}
+						placeholder={placeholder[pickSamples]}
+						spellCheck={false}
+						type='text'
+						value={value || ''}/>
+				</Tooltip>
+				<FormHelperText>{`${matches} matching samples`}</FormHelperText>
+			</Box>
+			{showHistoryButton &&
+			<Tooltip title={tooltips.history}>
+				<Box component={IconButton} onClick={comp.onOpenHistory} sx={sxHistoryButton}>
+					<Icon>arrow_drop_down</Icon>
+				</Box>
+			</Tooltip>}
+			<Menu
+				anchorEl={comp.input}
+				anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
+				getContentAnchorEl={null}
+				onClose={comp.onHideHistory}
+				open={historyOpen}
+				PaperProps={{style: {maxWidth: formWidth, width: '100%'}}}>
+				{history.map((b, i) =>
+					<MenuItem data-value={b} dense key={i} onClick={() => comp.onHistory(b)} value={b}>{b}</MenuItem>)}
+			</Menu>
+		</>);
 };
 
 const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
@@ -195,12 +199,12 @@ var helpSteps = [
 	props => (
 		<HelpBox o='Below' w={400} onClose={props.onClose}>
 			<p>When you have added all your samples, use the menu to filter or create subgroups from your selection.</p>
-			<a href={searchHelp} target='_blank'>Filter/subgroup documentation</a>
+			<Link href={searchHelp} target='_blank'>Filter/subgroup documentation</Link>
 		</HelpBox>)
 ];
 
 class Search extends PureComponent {
-	state = {value: this.props.value};
+	state = {filterMenuEl: null, historyOpen: false, value: this.props.value};
 
 	componentDidMount() {
 		var highlight = new Rx.Subject();
@@ -235,8 +239,9 @@ class Search extends PureComponent {
 		}
 	}
 
-	onChange = (value) => {
+	onSearchChange = (event) => {
 		var {onChange} = this.props;
+		const value = event.target.value;
 		this.setState({value});
 		onChange(value);
 	};
@@ -248,7 +253,7 @@ class Search extends PureComponent {
 	};
 
 	setRef = ref => {
-		this.input = ref && ref.inputNode;
+		this.input = ref;
 	}
 
 	onCaret = () => {
@@ -262,20 +267,22 @@ class Search extends PureComponent {
 		this.highlight(undefined);
 	}
 
+	onCloseFilterMenu = () => {
+		this.setState({filterMenuEl: null});
+	}
+
+	onOpenFilterMenu = (event) => {
+		this.setState({filterMenuEl: event.currentTarget});
+	}
+
 	onOpenHistory = () => {
-		this.setState({historyOpen: !this.state.historyOpen});
+		this.setState({historyOpen: true});
 	}
 
 	onHistory = value => {
 		this.setState({historyOpen: false});
 		this.props.onHistory(value); // move to front of history
 		this.props.onChange(value);
-	}
-
-	// These two are hacks to keep local state synced with the menu, e.g.
-	// when the user closes it by clicking outside the menu.
-	onShowHistory = () => {
-		this.setState({historyOpen: true});
 	}
 
 	onHideHistory = () => {
@@ -285,11 +292,23 @@ class Search extends PureComponent {
 	onRemove = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onFilter(true);
+		this.onCloseFilterMenu();
 	}
 
 	onKeep = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onFilter(false);
+		this.onCloseFilterMenu();
+	}
+
+	onClear = () => {
+		this.props.onResetSampleFilter();
+		this.onCloseFilterMenu();
+	}
+
+	onRemoveNulls = () => {
+		this.props.onIntersection();
+		this.onCloseFilterMenu();
 	}
 
 	onCreateColumn = () => {
@@ -297,39 +316,64 @@ class Search extends PureComponent {
 		// prevent the history having wrong column ids.
 		this.props.onHistory(this.state.value.trim());
 		this.props.onCreateColumn();
+		this.onCloseFilterMenu();
 	}
 
 	onZoom = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onZoom();
+		this.onCloseFilterMenu();
 	}
 
 	render() {
-		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples,
-				onIntersection, onResetSampleFilter} = this.props,
+		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples} = this.props,
 			{inputHelp, pickHelp, actionHelp} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
+		var {filterMenuEl} = this.state;
 
 		return (
-			<div className={compStyles.SampleSearch}>
+			<>
 				{inputHelp(input(this))}
 				{pickHelp(
-					<TooltipIconButton icon='colorize' className={pickSamples ? compStyles.dark : ''}
-						disabled={noshow} onClick={onPickSamples} tooltip='Pick samples'/>)}
-				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
-				actionHelp(
-					<TooltipIconMenu tooltip='Filter + subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-						<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
-						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
-						<MenuItem disabled={!sampleFilter} caption='Clear samples filter' onClick={onResetSampleFilter}/>
-						<MenuItem caption='Remove samples with nulls' onClick={onIntersection}/>
-						<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
-						<MenuItem disabled={disableActions} caption='New subgroup column' onClick={this.onCreateColumn}/>
-					</TooltipIconMenu>)}
-				<IconButton icon='help_outline' disabled={noshow}
-					onClick={this.props.help.start}/>
-			</div>
+					<Tooltip title='Pick samples'>
+						{/* span is required for wrapping Tooltip around a disabled IconButton; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+						<span>
+							<Box
+								component={IconButton}
+								disabled={noshow}
+								onClick={onPickSamples}
+								sx={{...sxSamplePicker, ...(pickSamples && sxSamplePickerPicking)}}>
+								<Icon>colorize</Icon>
+							</Box>
+						</span>
+					</Tooltip>)}
+				{actionHelp(
+					<>
+						<Tooltip disableFocusListener title='Filter + subgroup actions'>
+							{/* span is required for wrapping Tooltip around a disabled IconButton; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+							<span>
+								<IconButton disabled={noshow} onClick={this.onOpenFilterMenu}>
+									<Icon>filter_list</Icon>
+								</IconButton>
+							</span>
+						</Tooltip>
+						<Menu
+							anchorEl={filterMenuEl}
+							anchorOrigin={{horizontal: 'left', vertical: 'top'}}
+							getContentAnchorEl={null}
+							onClose={this.onCloseFilterMenu}
+							open={Boolean(filterMenuEl)}>
+							<MenuItem disabled={disableActions} onClick={this.onKeep}>Keep samples</MenuItem>
+							<MenuItem disabled={disableActions} onClick={this.onRemove}>Remove samples</MenuItem>
+							<MenuItem disabled={!sampleFilter} onClick={this.onClear}>Clear samples filter</MenuItem>
+							<MenuItem onClick={this.onRemoveNulls}>Remove samples with nulls</MenuItem>
+							<MenuItem disabled={disableActions} onClick={this.onZoom}>Zoom</MenuItem>
+							<MenuItem disabled={disableActions} onClick={this.onCreateColumn}>New subgroup column</MenuItem>
+						</Menu>
+					</>)}
+				<IconButton disabled={noshow} edge='end' onClick={this.props.help.start}><Icon>help_outline</Icon></IconButton>
+			</>
 		);
 	}
 }

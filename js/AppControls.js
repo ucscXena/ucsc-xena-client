@@ -1,9 +1,9 @@
+import {AppBar, Box, Button, Divider, Icon, IconButton, Tooltip, Typography} from '@material-ui/core';
 import PureComponent from './PureComponent';
 var React = require('react');
 import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
 var _ = require('./underscore_ext').default;
-import AppBar from 'react-toolbox/lib/app_bar';
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
@@ -12,11 +12,31 @@ var {invert, searchSamples} = require('./models/searchSamples');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
-import Tooltip from 'react-toolbox/lib/tooltip';
 import {hidden} from './nav';
+import {xenaColor} from './xenaColor';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
+var sxControlBar = {
+	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+	display: 'flex',
+	minHeight: 64,
+};
+var sxControlBarInner = {
+	alignItems: 'stretch',
+	display: 'flex',
+	flex: 1,
+	maxWidth: '100vw', /* required for horizontal scroll */
+	padding: '0 24px',
+};
+var sxFlex = {
+	alignItems: 'center',
+	display: 'flex',
+};
+var sxControlTools = {
+	flex: 1,
+	paddingLeft: 16,
+};
 
 var modePdf = {
 	chart: pdfChart,
@@ -51,37 +71,47 @@ function download([fields, rows]) {
 	document.body.removeChild(a);
 }
 
-var TTIcon = Tooltip(props => <i {..._.omit(props, 'theme')} />);
-var icon = (i, tooltip, onClick, disabled) =>
-	<TTIcon className={classNames('material-icons', disabled && compStyles.disabled)}
-		onClick={onClick}
-		tooltip={tooltip}>{i}</TTIcon>;
+var ActionIcon = (i, tooltip, edge, onClick, disabled) => (
+	<Tooltip title={tooltip}>
+		{/* span is required for wrapping Tooltip around a disabled IconButton; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+		<span>
+			<IconButton
+				disabled={disabled}
+				edge={edge && 'end'}
+				onClick={onClick}>
+				<Icon>{i}</Icon>
+			</IconButton>
+		</span>
+	</Tooltip>
+);
 
-var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, onMap, mode}) => (
-	<div className={compStyles.actions}>
-		{icon(modeIcon[mode], modeHelp[!onMode || mode], onMode, !onMode)}
-		{icon('grade', 'Map', onMap, !onMap)}
-		{icon('picture_as_pdf', 'Download as PDF', onPdf, !onPdf)}
-		{icon('cloud_download', 'Download as tsv', onDownload)}
-		{showWelcome ? null : icon('help', 'Show carousel', onShowWelcome)}
-	</div>);
+var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, onMap, mode}) => {
+	return (
+	<>
+		{ActionIcon(modeIcon[mode], modeHelp[!onMode || mode], false, onMode, !onMode)}
+		{ActionIcon('grade', 'Map', false, onMap, !onMap)}
+		{ActionIcon('picture_as_pdf', 'Download as PDF', false, onPdf, !onPdf)}
+		{ActionIcon('cloud_download', 'Download as tsv', showWelcome, onDownload)}
+		{showWelcome ? null : ActionIcon('help', 'Show carousel', true, onShowWelcome)}
+	</>
+	);
+};
 
 var BasicSearch = ({onTies, tiesEnabled, ...searchProps}) => (
-	<div className={compStyles.filter}>
+	<>
 		<SampleSearch {...searchProps}/>
-		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
-	</div>);
+		{tiesEnabled && <IconButton onClick={onTies} className={compStyles.ties}><Icon>toys</Icon></IconButton>}
+	</>);
 
 var TiesSearch = () => (
-		<div className={compStyles.filter}>
-			<span>Pathology Report Search and Filter by TIES</span>
-		</div>);
+	<Typography component='span' variant='subtitle2'>Pathology Report Search and Filter by TIES</Typography>
+);
 
 var TiesActions = ({onTies, onTiesColumn}) => (
-	<div className={compStyles.actions}>
-		<button onClick={onTiesColumn}>Create filtered column</button>
-		<a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>close</i></a>
-	</div>);
+	<>
+		<Button onClick={onTiesColumn}>Create filtered column</Button>
+		<IconButton edge='end' onClick={onTies}><Icon>close</Icon></IconButton>
+	</>);
 
 function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 	var field = signatureField(title, {
@@ -234,7 +264,7 @@ export class AppControls extends PureComponent {
 					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
 				onReset, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
-			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
+			displayOver = samplesOver && !allowOverSamples,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onMap, onPdf, onDownload, onShowWelcome} = this,
 			onMode = anyCanDraw(this.props.appState) ? this.onMode : undefined,
@@ -242,50 +272,69 @@ export class AppControls extends PureComponent {
 			cohortName = _.get(cohort, 'name'),
 			disablePDF = showChartWizard(this.props.appState),
 			sampleFilter = _.get(cohort, 'sampleFilter'),
-			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
+			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to</span> : null;
 		return (
-				<AppBar theme={{inner: compStyles.inner}}>
-					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, pickSamples && compStyles.picking)}>
-						<div className={compStyles.titleContainer}>
-							<span className={compStyles.title}>{cohortName}</span>
-							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
-						</div>
-						{icon('refresh', 'Reload cohort data', this.onRefresh)}
-						{icon('close', 'Pick new cohort', onReset)}
-					</div>
-					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
-						{tiesOpen ?
-							<TiesSearch {...{onTies: this.onTies}}/> :
-							<BasicSearch {...{
-								value: sampleSearch,
-								sampleFilter,
-								oldSearch,
-								selection: sampleSearchSelection,
-								matches,
-								offsets: allMatches.offsets,
-								onHighlightSelect,
-								sampleCount: samples.length,
-								history: searchHistory || [],
-								onHistory: this.onSearchHistory,
-								onFilter: this.onFilter,
-								onIntersection: this.onIntersection,
-								onZoom: this.onFilterZoom,
-								onCreateColumn: this.onFilterColumn,
-								pickSamples: pickSamples,
-								onPickSamples: this.onPickSamples,
-								onChange: onHighlightChange,
-								mode,
-								onResetSampleFilter: this.onResetSampleFilter,
-								cohort,
-								callback,
-								onTies: this.onTies,
-								tiesEnabled: false}}/>}
-					</div>
-					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
-						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-							<Actions {...{onMap, onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
-					</div>
-				</AppBar>
+			<AppBar>
+				<Box sx={sxControlBar}>
+					<Box sx={sxControlBarInner}>
+						<Box className={classNames(compStyles.cohort, pickSamples && compStyles.picking)} sx={sxFlex}>
+							<div className={compStyles.titleContainer}>
+								<Typography component='span' variant='subtitle1'>{cohortName}</Typography>
+								<Box
+									component={Typography}
+									color='text.hint'
+									sx={{alignItems: 'center', display: 'flex', gap: 6}}
+									variant='caption'><span>{filter} {samples.length} Samples</span>
+									{displayOver && <Box
+										component={IconButton}
+										color='warning.main'
+										onClick={onAllowOverSamples}
+										sx={{padding: 0}}
+										title="Samples on screen limited to 50000 for performance. Click to see all samples.">
+										<Icon fontSize='small'>warning</Icon></Box>}
+								</Box>
+							</div>
+							{ActionIcon('refresh', 'Reload cohort data', false, this.onRefresh)}
+							{ActionIcon('close', 'Pick new cohort', true, onReset)}
+						</Box>
+						<Divider flexItem orientation='vertical' />
+						<Box sx={{...sxFlex, ...sxControlTools, paddingRight: 16}}>
+								{tiesOpen ?
+									<TiesSearch {...{onTies: this.onTies}}/> :
+									<BasicSearch {...{
+										value: sampleSearch,
+										sampleFilter,
+										oldSearch,
+										selection: sampleSearchSelection,
+										matches,
+										offsets: allMatches.offsets,
+										onHighlightSelect,
+										sampleCount: samples.length,
+										history: searchHistory || [],
+										onHistory: this.onSearchHistory,
+										onFilter: this.onFilter,
+										onIntersection: this.onIntersection,
+										onZoom: this.onFilterZoom,
+										onCreateColumn: this.onFilterColumn,
+										pickSamples: pickSamples,
+										onPickSamples: this.onPickSamples,
+										onChange: onHighlightChange,
+										mode,
+										onResetSampleFilter: this.onResetSampleFilter,
+										cohort,
+										callback,
+										onTies: this.onTies,
+										tiesEnabled: false}}/>}
+							</Box>
+						<Divider flexItem orientation='vertical' />
+						<Box sx={{...sxFlex, ...sxControlTools, justifyContent: 'flex-end'}}>
+							{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
+								<Actions {...{onMap, onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
+						</Box>
+					</Box>
+					<Divider flexItem orientation='vertical'/>
+				</Box>
+			</AppBar>
 		);
 	}
 }
