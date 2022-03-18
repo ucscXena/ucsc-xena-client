@@ -7,6 +7,7 @@ export const xenaColor = {
 	'BLACK_87': 'rgba(0, 0, 0, 0.87)',
 	'GRAY': '#eee',
 	'GRAY_LIGHT': '#f7f7f7',
+	'GRAY_400': '#bdbdbd',
 	'PRIMARY': '#1a535c',
 	'PRIMARY_CONTRAST': '#ff6b6b',
 	'WARNING': '#8d0000',

@@ -277,18 +277,6 @@ export const xenaTheme = createTheme(theme, {
 				paddingLeft: 0,
 				paddingRight: 0,
 			},
-			root: {
-				alignItems: 'center',
-				display: 'flex',
-			},
-		},
-		MuiStepConnector: {
-			root: {
-				marginLeft: 8,
-				marginRight: 8,
-				position: 'relative',
-				top: 1,
-			},
 		},
 		MuiStepIcon: {
 			root: {
