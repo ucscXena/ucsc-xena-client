@@ -11,12 +11,13 @@
 
 
 // Core dependencies, components
+import {Box, Icon, IconButton, Typography} from '@material-ui/core';
 import React, { Component } from 'react';
 var {times} = require('./../underscore_ext').default;
+import XTypography, {XTypographyVariants} from './XTypography';
 
 // Styles
 import compStyles from'./Welcome.module.css';
-import typStyles from '../../css/typography.module.css';
 
 // Images
 import welcomeImg from '../../images/iconXena.png';
@@ -33,16 +34,15 @@ class Welcome extends Component {
 		const {link: [app, bookmark, text], count, i, linkProps, bulletProps} = this.props,
 			link = `${document.location.origin}/${app}/?bookmark=${bookmark}`;
 		return(
-			<div className={compStyles.Welcome}>
+			<Box bgcolor='primary.main' className={compStyles.Welcome} color='primary.contrastText'>
 				<div className={compStyles.welcomeIcon}>
 					<img className={compStyles.imgXena} src={welcomeImg} srcSet={welcomeSrcSet}/>
 				</div>
 				<div className={compStyles.welcomeText}>
-					<h1 className={typStyles.mdHeadline}>Welcome to the Xena Functional Genomics Explorer</h1>
-					<h2 className={typStyles.mdSubhead}>UCSC Xena allows users to explore functional genomic data sets
-						for correlations between genomic and/or phenotypic variables.</h2>
-					<h2 className={typStyles.mdSubhead}>View live example: <a {...linkProps} href={link}
-																			   target='_blank'>{text}</a></h2>
+					<XTypography component='h1' variant={XTypographyVariants.MD_HEADLINE}>Welcome to the Xena Functional Genomics Explorer</XTypography>
+					<Typography component='h2' variant='subtitle2'>UCSC Xena allows users to explore functional genomic data sets
+						for correlations between genomic and/or phenotypic variables.</Typography>
+					<Typography component='h2' variant='subtitle2'>View live example: <a {...linkProps} href={link} target='_blank'>{text}</a></Typography>
 					<div className={compStyles.bulletWrapper}>
 						<div className={compStyles.bullets}>
 							{times(count, j => <div
@@ -56,10 +56,10 @@ class Welcome extends Component {
 						</div>
 					</div>
 				</div>
-				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
-					<i className='material-icons'>close</i>
-				</div>
-			</div>
+				<IconButton className={compStyles.closeIcon} color='inherit' onClick={this.dismissWelcome}>
+					<Icon>close</Icon>
+				</IconButton>
+			</Box>
 		);
 	}
 
