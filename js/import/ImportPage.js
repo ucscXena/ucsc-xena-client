@@ -543,7 +543,7 @@ class ImportPage extends React.Component {
 					Loading data...
 					<Button label='Help' target='_blank' href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
 					<div className={styles.stepperBox}>
-						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} flat={true} wideStep={true}/>
+						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} wideStep={true}/>
 					</div>
 				</div>
 				<div className={styles.container}>
