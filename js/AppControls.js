@@ -264,7 +264,7 @@ export class AppControls extends PureComponent {
 					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
 				onReset, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
-			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
+			displayOver = samplesOver && !allowOverSamples,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onMap, onPdf, onDownload, onShowWelcome} = this,
 			onMode = anyCanDraw(this.props.appState) ? this.onMode : undefined,
@@ -272,7 +272,7 @@ export class AppControls extends PureComponent {
 			cohortName = _.get(cohort, 'name'),
 			disablePDF = showChartWizard(this.props.appState),
 			sampleFilter = _.get(cohort, 'sampleFilter'),
-			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
+			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to</span> : null;
 		return (
 			<AppBar>
 				<Box sx={sxControlBar}>
@@ -283,15 +283,15 @@ export class AppControls extends PureComponent {
 								<Box
 									component={Typography}
 									color='text.hint'
-									display='block'
-									variant='caption'>{filter} {samples.length} Samples{displayOver &&
-								<Box
-									component={IconButton}
-									color='warning.main'
-									onClick={onAllowOverSamples}
-									sx={{padding: 2}}
-									title="Samples on screen limited to 50000 for performance. Click to see all samples.">
-									<Icon>warning</Icon></Box>}
+									sx={{alignItems: 'center', display: 'flex', gap: 6}}
+									variant='caption'><span>{filter} {samples.length} Samples</span>
+									{displayOver && <Box
+										component={IconButton}
+										color='warning.main'
+										onClick={onAllowOverSamples}
+										sx={{padding: 0}}
+										title="Samples on screen limited to 50000 for performance. Click to see all samples.">
+										<Icon fontSize='small'>warning</Icon></Box>}
 								</Box>
 							</div>
 							{ActionIcon('refresh', 'Reload cohort data', false, this.onRefresh)}
