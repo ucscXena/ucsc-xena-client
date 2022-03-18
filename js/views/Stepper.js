@@ -18,7 +18,7 @@
 
 
 // Core dependencies, components
-import {AppBar, Box, Step, StepConnector, StepLabel, Stepper as MuiStepper} from '@material-ui/core';
+import {AppBar, Box, Step, StepLabel, Stepper as MuiStepper} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 import {xenaColor} from '../xenaColor';
@@ -31,6 +31,12 @@ var sxStepperBar = {
 	height: 64,
 	padding: '0 24px',
 };
+var sxStepConnector = {
+	backgroundColor: xenaColor.GRAY_400,
+	flex: 1,
+	height: 1,
+	margin: '0 8px',
+};
 
 class Stepper extends React.Component {
 	render() {
@@ -41,8 +47,12 @@ class Stepper extends React.Component {
 					<MuiStepper activeStep={stateIndex[mode]} connector={null}>
 						{_.map(steps, (step, index) =>
 							<Box component={Step} key={index} sx={{width: wideStep ? '33%' : '25%'}}>
-								<StepLabel>{step.label}</StepLabel>
-								<StepConnector/>
+								<StepLabel>
+									<Box component='span' sx={{alignItems: 'center', display: 'flex'}}>
+										<span>{step.label}</span>
+										<Box component='span' sx={sxStepConnector}/>
+									</Box>
+								</StepLabel>
 							</Box>)}
 					</MuiStepper>
 				</Box>
