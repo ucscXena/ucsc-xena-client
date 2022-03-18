@@ -288,7 +288,7 @@ class XenaNav extends React.Component {
 class ThemedNav extends React.Component {
 	render() {
 		return (
-			<StylesProvider generateClassName={createGenerateClassName({seed: 'Nav'})} injectFirst>
+			<StylesProvider generateClassName={createGenerateClassName({seed: 'Nav'})}>
 				<MuiThemeProvider theme={xenaNavTheme}>
 					<XenaNav {...this.props}/>
 				</MuiThemeProvider>
