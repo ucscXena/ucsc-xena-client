@@ -127,8 +127,12 @@ export const xenaTheme = createTheme(theme, {
 		MuiCheckbox: {
 			root: {
 				color: xenaColor.BLACK_38,
+				height: 18,
 				padding: 0,
-				transform: 'scale(1.6)',
+				width: 18,
+				'& svg': {
+					fontSize: 24,
+				},
 			},
 		},
 		MuiCssBaseline: {
