@@ -195,6 +195,7 @@ export const xenaTheme = createTheme(theme, {
 				paddingLeft: 16,
 			},
 			root: {
+				display: 'flex',
 				marginLeft: undefined,
 				marginRight: undefined,
 				marginTop: 16,
