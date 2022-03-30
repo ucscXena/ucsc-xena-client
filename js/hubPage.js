@@ -4,14 +4,13 @@ import {
 	Box,
 	Button,
 	Card,
-	Checkbox, CssBaseline,
+	Checkbox,
 	Icon,
 	IconButton,
 	Input,
 	Link,
 	List,
 	ListItem,
-	MuiThemeProvider,
 	Typography
 } from '@material-ui/core';
 var React = require('react');
@@ -24,7 +23,6 @@ var {parseServer, getHubParams} = require('./hubParams');
 import nav from './nav';
 import XTypography, {XTypographyVariants} from './views/XTypography';
 import {xenaColor} from './xenaColor';
-import {xenaTheme} from './xenaTheme';
 var {encodeObject} = require('./util').default;
 
 // Styles
@@ -189,14 +187,12 @@ var Hub = class extends React.Component {
 
 var selector = state => state.spreadsheet.servers;
 
-class ThemedHub extends React.Component {
+class HubPage extends React.Component {
 	render() {
 		return (
-		<MuiThemeProvider theme={xenaTheme}>
-			<CssBaseline/>
 			<Hub {...this.props} selector={selector}/>
-		</MuiThemeProvider>);
+		);
 	}
 }
 
-export default ThemedHub;
+export default HubPage;
