@@ -7,6 +7,7 @@
 
 
 // Core dependencies, components
+import {Box, Divider, Typography} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 
@@ -17,11 +18,18 @@ class XRadioMeta extends React.Component {
 	render() {
 		var {meta} = this.props;
 		return (
-			<ul className={compStyles.XRadioMeta}>
-				{_.map(meta, m => <li className={compStyles.meta} key={m.label}>
-					<span className={compStyles.label}>{m.label}</span><span className={compStyles.value}>{m.value}</span><span
-					className={compStyles.more}>+12 more</span></li>)}
-			</ul>
+			<Typography className={compStyles.XRadioMeta} component='ul' variant='caption'>
+				{_.map(meta, m =>
+					<React.Fragment key={m.label}>
+						<Divider light/>
+						<li className={compStyles.meta} key={m.label}>
+						<span className={compStyles.label}>{m.label}</span>
+							<Box className={compStyles.value} color='text.hint'>{m.value}</Box>
+							<Box className={compStyles.more} color='secondary.main'>+12 more</Box>
+						</li>
+					</React.Fragment>)}
+				<Divider light/>
+			</Typography>
 		);
 	}
 }
