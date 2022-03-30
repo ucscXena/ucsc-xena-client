@@ -17,10 +17,9 @@
 
 
 // Core dependencies, components
+import {Box, Typography} from '@material-ui/core';
 var React = require('react');
-
-// Styles
-var compStyles = require('./XInputToolbar.module.css');
+import XActionButton from './XActionButton';
 
 class XInputGroup extends React.Component {
 	onAdditionalAction = (value) => {
@@ -30,13 +29,11 @@ class XInputGroup extends React.Component {
 	render() {
 		var {additionalAction, label} = this.props;
 		return (
-			<div className={compStyles.toolbar}>
-				{label ? <span className={compStyles.label}>{label}</span> :
+			<Box display='flex' justifyContent='space-between'>
+				{label ? <Box component={Typography} color='text.hint' variant='caption'>{label}</Box> : null}
+				{additionalAction ? <XActionButton onClick={this.onAdditionalAction}>{additionalAction}</XActionButton> :
 					null}
-				{additionalAction ? <span className={compStyles.additionalAction}
-										  onClick={this.onAdditionalAction}>{additionalAction}</span> :
-					null}
-			</div>
+			</Box>
 		);
 	}
 }
