@@ -1,5 +1,6 @@
 import PureComponent from '../PureComponent';
 
+import {Icon, IconButton} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var CohortOrDisease = require('../views/CohortOrDisease');
@@ -190,7 +191,7 @@ function addWizardColumns(Component) {
 					onSelect: this.onDatasetSelect,
 					width},
 				columns = React.Children.toArray(children),
-				cancelIcon = <i className='material-icons' onClick={this.onCancel}>cancel</i>,
+				cancelIcon = <IconButton edge='end' onClick={this.onCancel}><Icon>cancel</Icon></IconButton>,
 				withEditor = columns.map(el =>
 					editing === el.props.id ?
 						<VariableSelect

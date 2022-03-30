@@ -20,18 +20,19 @@
 
 
 // Core dependencies, components
+import {Box, Button, Card, CardActions, CardContent, CardHeader, Divider, Icon} from '@material-ui/core';
 var React = require('react');
-import {Button} from 'react-toolbox/lib/button';
-import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
 import spinner from '../ajax-loader.gif';
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
 
 // Styles
-var compStyles = require('./WizardCard.module.css');
-var cardStyles = require('./RTCardTheme.module.css');
-var classname = require('classnames');
+var sxWizardCard = {
+	display: 'flex',
+	flexDirection: 'column',
+	minHeight: 645, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+};
 
 class WizardCard extends React.Component {
 	onDone = () => {
@@ -49,29 +50,31 @@ class WizardCard extends React.Component {
 		var {children, colId, controls, contentSpecificHelp,
 			title, subtitle, valid, loading, loadingCohort, width} = this.props;
 		return (
-				<Card style={{width: width}} className={compStyles.WizardCard}>
-					<div className={compStyles.headerContainer}>
-						<CardAvatar colId={colId}/>
-						<div className={compStyles.controls}>
-							{controls}
-						</div>
-					</div>
-					<div className={compStyles.titleContainer}>
-						<CardTitle className={classname(compStyles.title, subtitle ? cardStyles.warning : '')} title={title} subtitle={subtitle}/>
-					</div>
-					<div className={compStyles.content}>
-						{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
-						{loadingCohort ? <CardText>Loading datasets...</CardText> : null}
-						{children}
-					</div>
-					<CardActions className={compStyles.actions}>
-						{loading ? <img src={spinner}/> : null}
-						{valid ? <i className='material-icons'>done</i> : null}
-						<span onClick={this.onDoneInvalid}>
-						<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
+			<Box component={Card} sx={{...sxWizardCard, width: width}}>
+				<CardHeader action={controls} avatar={<CardAvatar colId={colId}/>}/>
+				<Divider/>
+				<Box
+					component={CardHeader}
+					subheader={subtitle}
+					subheaderTypographyProps={{color: 'error'}}
+					sx={{height: 60}}
+					title={title}
+					titleTypographyProps={{component: 'h5'}}/>
+				<Divider/>
+				<Box flex='1'>
+					{contentSpecificHelp ? <CardContent><p>{contentSpecificHelp}</p></CardContent> : null}
+					{loadingCohort ? <CardContent><p>Loading datasets...</p></CardContent> : null}
+					{(contentSpecificHelp || loadingCohort) && <Divider/>}
+					{children}
+				</Box>
+				<CardActions>
+					{loading ? <img alt='loading' src={spinner}/> : null}
+					{valid ? <Icon>done</Icon> : null}
+					<span onClick={this.onDoneInvalid}>
+						<Button disabled={!valid} onClick={this.onDone}>Done</Button>
 					</span>
-					</CardActions>
-				</Card>
+				</CardActions>
+			</Box>
 		);
 	}
 }
