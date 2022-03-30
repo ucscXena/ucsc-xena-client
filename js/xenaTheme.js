@@ -282,6 +282,11 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 		},
+		MuiListItem: {
+			divider: {
+				borderBottom: `1px solid ${xenaColor.BLACK_6}`,
+			},
+		},
 		MuiMenuItem: {
 			root: {
 				fontSize: 16,
