@@ -88,7 +88,7 @@ class DataHubs extends React.Component {
 						({user}, host) => (
 							<li key={host}>
 								<FormControlLabel
-									control={<Checkbox checked={user} inputProps={{'data-host': host}} onChange={this.onSelect}/>}
+									control={<Checkbox checked={user || false} inputProps={{'data-host': host}} onChange={this.onSelect}/>}
 									label={hubLink(host, this.onHub, hubParams)}/>
 							</li>))}
 				</ul>
