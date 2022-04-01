@@ -40,13 +40,13 @@ var sxStepConnector = {
 
 class Stepper extends React.Component {
 	render() {
-		const { steps, stateIndex, mode, wideStep } = this.props;
+		const { flat, steps, stateIndex, mode, wideStep } = this.props;
 		return (
 			<AppBar>
-				<Box sx={sxStepperBar}>
+				<Box sx={{...sxStepperBar, ...(flat && {borderBottom: undefined})}}>
 					<MuiStepper activeStep={stateIndex[mode]} connector={null}>
 						{_.map(steps, (step, index) =>
-							<Box component={Step} key={index} sx={{width: wideStep ? '33%' : '25%'}}>
+							<Box component={Step} key={index} sx={{width: wideStep ? '33.33%' : '25%'}}>
 								<StepLabel>
 									<Box component='span' sx={{alignItems: 'center', display: 'flex'}}>
 										<span>{step.label}</span>

@@ -363,6 +363,11 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 		},
+		MuiInputLabel: {
+			root: {
+				color: theme.palette.text.hint,
+			},
+		},
 		MuiLink: {
 			root: {
 				color: theme.palette.secondary.main,

@@ -1,12 +1,16 @@
+import {
+	Box,
+	Button,
+	CardActions,
+	CardContent,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Divider, Typography
+} from '@material-ui/core';
 import React from 'react';
-import { Button, Dialog } from 'react-toolbox/lib';
-import styles from './ImportPage.module.css';
-
-const style = {
-    next: { float: 'right', color: 'rgb(33, 33, 33)', marginLeft: '20px' },
-    cancel: { float: 'right', display: 'inline-block'},
-    buttons: { paddingTop: '20px' }
-};
 
 export default class WizardSection extends React.Component {
     render() {
@@ -16,94 +20,47 @@ export default class WizardSection extends React.Component {
         const showNext = !isLast && !onImport && !showRetry;
         const showBack = !isFirst && !showSuccess;
 
-        return (
-            <div>
-                { fileName && <p><b>File to Import: {fileName}</b></p> }
+		return (
+			<>
+				<CardContent>
+					<Box position='relative'>
+						{fileName && <Box component={Typography} mt={0} variant='h4'><strong>File to Import: {fileName}</strong></Box>}
+						{this.props.children}
+					</Box>
+				</CardContent>
+				<Divider/>
+				<CardActions>
+					{showBack && <Box flex={1}><Button color='default' onClick={this.props.onPreviousPage}>Back</Button></Box>}
+					{!showSuccess && <CancelButton onCancelImport={this.props.onCancelImport}/>}
+					{showNext && <Button disabled={!nextEnabled} onClick={this.props.onNextPage}>Next</Button>}
+					{showAdvancedNextLabel && <Button color='default' disabled={!nextEnabled} onClick={this.props.onNextPage}>Advanced</Button>}
+					{!!onImport && <Button disabled={!nextEnabled} onClick={onImport}>Import</Button>}
+					{showRetry && this.renderRetryButtons()}
+					{showSuccess && this.renderSuccessButtons()}
+				</CardActions>
+			</>
+		);
+	}
 
-                { this.props.children }
-                <div className={styles.wizardButtons}>
-                    <Button
-                        label='Back'
-                        raised
-                        style={{visibility: showBack ? 'visible' : 'hidden'}}
-                        onClick={this.props.onPreviousPage}
-                    />
+	renderRetryButtons() {
+		return (
+			<>
+				<Button onClick={this.props.onRetryFile}>Reload file</Button>
+				{!!this.props.showLoadWithWarnings && <Button onClick={this.props.onLoadWithWarnings}>Load with warnings</Button>}
+				<Button onClick={this.props.onRetryMetadata}>Edit Data Details</Button>
+			</>
+		);
+	}
 
-                    {showNext &&
-                        <Button
-                            label={'Next'}
-                            raised
-                            style={style.next}
-                            accent={nextEnabled} disabled={!nextEnabled}
-                            onClick={this.props.onNextPage}
-                        />
-                    }
-
-                    {!!onImport &&
-                        <Button
-                            label='Import'
-                            raised style={style.next}
-                            accent={nextEnabled}
-                            disabled={!nextEnabled}
-                            onClick={onImport}
-                        />
-                    }
-
-                    {showAdvancedNextLabel &&
-                        <Button
-                            label={'Advanced'}
-                            raised
-                            style={style.next}
-                            disabled={!nextEnabled}
-                            onClick={this.props.onNextPage}
-                        />
-                    }
-
-                    { showRetry && this.renderRetryButtons() }
-
-                    { showSuccess && this.renderSuccessButtons() }
-
-                    { !showSuccess &&
-                    <CancelButton onCancelImport={this.props.onCancelImport}/>}
-                </div>
-            </div>
-        );
-    }
-
-    renderRetryButtons() {
-        return (
-            <div className={styles.retryButtons}>
-                <Button label='Edit Data Details' raised style={style.next} accent
-                    onClick={this.props.onRetryMetadata}
-                />
-                <Button label='Reload file' raised style={style.retryButton} accent
-                    onClick={this.props.onRetryFile}
-                />
-
-                { !!this.props.showLoadWithWarnings &&
-                    <Button label='Load with warnings' raised style={style.next}
-                        accent onClick={this.props.onLoadWithWarnings}
-                    />
-                }
-            </div>
-        );
-    }
-
-    renderSuccessButtons() {
-        return (
-            <div className={styles.retryButtons}>
-                <Button label='Finish' raised style={style.next} accent
-                    onClick={this.props.onFinish}
-                />
-                <Button label='Load more data' raised style={style.next} accent
-                    onClick={this.props.onImportMoreData}
-                />
-                <Button label='View data' raised style={style.next} accent
-                    onClick={this.props.onViewData}
-                />
-            </div>
-        );
-    }
+	renderSuccessButtons() {
+		return (
+			<>
+				<Button onClick={this.props.onViewData}>View data</Button>
+				<Button onClick={this.props.onImportMoreData}>Load more data</Button>
+				<Button onClick={this.props.onFinish}>Finish</Button>
+			</>
+		);
+	}
 };
 
 class CancelButton extends React.Component {
@@ -111,25 +68,24 @@ class CancelButton extends React.Component {
 
 	onToggle = () => {
 		this.setState({active: !this.state.active});
-    };
-
-	actions = () => {
-		return [
-			{label: 'No, I want to continue', onClick: this.onToggle, style: {color: '#377937'}},
-			{label: 'Yes, cancel import', onClick: this.props.onCancelImport, style: {color: '#c95252'}}];
 	};
 
 	render() {
-        var {active} = this.state;
+		var {active} = this.state;
 
 		return (
-			<div style={style.cancel}>
-				<Dialog actions={this.actions()} active={active}
-						onEscKeyDown={this.onToggle} onOverlayClick={this.onToggle}
-						title='Are you sure you want to cancel import process ?'>
-					Current progress will be lost
+			<>
+				<Dialog maxWidth={false} onClose={this.onToggle} open={active}>
+					<DialogTitle disableTypography><h2>Are you sure you want to cancel import process?</h2></DialogTitle>
+					<DialogContent>
+						<DialogContentText>Current progress will be lost</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Box sx={{color: '#377937'}}><Button color='inherit' onClick={this.onToggle}>No, I want to continue</Button></Box>
+						<Box sx={{color: '#c95252'}}><Button color='inherit' onClick={this.props.onCancelImport}>Yes, cancel import</Button></Box>
+					</DialogActions>
 				</Dialog>
-				<Button onClick={this.onToggle} flat style={{backgroundColor: '#f7f7f7'}}>Cancel</Button>
-			</div>);
+				<Button color='default' onClick={this.onToggle}>Cancel</Button>
+			</>);
 	}
 }
