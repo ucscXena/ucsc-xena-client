@@ -6,6 +6,7 @@ var {getNotifications} = require('../notifications');
 import {make, mount, compose} from './utils';
 var Rx = require('../rx').default;
 var uuid = require('../uuid');
+var widgets = require('../columnWidgets');
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
@@ -249,7 +250,16 @@ var spreadsheetControls = {
 	'widget-data': mergeWidgetData,
 	'widget-data-post!': (serverBus, state, newState, id) => {
 		if (_.getIn(newState, ['columns', id, 'clustering']) != null) {
-			fetchClustering(serverBus, newState, id);
+			// XXX Note that this duplicates the avgSelector in appSelector.js.
+			// Also, there's a second path to fetchClustering in ui.js that
+			// pulls data from the ui, so it already has the average.
+			// We need to call it here because appSelector will not have run
+			// when we reach this code. Since we only reach this on first
+			// column load, it's not a large performance concern.
+			var data = _.getIn(newState, ['data', id]),
+				avg = widgets.avg(state.columns[id], data);
+
+			fetchClustering(serverBus, newState, id, _.merge(data, avg));
 		}
 	},
 	'cluster-result': (state, id, order) =>
