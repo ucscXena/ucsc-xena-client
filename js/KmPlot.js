@@ -34,6 +34,11 @@ var sxCloseButton = {
 		backgroundColor: xenaColor.BLACK_6,
 	},
 };
+var sxWarnButton = {
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
 
 var ActionIcon = (i, tooltip, onClick) => (
 	<Tooltip title={tooltip}>
@@ -191,9 +196,13 @@ class WarningTrigger extends React.Component {
 		return (
 			<>
 				<Box color='warning.main' sx={{left: '100%', position: 'absolute'}}>
-					<IconButton color='inherit' onClick={() => this.setState({show: true})} size='small'>
+					<Box
+						component={IconButton}
+						color='inherit'
+						onClick={() => this.setState({show: true})}
+						sx={sxWarnButton}>
 						<Icon fontSize='small'>warning</Icon>
-					</IconButton>
+					</Box>
 				</Box>
 				<WarningDialog body={body} header={header} onHide={this.close} open={this.state.show}/>
 			</>
