@@ -1,13 +1,22 @@
-import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext').default;
+import {
+	Box,
+	Dialog,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Icon,
+	IconButton,
+	MenuItem,
+	TextField,
+	Tooltip,
+	Typography
+} from '@material-ui/core';
 import PureComponent from './PureComponent';
 var React = require('react');
-import {Button} from 'react-toolbox/lib/button';
-import Dropdown from 'react-toolbox/lib/dropdown';
-import Dialog from 'react-toolbox/lib/dialog';
-import Tooltip from 'react-toolbox/lib/tooltip';
 // XXX move this file out of chart directory
 import {el, div, h1, h3, label, span} from './chart/react-hyper';
+import {xenaColor} from './xenaColor';
 
 var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
@@ -16,18 +25,28 @@ var NumberForm = require('./views/NumberForm');
 var {survivalOptions, getSplits} = require('./models/km');
 var gaEvents = require('./gaEvents');
 
-var TTIcon = Tooltip(props => <i {..._.omit(props, 'theme')} />);
+// Styles
+import kmStyle from './km.module.css';
+var sxCloseButton = {
+	alignSelf: 'flex-start',
+	color: xenaColor.BLACK_38,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
 
-// XXX there's overlap here with react-toolbox IconButton. Not sure
-// why we need both. Copied this pattern from AppControls, so it would
-// match.
-var icon = (i, tooltip, onClick) =>
-	<TTIcon className='material-icons'
-		onClick={onClick}
-		tooltip={tooltip}>{i}</TTIcon>;
+var ActionIcon = (i, tooltip, onClick) => (
+	<Tooltip title={tooltip}>
+		{/* span is required for wrapping Tooltip around a disabled IconButton; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+		<span>
+			<IconButton color='inherit' onClick={onClick}>
+				<Icon>{i}</Icon>
+			</IconButton>
+		</span>
+	</Tooltip>
+);
 
-var iconLink = (i, href) =>
-	<a href={href} target='_blank'><i className='material-icons'>{i}</i></a>;
+var IconLink = (i, href) => <IconButton color='inherit' href={href} target='_blank'><Icon>{i}</Icon></IconButton>;
 
 var kmHelpURL = 'https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots';
 
@@ -170,14 +189,14 @@ class WarningTrigger extends React.Component {
 		let {header, body} = this.props;
 
 		return (
-			<div className={kmStyle.warningContainer}>
-				<Button
-					onClick={() => this.setState({show: true})}
-					className={kmStyle.showPWarningButton}>
-					<i className={`material-icons ${kmStyle.pWarningIcon}`}>warning</i>
-				</Button>
-				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
-			</div>
+			<>
+				<Box color='warning.main' sx={{left: '100%', position: 'absolute'}}>
+					<IconButton color='inherit' onClick={() => this.setState({show: true})} size='small'>
+						<Icon fontSize='small'>warning</Icon>
+					</IconButton>
+				</Box>
+				<WarningDialog body={body} header={header} onHide={this.close} open={this.state.show}/>
+			</>
 		);
 	}
 }
@@ -190,27 +209,22 @@ class WarningDialog extends React.Component {
 	}
 
 	render() {
-
-		const actions = [
-			{
-				children: [<i className='material-icons'>close</i>],
-				className: kmStyle.warningDialogClose,
-				onClick: this.props.onHide
-			},
-		];
-
 		return (
 			<Dialog
-				actions={actions}
-				active={true}
-				title={this.props.header}
-				className={kmStyle.warningDialog}
-				onEscKeyDown={this.props.onHide}
-				onOverlayClick={this.props.onHide}
-				theme={{
-					wrapper: kmStyle.dialogWrapper,
-					overlay: kmStyle.dialogOverlay}}>
-				{this.props.body}
+				BackdropProps={{style: {top: 64}}}
+				fullWidth
+				maxWidth={'sm'}
+				onClose={this.props.onHide}
+				open={this.props.open}>
+				<DialogTitle disableTypography>
+					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
+						<Typography variant='subtitle1'>{this.props.header}</Typography>
+						<Box color='default' component={IconButton} onClick={this.props.onHide} sx={sxCloseButton}>
+							<Icon>close</Icon>
+						</Box>
+					</Box>
+				</DialogTitle>
+				<DialogContent><DialogContentText>{this.props.body}</DialogContentText></DialogContent>
 			</Dialog>
 		);
 	}
@@ -224,11 +238,7 @@ class PValue extends PureComponent {
 			<div>
 				<div className={kmStyle.PValueArea}>
 					<div className={kmStyle.PValueP}><i>P</i>-value = {formatPValue(pValue)}</div>
-					{patientWarning ?
-						<WarningTrigger
-							header="P value warning"
-							body={patientWarning}
-						/> : null}
+					{patientWarning && <WarningTrigger body={patientWarning} header='P value warning'/>}
 				</div>
 				<div>
 					Log-rank test statistics = {formatPValue(logRank)}
@@ -258,13 +268,12 @@ function makeLegendKey({colors, curves, labels}, i) {
 
 function makeSurvivalTypeUI(cohort, survType, survivalTypes, onSurvType) {
 	return (
-		<Dropdown className={kmStyle.survType}
-			source = {survivalTypes.map(t => ({
-						value: t,
-						label: survivalOptions[t].label
-					}))}
-			value = {survType || survivalTypes[0]}
-			onChange={onSurvType} />);
+		<TextField fullWidth onChange={onSurvType} select value={survType || survivalTypes[0]}>
+			{survivalTypes
+				.map(t => ({value: t, label: survivalOptions[t].label}))
+				.map(({value, label}) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+		</TextField>
+	);
 }
 
 // When looking up the at-risk at a particular time, we need
@@ -399,7 +408,7 @@ class KmPlot extends PureComponent {
 
 	onSurvType = (ev) => {
 		var {callback} = this.props;
-		callback(['km-survivalType', ev]);
+		callback(['km-survivalType', ev.target.value]);
 	};
 
 	componentDidMount() {
@@ -444,14 +453,14 @@ class KmPlot extends PureComponent {
 			plotDims = getPlotDims(groups, dims);
 		return (
 			<div className={gClass}>
-				<div className={kmStyle.topPanel}>
+				<Box display='flex'>
 					{kmSVG({groups, onMouse: this.onMouse, size: dims, plotDims, unit})}
 					<div className={kmStyle.rightPanel}>
-						<div className={kmStyle.actions}>
-							{icon('picture_as_pdf', 'Download as PDF', this.onPdf)}
-							{icon('cloud_download', 'Download as tsv', this.onDownload)}
-							{iconLink('help', kmHelpURL)}
-						</div>
+						<Box sx={{display: 'flex', gap: 8}}>
+							{ActionIcon('picture_as_pdf', 'Download as PDF', this.onPdf)}
+							{ActionIcon('cloud_download', 'Download as tsv', this.onDownload)}
+							{IconLink('help', kmHelpURL)}
+						</Box>
 						<h4>{label}</h4>
 						{makeDefinitions(groups,
 							maySplit, splits, this.onSplits, label, clarification, warning)}
@@ -463,7 +472,7 @@ class KmPlot extends PureComponent {
 							max={max}
 							initialValue={cutoff}/>
 					</div>
-				</div>
+				</Box>
 				{riskTable({groups, groupLabel: label, clarification, warning,
 							   onMouse: this.onMouse, plotDims})}
 			</div>);
@@ -476,25 +485,23 @@ class KmPlot extends PureComponent {
 				_.isEmpty(groups.colors) ? this.renderNoOverlap() :
 				this.renderPlot();
 
-		const actions = [
-			{
-				children: [<i className='material-icons'>close</i>],
-				className: kmStyle.mainDialogClose,
-				onClick: this.hide
-			}
-		];
 		return (
 			<Dialog
-				actions={actions}
-				active={true}
-				title={'Kaplan Meier ' + title}
+				BackdropProps={{style: {top: 64}}}
 				className={kmStyle.mainDialog}
-				onEscKeyDown={this.hide}
-				onOverlayClick={this.hide}
-				theme={{
-					wrapper: kmStyle.dialogWrapper,
-					overlay: kmStyle.dialogOverlay}}>
-				{Content}
+				fullWidth
+				maxWidth={'md'}
+				onClose={this.hide}
+				open={true}>
+				<DialogTitle disableTypography>
+					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
+						<Typography variant='subtitle1'>Kaplan Meier {title}</Typography>
+						<Box color='default' component={IconButton} onClick={this.hide} sx={sxCloseButton}>
+							<Icon>close</Icon>
+						</Box>
+					</Box>
+				</DialogTitle>
+				<DialogContent><Box mb={6} sx={{color: '#757575'}}>{Content}</Box></DialogContent>
 			</Dialog>);
 	}
 }

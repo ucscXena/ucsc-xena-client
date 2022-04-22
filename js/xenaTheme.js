@@ -390,6 +390,12 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 		},
+		MuiSelect: {
+			icon: {
+				color: theme.palette.text.hint,
+				fontSize: 24,
+			},
+		},
 		MuiStep: {
 			horizontal: {
 				paddingLeft: 0,
