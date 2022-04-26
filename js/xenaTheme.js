@@ -100,6 +100,19 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiButton: {
+			contained: {
+				...theme.typography.body2,
+				backgroundColor: xenaColor.GRAY_LIGHT,
+				letterSpacing: '0.5px',
+				padding: '0 12px',
+				'&$disabled': {
+					backgroundColor: xenaColor.GRAY_LIGHT,
+					color: xenaColor.BLACK_26,
+				},
+				'&:hover': {
+					backgroundColor: xenaColor.BLACK_12,
+				},
+			},
 			root: {
 				borderRadius: 2,
 				fontWeight: 500,
