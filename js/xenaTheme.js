@@ -371,6 +371,17 @@ export const xenaTheme = createTheme(theme, {
 				borderRadius: 2,
 			}
 		},
+		MuiRadio: {
+			root: {
+				color: xenaColor.BLACK_38,
+				height: 20,
+				padding: 0,
+				width: 20,
+				'& svg': {
+					fontSize: 24,
+				},
+			},
+		},
 		MuiStep: {
 			horizontal: {
 				paddingLeft: 0,
