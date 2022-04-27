@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-import React from 'react';
+var React = require('react');
 var gaEvents = require('../gaEvents');
 import {
 	Box,
@@ -246,7 +246,7 @@ export default class ChartWizard extends PureComponent {
 				'another', false)]);
 	}
 	onX = event => {
-		const xcolumn = event.target.value;
+		var xcolumn = event.target.value;
 		var {ycolumn} = this.state;
 		this.setState({xcolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
@@ -254,7 +254,7 @@ export default class ChartWizard extends PureComponent {
 		}
 	}
 	onY = event => {
-		const ycolumn = event.target.value;
+		var ycolumn = event.target.value;
 		var {xcolumn} = this.state;
 		this.setState({ycolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
