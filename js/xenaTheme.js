@@ -237,6 +237,14 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 		},
+		MuiDialogActions: {
+			root: {
+				'& .MuiButton-text': {
+					minWidth: 0,
+					padding: '0 8px',
+				},
+			},
+		},
 		MuiDivider: {
 			light: {
 				backgroundColor: xenaColor.BLACK_6,
