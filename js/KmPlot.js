@@ -501,7 +501,8 @@ class KmPlot extends PureComponent {
 				fullWidth
 				maxWidth={'md'}
 				onClose={this.hide}
-				open={true}>
+				open={true}
+				PaperProps={{style: {alignSelf: 'flex-start'}}}>
 				<DialogTitle disableTypography>
 					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
 						<Typography variant='subtitle1'>Kaplan Meier {title}</Typography>
