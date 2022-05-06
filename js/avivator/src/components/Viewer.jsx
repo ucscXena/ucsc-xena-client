@@ -3,7 +3,6 @@ import React from 'react';
 import debounce from 'lodash/debounce';
 import {
   SideBySideViewer,
-  PictureInPictureViewer,
   VolumeViewer
   // eslint-disable-next-line import/no-unresolved
 } from '@hms-dbmi/viv';
@@ -12,10 +11,11 @@ import {
   useViewerStore,
   useChannelSettings
 } from '../state';
+import PictureInPictureViewer from './XenaPictureInPictureViewer';
 import { useWindowSize } from '../utils';
 import { DEFAULT_OVERVIEW } from '../constants';
 
-const Viewer = () => {
+const Viewer = props => {
   const { useLinkedView, setViewerState, use3d, viewState } = useViewerStore();
   const { colors, sliders, isOn, selections, loader } = useChannelSettings();
   const viewSize = useWindowSize();
@@ -80,6 +80,7 @@ const Viewer = () => {
     />
   ) : (
     <PictureInPictureViewer
+	  mergeLayers={props.mergeLayers}
       loader={loader}
       sliderValues={sliders}
       colorValues={colors}

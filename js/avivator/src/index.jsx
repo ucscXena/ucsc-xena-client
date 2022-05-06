@@ -68,5 +68,5 @@ ReactDOM.render(
       />
     </Switch>
   </Router>,
-  document.getElementById('root')
+  document.getElementById('main')
 );

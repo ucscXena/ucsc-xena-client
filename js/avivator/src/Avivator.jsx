@@ -26,7 +26,7 @@ export default function Avivator(props) {
   useImage(source, history);
   return (
     <>
-      <DropzoneWrapper>{!isViewerLoading && <Viewer />}</DropzoneWrapper>
+      <DropzoneWrapper>{!isViewerLoading && <Viewer mergeLayers={props.mergeLayers}/>}</DropzoneWrapper>
       <Controller />
       <SnackBars />
     </>
