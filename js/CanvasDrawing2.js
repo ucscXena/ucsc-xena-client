@@ -13,7 +13,7 @@ var ReactDOM = require('react-dom');
 // driven by the css, so we're not holding the final width when we draw.
 
 class CanvasDrawing extends React.Component {
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}

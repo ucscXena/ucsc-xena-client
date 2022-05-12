@@ -131,7 +131,7 @@ function addWizardColumns(Component) {
 			this.state = {editing};
 		}
 
-		componentWillMount() {
+		UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 			var {callback} = this.props;
 			this.sub = Rx.Observable.of(true)
 				.concat(Rx.Observable.fromEvent(window, 'resize'))
@@ -144,7 +144,7 @@ function addWizardColumns(Component) {
 			this.sub.unsubscribe();
 		}
 
-		componentWillReceiveProps(newProps) {
+		UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 			var {editing} = newProps;
 			this.setState({editing});
 		}

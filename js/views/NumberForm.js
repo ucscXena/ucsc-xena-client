@@ -23,7 +23,7 @@ class NumberForm extends React.Component {
 	    this.state = {value: initialValue == null ? '' : '' + initialValue, focused: false};
 	}
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var {dflt, min, max} = this.props;
 		var events = rxEvents(this, 'change');
 		this.change = events.change

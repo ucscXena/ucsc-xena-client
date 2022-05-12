@@ -11,7 +11,7 @@ var compStyles = require('./CanvasDrawing.module.css');
 var classNames = require('classnames');
 
 class CanvasDrawing extends React.Component {
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}

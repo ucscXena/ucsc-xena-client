@@ -39,7 +39,7 @@ module.exports = {
 		disableHostCheck: true,
 		historyApiFallback: true,
 		headers: {
-			"Content-Security-Policy-Report-Only": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src *; img-src * data:; frame-src 'self' ucscxena: https://www.youtube.com https://xenageneset.berkeleybop.io/xena/"
+			"Content-Security-Policy-Report-Only": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval blob:'; style-src 'self' 'unsafe-inline'; connect-src *; img-src * data:; frame-src 'self' ucscxena: https://www.youtube.com https://xenageneset.berkeleybop.io/xena/"
 		},
 		proxy: {
 			'/api/**': {
@@ -70,6 +70,8 @@ module.exports = {
 					{ loader: 'babel-loader' }
 				]
 			},
+			{ test: path => path.match(/@hms-dbmi[/\\]viv[/\\]dist[/\\]viv.es.js/),
+				loader: "babel-loader"},
 			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
 			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },
 			{ test: /unicode-trie[/\\]index.js/, loader: "babel-loader" },
@@ -86,7 +88,7 @@ module.exports = {
 			{ test: /src[/\\]assets/, loader: "arraybuffer-loader" },
 			{ test: /\.afm$/, loader: "raw-loader" },
 			{
-				test: /\.js$/,
+				test: /\.jsx?$/,
 				include: [
 					path.join(__dirname, 'js'),
 					path.join(__dirname, 'test'),
@@ -156,8 +158,10 @@ module.exports = {
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
-			'fs': 'pdfkit/js/virtual-fs.js'
+			'fs': 'pdfkit/js/virtual-fs.js',
+			'txml/txml': 'txml/dist/txml'
 		},
-		extensions: ['.js', '.json', '.coffee']
+		symlinks: false,
+		extensions: ['.js', '.jsx', '.json']
 	}
 };

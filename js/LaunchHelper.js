@@ -175,7 +175,7 @@ var wrap = Comp => class extends PureComponent {
 		}
 	}
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		// If localStatus was not set (no ping yet, from server) and changes to 'down',
 		// show dialog & try to launch.
 		if (!this.props.state.localStatus && props.state.localStatus === 'down') {

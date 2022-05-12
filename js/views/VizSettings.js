@@ -259,7 +259,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			};
 	    }
 
-		componentWillMount() {
+		UNSAFE_componentWillMount() {//eslint-disable-line camelcase
+			// XXX move initial state to constructor
 			let initStates = colorParams[valueType].map((colorParam) => _.valToStr(this.state.settings[colorParam]));
 			this.setState(_.object(colorParams[valueType], initStates));
 		}
@@ -705,7 +706,7 @@ class SettingsWrapper extends React.Component {
 		return false;
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		this.currentSettings.state = newProps.vizSettings;
 	}
 

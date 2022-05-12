@@ -57,7 +57,7 @@ var fetchSuggestions = (assembly, dataset, value) =>
 class GeneSuggest extends PureComponent {
 	state = {suggestions: []};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.debounceTime(200)

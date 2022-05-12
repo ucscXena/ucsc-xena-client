@@ -54,7 +54,7 @@ class ApplicationContainer extends PureComponent {
 		callback(['sample-search', value]);
 	};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'highlightChange');
 		this.change = events.highlightChange
 			.debounceTime(200)

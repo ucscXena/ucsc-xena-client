@@ -38,7 +38,7 @@ class SpreadSheetHighlight extends React.Component {
 		this.animate.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}

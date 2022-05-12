@@ -98,7 +98,7 @@ function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 
 // XXX drop this.props.style? Not sure it's used.
 export class AppControls extends PureComponent {
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		hidden.create('help', 'Reset help', {
 			onClick: () => {
 				this.props.callback(['notifications-enable']);

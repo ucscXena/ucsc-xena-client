@@ -95,7 +95,7 @@ class Tooltip extends PureComponent {
 	state = {
 		tooltip: {open: false},
 	};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.sub = this.props.tooltip.subscribe(ev => this.setState({tooltip: ev}));
 	}
 	componentWillUnmount() {

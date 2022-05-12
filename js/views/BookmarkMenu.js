@@ -34,7 +34,7 @@ var linking; // XXX move to state?
 class BookmarkMenu extends React.Component {
 	state = {loading: false, open: false, recent: false};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		linking = hidden.create('linking', 'Links in Bookmarks', {
 			onChange: val => linking = val,
 			default: false

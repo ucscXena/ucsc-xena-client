@@ -311,7 +311,7 @@ class VariableSelect extends PureComponent {
 			applyInitialState[datasetMode(datasets, dataset)](text, fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
-	componentWillReceiveProps({features, basicFeatures}) {
+	UNSAFE_componentWillReceiveProps({features, basicFeatures}) {//eslint-disable-line camelcase
 		this.setState({
 			basicFeatures: featureIndexes(features, basicFeatures),
 		});
@@ -323,7 +323,7 @@ class VariableSelect extends PureComponent {
 	// withLatestFrom() operators do not subscribe to their upstream sources,
 	// and miss the startWith() of those. The workaround here is to use replay
 	// subjects. This is all much too complex.
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mode', 'advanced', 'field', 'select');
 		var mode = events.mode.startWith(this.state.mode).publishReplay(1).refCount(),
 			advanced = events.advanced
@@ -466,7 +466,7 @@ class VariableSelect extends PureComponent {
 class LoadingNotice extends React.Component {
 	state={wait: true};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.timeout = setTimeout(() => this.setState({wait: false}), 3000);
 	}
 

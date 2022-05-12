@@ -70,7 +70,7 @@ var Hub = class extends React.Component {
 		this.sub.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		var {ping} = this.state,
 			{state, selector} = newProps,
 			servers = selector(state),

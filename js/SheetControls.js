@@ -32,7 +32,7 @@ class SheetControls extends React.Component {
 			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
 			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'None',
 			zoomStatus = (<SheetStatus className={compStyles.zoomAnimate} disabled={statusDisabled} label={zoomLabel} sheetState={zoomState}/>),
-			ZoomTooltip = Tooltip('zoomStatus');
+			ZoomTooltip = Tooltip('div');
 		return (
 			<div className={compStyles.sheetControls}>
 				{mode === "chart" ? null : <div className={compStyles.sheetStatus}>
