@@ -148,6 +148,7 @@ var input = comp => {
 					<Input
 						disabled={noshow}
 						inputRef={comp.setRef}
+						inputProps={{spellCheck: false}}
 						margin='none'
 						onBlur={comp.onHideCaret}
 						onChange={comp.onSearchChange}
@@ -155,7 +156,6 @@ var input = comp => {
 						onFocus={comp.onCaret}
 						onKeyUp={comp.onCaret}
 						placeholder={placeholder[pickSamples]}
-						spellCheck={false}
 						type='text'
 						value={value || ''}/>
 				</Tooltip>
