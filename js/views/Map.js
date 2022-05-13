@@ -417,7 +417,7 @@ export class Map extends PureComponent {
 			labels = _.get(params, 'dimension', []),
 			radius = _.get(params, 'spot_diameter', 200) / 2,
 			// don't create an image parameter while doing this
-			image = setHost(dsID, _.getIn(params, ['image', 1])),
+			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
 				hideColors, labels, view, image},
 			drawing = image ? vivDrawing : mapDrawing;
