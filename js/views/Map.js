@@ -51,7 +51,7 @@ var button = el(Button);
 
 var deckGL = el(DeckGL);
 
-const patchLayer = (data, color, onHover) => new ScatterplotLayer({
+const patchLayer = (data, color, radius, onHover) => new ScatterplotLayer({
 	id: `scatter-plot${getVivId(DETAIL_VIEW_ID)}`,
 	data: data,
 	stroked: true,
@@ -60,7 +60,7 @@ const patchLayer = (data, color, onHover) => new ScatterplotLayer({
 	getPosition: d => d.coordinates,
 	lineWidthMinPixels: 2,
 	lineWidthMaxPixels: 3,
-	getRadius: 100,
+	getRadius: radius,
 	getFillColor: [255, 0, 0],
 	getLineColor: color,
 	pickable: true,
@@ -108,7 +108,8 @@ class MapDrawing extends PureComponent {
 					(coords, {index}) => toRGB(scale(colorColumn[index])))
 				: () => [0, 255, 0];
 		var data = transpose(this.props.data.columns);
-		var mergeLayer = patchLayerMap(data, colorScale, this.onHover);
+		var {radius} = this.props.data;
+		var mergeLayer = patchLayerMap(data, colorScale, radius, this.onHover);
 		var scale = x => x;
 		// XXX fix range & ticks
 		scale.range = () => [0, 20];
@@ -179,7 +180,7 @@ class VivDrawing extends PureComponent {
 		if (!_.every(this.props.data.columns, _.identity)) {
 			return null;
 		}
-		var {colorColumn, colors} = this.props.data,
+		var {colorColumn, colors, radius} = this.props.data,
 			colorScale = colorColumn ?
 				_.Let((scale = colorScales.colorScale(colors)) =>
 					(coords, {index}) => toRGB(scale(colorColumn[index])))
@@ -187,7 +188,7 @@ class VivDrawing extends PureComponent {
 		var {offset, image_scalef: scale} = this.props.data.image;
 		var data = transpose(this.props.data.columns).map(c =>
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		var mergeLayer = patchLayer(data, colorScale, this.onHover);
+		var mergeLayer = patchLayer(data, colorScale, radius, this.onHover);
 		return /*this.state.source ? */avivator({
 			mergeLayers: [mergeLayer],
 			source: {urlOrFile: this.props.data.image.path}
@@ -414,10 +415,10 @@ export class Map extends PureComponent {
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			size = params.spot_diameter,
+			radius = _.get(params, 'spot_diameter', 200) / 2,
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 1])),
-			data = {columns, colorColumn, size, colors,
+			data = {columns, colorColumn, radius, colors,
 				hideColors, labels, view, image},
 			drawing = image ? vivDrawing : mapDrawing;
 
