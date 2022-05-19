@@ -9,18 +9,15 @@ import MenuList from '@material-ui/core/MenuList';
 
 import { makeStyles } from '@material-ui/core/styles';
 
+import shallow from 'zustand/shallow';
+
 import {
   useImageSettingsStore,
-  useChannelSettings,
   useViewerStore,
-  useChannelSetters
+  useChannelsStore,
+  useLoader
 } from '../../../state';
-import {
-  range,
-  guessRgb,
-  getMultiSelectionStats,
-  getBoundingCube
-} from '../../../utils';
+import { range, getMultiSelectionStats, getBoundingCube } from '../../../utils';
 
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
@@ -86,17 +83,25 @@ const useStyles = makeStyles(() => ({
 }));
 
 function VolumeButton() {
-  const { setImageSetting } = useImageSettingsStore();
-  const { loader, selections } = useChannelSettings();
-  const { setPropertiesForChannel } = useChannelSetters();
-  const {
+  const [selections, setPropertiesForChannel] = useChannelsStore(
+    store => [store.selections, store.setPropertiesForChannel],
+    shallow
+  );
+  const loader = useLoader();
+  const [
     use3d,
     toggleUse3d,
-    metadata,
     toggleIsVolumeRenderingWarningOn,
-    setViewerState,
     isViewerLoading
-  } = useViewerStore();
+  ] = useViewerStore(
+    store => [
+      store.use3d,
+      store.toggleUse3d,
+      store.toggleIsVolumeRenderingWarningOn,
+      store.isViewerLoading
+    ],
+    shallow
+  );
 
   const [open, toggle] = useReducer(v => !v, false);
   const anchorRef = useRef(null);
@@ -122,26 +127,22 @@ function VolumeButton() {
           // eslint-disable-next-line no-unused-expressions
           if (use3d) {
             toggleUse3d();
-            setViewerState({
+            useViewerStore.setState({
               isChannelLoading: Array(selections.length).fill(true)
             });
             getMultiSelectionStats({ loader, selections, use3d: !use3d }).then(
-              ({ domains, sliders }) => {
+              ({ domains, contrastLimits }) => {
                 range(selections.length).forEach((channel, j) =>
                   setPropertiesForChannel(channel, {
                     domains: domains[j],
-                    sliders: sliders[j]
+                    contrastLimits: contrastLimits[j]
                   })
                 );
-                setViewerState({
+                useViewerStore.setState({
                   isChannelLoading: Array(selections.length).fill(false)
                 });
               }
             );
-            const isRgb = metadata && guessRgb(metadata);
-            if (!isRgb && metadata) {
-              setViewerState({ useLens: true });
-            }
           }
         }}
         fullWidth
@@ -169,7 +170,7 @@ function VolumeButton() {
                           dense
                           disableGutters
                           onClick={() => {
-                            setViewerState({
+                            useViewerStore.setState({
                               isChannelLoading: Array(selections.length).fill(
                                 true
                               )
@@ -177,7 +178,7 @@ function VolumeButton() {
                             const [xSlice, ySlice, zSlice] = getBoundingCube(
                               loader
                             );
-                            setImageSetting({
+                            useImageSettingsStore.setState({
                               resolution,
                               xSlice,
                               ySlice,
@@ -188,18 +189,19 @@ function VolumeButton() {
                               loader,
                               selections,
                               use3d: true
-                            }).then(({ domains, sliders }) => {
-                              setImageSetting({
+                            }).then(({ domains, contrastLimits }) => {
+                              range(selections.length).forEach((channel, j) =>
+                                setPropertiesForChannel(channel, {
+                                  domains: domains[j],
+                                  contrastLimits: contrastLimits[j]
+                                })
+                              );
+                              useImageSettingsStore.setState({
                                 onViewportLoad: () => {
-                                  range(selections.length).forEach(
-                                    (channel, j) =>
-                                      setPropertiesForChannel(channel, {
-                                        domains: domains[j],
-                                        sliders: sliders[j]
-                                      })
-                                  );
-                                  setImageSetting({ onViewportLoad: () => {} });
-                                  setViewerState({
+                                  useImageSettingsStore.setState({
+                                    onViewportLoad: () => {}
+                                  });
+                                  useViewerStore.setState({
                                     isChannelLoading: Array(
                                       selections.length
                                     ).fill(false)
@@ -214,7 +216,6 @@ function VolumeButton() {
                                 toggleIsVolumeRenderingWarningOn();
                               }
                             });
-                            setViewerState({ useLens: false });
                           }}
                           key={`(${height}, ${width}, ${depthDownsampled})`}
                         >

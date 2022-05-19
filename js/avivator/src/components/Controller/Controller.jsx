@@ -4,6 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Divider from '@material-ui/core/Divider';
+import shallow from 'zustand/shallow';
 
 import ChannelController from './components/ChannelController';
 import Menu from './components/Menu';
@@ -20,10 +21,11 @@ import SideBySideToggle from './components/SideBySideToggle';
 import PictureInPictureToggle from './components/PictureInPictureToggle';
 import CameraOptions from './components/CameraOptions';
 import {
-  useChannelSettings,
+  useChannelsStore,
   useViewerStore,
   useImageSettingsStore,
-  useChannelSetters
+  useLoader,
+  useMetadata
 } from '../../state';
 import { guessRgb, useWindowSize, getSingleSelectionStats } from '../../utils';
 import { GLOBAL_SLIDER_DIMENSION_FIELDS } from '../../constants';
@@ -46,23 +48,34 @@ function TabPanel(props) {
 }
 
 const Controller = () => {
-  const {
-    isOn,
-    sliders,
+  const [
+    channelsVisible,
+    contrastLimits,
     colors,
     domains,
     selections,
-    loader,
-    ids
-  } = useChannelSettings();
-  const {
+    ids,
     setPropertiesForChannel,
-    toggleIsOn: toggleIsOnSetter,
+    toggleIsOnSetter,
     removeChannel
-  } = useChannelSetters();
-  const { colormap, setImageSetting } = useImageSettingsStore();
-  const {
-    metadata,
+  ] = useChannelsStore(
+    store => [
+      store.channelsVisible,
+      store.contrastLimits,
+      store.colors,
+      store.domains,
+      store.selections,
+      store.ids,
+      store.setPropertiesForChannel,
+      store.toggleIsOn,
+      store.removeChannel
+    ],
+    shallow
+  );
+  const loader = useLoader();
+
+  const colormap = useImageSettingsStore(store => store.colormap);
+  const [
     channelOptions,
     useLinkedView,
     use3d,
@@ -73,7 +86,22 @@ const Controller = () => {
     removeIsChannelLoading,
     pixelValues,
     isViewerLoading
-  } = useViewerStore();
+  ] = useViewerStore(
+    store => [
+      store.channelOptions,
+      store.useLinkedView,
+      store.use3d,
+      store.useColormap,
+      store.useLens,
+      store.isChannelLoading,
+      store.setIsChannelLoading,
+      store.removeIsChannelLoading,
+      store.pixelValues,
+      store.isViewerLoading
+    ],
+    shallow
+  );
+  const metadata = useMetadata();
   const viewSize = useWindowSize();
   const isRgb = metadata && guessRgb(metadata);
   const { shape, labels } = loader[0];
@@ -91,11 +119,14 @@ const Controller = () => {
         loader,
         selection,
         use3d
-      }).then(({ domain, slider }) => {
-        setImageSetting({
+      }).then(({ domain, contrastLimits: newContrastLimit }) => {
+        setPropertiesForChannel(i, {
+          contrastLimits: newContrastLimit,
+          domains: domain
+        });
+        useImageSettingsStore.setState({
           onViewportLoad: () => {
-            setPropertiesForChannel(i, { sliders: slider, domains: domain });
-            setImageSetting({ onViewportLoad: () => {} });
+            useImageSettingsStore.setState({ onViewportLoad: () => {} });
             setIsChannelLoading(i, false);
           }
         });
@@ -104,7 +135,7 @@ const Controller = () => {
     };
     const toggleIsOn = () => toggleIsOnSetter(i);
     const handleSliderChange = (e, v) =>
-      setPropertiesForChannel(i, { sliders: v });
+      setPropertiesForChannel(i, { contrastLimits: v });
     const handleRemoveChannel = () => {
       removeChannel(i);
       removeIsChannelLoading(i);
@@ -122,12 +153,12 @@ const Controller = () => {
         <ChannelController
           name={name}
           onSelectionChange={onSelectionChange}
-          isOn={isOn[i]}
+          channelsVisible={channelsVisible[i]}
           pixelValue={pixelValues[i]}
           toggleIsOn={toggleIsOn}
           handleSliderChange={handleSliderChange}
           domain={domains[i]}
-          slider={sliders[i]}
+          slider={contrastLimits[i]}
           color={colors[i]}
           handleRemoveChannel={handleRemoveChannel}
           handleColorSelect={handleColorSelect}
@@ -162,7 +193,7 @@ const Controller = () => {
       <Divider />
       <TabPanel value={tab} index={0}>
         {useColormap && <ColormapSelect />}
-        {useLens && !colormap && shape[labels.indexOf('c')] > 1 && (
+        {useLens && !colormap && !use3d && shape[labels.indexOf('c')] > 1 && (
           <LensSelect
             channelOptions={selections.map(sel => channelOptions[sel.c])}
           />

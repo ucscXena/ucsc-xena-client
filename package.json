@@ -101,8 +101,8 @@
     "xss": "^1.0.6"
   },
   "dependencies": {
-    "@hms-dbmi/viv": "^0.10.6",
-    "@luma.gl/webgl": "^8.5.10",
+    "@hms-dbmi/viv": "^0.12.8",
+    "@luma.gl/webgl": "^8.5.12",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
@@ -110,7 +110,7 @@
     "brfs": "^1.4.3",
     "classnames": "2.2.5",
     "core-js": "^3.6.5",
-    "deck.gl": "^8.5.3",
+    "deck.gl": "^8.6.7",
     "ehmutable": "^1.4.0",
     "highcharts": "^6.0.7",
     "iconv-lite": "^0.6.3",

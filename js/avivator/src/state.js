@@ -1,9 +1,6 @@
 /* eslint-disable camelcase */
 import create from 'zustand';
-import pick from 'lodash/pick';
-import pickBy from 'lodash/pickBy';
-import isFunction from 'lodash/isFunction';
-import shallow from 'zustand/shallow';
+
 // eslint-disable-next-line import/no-unresolved
 import { RENDERING_MODES } from '@hms-dbmi/viv';
 
@@ -24,18 +21,19 @@ const generateToggles = (defaults, set) => {
 };
 
 const DEFAUlT_CHANNEL_STATE = {
-  isOn: [],
-  sliders: [],
+  channelsVisible: [],
+  contrastLimits: [],
   colors: [],
   domains: [],
   selections: [],
   ids: [],
-  loader: [{ labels: [], shape: [] }]
+  loader: [{ labels: [], shape: [] }],
+  image: 0
 };
 
 const DEFAUlT_CHANNEL_VALUES = {
-  isOn: true,
-  sliders: [0, 65535],
+  channelsVisible: true,
+  contrastLimits: [0, 65535],
   colors: [255, 255, 255],
   domains: [0, 65535],
   selections: { z: 0, c: 0, t: 0 },
@@ -47,11 +45,10 @@ export const useChannelsStore = create(set => ({
   ...generateToggles(DEFAUlT_CHANNEL_VALUES, set),
   toggleIsOn: index =>
     set(state => {
-      const isOn = [...state.isOn];
-      isOn[index] = !isOn[index];
-      return { ...state, isOn };
+      const channelsVisible = [...state.channelsVisible];
+      channelsVisible[index] = !channelsVisible[index];
+      return { ...state, channelsVisible };
     }),
-  setLoader: loader => set(state => ({ ...state, loader })),
   setPropertiesForChannel: (channel, newProperties) =>
     set(state => {
       const entries = Object.entries(newProperties);
@@ -86,43 +83,15 @@ export const useChannelsStore = create(set => ({
         }
       });
       return newState;
-    }),
-  addChannels: newProperties =>
-    set(state => {
-      const entries = Object.entries(newProperties);
-      const newState = { ...state };
-      entries.forEach(([property, values]) => {
-        newState[property] = [...state[property], ...values];
-      });
-      const numNewChannels = entries[0][1].length;
-      Object.entries(DEFAUlT_CHANNEL_VALUES).forEach(([k, v]) => {
-        if (!newState[k].length) {
-          newState[k] = [
-            ...state[k],
-            ...Array.from({ length: numNewChannels }).map(() => v)
-          ];
-        }
-      });
-      return newState;
-    }),
-  resetChannels: () => set(state => ({ ...state, ...DEFAUlT_CHANNEL_STATE }))
+    })
 }));
-
-export const useChannelSettings = () =>
-  useChannelsStore(
-    state => pick(state, Object.keys(DEFAUlT_CHANNEL_STATE)),
-    shallow
-  );
-
-export const useChannelSetters = () =>
-  useChannelsStore(state => pickBy(state, isFunction), shallow);
 
 const DEFAULT_IMAGE_STATE = {
   lensSelection: 0,
   colormap: '',
   renderingMode: RENDERING_MODES.MAX_INTENSITY_PROJECTION,
   resolution: 0,
-  isLensOn: false,
+  lensEnabled: false,
   zoomLock: true,
   panLock: true,
   isOverviewOn: false,
@@ -135,12 +104,7 @@ const DEFAULT_IMAGE_STATE = {
 
 export const useImageSettingsStore = create(set => ({
   ...DEFAULT_IMAGE_STATE,
-  ...generateToggles(DEFAULT_IMAGE_STATE, set),
-  setImageSetting: newState =>
-    set(state => ({
-      ...state,
-      ...newState
-    }))
+  ...generateToggles(DEFAULT_IMAGE_STATE, set)
 }));
 
 const DEFAULT_VIEWER_STATE = {
@@ -163,17 +127,13 @@ const DEFAULT_VIEWER_STATE = {
   channelOptions: [],
   metadata: null,
   viewState: null,
-  source: ''
+  source: '',
+  pyramidResolution: 0
 };
 
 export const useViewerStore = create(set => ({
   ...DEFAULT_VIEWER_STATE,
   ...generateToggles(DEFAULT_VIEWER_STATE, set),
-  setViewerState: newState =>
-    set(state => ({
-      ...state,
-      ...newState
-    })),
   setIsChannelLoading: (index, val) =>
     set(state => {
       const newIsChannelLoading = [...state.isChannelLoading];
@@ -192,3 +152,17 @@ export const useViewerStore = create(set => ({
       return { ...state, isChannelLoading: newIsChannelLoading };
     })
 }));
+
+export const useLoader = () => {
+  const [fullLoader, image] = useChannelsStore(store => [
+    store.loader,
+    store.image
+  ]);
+  return Array.isArray(fullLoader[0]) ? fullLoader[image] : fullLoader;
+};
+
+export const useMetadata = () => {
+  const image = useChannelsStore(store => store.image);
+  const metadata = useViewerStore(store => store.metadata);
+  return Array.isArray(metadata) ? metadata[image] : metadata;
+};

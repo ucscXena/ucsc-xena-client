@@ -5,11 +5,12 @@ import Grid from '@material-ui/core/Grid';
 import Slider from '@material-ui/core/Slider';
 import Select from '@material-ui/core/Select';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import shallow from 'zustand/shallow';
 
 import ChannelOptions from './ChannelOptions';
 import { FILL_PIXEL_VALUE } from '../../../constants';
 import {
-  useChannelSettings,
+  useLoader,
   useImageSettingsStore,
   useViewerStore
 } from '../../../state';
@@ -42,7 +43,7 @@ const getPixelValueDisplay = (pixelValue, isLoading, shouldShowPixelValue) => {
 function ChannelController({
   name,
   onSelectionChange,
-  isOn,
+  channelsVisible,
   pixelValue,
   toggleIsOn,
   handleSliderChange,
@@ -53,14 +54,18 @@ function ChannelController({
   handleColorSelect,
   isLoading
 }) {
-  const { loader } = useChannelSettings();
-  const { colormap } = useImageSettingsStore();
-  const { channelOptions, useLinkedView, use3d } = useViewerStore();
+  const loader = useLoader();
+  const colormap = useImageSettingsStore(store => store.colormap);
+  const [channelOptions, useLinkedView, use3d] = useViewerStore(
+    store => [store.channelOptions, store.useLinkedView, store.use3d],
+    shallow
+  );
   const rgbColor = toRgb(colormap, color);
   const [min, max] = domain;
-  // If the min/max range is and the dtype is float, make the step size smaller so sliders are smoother.
-  const step =
-    max - min < 500 && loader[0]?.dtype === 'Float32' ? (max - min) / 500 : 1;
+  // If the min/max range is and the dtype is float, make the step size smaller so contrastLimits are smoother.
+  const { dtype } = loader[0];
+  const isFloat = dtype === 'Float32' || dtype === 'Float64';
+  const step = max - min < 500 && isFloat ? (max - min) / 500 : 1;
   const shouldShowPixelValue = !useLinkedView && !use3d;
   return (
     <Grid container direction="column" m={2} justify="center">
@@ -90,7 +95,7 @@ function ChannelController({
           <Checkbox
             onChange={toggleIsOn}
             disabled={isLoading}
-            checked={isOn}
+            checked={channelsVisible}
             style={{
               color: rgbColor,
               '&$checked': {

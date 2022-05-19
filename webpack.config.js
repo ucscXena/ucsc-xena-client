@@ -70,7 +70,7 @@ module.exports = {
 					{ loader: 'babel-loader' }
 				]
 			},
-			{ test: path => path.match(/@hms-dbmi[/\\]viv[/\\]dist[/\\]viv.es.js/),
+			{ test: path => path.match(/@hms-dbmi[/\\]viv[/\\].*.jsx?/),
 				loader: "babel-loader"},
 			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
 			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },

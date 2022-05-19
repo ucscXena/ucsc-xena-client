@@ -1,25 +1,46 @@
 /* eslint-disable no-nested-ternary */
+import shallow from 'zustand/shallow';
 import React from 'react';
 import debounce from 'lodash/debounce';
 import {
   SideBySideViewer,
-  VolumeViewer
+  VolumeViewer,
+  AdditiveColormapExtension,
+  LensExtension
   // eslint-disable-next-line import/no-unresolved
 } from '@hms-dbmi/viv';
 import {
   useImageSettingsStore,
   useViewerStore,
-  useChannelSettings
+  useChannelsStore,
+  useLoader
 } from '../state';
 import PictureInPictureViewer from './XenaPictureInPictureViewer';
 import { useWindowSize } from '../utils';
 import { DEFAULT_OVERVIEW } from '../constants';
 
 const Viewer = props => {
-  const { useLinkedView, setViewerState, use3d, viewState } = useViewerStore();
-  const { colors, sliders, isOn, selections, loader } = useChannelSettings();
+  const [useLinkedView, use3d, viewState] = useViewerStore(
+    store => [store.useLinkedView, store.use3d, store.viewState],
+    shallow
+  );
+  const [
+    colors,
+    contrastLimits,
+    channelsVisible,
+    selections
+  ] = useChannelsStore(
+    store => [
+      store.colors,
+      store.contrastLimits,
+      store.channelsVisible,
+      store.selections
+    ],
+    shallow
+  );
+  const loader = useLoader();
   const viewSize = useWindowSize();
-  const {
+  const [
     lensSelection,
     colormap,
     renderingMode,
@@ -27,21 +48,44 @@ const Viewer = props => {
     ySlice,
     zSlice,
     resolution,
-    isLensOn,
+    lensEnabled,
     zoomLock,
     panLock,
     isOverviewOn,
     onViewportLoad,
     useFixedAxis
-  } = useImageSettingsStore();
+  ] = useImageSettingsStore(
+    store => [
+      store.lensSelection,
+      store.colormap,
+      store.renderingMode,
+      store.xSlice,
+      store.ySlice,
+      store.zSlice,
+      store.resolution,
+      store.lensEnabled,
+      store.zoomLock,
+      store.panLock,
+      store.isOverviewOn,
+      store.onViewportLoad,
+      store.useFixedAxis
+    ],
+    shallow
+  );
+
+  const onViewStateChange = ({ viewState: { zoom } }) => {
+    const z = Math.min(Math.max(Math.round(-zoom), 0), loader.length - 1);
+    useViewerStore.setState({ pyramidResolution: z });
+  };
+
   return use3d ? (
     <VolumeViewer
       loader={loader}
-      sliderValues={sliders}
-      colorValues={colors}
-      channelIsOn={isOn}
-      loaderSelection={selections}
-      colormap={colormap.length > 0 && colormap}
+      contrastLimits={contrastLimits}
+      colors={colors}
+      channelsVisible={channelsVisible}
+      selections={selections}
+      colormap={colormap}
       xSlice={xSlice}
       ySlice={ySlice}
       zSlice={zSlice}
@@ -54,7 +98,9 @@ const Viewer = props => {
       viewStates={[viewState]}
       onViewStateChange={debounce(
         ({ viewState: newViewState, viewId }) =>
-          setViewerState({ viewState: { ...newViewState, id: viewId } }),
+          useViewerStore.setState({
+            viewState: { ...newViewState, id: viewId }
+          }),
         250,
         { trailing: true }
       )}
@@ -62,41 +108,48 @@ const Viewer = props => {
   ) : useLinkedView ? (
     <SideBySideViewer
       loader={loader}
-      sliderValues={sliders}
-      colorValues={colors}
-      channelIsOn={isOn}
-      loaderSelection={selections}
+      contrastLimits={contrastLimits}
+      colors={colors}
+      channelsVisible={channelsVisible}
+      selections={selections}
       height={viewSize.height}
       width={viewSize.width}
-      colormap={colormap.length > 0 && colormap}
       zoomLock={zoomLock}
       panLock={panLock}
       hoverHooks={{
-        handleValue: v => setViewerState({ pixelValues: v })
+        handleValue: v => useViewerStore.setState({ pixelValues: v })
       }}
       lensSelection={lensSelection}
-      isLensOn={isLensOn}
+      lensEnabled={lensEnabled}
       onViewportLoad={onViewportLoad}
+      extensions={[
+        colormap ? new AdditiveColormapExtension() : new LensExtension()
+      ]}
+      colormap={colormap || 'viridis'}
     />
   ) : (
     <PictureInPictureViewer
 	  mergeLayers={props.mergeLayers}
       loader={loader}
-      sliderValues={sliders}
-      colorValues={colors}
-      channelIsOn={isOn}
-      loaderSelection={selections}
+      contrastLimits={contrastLimits}
+      colors={colors}
+      channelsVisible={channelsVisible}
+      selections={selections}
       height={viewSize.height}
       width={viewSize.width}
-      colormap={colormap.length > 0 && colormap}
       overview={DEFAULT_OVERVIEW}
       overviewOn={isOverviewOn}
       hoverHooks={{
-        handleValue: v => setViewerState({ pixelValues: v })
+        handleValue: v => useViewerStore.setState({ pixelValues: v })
       }}
       lensSelection={lensSelection}
-      isLensOn={isLensOn}
+      lensEnabled={lensEnabled}
       onViewportLoad={onViewportLoad}
+      extensions={[
+        colormap ? new AdditiveColormapExtension() : new LensExtension()
+      ]}
+      colormap={colormap || 'viridis'}
+      onViewStateChange={onViewStateChange}
     />
   );
 };

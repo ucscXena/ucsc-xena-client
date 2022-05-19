@@ -1,58 +1,73 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+// eslint-disable-next-line camelcase
+import { unstable_batchedUpdates } from 'react-dom';
 import Grid from '@material-ui/core/Grid';
 import Slider from '@material-ui/core/Slider';
 import debounce from 'lodash/debounce';
+import shallow from 'zustand/shallow';
+
 import { range, getMultiSelectionStats } from '../../../utils';
 import {
-  useChannelSettings,
-  useChannelSetters,
+  useChannelsStore,
   useViewerStore,
-  useImageSettingsStore
+  useImageSettingsStore,
+  useLoader
 } from '../../../state';
 
 export default function GlobalSelectionSlider(props) {
   const { size, label } = props;
-  const { setPropertiesForChannel } = useChannelSetters();
-  const { selections, loader } = useChannelSettings();
-  const { setViewerState, globalSelection } = useViewerStore();
-  const { setImageSetting } = useImageSettingsStore();
-  const changeSelection = debounce(
-    (event, newValue) => {
-      setViewerState({
-        isChannelLoading: selections.map(() => true)
-      });
-      const newSelections = [...selections].map(sel => ({
-        ...sel,
-        [label]: newValue
-      }));
-      getMultiSelectionStats({
-        loader,
-        selections: newSelections,
-        use3d: false
-      }).then(({ domains, sliders }) => {
-        setImageSetting({
-          onViewportLoad: () => {
+  const [selections, setPropertiesForChannel] = useChannelsStore(
+    store => [store.selections, store.setPropertiesForChannel],
+    shallow
+  );
+  const loader = useLoader();
+  const globalSelection = useViewerStore(store => store.globalSelection);
+  const changeSelection = useCallback(
+    debounce(
+      (event, newValue) => {
+        useViewerStore.setState({
+          isChannelLoading: selections.map(() => true)
+        });
+        const newSelections = [...selections].map(sel => ({
+          ...sel,
+          [label]: newValue
+        }));
+        getMultiSelectionStats({
+          loader,
+          selections: newSelections,
+          use3d: false
+        }).then(({ domains, contrastLimits }) => {
+          unstable_batchedUpdates(() => {
             range(newSelections.length).forEach((channel, j) =>
               setPropertiesForChannel(channel, {
                 domains: domains[j],
-                sliders: sliders[j]
+                contrastLimits: contrastLimits[j]
               })
             );
-            setImageSetting({ onViewportLoad: () => {} });
-            setViewerState({
-              isChannelLoading: selections.map(() => false)
+          });
+          unstable_batchedUpdates(() => {
+            useImageSettingsStore.setState({
+              onViewportLoad: () => {
+                useImageSettingsStore.setState({
+                  onViewportLoad: () => {}
+                });
+                useViewerStore.setState({
+                  isChannelLoading: selections.map(() => false)
+                });
+              }
             });
-          }
+            range(newSelections.length).forEach((channel, j) =>
+              setPropertiesForChannel(channel, {
+                selections: newSelections[j]
+              })
+            );
+          });
         });
-        range(newSelections.length).forEach((channel, j) =>
-          setPropertiesForChannel(channel, {
-            selections: newSelections[j]
-          })
-        );
-      });
-    },
-    50,
-    { trailing: true }
+      },
+      50,
+      { trailing: true }
+    ),
+    [loader, selections]
   );
   return (
     <Grid container direction="row" justify="space-between" alignItems="center">
@@ -63,7 +78,7 @@ export default function GlobalSelectionSlider(props) {
         <Slider
           value={globalSelection[label]}
           onChange={(event, newValue) => {
-            setViewerState({
+            useViewerStore.setState({
               globalSelection: {
                 ...globalSelection,
                 [label]: newValue

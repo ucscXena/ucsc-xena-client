@@ -5,6 +5,7 @@ import { Matrix4 } from '@math.gl/core';
 import {
   loadOmeTiff,
   loadBioformatsZarr,
+  loadOmeZarr,
   getChannelStats
   // eslint-disable-next-line import/no-unresolved
 } from '@hms-dbmi/viv';
@@ -33,20 +34,30 @@ class UnsupportedBrowserError extends Error {
 /**
  *
  * @param {string | File} src
- * @param {import('../../src/loaders/omexml').OMEXML[0]} imgMeta
+ * @param {import('../../src/loaders/omexml').OMEXML} rootMeta
  * @param {number} levels
+ * @param {import('../../src/loaders/tiff/pixel-source').TiffPixelSource[]} data
  */
-async function getTotalImageCount(src, imgMeta, levels) {
+async function getTotalImageCount(src, rootMeta, data) {
   const from = typeof src === 'string' ? fromUrl : fromBlob;
   const tiff = await from(src);
-  const {
-    Pixels: { SizeC, SizeT, SizeZ }
-  } = imgMeta;
-  const numImagesPerResolution = SizeC * SizeT * SizeZ;
-
   const firstImage = await tiff.getImage(0);
   const hasSubIFDs = Boolean(firstImage?.fileDirectory?.SubIFDs);
-  return numImagesPerResolution * (hasSubIFDs ? 1 : levels);
+  if (hasSubIFDs) {
+    return rootMeta.reduce((sum, imgMeta) => {
+      const {
+        Pixels: { SizeC, SizeT, SizeZ }
+      } = imgMeta;
+      const numImagesPerResolution = SizeC * SizeT * SizeZ;
+      return numImagesPerResolution + sum;
+    }, 1);
+  }
+  const levels = data[0].length;
+  const {
+    Pixels: { SizeC, SizeT, SizeZ }
+  } = rootMeta[0];
+  const numImagesPerResolution = SizeC * SizeT * SizeZ;
+  return numImagesPerResolution * levels;
 }
 
 /**
@@ -67,22 +78,27 @@ export async function createLoader(
     // OME-TIFF
     if (isOMETIFF(urlOrFile)) {
       if (urlOrFile instanceof File) {
-        const source = await loadOmeTiff(urlOrFile);
+        const source = await loadOmeTiff(urlOrFile, { images: 'all' });
         return source;
       }
       const url = urlOrFile;
       const res = await fetch(url.replace(/ome\.tif(f?)/gi, 'offsets.json'));
       const isOffsets404 = res.status === 404;
       const offsets = !isOffsets404 ? await res.json() : undefined;
-      const source = await loadOmeTiff(urlOrFile, { offsets });
+      // TODO(2021-05-06): temporarily disable `pool` until inline worker module is fixed.
+      const source = await loadOmeTiff(urlOrFile, {
+        offsets,
+        images: 'all',
+        pool: false
+      });
 
       // Show a warning if the total number of channels/images exceeds a fixed amount.
       // Non-Bioformats6 pyramids use Image tags for pyramid levels and do not have offsets
       // built in to the format for them, hence the ternary.
       const totalImageCount = await getTotalImageCount(
         urlOrFile,
-        source.metadata,
-        source.data.length
+        source.map(s => s.metadata),
+        source.map(s => s.data)
       );
       if (isOffsets404 && totalImageCount > MAX_CHANNELS_FOR_SNACKBAR_WARNING) {
         handleOffsetsNotFound(true);
@@ -99,12 +115,29 @@ export async function createLoader(
       );
     }
 
-    const source = await loadBioformatsZarr(urlOrFile);
+    let source;
+    try {
+      source = await loadBioformatsZarr(urlOrFile);
+    } catch {
+      // try ome-zarr
+      const res = await loadOmeZarr(urlOrFile, { type: 'multiscales' });
+      // extract metadata into OME-XML-like form
+      const metadata = {
+        Pixels: {
+          Channels: res.metadata.omero.channels.map(c => ({
+            Name: c.label,
+            SamplesPerPixel: 1
+          }))
+        }
+      };
+      source = { data: res.data, metadata };
+    }
     return source;
   } catch (e) {
     if (e instanceof UnsupportedBrowserError) {
       handleLoaderError(e.message);
     } else {
+      console.error(e); // eslint-disable-line
       handleLoaderError(null);
     }
     return { data: null };
@@ -208,8 +241,8 @@ export async function getSingleSelectionStats2D({ loader, selection }) {
   const data = Array.isArray(loader) ? loader[loader.length - 1] : loader;
   const raster = await data.getRaster({ selection });
   const selectionStats = getChannelStats(raster.data);
-  const { domain, autoSliders: slider } = selectionStats;
-  return { domain, slider };
+  const { domain, contrastLimits } = selectionStats;
+  return { domain, contrastLimits };
 }
 
 export async function getSingleSelectionStats3D({ loader, selection }) {
@@ -234,16 +267,16 @@ export async function getSingleSelectionStats3D({ loader, selection }) {
       Math.min(stats0.domain[0], statsMid.domain[0], statsTop.domain[0]),
       Math.max(stats0.domain[1], statsMid.domain[1], statsTop.domain[1])
     ],
-    slider: [
+    contrastLimits: [
       Math.min(
-        stats0.autoSliders[0],
-        statsMid.autoSliders[0],
-        statsTop.autoSliders[0]
+        stats0.contrastLimits[0],
+        statsMid.contrastLimits[0],
+        statsTop.contrastLimits[0]
       ),
       Math.max(
-        stats0.autoSliders[1],
-        statsMid.autoSliders[1],
-        statsTop.autoSliders[1]
+        stats0.contrastLimits[1],
+        statsMid.contrastLimits[1],
+        statsTop.contrastLimits[1]
       )
     ]
   };
@@ -263,8 +296,8 @@ export const getMultiSelectionStats = async ({ loader, selections, use3d }) => {
     )
   );
   const domains = stats.map(stat => stat.domain);
-  const sliders = stats.map(stat => stat.slider);
-  return { domains, sliders };
+  const contrastLimits = stats.map(stat => stat.contrastLimits);
+  return { domains, contrastLimits };
 };
 
 /* eslint-disable no-useless-escape */

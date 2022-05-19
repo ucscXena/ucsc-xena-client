@@ -12,11 +12,13 @@ import Link from '@material-ui/core/Link';
 import Button from '@material-ui/core/Button';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { makeStyles } from '@material-ui/core/styles';
+import shallow from 'zustand/shallow';
+import { Select } from '@material-ui/core';
 
 import MenuTitle from './MenuTitle';
 import DropzoneButton from './DropzoneButton';
 import { isMobileOrTablet, getNameFromUrl } from '../../../utils';
-import { useViewerStore } from '../../../state';
+import { useChannelsStore, useViewerStore } from '../../../state';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -50,7 +52,11 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function Header(props) {
-  const { setViewerState, source } = useViewerStore();
+  const image = useChannelsStore(store => store.image);
+  const [source, metadata] = useViewerStore(store => [
+    store.source,
+    store.metadata
+  ]);
   const handleSubmitNewUrl = (event, newUrl) => {
     event.preventDefault();
     const newSource = {
@@ -58,8 +64,12 @@ function Header(props) {
       // Use the trailing part of the URL (file name, presumably) as the description.
       description: getNameFromUrl(newUrl)
     };
-    setViewerState({ source: newSource });
+    useViewerStore.setState({ source: newSource });
   };
+  const onImageSelectionChange = e =>
+    useChannelsStore.setState({
+      image: e.target.value
+    });
   const url = typeof source.urlOrFile === 'string' ? source.urlOrFile : '';
   const [text, setText] = useState(url);
   const [open, toggle] = useReducer(v => !v, false);
@@ -128,6 +138,17 @@ function Header(props) {
           <DropzoneButton />
         </Grid>
       )}
+      {Array.isArray(metadata) && (
+        <Grid item xs={12}>
+          <Select native value={image} onChange={onImageSelectionChange}>
+            {metadata.map((meta, i) => (
+              <option key={meta.Name} value={i}>
+                {meta.Name}
+              </option>
+            ))}
+          </Select>
+        </Grid>
+      )}
       <Grid item xs={12} className={classes.divider}>
         <Divider />
       </Grid>
@@ -137,7 +158,10 @@ function Header(props) {
 
 function Menu({ children, ...props }) {
   const classes = useStyles(props);
-  const { isControllerOn, toggleIsControllerOn } = useViewerStore();
+  const [isControllerOn, toggleIsControllerOn] = useViewerStore(
+    store => [store.isControllerOn, store.toggleIsControllerOn],
+    shallow
+  );
   return isControllerOn ? (
     <Box position="absolute" right={0} top={0} m={1} className={classes.root}>
       <Paper className={classes.paper}>
