@@ -14,7 +14,7 @@
     "clean:dist": "rimraf dist/*",
     "start": "npm run start:hot",
     "start:cold": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
-    "start:hot": "webpack-dev-server --config webpack.hot.js --devtool eval --progress --colors --history-api-fallback",
+    "start:hot": "webpack-dev-server --config webpack.hot.js --devtool eval-source-map --progress --colors --history-api-fallback",
     "start:prod": "webpack-dev-server --config webpack.prod.js --devtool source-map --progress --colors --history-api-fallback",
     "build": "webpack",
     "build:prod": "npm run build -- --config webpack.prod.js --devtool source-map",
