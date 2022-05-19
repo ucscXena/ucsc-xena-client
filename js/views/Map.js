@@ -310,9 +310,12 @@ function getStatusView(loading, error, onReload) {
 
 var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
 
+var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
+	host + '/download' + path;
+
 function setHost(dsID, image) {
 	var {host} = JSON.parse(dsID);
-	return image && _.assoc(image, 'path', host + '/download' + fudgeOme(image.path));
+	return image && _.assoc(image, 'path', relativeOrAbsolute(host, fudgeOme(image.path)));
 }
 
 export class Map extends PureComponent {
