@@ -112,7 +112,7 @@
     "core-js": "^3.6.5",
     "deck.gl": "^8.6.7",
     "ehmutable": "^1.4.0",
-    "highcharts": "^6.0.7",
+    "highcharts": "^9.0.0",
     "iconv-lite": "^0.6.3",
     "jStat": "1.5.3",
     "linear-algebra": "3.1.1",
