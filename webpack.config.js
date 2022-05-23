@@ -72,6 +72,8 @@ module.exports = {
 			},
 			{ test: path => path.match(/@hms-dbmi[/\\]viv[/\\].*.jsx?/),
 				loader: "babel-loader"},
+			{ test: path => path.match(/ucsc-xena-viv[/\\].*.jsx?/),
+				loader: "babel-loader"},
 			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
 			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },
 			{ test: /unicode-trie[/\\]index.js/, loader: "babel-loader" },

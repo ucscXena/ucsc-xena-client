@@ -1,4 +1,4 @@
-import {DetailView} from '@hms-dbmi/viv';
+import {DetailView} from 'ucsc-xena-viv';
 
 // Extend DetailView to allow data overlay.
 export default class XenaDetailView extends DetailView {

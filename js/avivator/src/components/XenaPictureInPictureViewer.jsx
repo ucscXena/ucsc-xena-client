@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react'; // eslint-disable-line import/no-unresolved
-import {VivViewer} from '@hms-dbmi/viv';
+import {VivViewer} from 'ucsc-xena-viv';
 import DetailView from './XenaDetailView';
 import {
   OverviewView,
   getDefaultInitialViewState,
   DETAIL_VIEW_ID,
   OVERVIEW_VIEW_ID
-} from '@hms-dbmi/viv';
-import { ColorPaletteExtension } from '@hms-dbmi/viv';
+} from 'ucsc-xena-viv';
+import { ColorPaletteExtension } from 'ucsc-xena-viv';
 
 /**
  * This component provides a component for an overview-detail VivViewer of an image (i.e picture-in-picture).

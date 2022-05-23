@@ -8,7 +8,7 @@ import {
   loadOmeZarr,
   getChannelStats
   // eslint-disable-next-line import/no-unresolved
-} from '@hms-dbmi/viv';
+} from 'ucsc-xena-viv';
 
 import { GLOBAL_SLIDER_DIMENSION_FIELDS } from './constants';
 

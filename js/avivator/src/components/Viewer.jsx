@@ -8,7 +8,7 @@ import {
   AdditiveColormapExtension,
   LensExtension
   // eslint-disable-next-line import/no-unresolved
-} from '@hms-dbmi/viv';
+} from 'ucsc-xena-viv';
 import {
   useImageSettingsStore,
   useViewerStore,

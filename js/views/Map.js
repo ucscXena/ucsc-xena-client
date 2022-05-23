@@ -20,7 +20,7 @@ import AxesLayer from './axes-layer';
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {grey} from '@material-ui/core/colors';
 import Avivator from '../avivator/src/Avivator.jsx';
-import {DETAIL_VIEW_ID} from '@hms-dbmi/viv';
+import {DETAIL_VIEW_ID} from 'ucsc-xena-viv';
 var {transpose} = require('../underscore_ext').default;
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 // XXX Try to ditch this, in favor of the singlecell scales that
