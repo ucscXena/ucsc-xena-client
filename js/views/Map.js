@@ -61,7 +61,6 @@ const patchLayer = (data, color, radius, onHover) => new ScatterplotLayer({
 	lineWidthMinPixels: 2,
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
-	getFillColor: [255, 0, 0],
 	getLineColor: color,
 	pickable: true,
 	onHover
@@ -178,13 +177,15 @@ class VivDrawing extends PureComponent {
 		this.props.onTooltip(index === -1 ? null : index);
 	}
 	render() {
+		var hidden = new Set(this.props.data.hideColors);
 		if (!_.every(this.props.data.columns, _.identity)) {
 			return null;
 		}
 		var {colorColumn, colors, radius} = this.props.data,
 			colorScale = colorColumn ?
 				_.Let((scale = colorScales.colorScale(colors)) =>
-					(coords, {index}) => toRGB(scale(colorColumn[index])))
+					(coords, {index}) => _.Let((v = colorColumn[index]) =>
+						hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
 				: () => [0, 255, 0];
 		var {offset, image_scalef: scale} = this.props.data.image;
 		var data = transpose(this.props.data.columns).map(c =>
@@ -412,7 +413,7 @@ export class Map extends PureComponent {
 			colorId = getColorColumn(state),
 			colorColumn = _.getIn(state, ['data', colorId,
 				'req', 'values', 0]),
-			hideColors = _.getIn(mapState, ['hidden', colorColumn]),
+			hideColors = _.getIn(mapState, ['hidden', colorId]),
 			colors = _.getIn(state, ['columns', colorId, 'colors', 0]),
 			availableMaps = mapState.available,
 			mapValue = _.findIndex(availableMaps,
