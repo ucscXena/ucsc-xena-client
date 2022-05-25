@@ -6,6 +6,9 @@ const theme = createTheme({
 		action: {
 			disabled: xenaColor.BLACK_12,
 		},
+		error: {
+			main: xenaColor.WARNING,
+		},
 		primary: {
 			main: xenaColor.PRIMARY,
 			contrastText: xenaColor.WHITE,
@@ -256,6 +259,12 @@ export const xenaTheme = createTheme(theme, {
 					minWidth: 0,
 					padding: '0 8px',
 				},
+			},
+		},
+		MuiDialogContentText: {
+			root: {
+				fontSize: 16,
+				marginTop: 0,
 			},
 		},
 		MuiDivider: {
