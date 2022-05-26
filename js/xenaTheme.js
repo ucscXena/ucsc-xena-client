@@ -288,13 +288,19 @@ export const xenaTheme = createTheme(theme, {
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap',
+				'&$error': {
+					color: xenaColor.ERROR,
+				},
 			},
 		},
 		MuiFormLabel: {
 			root: {
-				color: theme.palette.text.primary,
-				lineHeight: undefined,
+				...theme.typography.subtitle2,
+				color: theme.palette.text.hint,
 				padding: undefined,
+				'&$focused': {
+					color: theme.palette.text.hint,
+				},
 			},
 		},
 		MuiIcon: {

@@ -33,7 +33,8 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 
 var _ = require('../underscore_ext').default;
-import XFormControl from "./XFormControl";
+import {xenaColor} from '../xenaColor';
+import XFormControl from './XFormControl';
 var XInputToolbar = require('./XInputToolbar');
 
 // Styles
@@ -52,18 +53,26 @@ var sxControlLabel = {
 	},
 };
 var sxFormLabel = {
-	display: 'block',
-	overflow: 'hidden',
-	padding: '32px 0 8px 0',
-	textOverflow: 'ellipsis',
-	whiteSpace: 'nowrap',
-	width: '100%', /* required for ellipsis */
-	'&:hover': {
-		overflow: 'visible',
-	},
-	'&:first-of-type': {
-		paddingTop: 8,
-	},
+	'&.MuiFormLabel-root': {
+		color: xenaColor.BLACK_87,
+		display: 'block',
+		fontSize: 14,
+		lineHeight: '20px',
+		overflow: 'hidden',
+		padding: '32px 0 8px 0',
+		textOverflow: 'ellipsis',
+		whiteSpace: 'nowrap',
+		width: '100%', /* required for ellipsis */
+		'&.Mui-focused': {
+			color: xenaColor.BLACK_87,
+		},
+		'&:hover': {
+			overflow: 'visible',
+		},
+		'&:first-of-type': {
+			paddingTop: 8,
+		},
+	}
 };
 
 class XCheckboxGroup extends PureComponent {
