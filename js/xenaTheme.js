@@ -6,9 +6,6 @@ const theme = createTheme({
 		action: {
 			disabled: xenaColor.BLACK_12,
 		},
-		error: {
-			main: xenaColor.WARNING,
-		},
 		primary: {
 			main: xenaColor.PRIMARY,
 			contrastText: xenaColor.WHITE,

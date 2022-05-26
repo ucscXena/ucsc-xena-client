@@ -65,6 +65,14 @@ var sxCloseButton = {
 		backgroundColor: xenaColor.BLACK_6,
 	},
 };
+var sxModeTextField = {
+	'& .MuiFormLabel-root.Mui-error': {
+		color: xenaColor.WARNING,
+	},
+	'& .MuiFormHelperText-root.Mui-error': {
+		color: xenaColor.WARNING,
+	},
+};
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units, column) {
@@ -294,7 +302,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						error = this.state.errors[param];
 
 					return (
-						<TextField
+						<Box
+							component={TextField}
 							error={!!error}
 							fullWidth
 							helperText={error || undefined}
@@ -304,6 +313,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 							type='text'
 							value={this.state[param]}
 							placeholder={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
+							sx={sxModeTextField}
 							onChange={this.handleChange.bind(this, param)}/>
 					);
 				});
