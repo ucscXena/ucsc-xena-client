@@ -6,6 +6,9 @@ const theme = createTheme({
 		action: {
 			disabled: xenaColor.BLACK_12,
 		},
+		error: {
+			main: xenaColor.ERROR,
+		},
 		primary: {
 			main: xenaColor.PRIMARY,
 			contrastText: xenaColor.WHITE,
@@ -288,9 +291,6 @@ export const xenaTheme = createTheme(theme, {
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap',
-				'&$error': {
-					color: xenaColor.ERROR,
-				},
 			},
 		},
 		MuiFormLabel: {
