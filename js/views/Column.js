@@ -16,8 +16,7 @@ var Crosshair = require('./Crosshair');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
-import Tooltip from 'react-toolbox/lib/tooltip';
+import {Box, Divider, Icon, IconButton, Menu, MenuItem, Tooltip} from '@material-ui/core';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 import RefGeneAnnotation from '../refGeneExons';
@@ -40,70 +39,20 @@ function bounded(min, max, x) {
 	return x < min ? min : (x > max ? max : x);
 }
 
-var ESCAPE = 27;
-
-class IconMenu extends React.Component {
-	onKeyDown = ev => {
-		if (ev.keyCode === ESCAPE) {
-			this.ref.handleMenuHide();
-		}
-	};
-	cleanup() {
-		// We get an onHide() call from setting state in Menu, *and*
-		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
-		// check if 'curtain' still exists before tear down.
-		if (this.curtain) {
-			document.body.removeChild(this.curtain);
-			document.removeEventListener('keydown', this.onKeyDown);
-			delete this.curtain;
-		}
-	}
-	componentWillUnmount() {
-		this.cleanup();
-	}
-	onHide = () => {
-		var {onHide} = this.props;
-		this.cleanup();
-		onHide && onHide();
-	};
-	onShow = () => {
-		var {onShow} = this.props;
-		this.curtain = document.createElement('div');
-		this.curtain.style = "position:absolute;top:0;left:0;width:100%;height:100%";
-		document.body.appendChild(this.curtain);
-		document.addEventListener('keydown', this.onKeyDown, false);
-		onShow && onShow();
-	};
-	onRef = ref => {
-		this.ref = ref;
-	};
-	render() {
-		var others = _.omit(this.props, 'onShow', 'onHide');
-		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
-	}
-}
-
-
 function uniqueNotNull(data) {
   return _.uniq(data).filter( f => f !== null);
 }
 
-const TooltipMenuItem_ = Tooltip(MenuItem);
+// menu item that shows tooltip when disabled.
+var TooltipMenuItem = React.forwardRef(({disabled, tooltip, ...menuProps}, ref) => (
+	disabled && tooltip ?
+		<Tooltip enterDelay={750} placement='right' ref={ref} title={tooltip}>
+			{/* span is required for wrapping Tooltip around a disabled MenuItem; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+			<span><MenuItem disabled={disabled} {...menuProps}/></span>
+		</Tooltip> : <MenuItem disabled={disabled} {...menuProps}/>
+));
 
-
-const tooltipConfig = {
-	tooltipDelay: 750,
-	tooltipPosition: "horizontal",
-	style: {pointerEvents: 'all'}
-};
-
-// menu item that shows tooltip when disabled. react-toolbox Tooltip
-// doesn't allow hiding of the tooltip, or setting to null, so we have
-// to remove the Tooltip component entirely.
-var TooltipMenuItem = props => props.disabled ?
-	<TooltipMenuItem_ {...{...props, ...tooltipConfig}}/> :
-	<MenuItem {..._.omit(props, 'tooltip')}/>;
-
+var MenuDivider = React.forwardRef(({}, ref) => <Box ref={ref} my={3}><Divider/></Box>);
 
 // XXX move this?
 function download([fields, rows]) {
@@ -146,9 +95,7 @@ var styles = {
 		backgroundColor: 'rgba(255, 255, 255, 0.6)'
 	},
 	error: {
-		textAlign: 'center',
 		pointerEvents: 'all',
-		cursor: 'pointer'
 	}
 };
 
@@ -212,9 +159,9 @@ function sortVisibleLabel(column, pos) {
 function segmentedVizOptions(onVizOptions) {
 	return onVizOptions ? [
 		<MenuDivider/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='line' caption='Line'/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='pixel' caption='Pixel'/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='power' caption='Power'/>,
+		<MenuItem onClick={onVizOptions} data-renderer='line'>Line</MenuItem>,
+		<MenuItem onClick={onVizOptions} data-renderer='pixel'>Pixel</MenuItem>,
+		<MenuItem onClick={onVizOptions} data-renderer='power'>Power</MenuItem>,
 		<MenuDivider/>] : [];
 }
 
@@ -228,11 +175,11 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		specialDownloadItemName = 'Download segments';
 
 	return addIdsToArr([
-		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>]),
+		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons}>{intronsItemName}</MenuItem>]),
 		...(segmentedVizOptions(onVizOptions)),
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>,
-		<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
+		<MenuItem disabled={noData} onClick={onSortVisible}>{sortVisibleItemName}</MenuItem>,
+		<MenuItem disabled={noData} onClick={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
 	]);
 }
 
@@ -254,15 +201,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitMenuItem = null;
 
 	if (data && !(_.isEmpty(data.refGene))) {
-		mupitMenuItem = (<TooltipMenuItem onClick={(e) => onMuPit(assembly, e)}
-			disabled={noMuPit} tooltip={mupitTooltip} caption={mupitItemName}/>);
+		mupitMenuItem = (<TooltipMenuItem onClick={(e) => onMuPit(assembly, e)} disabled={noMuPit} tooltip={mupitTooltip}>{mupitItemName}</TooltipMenuItem>);
 	}
 
 	return addIdsToArr([
 		mupitMenuItem,
-		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
+		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons}>{intronsItemName}</MenuItem>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
+		<MenuItem disabled={noData} onClick={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
 
@@ -311,19 +257,18 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}
 
 	return addIdsToArr([
 		supportsClustering(column) ?
-			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
+			<MenuItem onClick={onCluster} disabled={config.singlecell}>{order}</MenuItem> :
 			null,
 		preferredExpression && supportsDEA(column, data) ?
-			<TooltipMenuItem onClick={onDiff} disabled={!isPublic}
-				tooltip='Private data not allowed' caption='Differential expression' /> :
+			<TooltipMenuItem onClick={onDiff} disabled={!isPublic} tooltip='Private data not allowed'>Differential expression</TooltipMenuItem> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
-				<MenuItem onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
-				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
+				<MenuItem onClick={(e) => onMode(e, 'geneProbes')}>Detailed view</MenuItem> :
+				<MenuItem onClick={(e) => onMode(e, 'genes')}>Gene average</MenuItem>) :
 				null,
 		supportTumorMap ?
-			<MenuItem onClick={(e) => onTumorMap(thisTumorMap, e)} caption={`Tumor Map`}/> :
+			<MenuItem onClick={(e) => onTumorMap(thisTumorMap, e)}>Tumor Map</MenuItem> :
 			null
 	]);
 }
@@ -346,11 +291,11 @@ function getStatusView(status, onReload) {
 	if (status === 'error') {
 		return (
 			<div style={styles.status}>
-				<i onClick={onReload}
-				   style={styles.error}
-				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={'material-icons'}>warning</i>
+				<IconButton onClick={onReload}
+							style={styles.error}
+							title='Error loading data. Click to reload.'
+							aria-hidden='true'><Icon>warning</Icon>
+				</IconButton>
 			</div>);
 	}
 	return null;
@@ -450,6 +395,7 @@ var zoomTranslateSelection = (props, selection, zone) => {
 export default class Column extends PureComponent {
 	state = {
 		dragZoom: {},
+		menuEl: null,
 		subColumnIndex: {},
 		showGeneSetWizard: false,
 		geneSetUrl: undefined,
@@ -492,30 +438,44 @@ export default class Column extends PureComponent {
 		this.props.onResize(this.props.id, size);
 	};
 
+	onColumnMenuClose = () => {
+		this.setState({menuEl: null});
+	}
+
+	onColumnMenuOpen = (event) => {
+		this.setState({ menuEl: event.currentTarget });
+	}
+
 	onRemove = () => {
+		this.onColumnMenuClose();
 		this.props.onRemove(this.props.id);
 	};
 
 	onDownload = () => {
+		this.onColumnMenuClose();
 		var {column, data, samples, index, sampleFormat} = this.props;
 		gaEvents('spreadsheet', 'download', 'column');
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
 	};
 
 	onViz = () => {
+		this.onColumnMenuClose();
 		this.props.onViz(this.props.id);
 	};
 
 	onEdit = () => {
+		this.onColumnMenuClose();
 		this.props.onEdit(this.props.id);
 	};
 
 	onKm = () => {
+		this.onColumnMenuClose();
 		gaEvents('spreadsheet', 'km');
 		this.props.onKm(this.props.id);
 	};
 
 	onChart = () => {
+		this.onColumnMenuClose();
 		gaEvents('spreadsheet', 'columnChart-open');
 		this.props.onChart(this.props.id);
 	};
@@ -547,6 +507,7 @@ export default class Column extends PureComponent {
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
    */
   showGeneSetComparison = () => {
+    this.onColumnMenuClose();
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0].filter( f => f !== null);
     const heatmapCodes = uniqueNotNull(heatmapData);
@@ -573,12 +534,14 @@ export default class Column extends PureComponent {
   };
 
 	onSortDirection = () => {
+		this.onColumnMenuClose();
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
 		this.props.onSortDirection(this.props.id, newDir);
 	};
 
 	onMode = (ev, newMode) => {
+		this.onColumnMenuClose();
 		this.props.onMode(this.props.id, newMode);
 	};
 
@@ -591,10 +554,12 @@ export default class Column extends PureComponent {
 	};
 
 	onShowIntrons = () => {
+		this.onColumnMenuClose();
 		this.props.onShowIntrons(this.props.id);
 	};
 
 	onCluster = () => {
+		this.onColumnMenuClose();
 		this.props.onCluster(this.props.id,
 			this.props.column.clustering ? undefined : 'probes', this.props.data);
 	};
@@ -650,6 +615,7 @@ export default class Column extends PureComponent {
 	onDragZoomA = selection => this.onDragZoom(selection, 'a');
 
 	onSortVisible = () => {
+		this.onColumnMenuClose();
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
 				column.valueType === 'segmented' ? true : false);
@@ -657,6 +623,7 @@ export default class Column extends PureComponent {
 	};
 
 	onSpecialDownload = () => {
+		this.onColumnMenuClose();
 		var {column, data, samples, index, sampleFormat} = this.props,
 			{type, downloadData} = widgets.specialDownload({column, data, samples, index: index, sampleFormat});
 		if (type === "txt") {
@@ -687,6 +654,7 @@ export default class Column extends PureComponent {
 	};
 
 	onMuPit = (assembly) => {
+		this.onColumnMenuClose();
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
 		// k fixed at 1000
@@ -722,6 +690,7 @@ export default class Column extends PureComponent {
 	};
 
 	onDiff = () => {
+		this.onColumnMenuClose();
 		gaEvents('spreadsheet', 'DEA');
 		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
 				column} = this.props,
@@ -757,6 +726,7 @@ export default class Column extends PureComponent {
 	}
 
 	onTumorMap = (tumorMap) => {
+		this.onColumnMenuClose();
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
 		var {data, column} = this.props,
 			{valueType} = column,
@@ -797,6 +767,7 @@ export default class Column extends PureComponent {
 	};
 
 	onAbout = (ev, host, dataset) => {
+		this.onColumnMenuClose();
 		ev.preventDefault();
 		this.props.onAbout(host, dataset);
 	};
@@ -825,7 +796,7 @@ export default class Column extends PureComponent {
 			chartDisabled = disableChart(column),
 	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
-			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
+			refreshIcon = (<IconButton onClick={onReset}><Icon>close</Icon></IconButton>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
@@ -884,24 +855,26 @@ export default class Column extends PureComponent {
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
 										{first ? null : (
-											<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+											<>
+											<IconButton onClick={this.onColumnMenuOpen}><Icon>more_vert</Icon></IconButton>
+											<Menu
+												anchorEl={this.state.menuEl}
+												anchorOrigin={{horizontal: 'left', vertical: 'top'}}
+												getContentAnchorEl={null}
+												open={Boolean(this.state.menuEl)}
+												onClose={this.onColumnMenuClose}>
 												{menu}
 												{menu && <MenuDivider />}
-												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-													caption='Kaplan Meier Plot'/>
-												<MenuItem onClick={this.onChart} disabled={chartDisabled}
-													caption='Chart & Statistics'/>
-                        {canDoGeneSetComparison &&
-                        <MenuItem onClick={this.showGeneSetComparison}
-                                  caption='Differential Geneset View'/>
-                        }
-												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-												<MenuItem onClick={this.onDownload} caption='Download'/>
+												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
+												<MenuItem onClick={this.onChart} disabled={chartDisabled}>Chart & Statistics</MenuItem>
+												{canDoGeneSetComparison && <MenuItem onClick={this.showGeneSetComparison}>Differential Geneset View</MenuItem>}
+												<MenuItem onClick={this.onSortDirection}>Reverse sort</MenuItem>
+												<MenuItem onClick={this.onDownload}>Download</MenuItem>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
-												<MenuItem onClick={this.onViz} caption='Display'/>
-												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-												<MenuItem onClick={this.onRemove} caption='Remove'/>
-												</IconMenu>)}
+												<MenuItem onClick={this.onViz}>Display</MenuItem>
+												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit}>Edit</MenuItem>
+												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
+											</Menu></>)}
 									</div>
 								}
 								 wizardMode={wizardMode}>
