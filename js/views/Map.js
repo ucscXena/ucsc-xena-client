@@ -51,7 +51,7 @@ var button = el(Button);
 
 var deckGL = el(DeckGL);
 
-const patchLayer = (data, color, radius, onHover) => new ScatterplotLayer({
+const patchLayer = (data, color, radius, triggers, onHover) => new ScatterplotLayer({
 	id: `scatter-plot${getVivId(DETAIL_VIEW_ID)}`,
 	data: data,
 	stroked: true,
@@ -62,6 +62,7 @@ const patchLayer = (data, color, radius, onHover) => new ScatterplotLayer({
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
 	getLineColor: color,
+	updateTriggers: {getLineColor: triggers},
 	pickable: true,
 	onHover
 });
@@ -185,12 +186,12 @@ class VivDrawing extends PureComponent {
 			colorScale = colorColumn ?
 				_.Let((scale = colorScales.colorScale(colors)) =>
 					(coords, {index}) => _.Let((v = colorColumn[index]) =>
-						hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
+						v == null || hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
 				: () => [0, 255, 0];
 		var {offset, image_scalef: scale} = this.props.data.image;
 		var data = transpose(this.props.data.columns).map(c =>
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		var mergeLayer = patchLayer(data, colorScale, radius, this.onHover);
+		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hidden], this.onHover);
 		return /*this.state.source ? */avivator({
 			mergeLayers: [mergeLayer],
 			source: {urlOrFile: this.props.data.image.path}
@@ -389,7 +390,9 @@ export class Map extends PureComponent {
 		this.props.callback(['map', true]);
 	}
 	onRef = ref => {
-		this.setState({container: ref});
+		if (ref) {
+			this.setState({container: ref});
+		}
 	}
 	render() {
 		var actions = [
