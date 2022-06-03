@@ -166,3 +166,9 @@ export const useMetadata = () => {
   const metadata = useViewerStore(store => store.metadata);
   return Array.isArray(metadata) ? metadata[image] : metadata;
 };
+
+export const resetState = () => {
+	useChannelsStore.setState(DEFAUlT_CHANNEL_STATE);
+	useViewerStore.setState(DEFAULT_VIEWER_STATE);
+	useImageSettingsStore.setState(DEFAULT_IMAGE_STATE);
+};
