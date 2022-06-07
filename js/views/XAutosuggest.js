@@ -32,12 +32,21 @@
 
 
 // Core dependencies, components
+import {Box, Icon, IconButton} from '@material-ui/core';
 import React from 'react';
 import Autosuggest from 'react-autosuggest';
+import {xenaColor} from '../xenaColor';
 
 // Styles
 import autosuggestTheme from './AutosuggestTheme.module.css';
 import compStyles from './XAutosuggest.module.css';
+var sxClearButton = {
+	color: xenaColor.BLACK_38,
+	position: 'absolute',
+	right: 10,
+	top: '50%',
+	transform: 'translateY(-50%)'
+};
 
 class XAutosuggest extends React.Component {
 	callInputRef = autosuggest => {
@@ -55,7 +64,7 @@ class XAutosuggest extends React.Component {
 		return (
 			<div className={compStyles.XAutosuggest}>
 				<Autosuggest {...autoProps} ref={this.callInputRef} theme={autosuggestTheme}/>
-				{value ? <i className='material-icons' onClick={onClear}>close</i> : null}
+				{value ? <Box component={IconButton} color='inherit' onClick={onClear} sx={sxClearButton}><Icon>close</Icon></Box> : null}
 			</div>
 		);
 	}

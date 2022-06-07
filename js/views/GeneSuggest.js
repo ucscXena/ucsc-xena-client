@@ -1,13 +1,12 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 import XAutosuggest from './XAutosuggest';
-import Input from 'react-toolbox/lib/input';
+import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
 require('./GeneSuggest.css'); // react-autosuggest, global styles
-var styles = require('./GeneSuggest.module.css'); // react-toolbox, module styles
 var limit = 8;
 
 // Return the start and end indices of the word in 'value'
@@ -27,16 +26,15 @@ function currentWord(value, position) {
 }
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
-	<Input
-		theme={styles}
-		error={_.isString(error) ? error : null}
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
+	<XAutosuggestInput
+		error={!!(_.isString(error))}
+		fullWidth
+		helperText={_.isString(error) ? error : null}
+		inputProps={{spellCheck: false}}
+		inputRef={el => ref(el)}
+		onChange={onChange}
 		label={label || 'Add Gene or Position'}
-		{...props} >
-		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
-	</Input>
+		{...props} />
 );
 
 var empty = Observable.of([], Scheduler.asap);

@@ -1,15 +1,16 @@
 import React from 'react';
 import PureComponent from '../PureComponent';
-import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext').default;
 import './GeneSuggest.css'; // XXX rename file
 import XAutosuggest from './XAutosuggest';
+import XAutosuggestInput from './XAutosuggestInput';
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
-	<Input
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
+	<XAutosuggestInput
+		fullWidth
+		inputProps={{spellCheck: false}}
+		inputRef={el => ref(el)}
+		onChange={onChange}
 		label='Search for a study'
 		{...props} />);
 

@@ -1,11 +1,11 @@
 
 import PureComponent from '../PureComponent';
 var React = require('react');
-import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext').default;
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
 import XAutosuggest from './XAutosuggest';
+import XAutosuggestInput from './XAutosuggestInput';
 var XRadioGroup = require('./XRadioGroup');
 
 function toLCWords(str) {
@@ -142,10 +142,11 @@ function currentWord(value, position) {
 }
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
-	<Input
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
+	<XAutosuggestInput
+		fullWidth
+		inputProps={{spellCheck: false}}
+		inputRef={el => ref(el)}
+		onChange={onChange}
 		label='Primary Disease or Tissue of Origin'
 		{...props} />);
 

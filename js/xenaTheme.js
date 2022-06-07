@@ -6,6 +6,9 @@ const theme = createTheme({
 		action: {
 			disabled: xenaColor.BLACK_12,
 		},
+		error: {
+			main: xenaColor.ERROR,
+		},
 		primary: {
 			main: xenaColor.PRIMARY,
 			contrastText: xenaColor.WHITE,
@@ -292,9 +295,12 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiFormLabel: {
 			root: {
-				color: theme.palette.text.primary,
-				lineHeight: undefined,
+				...theme.typography.subtitle2,
+				color: theme.palette.text.hint,
 				padding: undefined,
+				'&$focused': {
+					color: theme.palette.text.hint,
+				},
 			},
 		},
 		MuiIcon: {

@@ -6,28 +6,10 @@
  */
 
 @value black3 from '../../css/variables.css';
-@value black12 from '../../css/variables.css';
 
 /**
  * Core react-autosuggest theming API end points.
  */
-
-.input {
-	border-bottom: 1px solid black12;
-	padding: 0;
-}
-
-.input input {
-	height: 77px; /* Allows input field access to full height of its container - to improve clickable area */
-	overflow: hidden;
-	padding: 20px 56px 20px 16px !important; /* 56px RHS to allow for close (X) icon */
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.inputOpen {
-	border-bottom: 1px solid black12;
-}
 
 /* Suggestions container */
 .suggestionsContainer {
@@ -47,7 +29,9 @@
 
 /* Suggestions */
 .suggestion {
-	composes: mdSubhead from '../../css/typography.module.css';
+	font-size: 16px;
+	font-weight: 400;
+	letter-spacing: .01em;
 	line-height: 20px;
 	overflow: hidden;
 	padding: 16px;
