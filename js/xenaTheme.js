@@ -261,6 +261,12 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 		},
+		MuiDialogContentText: {
+			root: {
+				fontSize: 16,
+				marginTop: 0,
+			},
+		},
 		MuiDivider: {
 			light: {
 				backgroundColor: xenaColor.BLACK_6,

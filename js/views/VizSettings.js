@@ -36,17 +36,50 @@ var _ = require('../underscore_ext').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
 var {Row, Col} = require("react-material-responsive-grid");
-import {Dialog} from 'react-toolbox/lib/dialog';
-import {Dropdown} from 'react-toolbox/lib/dropdown';
-import {Button} from 'react-toolbox/lib/button';
-import {Input} from 'react-toolbox/lib/input';
-import vizSettingStyle from "./VizSettings.module.css";
+import {
+	Box,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Icon,
+	IconButton,
+	Input,
+	MenuItem,
+	MuiThemeProvider,
+	TextField,
+	Typography,
+} from '@material-ui/core';
 var {categoryMore} = require("../colorScales");
+import {xenaColor} from '../xenaColor';
+import {xenaTheme} from '../xenaTheme';
+
+// Styles
+import vizSettingStyle from './VizSettings.module.css';
+var sxCloseButton = {
+	alignSelf: 'flex-start',
+	color: xenaColor.BLACK_38,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
+var sxModeTextField = {
+	'& .MuiFormLabel-root.Mui-error': {
+		color: xenaColor.WARNING,
+	},
+	'& .MuiFormHelperText-root.Mui-error': {
+		color: xenaColor.WARNING,
+	},
+};
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units, column) {
 
 	class DatasetSetting extends React.Component {
+		// DatasetSetting rendered with React createElement and therefore the simplest way to access to Mui theme is by
+		// wrapping the component with MuiThemeProvider.
 		render() {
 			let settingsContent =
 				valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
@@ -54,61 +87,43 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				valueType === "coded" ? <Coded /> :
 				<NoSettings />;
 			return (
-				<div>
-					{settingsContent}
+				<MuiThemeProvider theme={xenaTheme}>
+					<DialogContent>
+						{settingsContent}
+					</DialogContent>
 					<FinishButtonBar/>
-				</div>
+				</MuiThemeProvider>
 			);
 		}
 	}
 	class AllFloat extends React.Component {
 		render() {
 			return (
-				<div>
-					<div>
-						<ColorDropDown />
-					</div>
-					<br />
-					<div>
-						<ScaleChoice />
-					</div>
-					<br />
-				</div>
+				<Box sx={{display: 'flex', flexDirection: 'column', gap: 16}}>
+					<ColorDropDown />
+					<ScaleChoice />
+				</Box>
 			);
 		}
 	}
 	class Sv extends React.Component {
 		render() {
 			return (
-				<div>
-					<div>
-						<SvColorDropDown />
-					</div>
-					<br />
-				</div>
+				<SvColorDropDown />
 			);
 		}
 	}
 	class Coded extends React.Component {
 		render() {
 			return (
-				<div>
-					<div>
-						<CategoricalTable />
-					</div>
-					<br />
-				</div>
+				<CategoricalTable />
 			);
 		}
 	}
 	class NoSettings extends React.Component {
 		render() {
 			return (
-				<div>
-					<div>No setting adjustments available.</div>
-					<br />
-					<br />
-				</div>
+				<DialogContentText>No setting adjustments available.</DialogContentText>
 			);
 		}
 	}
@@ -126,16 +141,10 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	    render() {
 			return (
-				<div>
-					<Button onMouseUp={this.handleCancelClick}
-							className={vizSettingStyle.cancelButton}>
-						Cancel
-					</Button>
-					<Button onMouseUp={this.handleDoneClick}
-							className={vizSettingStyle.confirmButton}>
-						Done
-					</Button>
-				</div>
+				<DialogActions>
+					<Button color='default' onMouseUp={this.handleCancelClick}>Cancel</Button>
+					<Button onMouseUp={this.handleDoneClick}>Done</Button>
+				</DialogActions>
 			);
 		}
 	}
@@ -275,7 +284,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(this.state.settings)));
 		};
 
-		handleChange = (name, value) => {
+		handleChange = (name, event) => {
+			var value = event.target.value;
 			var {settings} = this.state,
 				newSettings = _.assoc(settings, name, value),
 				errors = validateSettings[valueType](newSettings);
@@ -294,26 +304,22 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						error = this.state.errors[param];
 
 					return (
-						<Row key={param}>
-							<Col xs4={4} xs8={8} sm={6} smOffset={6}>
-								<label className={vizSettingStyle.errorLabel}>{error}</label>
-							</Col>
-							<Col xs4={4} xs8={4} sm={6}>
-								<div className={vizSettingStyle.inputLabel}>
-									{label}
-								</div>
-							</Col>
-							<Col xs4={4} xs8={4} sm={6}>
-								<Input type='text'
-									   value={this.state[param]}
-									   className={vizSettingStyle.rangeInput}
-									   hint={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
-									   onChange={this.handleChange.bind(this, param)}/>
-							</Col>
-						</Row>
+						<Box
+							component={TextField}
+							error={!!error}
+							fullWidth
+							helperText={error || undefined}
+							key={param}
+							label={label}
+							size='small'
+							type='text'
+							value={this.state[param]}
+							placeholder={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
+							sx={sxModeTextField}
+							onChange={this.handleChange.bind(this, param)}/>
 					);
 				});
-			return node;
+			return <Box mt={2} sx={{display: 'flex', flexDirection: 'column', gap: 4}}>{node}</Box>;
 		};
 
 	    render() {
@@ -326,7 +332,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				},
 				buttons = modes.map(mode => {
 					let active = (this.state.mode === mode),
-						style = vizSettingStyle[active ? 'activeModeButton' : 'inactiveModeButton'],
+						style = vizSettingStyle[active ? 'activeModeButton' : undefined],
 						func = funcMapping[mode];
 					return <Button key={mode} onMouseUp={func} className={style}>{mode}</Button>;
 				}),
@@ -336,14 +342,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					(valueType === 'segmented' ? <SegCNVnormalizationDropDown /> : null),
 				notransformation = (
 				    <Row>
-						<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
-						<Col xs4={4} xs8={5} sm={9}>no transformation</Col>
+						<Col xs4={4} xs8={3} sm={3}>
+							<div className={vizSettingStyle.selectLabel}>Color transformation</div>
+						</Col>
+						<Col xs4={4} xs8={5} sm={9}>
+							<div className={vizSettingStyle.selectLabel}>no transformation</div>
+						</Col>
 					</Row>
 				),
 				colorTransformation = autoMode ? autocolorTransformation : notransformation;
 
 			return (
-				<div>
+				<>
 					<Row>
 						<Col xs4={4} xs8={3} sm={3}>
 							<div className={vizSettingStyle.buttonGroupLabel}>
@@ -352,14 +362,11 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</Col>
 						<Col xs4={4} xs8={5} sm={9}>
 							{buttons}
-							<div>
-								{enterInput}
-							</div>
+							{enterInput}
 						</Col>
 					</Row>
-					<br/>
 					{colorTransformation}
-				</div>
+				</>
 			);
 		}
 	}
@@ -370,6 +377,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	function getVizSettings(key) {
 		return _.getIn(state, [key]);
+	}
+
+	//standardized select options for select text field
+	function renderSelectOptions(options) {
+		return (
+			options.map(({label, value}) => <MenuItem key={value} value={value}>{label}</MenuItem>)
+		);
 	}
 
 	//color transformation for dense genomics matrix floats
@@ -389,7 +403,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			};
 	    }
 
-	    handleChange = (value) => {
+		handleChange = (event) => {
+			var value = event.target.value;
 			var key = "colNormalization";
 			setVizSettings(key, value);
 			this.setState({optionValue: value});
@@ -419,15 +434,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</div>
 					</Col>
 					<Col xs4={4} xs8={5} sm={9}>
-						<Dropdown
-							auto
+						<TextField
+							fullWidth
 							onChange={this.handleChange}
-							source={normalizations}
-							value={optionValue}
-							className={vizSettingStyle.dropDown}
-							theme={{
-								selected: vizSettingStyle.selected
-							}} />
+							select
+							value={optionValue}>
+							{renderSelectOptions(normalizations)}
+						</TextField>
 					</Col>
 				</Row>
 			);
@@ -449,7 +462,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			};
 	    }
 
-	    handleChange = (value) => {
+		handleChange = (event) => {
+			var value = event.target.value;
 			var key = "colNormalization";
 			setVizSettings(key, value);
 			this.setState({optionValue: value});
@@ -473,15 +487,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</div>
 					</Col>
 					<Col xs4={4} xs8={5} sm={9}>
-						<Dropdown
-							auto
+						<TextField
+							fullWidth
 							onChange={this.handleChange}
-							source={normalizations}
-							value={optionValue}
-							className={vizSettingStyle.dropDown}
-							theme={{
-								selected: vizSettingStyle.selected
-							}} />
+							select
+							value={optionValue}>
+							{renderSelectOptions(normalizations)}
+						</TextField>
 					</Col>
 				</Row>
 			);
@@ -499,7 +511,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			};
 	    }
 
-		handleChange = (value) => {
+		handleChange = (event) => {
+			var value = event.target.value;
 			var key = "colorClass";
 			setVizSettings(key, value);
 			this.setState({optionValue: value});
@@ -532,15 +545,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</div>
 					</Col>
 					<Col xs4={4} xs8={5} sm={9}>
-						<Dropdown
-							auto
+						<TextField
+							fullWidth
 							onChange={this.handleChange}
-							source={colors}
-							value={optionValue}
-							className={vizSettingStyle.dropDown}
-							theme={{
-								selected: vizSettingStyle.selected
-							}} />
+							select
+							value={optionValue}>
+							{renderSelectOptions(colors)}
+						</TextField>
 					</Col>
 				</Row>
 			);
@@ -558,7 +569,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			};
 	    }
 
-		handleChange = (value) => {
+		handleChange = (event) => {
+			var value = event.target.value;
 			var key = "svColor";
 			setVizSettings(key, value);
 			this.setState({optionValue: value});
@@ -585,15 +597,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</div>
 					</Col>
 					<Col xs4={4} xs8={5} sm={9}>
-						<Dropdown
-							auto
+						<TextField
+							fullWidth
 							onChange={this.handleChange}
-							source={colors}
-							value={optionValue}
-							className={vizSettingStyle.dropDown}
-							theme={{
-								selected: vizSettingStyle.selected
-							}} />
+							select
+							value={optionValue}>
+							{renderSelectOptions(colors)}
+						</TextField>
 					</Col>
 				</Row>
 			);
@@ -610,7 +620,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				_.object(_.range(data.codes.length), data.codes);
 	    }
 
-		handleChange = (i, value) => {
+		handleChange = (i, event) => {
+			var value = event.target.value;
 			let codes = this.state;
 
 			codes[i] = value;
@@ -637,21 +648,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				return (
 					<Row key={i}>
 						<Col xs4={1} xs8={1} sm={1}>
-							<div className={vizSettingStyle.categoryColor}
-								style={{backgroundColor: backgroundColor}}/>
+						    <Box bgcolor={backgroundColor} sx={{height: 20, marginTop: 8, width: 20}}/>
 						</Col>
 						<Col xs4={4} xs8={4} sm={6}>
-							<Input type='text'
-								   value={code}
-								   className={vizSettingStyle.categoryInput}
-								   onChange={this.handleChange.bind(this, i)}/>
+							<Input fullWidth onChange={this.handleChange.bind(this, i)} type='text' value={code}/>
 						</Col>
 						{code !== originalCode ?
 							<Col>
-								<Button onMouseUp={this.onRest.bind(this, i, originalCode)}
-									className={vizSettingStyle.cancelButton}>
-									Reset
-								</Button>
+								<Button onMouseUp={this.onRest.bind(this, i, originalCode)}>Reset</Button>
 							</Col> : null}
 					</Row>
 				);
@@ -668,7 +672,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			index.sort(function sortNumber(a, b) {return a - b;}).reverse();
 
 			return (
-				<div>
+				<Box sx={{display: 'flex', flexDirection: 'column', gap: 8}}>
 					<Row>
 						<Col xs4={1} xs8={1} sm={1}>
 							<div className={vizSettingStyle.selectLabel}>
@@ -682,7 +686,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						</Col>
 					</Row>
 					{this.buildCoded(index, codes, originalCodes, customColors)}
-				</div>
+				</Box>
 			);
 		}
 	}
@@ -733,25 +737,23 @@ class VizSettings extends React.Component {
 	render() {
 		var {onRequestHide} = this.props;
 
-		const actions = [
-			{
-				children: [<i className='material-icons'>close</i>],
-				className: vizSettingStyle.dialogClose,
-				onClick: onRequestHide
-			},
-		];
-
 		return (
 			<Dialog
-				actions={actions}
-				active={true}
-				title='Adjust Display Settings'
+				BackdropProps={{style: {top: 64}}}
 				className={vizSettingStyle.dialog}
-				onEscKeyDown={onRequestHide}
-				onOverlayClick={onRequestHide}
-				theme={{
-					wrapper: vizSettingStyle.dialogWrapper,
-					overlay: vizSettingStyle.dialogOverlay}}>
+				fullWidth
+				maxWidth={'sm'}
+				onClose={onRequestHide}
+				open={true}
+				PaperProps={{style: {alignSelf: 'flex-start'}}}>
+				<DialogTitle disableTypography>
+					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
+						<Typography variant='subtitle1'>Adjust Display Settings</Typography>
+						<Box color='default' component={IconButton} onClick={onRequestHide} sx={sxCloseButton}>
+							<Icon>close</Icon>
+						</Box>
+					</Box>
+				</DialogTitle>
 				<SettingsWrapper {...this.props} />
 			</Dialog>
 		);
