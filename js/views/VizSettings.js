@@ -78,6 +78,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	defaultColorClass, valueType, fieldType, data, units, column) {
 
 	class DatasetSetting extends React.Component {
+		// DatasetSetting rendered with React createElement and therefore the simplest way to access to Mui theme is by
+		// wrapping the component with MuiThemeProvider.
 		render() {
 			let settingsContent =
 				valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
