@@ -348,7 +348,9 @@ export const xenaTheme = createTheme(theme, {
 					borderBottom: `1px solid ${xenaColor.BLACK_12}`,
 				},
 				'&:hover:not($disabled):before': {
-					borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+					[theme.breakpoints.between('xs', 'xl')]: {
+						borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+					},
 				},
 			},
 		},
