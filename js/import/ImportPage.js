@@ -1,11 +1,20 @@
-import React from 'react';
-import styles from './ImportPage.module.css';
-import nav from "../nav";
-var _ = require('../underscore_ext').default;
 import {
-	Input, Button, Dropdown,
-	RadioGroup, RadioButton
-} from 'react-toolbox/lib';
+	Box,
+	Button,
+	Card,
+	Divider,
+	FormControl,
+	FormControlLabel, FormLabel,
+	Icon, Link,
+	MenuItem,
+	Radio,
+	RadioGroup,
+	TextField,
+	Typography
+} from '@material-ui/core';
+import React from 'react';
+import nav from '../nav';
+var _ = require('../underscore_ext').default;
 import * as DefaultServers from '../defaultServers';
 import loader from './loader.gif';
 const { servers: { localHub } } = DefaultServers;
@@ -16,6 +25,14 @@ import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import { FilePreview, ErrorPreview } from './staticComponents';
 import {CohortSuggest} from '../views/CohortSuggest';
+import XActionButton from '../views/XActionButton';
+
+// Styles
+import styles from './ImportPage.module.css';
+var sxCard = {
+	margin: '20px auto',
+	width: '80%',
+};
 
 const pageStates = _.range(Object.keys(PAGES).length);
 const pageRanges = [0, ...Array(4).fill(1), 2, 3]; // XXX need a better way to express this
@@ -139,25 +156,28 @@ class ImportForm extends React.Component {
 	fileSelectionPage(fileSelected) {
 		var serverError = _.getIn(this.props, ['state', 'serverError']);
 		return (
-			<div>
+			<>
 				<input type='file' id='file-input' style={{ display: 'none' }}
 					onChange={this.onFileChange('file')}
 				/>
-				<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
+				<Box component={'label'} boxShadow={2} className={styles.importFileLabel} htmlFor='file-input'>Select Data File</Box>
 
-				{fileSelected && <b>Selected file: {this.props.fileName} </b>}
+				{fileSelected && <Box display='inline' ml={6}><strong>Selected file: {this.props.fileName}</strong></Box>}
 
 				{serverError ?  (
-					<div>
+					<Box mt={4}>
 						<p>We were unable to read this file, due to the following error:</p>
 						<pre>{serverError}</pre>
-					</div>
+					</Box>
 				) : null}
 
-				<div style={{ marginTop: '1em' }}>
-					<Button icon='help_outline' target='_blank' href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications' label='Help on data file formatting' accent flat={false}/>
-				</div>
-			</div>
+				<Box mt={4}>
+					<Button
+						href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications'
+						startIcon={<Icon>help_outline</Icon>}
+						target='_blank'>Help on data file formatting</Button>
+				</Box>
+			</>
 		);
 	}
 
@@ -166,33 +186,44 @@ class ImportForm extends React.Component {
 			{showMoreDataTypes} = this.state;
 
 		return (
-			<div>
-				<RadioGroup value={dataType} onChange={this.onDataTypeChange}>
-					{dataTypeOptions.slice(0, showMoreDataTypes ? 4 : 2).map(({label, value}) =>
-						 <RadioButton disabled={!!fileReadInProgress} key={value} label={label} value={value}/>)}
-				</RadioGroup>
-				<p className={styles.showMore} onClick={this.onShowMoreDataTypesToggle}>
-					{showMoreDataTypes ? 'Less data types...' : 'More data types...'}
-				</p>
+			<>
+				<FormControl>
+					<RadioGroup value={dataType || ''} onChange={this.onDataTypeChange}>
+						{dataTypeOptions.slice(0, showMoreDataTypes ? 4 : 2).map(({label, value}) =>
+							<FormControlLabel control={<Radio />} disabled={!!fileReadInProgress} key={value} label={label} value={value}/>)}
+					</RadioGroup>
+				</FormControl>
+				<Box display='block' mt={4}>
+					<XActionButton onClick={this.onShowMoreDataTypesToggle}>
+						{showMoreDataTypes ? 'Less data types...' : 'More data types...'}
+					</XActionButton>
+				</Box>
+				<Box position='absolute' right={0} top={0}>
+					<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications' target='_blank'>Help</Button>
+				</Box>
 
-				<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications' target='_blank' className={styles.dataTypeHelp} label="HELP" accent flat={false}/>
-
-				<h4>File preview</h4>
-				{this.renderFilePreview()}
-			</div>
+				<h4><strong>File preview</strong></h4>
+				<Box mt={4}>
+					{this.renderFilePreview()}
+				</Box>
+			</>
 		);
 	}
 
 	denseOrientationPage() {
 		const { fileFormat } = this.props.state;
 		return (
-			<div>
-				<RadioGroup value={fileFormat} onChange={this.onFileFormatChange}>
-					<RadioButton label='The first column is sample IDs' value={FILE_FORMAT.CLINICAL_MATRIX} />
-					<RadioButton label='The first row is sample IDs' value={FILE_FORMAT.GENOMIC_MATRIX} />
-				</RadioGroup>
-				{this.renderFilePreview(true)}
-			</div>
+			<>
+				<FormControl>
+					<RadioGroup value={fileFormat || ''} onChange={this.onFileFormatChange}>
+						<FormControlLabel control={<Radio />} label='The first column is sample IDs' value={FILE_FORMAT.CLINICAL_MATRIX}/>
+						<FormControlLabel control={<Radio />} label='The first row is sample IDs' value={FILE_FORMAT.GENOMIC_MATRIX}/>
+					</RadioGroup>
+				</FormControl>
+				<Box mt={4}>
+					{this.renderFilePreview(true)}
+				</Box>
+			</>
 		);
 	}
 
@@ -209,34 +240,35 @@ class ImportForm extends React.Component {
 		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state,
 			cohorts = _.getIn(this.props, ['recommended', 'cohorts']);
 		return (
-			<div>
-				<RadioGroup value={cohortRadio} onChange={this.onCohortRadioChange}>
-					<RadioButton label="These are the first data on these samples." value='newCohort' />
-					{cohortRadio === 'newCohort' &&
-						<Input label="Study name" type="text" className={styles.field}
-							onChange={this.onNewCohortChange} value={newCohort}
-						/>}
-					<RadioButton label="I have loaded other data on these samples and want to connect to it."
-						value='localCohort' />
-					{cohortRadio === 'localCohort' &&
-						<Dropdown innerRef={this.setLocalCohortRef} onChange={this.onLocalCohortChange}
-							source={getDropdownOptions(["", ...this.props.localCohorts])}
-							value={localCohort}
-							label={"Select a study"}
-							className={[styles.field, styles.inline].join(' ')}
-						/>}
-					<RadioButton label="There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it."
-						value='publicCohort' />
-					{cohortRadio === 'publicCohort' &&
-						<div className={styles.field}>
-							<CohortSuggest cohort={publicCohort} cohorts={_.pluck(cohorts, 'name')}
-								onSelect={this.onPublicCohortChange}
-							/>
-						</div>
-					}
-				</RadioGroup>
-				{this.renderFilePreview(true)}
-			</div>
+			<>
+				<FormControl>
+					<RadioGroup value={cohortRadio || ''} onChange={this.onCohortRadioChange}>
+						<FormControlLabel control={<Radio />} label='These are the first data on these samples.' value='newCohort'/>
+						{cohortRadio === 'newCohort' &&
+							<Box pl={'36px'}>
+								<TextField fullWidth label='Study name' onChange={this.onNewCohortChange} type='text' value={newCohort || ''}/>
+							</Box>}
+						{this.props.localCohorts && <>
+							<FormControlLabel control={<Radio/>} label='I have loaded other data on these samples and want to connect to it.' value='localCohort'/>
+							{cohortRadio === 'localCohort' &&
+							<Box pl={'36px'}>
+								<TextField fullWidth label='Select a study' onChange={this.onLocalCohortChange} select value={localCohort || ''}>
+									{getDropdownOptions(['', ...this.props.localCohorts]).map(({label, value}) =>
+										<MenuItem key={value} value={value}>{label}</MenuItem>)}
+								</TextField>
+							</Box>}</>}
+						<FormControlLabel control={<Radio />} label='There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it.' value='publicCohort'/>
+						{cohortRadio === 'publicCohort' &&
+							<Box pl={'36px'}>
+								<CohortSuggest cohort={publicCohort} cohorts={_.pluck(cohorts, 'name')} onSelect={this.onPublicCohortChange}/>
+							</Box>
+						}
+					</RadioGroup>
+				</FormControl>
+				<Box mt={4}>
+					{this.renderFilePreview(true)}
+				</Box>
+			</>
 		);
 	}
 
@@ -262,30 +294,34 @@ class ImportForm extends React.Component {
 			<div>
 				{text}
 				{!!recommendationsExist &&
-					<Dropdown
-					onChange={this.onProbemapChange}
-					source={getProbemapOptions(probemapsToShow)}
-					value={_.get(probemap, 'name')}
-					className={[styles.probemap, styles.inline]. join(' ')}
-				/>}
+				<Box width={'50%'}>
+					<TextField fullWidth onChange={this.onProbemapChange} select value={_.get(probemap, 'name')}>
+						{getProbemapOptions(probemapsToShow).map(({label, value}) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
+					</TextField>
+				</Box>}
 				{ this.renderMailto("Xena import missing identifiers", "identifiers", probemap === NONE_STR || !recommendationsExist) }
-
-				{this.renderFilePreview(true)}
+				<Box mt={4}>
+					{this.renderFilePreview(true)}
+				</Box>
 			</div>
 		);
 	}
 
 	assemblySelectionPage() {
 		return (
-			<div>
-				<h4>Which reference genome was used to create this file?</h4>
-				<RadioGroup value={this.props.state.assembly} onChange={this.onAssemblyChange}>
-					<RadioButton label="hg18/GRCh36" value='hg18' />
-					<RadioButton label="hg19/GRCh37" value='hg19' />
-					<RadioButton label="hg38/GRCh38" value='hg38' />
-				</RadioGroup>
-				{this.renderFilePreview()}
-			</div>
+			<>
+				<FormControl>
+					<FormLabel>Which reference genome was used to create this file?</FormLabel>
+					<RadioGroup value={this.props.state.assembly || ''} onChange={this.onAssemblyChange}>
+						<FormControlLabel control={<Radio />} label='hg18/GRCh36' value='hg18'/>
+						<FormControlLabel control={<Radio />} label='hg19/GRCh37' value='hg19'/>
+						<FormControlLabel control={<Radio />} label='hg38/GRCh38' value='hg38'/>
+					</RadioGroup>
+				</FormControl>
+				<Box mt={4}>
+					{this.renderFilePreview()}
+				</Box>
+			</>
 		);
 	}
 
@@ -320,7 +356,7 @@ class ImportForm extends React.Component {
 				{ serverOrProbemapError &&
 				<div>
 					<p style={{color: 'red'}}>Unexpected server error occured: {serverOrProbemapError}</p>
-					<p>Please <a href={`mailto:genome-cancer@soe.ucsc.edu?subject="Xena import: java error"`}>contact</a> the
+					<p>Please <Link href={`mailto:genome-cancer@soe.ucsc.edu?subject="Xena import: java error"`}>contact</Link> the
 					 Xena team for help.</p>
 				</div>
 				}
@@ -354,18 +390,9 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	renderDropdown(onChange, source, value, label, display) {
-		return display ?
-		<Dropdown onChange={onChange} source={source} value={value} label={label}
-			className={[styles.field, styles.inline]. join(' ')}
-		/> : null;
-	}
-
 	renderMailto(subject, keyword, display) {
 		return display ?
-		<p className={styles.mailTo}><a href={`mailto:genome-cancer@soe.ucsc.edu?subject=${subject}`}>
-		Let us know which {keyword} you're using</a> so we can better support you in the future.</p>
-		: null;
+			<p><Link href={`mailto:genome-cancer@soe.ucsc.edu?subject=${subject}`}>Let us know which {keyword} you're using</Link> so we can better support you in the future.</p> : null;
 	}
 
 	isCohortPageNextEnabled = () => {
@@ -402,19 +429,18 @@ class ImportForm extends React.Component {
 		}
 	}
 
-	onCohortRadioChange = value => {
-		this.props.callback(['cohort-radio', value]);
-	}
+	onCohortRadioChange = event => this.props.callback(['cohort-radio', event.target.value]);
 
-	onProbemapChange = value => {
+	onProbemapChange = event => {
 		var {probemaps} = this.props,
-			pm = probemaps.find(({value: {name}}) => name === value);
+			pm = probemaps.find(({value: {name}}) => name === event.target.value);
 		this.props.callback(['probemap', pm ? pm.value : undefined]);
 	};
 
-	onFileFormatChange = format => this.props.callback(['file-format', format]);
+	onFileFormatChange = event => this.props.callback(['file-format', event.target.value]);
 
-	onDataTypeChange = type => {
+	onDataTypeChange = event => {
+		const type = event.target.value;
 		this.resetFieldsOnDataTypeChange(type);
 		this.setFileFormatForSparse(type);
 		this.props.callback(['data-type', type]);
@@ -422,15 +448,15 @@ class ImportForm extends React.Component {
 
 	onPublicCohortChange = cohort => this.props.callback(['import-publicCohort', cohort]);
 
-	onLocalCohortChange = cohort => this.props.callback(['import-localCohort', cohort]);
+	onLocalCohortChange = event => this.props.callback(['import-localCohort', event.target.value]);
 
-	onNewCohortChange = cohort => this.props.callback(['import-newCohort', cohort]);
+	onNewCohortChange = event => this.props.callback(['import-newCohort', event.target.value]);
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
 	onShowMoreDataTypesToggle = () => this.setState({showMoreDataTypes: !this.state.showMoreDataTypes});
 
-	onAssemblyChange = assembly => this.props.callback(['assembly', assembly]);
+	onAssemblyChange = event => this.props.callback(['assembly', event.target.value]);
 
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
@@ -538,15 +564,18 @@ class ImportPage extends React.Component {
 		} = this.props.state.import || {};
 
 		return (
-			<div>
-				<div className={styles.wizardTitle}>
-					Loading data...
-					<Button label='Help' target='_blank' href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
-					<div className={styles.stepperBox}>
-						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} wideStep={true}/>
-					</div>
-				</div>
-				<div className={styles.container}>
+			<>
+				<Box component={Card} elevation={2} sx={sxCard}>
+					<Box sx={{px: 4, py: 2}}>
+						<Box display='flex' sx={{alignItems: 'center', gap: 30}}>
+							<Typography display='inline' variant='h2'>Loading data...</Typography>
+							<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</Button>
+						</Box>
+					</Box>
+					<Divider/>
+					<Stepper flat mode={wizardPage} steps={steps} stateIndex={pageStateIndex} wideStep={true}/>
+				</Box>
+				<Box component={Card} elevation={2} sx={sxCard}>
 					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}
 
@@ -562,8 +591,8 @@ class ImportPage extends React.Component {
 
 						state={form}
 					/>
-				</div>
-			</div>
+				</Box>
+			</>
 		);
 	}
 }
@@ -575,13 +604,13 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, t
 
 	if (items.length > 3 && !showMore) {
 		items = items.slice(0, 3);
-		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show more... ({errors.length} in total)</p>;
+		showMoreText = <XActionButton onClick={onShowMoreToggle}>Show more... ({errors.length} in total)</XActionButton>;
 	} else if (showMore) {
-		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show less...</p>;
+		showMoreText = <XActionButton onClick={onShowMoreToggle}>Show less...</XActionButton>;
 	}
 
 	return (
-		<div className={styles.errorContainer}>
+		<div>
 			{ items }
 			{ showMoreText }
 
