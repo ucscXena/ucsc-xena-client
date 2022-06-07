@@ -66,6 +66,9 @@ var sxCloseButton = {
 	},
 };
 var sxModeTextField = {
+	'& .MuiFormLabel-root': {
+		fontSize: 14,
+	},
 	'& .MuiFormLabel-root.Mui-error': {
 		color: xenaColor.WARNING,
 	},
