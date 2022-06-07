@@ -10,9 +10,7 @@ var jStat = require('jStat').jStat;
 var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
-import {Button, IconButton} from 'react-toolbox/lib/button';
-import {Card} from 'react-toolbox/lib/card';
-import classNames from 'classnames';
+import {Box, Button, Card, CardContent, CardHeader, Icon, IconButton} from '@material-ui/core';
 var sc = require('science');
 import {div, select, option, label, el, textNode} from './react-hyper';
 
@@ -35,9 +33,13 @@ function kde() {
 // Styles
 var compStyles = require('./chart.module.css');
 
+var box = el(Box);
 var button = el(Button);
+var icon = el(Icon);
 var iconButton = el(IconButton);
 var card = el(Card);
+var cardContent = el(CardContent);
+var cardHeader = el(CardHeader);
 
 // group field0 by code0, where field1 has value
 function groupIndexWithValueByCode(field0, codes0, field1) {
@@ -1130,7 +1132,7 @@ var highchartView = props =>
 		_.updateIn(props, ['xenaState', 'chartState'], cs => _.omit(cs, 'advanced'))) ;
 
 var closeButton = onClose =>
-	iconButton({className: compStyles.close, onClick: onClose, icon: 'close'});
+	iconButton({edge: 'end', onClick: onClose}, icon('close'));
 
 // wrap handlers to add gaEvents
 var gaSwap = fn => () => {
@@ -1178,10 +1180,11 @@ class Chart extends PureComponent {
 		// a bit misleading.
 		// XXX this should now be happening in ChartWizard, so we should drop this.
 		if (!(v(chartState.ycolumn) && xenaState.cohort && xenaState.samples &&
-				xenaState.columnOrder.length > 0)) {
-			return card({className: classNames(compStyles.ChartView, compStyles.error)},
-				"There is no plottable data. Please add some from the Visual Spreadsheet.",
-				button({label: 'Close', onClick: () => callback(['heatmap'])}));
+			xenaState.columnOrder.length > 0)) {
+			return box({display: 'flex', justifyContent: 'center', my: 12},
+				card({elevation: 2},
+					cardHeader({action: closeButton(() => callback(['heatmap']))}),
+					cardContent("There is no plottable data. Please add some from the Visual Spreadsheet.")));
 		}
 
 		var {xcolumn, ycolumn, colorColumn, advanced, violin} = chartState,
@@ -1210,8 +1213,9 @@ class Chart extends PureComponent {
 				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
 		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
 			!isFloat(columns, ycolumn);
-		var swapAxes = codedVCoded || doScatter ? button({label: 'Swap X and Y',
-			onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn))}) :
+		var swapAxes = codedVCoded || doScatter ? button({color: 'default', disabledElevation: true,
+				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
+				'Swap X and Y') :
 			null;
 
 		var yExp = ycodemap ? null :
@@ -1234,8 +1238,9 @@ class Chart extends PureComponent {
 				i => set(['normalizationState', chartState.ycolumn], i));
 
 		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({label: `View as  ${violin ? 'boxplot' : 'violin plot'}`,
-				onClick: gaViolin(() => set(['violin'], !violin))}) :
+			button({color: 'default', disableElevation: true,
+				onClick: gaViolin(() => set(['violin'], !violin)), variant: 'contained'},
+				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
 		var advOpt =
@@ -1252,10 +1257,10 @@ class Chart extends PureComponent {
 
 		var HCV =
 			div(highchartView({xenaState, drawProps}),
-				yExp && button({label: advanced ? 'Hide options' : 'Advanced options',
-					className: compStyles.advanced,
-					icon: advanced ? 'expand_less' : 'expand_more',
-					onClick: () => set(['advanced'], !advanced)}),
+				yExp && button({color: 'default', fullWidth: true,
+					startIcon: advanced ? icon('expand_less') : icon('expand_more'),
+					onClick: () => set(['advanced'], !advanced)},
+					advanced ? 'Hide options' : 'Advanced options'),
 				yExp && advOpt);
 
 
@@ -1263,16 +1268,20 @@ class Chart extends PureComponent {
 		// it in react, or make another wrapper component so react won't touch it.
 		// otoh, since we always re-render, it kinda works as-is.
 
-		return div({className: compStyles.ChartView},
-				closeButton(this.onClose),
-				HCV,
-				div({className: compStyles.right},
-					div({className: compStyles.actions},
-						button({label: 'Make another graph', onClick:
-							gaAnother(() => set(['another'], true))}),
-						swapAxes,
-						violinOpt),
-					div({id: 'stats', className: compStyles.stats})));
+		return box({mx: 3, my: 12},
+				card({elevation: 2},
+					cardHeader({action: closeButton(this.onClose)}),
+					cardContent(
+						box({sx: {display: 'grid', gap: 24, gridTemplateColumns: '1.5fr 1fr', justifyItems: 'flex-start'}},
+						HCV,
+						div({className: compStyles.right},
+							div({className: compStyles.actions},
+								button({color: 'default', disableElevation: true,
+									onClick: gaAnother(() => set(['another'], true)), variant: 'contained'},
+									'Make another graph'),
+								swapAxes,
+								violinOpt),
+							div({id: 'stats', className: compStyles.stats}))))));
 	};
 }
 
