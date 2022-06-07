@@ -566,7 +566,7 @@ class ImportPage extends React.Component {
 		return (
 			<>
 				<Box component={Card} elevation={2} sx={sxCard}>
-					<Box sx={{pb: 2, pl: 4, pr: 4, pt: 2}}>
+					<Box sx={{px: 4, py: 2}}>
 						<Box display='flex' sx={{alignItems: 'center', gap: 30}}>
 							<Typography display='inline' variant='h2'>Loading data...</Typography>
 							<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</Button>
