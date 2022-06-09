@@ -30,6 +30,11 @@
 	opacity: 0;
 }
 
+/* Controls - wizard mode - show. */
+.headerContainer.wizardMode .controls {
+	opacity: 1;
+}
+
 /* Controls - show on header container hover. */
 .headerContainer:hover .controls {
 	opacity: 1;

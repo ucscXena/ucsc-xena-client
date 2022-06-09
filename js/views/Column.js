@@ -775,7 +775,7 @@ export default class Column extends PureComponent {
 	render() {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
-				onClick, tooltip, onReset,
+				onClick, tooltip, wizardMode, onReset,
 				pickSamples, interactive, append, cohort, tumorMap} = this.props,
 			{dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
@@ -876,7 +876,8 @@ export default class Column extends PureComponent {
 												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
 											</Menu></>)}
 									</>
-								}>
+								}
+								 wizardMode={wizardMode}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
 									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
