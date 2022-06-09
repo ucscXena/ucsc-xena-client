@@ -13,18 +13,24 @@
 
 // Core dependencies, components
 var React = require('react');
-var classNames = require('classnames');
+import {Box} from '@material-ui/core';
+import {xenaColor} from '../xenaColor';
 
 // Styles
 var compStyles = require('./CardAvatar.module.css');
+var sxGhostAvatar = {
+	border: `0.5px dashed ${xenaColor.BLACK_38}`,
+};
 
 class CardAvatar extends React.Component {
 	render() {
-		var {colId, zoomCard} = this.props,
-			ghost = !colId,
-			noAvatar = zoomCard;
+		var {colId} = this.props,
+			ghost = !colId;
 		return (
-			<div className={classNames({[compStyles.avatar]: !noAvatar}, {[compStyles.ghost]: ghost}, {[compStyles.noAvatar]: noAvatar})}>{colId}</div>
+			<Box
+				className={compStyles.avatar}
+				bgcolor={ghost ? 'transparent' : xenaColor.BLACK_6}
+				sx={ghost ? sxGhostAvatar : undefined}>{colId}</Box>
 		);
 	}
 }

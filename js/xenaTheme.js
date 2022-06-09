@@ -178,6 +178,7 @@ export const xenaTheme = createTheme(theme, {
 			},
 			avatar: {
 				marginRight: 0,
+				pointerEvents: 'none',
 			},
 			root: {
 				padding: '8px 16px',
@@ -404,12 +405,15 @@ export const xenaTheme = createTheme(theme, {
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap',
-			}
+			},
 		},
 		MuiPaper: {
+			root: {
+				transition: undefined,
+			},
 			rounded: {
 				borderRadius: 2,
-			}
+			},
 		},
 		MuiRadio: {
 			root: {
