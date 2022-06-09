@@ -762,7 +762,7 @@ export default class Column extends PureComponent {
 	};
 
 	getControlWidth = () => {
-		return 90;
+		return 98;
 //		return 136;
 	};
 
@@ -775,7 +775,7 @@ export default class Column extends PureComponent {
 	render() {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
-				onClick, tooltip, wizardMode, onReset,
+				onClick, tooltip, onReset,
 				pickSamples, interactive, append, cohort, tumorMap} = this.props,
 			{dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
@@ -796,7 +796,7 @@ export default class Column extends PureComponent {
 			chartDisabled = disableChart(column),
 	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
-			refreshIcon = (<IconButton onClick={onReset}><Icon>close</Icon></IconButton>),
+			refreshIcon = (<IconButton edge='end' onClick={onReset}><Icon>close</Icon></IconButton>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
@@ -853,10 +853,10 @@ export default class Column extends PureComponent {
 								onClick={this.onXZoomClear}
 								geneZoomText={columnZoom.zoomText(column)}
 								controls={!interactive ? (first ? refreshIcon : null) :
-									<div>
+									<>
 										{first ? null : (
 											<>
-											<IconButton onClick={this.onColumnMenuOpen}><Icon>more_vert</Icon></IconButton>
+											<IconButton edge='end' onClick={this.onColumnMenuOpen}><Icon>more_vert</Icon></IconButton>
 											<Menu
 												anchorEl={this.state.menuEl}
 												anchorOrigin={{horizontal: 'left', vertical: 'top'}}
@@ -875,9 +875,8 @@ export default class Column extends PureComponent {
 												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit}>Edit</MenuItem>
 												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
 											</Menu></>)}
-									</div>
-								}
-								 wizardMode={wizardMode}>
+									</>
+								}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
 									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
