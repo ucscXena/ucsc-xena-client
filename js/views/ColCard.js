@@ -48,7 +48,7 @@ class ColCard extends React.Component {
 									<Box
 										component={Typography} noWrap
 										sx={{fontSize: 8, mr: 1}} variant='inherit'>{geneZoomText}</Box>
-									<Icon fontSize='inherit'>cancel</Icon>
+									<Box component={Icon} sx={{fontSize: '10px !important'}}>cancel</Box>
 								</Box> : null}
 						</>} subheaderTypographyProps={{color: 'textSecondary', component: 'p'}}
 					sx={{height: 60, position: 'relative'}}
