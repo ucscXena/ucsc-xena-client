@@ -431,6 +431,11 @@ export const xenaTheme = createTheme(theme, {
 				color: theme.palette.text.hint,
 				fontSize: 24,
 			},
+			select: {
+				'&:focus': {
+					backgroundColor: undefined,
+				},
+			}
 		},
 		MuiStep: {
 			horizontal: {
