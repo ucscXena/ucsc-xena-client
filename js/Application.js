@@ -59,6 +59,11 @@ class Application extends PureComponent {
 //			Perf.start();
 //		}
 //	}
+	componentDidMount() {
+		const {onNavigate} = this.props;
+		nav({activeLink: 'heatmap', onNavigate});
+	}
+
 	componentDidUpdate() {
 		const { getState, onImport, onNavigate, state: { isPublic } } = this.props;
 
