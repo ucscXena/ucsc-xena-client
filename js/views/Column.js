@@ -841,6 +841,7 @@ export default class Column extends PureComponent {
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
 								 positionHeight={column.position ? positionHeight : 0} {...dragZoom}>
 						<ColCard colId={label}
+								 interactive={interactive}
 								sortable={!first}
 								title={<DefaultTextInput
 									disabled={!interactive}
@@ -852,9 +853,8 @@ export default class Column extends PureComponent {
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
 								geneZoomText={columnZoom.zoomText(column)}
-								controls={!interactive ? (first ? refreshIcon : null) :
-									<>
-										{first ? null : (
+								controls={!interactive ? (first && wizardMode ? refreshIcon : null) :
+										first ? null : (
 											<>
 											<IconButton edge='end' onClick={this.onColumnMenuOpen}><Icon>more_vert</Icon></IconButton>
 											<Menu
@@ -874,10 +874,7 @@ export default class Column extends PureComponent {
 												<MenuItem onClick={this.onViz}>Display</MenuItem>
 												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit}>Edit</MenuItem>
 												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
-											</Menu></>)}
-									</>
-								}
-								 wizardMode={wizardMode}>
+											</Menu></>)}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
 									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
