@@ -25,22 +25,6 @@
 	height: 52px;
 }
 
-/* Controls - hide. */
-.headerContainer .controls {
-	opacity: 0;
-}
-
-/* Controls - wizard mode - show. */
-.headerContainer.wizardMode .controls {
-	opacity: 1;
-}
-
-/* Controls - show on header container hover. */
-.headerContainer:hover .controls {
-	opacity: 1;
-	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
-}
-
 /* Zoom control */
 .zoomControl {
 	align-items: center;
