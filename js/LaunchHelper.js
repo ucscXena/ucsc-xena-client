@@ -1,12 +1,30 @@
 
 import React from 'react';
-import Dialog from 'react-toolbox/lib/dialog';
+import {
+	Box,
+	Button,
+	ButtonBase,
+	Dialog,
+	DialogActions,
+	DialogContent, Icon,
+	IconButton,
+	Link,
+	Typography
+} from '@material-ui/core';
 import PureComponent from './PureComponent';
 var {map, pick, mapObject, getIn, get} = require('./underscore_ext').default;
 var platform = require('platform');
 var Rx = require('./rx').default;
-import Link from 'react-toolbox/lib/link';
+
+// Styles
 import styles from './LaunchHelper.module.css';
+var sxHelperContent = {
+	color: '#757575',
+	display: 'grid',
+	gridTemplateRows: '1fr 1fr auto',
+	height: '100%',
+	textAlign: 'center'
+};
 
 var osFiles = {
 		osxJre: {
@@ -110,39 +128,34 @@ class XenaDownload extends React.Component {
 			defaultInstall = get(files, defaultTarget);
 
 		return (
-			<div className={styles.download}>
-				<div className={styles.i4j}>
-					<p>Supported by <a href='https://www.ej-technologies.com/products/install4j/overview.html'><img src={i4jLogo}/></a></p>
-				</div>
-				<p>
-					<br/>
-					<span className={styles.largeFont}>{isFirst ? 'If this is your first time, ' : 'If nothing prompts from browser, '}</span>
+			<div>
+				<Typography className={styles.i4j} component='div' variant='body1'>Supported by <a href='https://www.ej-technologies.com/products/install4j/overview.html'><img alt='i4j' src={i4jLogo}/></a></Typography>
+				<Typography component='div' variant='h2'>
+					{isFirst ? 'If this is your first time, ' : 'If nothing prompts from browser, '}
 					{defaultInstall ?
-						<Link className={styles.downloadLink} href={defaultInstall} label='download & run a Local Xena hub.'/> :
+						<Link display='block' href={defaultInstall} underline='always'>download & run a Local Xena hub.</Link> :
 						'download & run a Local Xena hub, from the list below:'}
-				</p>
-				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
-				{defaultInstall ? <br/> : null}
+				</Typography>
+				{defaultInstall ? <ButtonBase disableRipple onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</ButtonBase> : null}
 				<div className={advanced || !defaultInstall ? styles.tableShow : styles.table}>{map(files ? pick(osFiles, (_, k) => files[k]) : [], (info, key) =>
-					 <Link key={key} className={styles.downloadList} href={files[key]} title={info.help} label={info.description}/>)}</div>
-				<br/>
+					<Link key={key} className={styles.downloadList} display='block' href={files[key]} title={info.help} underline='hover'>{info.description}</Link>)}</div>
 			</div>);
 	}
 }
 
 var launchingHelp = ['Launching...',
-	<p>Please click <b>Open UCSC xena</b> if you see the system dialog.</p>];
+	<Typography variant='body1'>Please click <b>Open UCSC xena</b> if you see the system dialog.</Typography>];
 
 var statusHelp = {
 	undefined: [],
 	down: launchingHelp,
 	started: launchingHelp,
 	up: ['Your local Xena Hub is running.',
-		<p>To view your data, use the "Visualization" button</p>],
+		<Typography variant='body1'>To view your data, use the "Visualization" button</Typography>],
 	old: ['Your local Xena Hub is out of date.',
 		<p></p>],
 	lost: ['We have lost contact with your Local Xena hub.',
-		<p>To re-start it, you may reload this page.</p>]
+		<Typography variant='body1'>To re-start it, you may reload this page.</Typography>]
 };
 
 var launch = () => {
@@ -202,22 +215,17 @@ var wrap = Comp => class extends PureComponent {
 		this.compRef = ref;
 	}
 
-	actions = [
-		{label: 'Help', target: '_blank', href: 'https://ucsc-xena.gitbook.io/project/local-xena-hub'},
-		{label: 'Close', onClick: this.onHide}
-	];
-
 	render() {
 		var {advanced, show} = this.state,
 			{localStatus: status} = this.props.state,
 			statusBadge =
 				status === 'up' ? (
-					<i title='Connected to local Xena Hub'
-					   className={'material-icons ' + styles.badgeConnected}
-					   onClick={this.onShow}>lens</i>) : (
-					<i title='Not connected to local Xena Hub. Click for details.'
-					   className={'material-icons ' + styles.badgeDisconnected}
-					   onClick={this.onShow}>lens</i>),
+					<Box component={IconButton} sx={{left: -4, position: 'relative', top: -4}}
+						 title='Connected to local Xena Hub' onClick={this.onShow}>
+						<Box component={Icon} color='#77FFCC'>lens</Box></Box>) : (
+					<Box component={IconButton} sx={{left: -4, position: 'relative', top: -4}}
+						 title='Not connected to local Xena Hub. Click for details.' onClick={this.onShow}>
+						<Icon color='error'>lens</Icon></Box>),
 			unsupported = platform.name.match(/safari/i) && status === 'down',
 			[header, help] = unsupported ? [
 				`${platform.name} does not support viewing your own data. Please use Chrome or Firefox`,
@@ -226,15 +234,25 @@ var wrap = Comp => class extends PureComponent {
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
-				<Dialog theme={{body: styles.body}} active={show} actions={this.actions} className={styles.dialog}>
-					<div className={styles.padding}></div>
-					<h2 className={styles.header}>{header}</h2>
-					<div className={styles.padding}></div>
-					<div className={styles.status}>
-						{help}
-						{status !== 'up' && status !== 'lost' ? <XenaDownload isFirst={status !== 'old'} advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
-					</div>
-					<p className={styles.footer}>A Local Xena Hub is an application on your computer for loading and storing data.</p>
+				<Dialog
+					fullWidth
+					maxWidth='xl'
+					open={show}
+					PaperProps={{style: {height: '100%'}}}>
+					<DialogContent>
+						<Box sx={sxHelperContent}>
+							<Box component='h2' sx={{alignSelf: 'center'}}>{header}</Box>
+							<div>
+								{help}
+								{status !== 'up' && status !== 'lost' ? <XenaDownload isFirst={status !== 'old'} advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
+							</div>
+							<Typography variant='body1'>A Local Xena Hub is an application on your computer for loading and storing data.</Typography>
+						</Box>
+					</DialogContent>
+					<DialogActions>
+						<Button color='default' disableElevation href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank' variant='contained'>Help</Button>
+						<Button color='default' disableElevation onClick={this.onHide} variant='contained'>Close</Button>
+					</DialogActions>
 				</Dialog>
 			</Comp>);
 	}
