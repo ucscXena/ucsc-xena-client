@@ -1,8 +1,26 @@
 import PureComponent from './PureComponent';
 var React = require('react');
-import stateErrorStyle from './StateError.module.css';
-import Dialog from 'react-toolbox/lib/dialog';
+import {
+	Box,
+	Dialog,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Icon,
+	IconButton,
+	Typography
+} from '@material-ui/core';
 var {contains} = require('./underscore_ext').default;
+import {xenaColor} from './xenaColor';
+
+// Styles
+var sxCloseButton = {
+	alignSelf: 'flex-start',
+	color: xenaColor.BLACK_38,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
 
 var stateTypes = ['bookmark', 'import', 'session'];
 var getMsg = error =>
@@ -10,37 +28,27 @@ var getMsg = error =>
 	error;
 
 export class StateError extends PureComponent {
-	componentDidMount() {
-		document.documentElement.scrollTop = 0;
-		var body = document.getElementById("body");
-		body.style.overflow = "auto";
-	}
-
 	render() {
 		var message = getMsg(this.props.error);
-
-		const actions = [
-			{
-				label: <i className='material-icons'>close</i>,
-				className: stateErrorStyle.dialogClose,
-				onClick: this.props.onHide
-			},
-		];
 		return (
-			<div>
-				<Dialog
-					actions={actions}
-					active={true}
-					title='Whoops...'
-					className={stateErrorStyle.dialog}
-					onEscKeyDown={this.props.onHide}
-					onOverlayClick={this.props.onHide}
-					theme={{
-						wrapper: stateErrorStyle.dialogWrapper,
-						overlay: stateErrorStyle.dialogOverlay}}>
-					<p style={{wordWrap: 'break-word'}}>{message}</p>
-				</Dialog>
-			</div>
+			<Dialog
+				fullWidth
+				maxWidth={'sm'}
+				onClose={this.props.onHide}
+				open={!!this.props.error}
+				PaperProps={{style: {alignSelf: 'flex-start', marginTop: 96}}}>
+				<DialogTitle disableTypography>
+					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
+						<Typography variant='subtitle1'>Whoops...</Typography>
+						<Box color='default' component={IconButton} onClick={this.props.onHide} sx={sxCloseButton}>
+							<Icon>close</Icon>
+						</Box>
+					</Box>
+				</DialogTitle>
+				<DialogContent>
+					<DialogContentText>{message}</DialogContentText>
+				</DialogContent>
+			</Dialog>
 		);
 	}
 }

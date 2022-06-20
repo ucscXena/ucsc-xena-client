@@ -144,7 +144,7 @@ class Application extends PureComponent {
 					{_.getIn(state, ['map', 'open']) ? <Map
 							callback={callback}
 							state={state} /> : null}
-					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
+					<StateError onHide={this.onHideError} error={stateError}/>
 				</div>
 			</div>
 		);
