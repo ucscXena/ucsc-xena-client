@@ -5,16 +5,8 @@
  * Styles for tooltip that is displayed on column hover (or alt-click on column to freeze tooltip).
  */
 
-@value black6 from '../../css/variables.css';
-@value black12 from '../../css/variables.css';
-@value black38 from '../../css/variables.css';
-@value black54 from '../../css/variables.css';
-@value black87 from '../../css/variables.css';
-
 .Tooltip {
 	align-items: center;
-	background-color: #ffffff;
-	border-bottom: 1px solid black6;
 	display: flex;
 	height: 32px;
 	justify-content: space-between;
@@ -39,22 +31,11 @@
 
 /* Tooltip - frozen */
 .Tooltip.frozen {
-	z-index: 999;
-}
-
-.overlay {
-	background-color: black12;
-	bottom: 0;
-	left: 0;
-	position: fixed;
-	right: 0;
-	top: 0;
-	z-index: 998;
+	z-index: 1200;
 }
 
 /* Rows */
 .content {
-	composes: mdBody1 from '../../css/typography.module.css';
 	align-items: center;
 	display: flex;
 	list-style: none;
@@ -71,7 +52,6 @@
 /* All <li>, excluding .title */
 .content li:not(.title) {
 	align-items: center;
-	color: black54;
 	display: flex;
 }
 
@@ -82,9 +62,7 @@
 
 /* Sample display text */
 .title {
-	composes: mdBody1 from '../../css/typography.module.css';
 	align-items: flex-start;
-	color: black87;
 	display: flex;
 	flex-direction: column;
 }
@@ -95,7 +73,7 @@
 
 /* Dot */
 .content li:not(:first-child):before {
-	background-color: black12;
+	background-color: rgba(0, 0, 0, 0.12);
 	border-radius: 4px;
 	content: '';
 	display: inline-flex;
@@ -110,31 +88,7 @@
 	margin-left: 8px;
 }
 
-/* Content with link */
-.content a {
-	color: var(--color-accent);
-	transition: color 0.35s;
-}
-
-/* Content with link - hover state */
-.content a:hover {
-	color: var(--color-primary-contrast);
-	text-decoration: none;
-}
-
-/* Tooltip helper text, "+ more" */
-.tooltipHint, .moreGene {
-	composes: mdCaption from '../../css/typography.module.css';
-	color: black38 !important;
-}
-
 .moreGene {
 	align-self: center;
 	font-size: 10px;
-}
-
-/* Close icon - to unfreeze tooltip */
-.Tooltip i {
-	color: black54;
-	cursor: pointer;
 }
