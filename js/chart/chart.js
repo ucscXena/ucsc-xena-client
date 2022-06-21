@@ -1213,7 +1213,7 @@ class Chart extends PureComponent {
 				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
 		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
 			!isFloat(columns, ycolumn);
-		var swapAxes = codedVCoded || doScatter ? button({color: 'default', disabledElevation: true,
+		var swapAxes = codedVCoded || doScatter ? button({color: 'default', disableElevation: true,
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
 				'Swap X and Y') :
 			null;
