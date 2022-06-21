@@ -160,7 +160,7 @@ class Transcripts extends React.Component {
 
 		return (
 				<div className={styles.main}>
-					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
+					<StateError onHide={this.onHideError} error={stateError}/>
 					<a className={styles.selectorsLink} style={{fontSize: "0.85em"}}
 						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</a>
 					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
