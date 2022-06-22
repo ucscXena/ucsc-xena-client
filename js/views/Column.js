@@ -31,7 +31,7 @@ var config = require('../config');
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 import {setUserCodes} from '../models/denseMatrix';
 import {isChrom, getGeneMode} from '../models/columns';
-
+import {hidden} from '../nav';
 
 // We're getting events with coords < 0. Not sure if this
 // is a side-effect of the react event system. This will
@@ -487,6 +487,11 @@ export default class Column extends PureComponent {
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		// XXX move initial state to constructor
 		this.initSubColumnIndex();
+		var genesetView = hidden.create('genesetView', 'Geneset View', {
+			onChange: val => this.setState({genesetView: val}),
+			default: false
+		});
+		this.setState({genesetView});
 	}
 
 	onResizeStop = (size) => {
@@ -524,17 +529,19 @@ export default class Column extends PureComponent {
 
 
 	canDoGeneSetComparison = () => {
-    let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
-    if(
-      fieldType !== 'clinical' ||
-      valueType !== 'coded' ||
-      !codes || codes.length < 2  ||
-      AVAILABLE_GENESET_COHORTS.indexOf(name) < 0
-    ) {
-      return false ;
-    }
-    return (uniqueNotNull(heatmap[0]).length === 2);
-  };
+		let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props,
+			{genesetView} = this.state;
+		if(
+			!genesetView ||
+			fieldType !== 'clinical' ||
+			valueType !== 'coded' ||
+			!codes || codes.length < 2  ||
+			AVAILABLE_GENESET_COHORTS.indexOf(name) < 0
+		) {
+			return false ;
+		}
+		return uniqueNotNull(heatmap[0]).length === 2;
+	};
 
 	hideGeneSetWizard = () => {
 		this.setState({
@@ -824,7 +831,7 @@ export default class Column extends PureComponent {
 				onDiff, isSig}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
-	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
+			canDoGeneSetComparison = this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
