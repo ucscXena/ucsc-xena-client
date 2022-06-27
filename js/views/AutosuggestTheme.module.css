@@ -5,8 +5,6 @@
  * Theme overrides for styling react-autosuggest.
  */
 
-@value black3 from '../../css/variables.css';
-
 /**
  * Core react-autosuggest theming API end points.
  */
@@ -45,5 +43,5 @@
 
 /* Suggestions onfocus */
 .suggestionHighlighted {
-	background-color: black3;
+	background-color: rgba(0, 0, 0, 0.03);
 }

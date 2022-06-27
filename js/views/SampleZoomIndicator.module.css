@@ -5,8 +5,6 @@
  * Rules necessary for styling Xena sample zoom indicator component.
  */
 
-@value black54 from '../../css/variables.css';
-
 /* Sample Zoom Indicator */
 .sampleZoomIndicator {
 	margin-left: 12px; /* Match 24px gutter (12px from grid + 12px here) */

@@ -10,7 +10,7 @@ var jStat = require('jStat').jStat;
 var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
-import {Box, Button, Card, CardContent, CardHeader, Icon, IconButton} from '@material-ui/core';
+import {Box, Button, Card, CardContent, CardHeader, Icon, IconButton, Typography} from '@material-ui/core';
 var sc = require('science');
 import {div, select, option, label, el, textNode} from './react-hyper';
 
@@ -40,6 +40,7 @@ var iconButton = el(IconButton);
 var card = el(Card);
 var cardContent = el(CardContent);
 var cardHeader = el(CardHeader);
+var typography = el(Typography);
 
 // group field0 by code0, where field1 has value
 function groupIndexWithValueByCode(field0, codes0, field1) {
@@ -223,7 +224,7 @@ function buildNormalizationDropdown(index, onUpdate) {
 				onChange: ev => onUpdate(ev.currentTarget.selectedIndex)},
 			...normalizationOptions.map(getOpt));
 
-	return div({className: compStyles.column},
+	return typography({className: compStyles.column, component: 'div', variant: 'body1'},
 			label(textNode("Y data linear transform ")),
 			dropDownDiv);
 }
@@ -234,7 +235,7 @@ function buildExpDropdown({opts, index, label: text, onChange}) {
 				onChange: ev => onChange(ev.currentTarget.selectedIndex)},
 				...opts.map(getOpt));
 
-	return div({className: compStyles.column}, label(textNode(text)), dropDownDiv);
+	return typography({className: compStyles.column, component: 'div', variant: 'body1'}, label(textNode(text)), dropDownDiv);
 }
 
 var isFloat = (columns, id) => v(id) && !columns[id].codes;
@@ -281,7 +282,7 @@ function axisSelector(xenaState, selectorID, onChange) {
 		...axisOpts.map(getOpt));
 
 	return (
-		div({className: compStyles.column},
+		typography({className: compStyles.column, component: 'div', variant: 'body1'},
 			label(textNode(text)), div(sel)));
 }
 
@@ -1281,7 +1282,7 @@ class Chart extends PureComponent {
 									'Make another graph'),
 								swapAxes,
 								violinOpt),
-							div({id: 'stats', className: compStyles.stats}))))));
+							typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))))));
 	};
 }
 

@@ -11,10 +11,8 @@
 	z-index: 1000;
 }
 
-@value black38 from '../../css/variables.css';
-
 .rowMarker:after {
-	border: 1px dashed black38;
+	border: 1px dashed rgba(0, 0, 0, 0.38);
 	content: '';
 	display: block;
 	position: absolute;

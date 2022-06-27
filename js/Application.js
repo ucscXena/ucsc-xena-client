@@ -10,8 +10,6 @@ var _ = require('./underscore_ext').default;
 import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
-import { ThemeProvider as ReactCSSThemr } from 'react-css-themr';
-import appTheme from './appTheme';
 import nav from './nav';
 var gaEvents = require('./gaEvents');
 //var Perf = require('react-dom/lib/ReactPerf');
@@ -151,12 +149,4 @@ class Application extends PureComponent {
 	}
 }
 
-const ThemedApplication = (props) => {
-	return (
-		<ReactCSSThemr theme={appTheme}>
-			<Application {...props}/>
-		</ReactCSSThemr>
-	);
-};
-
-module.exports = ThemedApplication;
+module.exports = Application;
