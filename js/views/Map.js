@@ -1,5 +1,5 @@
 var React = require('react');
-import Dialog from 'react-toolbox/lib/dialog';
+import {Box, Button, Dialog, DialogContent, Icon, IconButton} from '@material-ui/core';
 import {Component} from 'react';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
@@ -9,7 +9,6 @@ import * as THREE from 'three/build/three';
 import {OrbitControls} from './OrbitControls';
 import disc from './disc.png';
 import picker from './picker.png';
-var dialog = el(Dialog);
 var _ = require('../underscore_ext').default;
 import Axes3d from './Axes3d';
 import Rx from '../rx';
@@ -20,14 +19,30 @@ import {hidden} from '../nav';
 import spinner from '../ajax-loader.gif';
 import widgets from '../columnWidgets';
 import {item} from './Legend.module.css';
-import {Button} from 'react-toolbox/lib/button';
+import {xenaColor} from '../xenaColor';
 
 var debug = false;
 
 var drawing = false; // XXX singleton
 var dumpRadeonPicker;
 
+var box = el(Box);
 var button = el(Button);
+var dialog = el(Dialog);
+var dialogContent = el(DialogContent);
+var icon = el(Icon);
+
+// Styles
+var sxCloseButton = {
+	alignSelf: 'flex-start',
+	color: xenaColor.BLACK_38,
+	position: 'absolute',
+	right: 8,
+	top: 8,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
 
 var ringTexture = (function () {
 	const ctx = document.createElement('canvas').getContext('2d');
@@ -655,8 +670,8 @@ class SideBar extends PureComponent {
 			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
 			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
 			column ? p({className: styles.actions},
-				button({label: 'Hide all', onClick: this.props.onHideAll}),
-				button({label: 'Show all', onClick: this.props.onShowAll})) : null,
+				button({color: 'default', disableElevation: true, onClick: this.props.onHideAll, variant: 'contained'}, 'Hide all'),
+				button({color: 'default', disableElevation: true, onClick: this.props.onShowAll, variant: 'contained'}, 'Show all')) : null,
 			column ? div({className: styles.legend},
 				widgets.legend({column, data, clickable: true})) : null);
 	}
@@ -784,13 +799,7 @@ export class Map extends PureComponent {
 		this.props.callback(['map', true]);
 	}
 	render() {
-		var actions = [
-			{
-				children: [<i className='material-icons'>close</i>],
-				className: styles.mainDialogClose,
-				onClick: this.onHide
-			}],
-			{onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
+		var {onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
 				state: {tooltip}} = this;
 
 		var state = setHidden(this.props.state),
@@ -818,13 +827,9 @@ export class Map extends PureComponent {
 			data = {columns, colorColumn, size, colors,
 				hideColors, labels, view, image};
 
-		return dialog({active: true, actions, onEscKeyDown: this.onHide,
-					onOverlayClick: this.onHide,
-					className: styles.mainDialog,
-					theme: {overlay: styles.dialogOverlay,
-						body: styles.dialogBody
-					}},
-				div({className: styles.content},
+		return dialog({fullWidth: true, maxWidth: 'xl', open: mapState.open, onClose: this.onHide, PaperProps: {style: {height: '100%'}}},
+			box({component: IconButton, onClick: this.onHide, sx: sxCloseButton}, icon("close")),
+				dialogContent({className: styles.content},
 					div({className: styles.graphWrapper},
 						getStatusView(loading, error, this.onReload),
 						mapDrawing({onTooltip, onMove, data})),
