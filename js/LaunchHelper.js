@@ -237,6 +237,7 @@ var wrap = Comp => class extends PureComponent {
 				<Dialog
 					fullWidth
 					maxWidth='xl'
+					onClose={this.onHide}
 					open={show}
 					PaperProps={{style: {height: '100%'}}}>
 					<DialogContent>

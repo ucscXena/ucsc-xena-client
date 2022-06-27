@@ -18,7 +18,7 @@ var compStyles = require('./footer.module.css');
 class Footer extends React.Component {
 	render() {
 		return (
-			<div className={compStyles.footer}>
+			<Box component='div' className={compStyles.footer} bgcolor='primary.main'>
 				<Typography component='div' className={compStyles.footerLinks} variant='body1'>
 					<ul>
 						<li><a href='https://www.ucsc.edu/' target='_blank'>UCSC</a></li>
@@ -36,7 +36,7 @@ class Footer extends React.Component {
 					<Box component='span' fontWeight={300}>Copyright © 2016, The Regents of the University of California,
 					Santa Cruz All. Rights Reserved. Apache-2.0 license.</Box>
 				</Typography>
-			</div>
+			</Box>
 		);
 	}
 }

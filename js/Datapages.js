@@ -29,8 +29,6 @@ var {rxEvents} = require('./react-utils');
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import {defaultHost} from './urlParams';
 var {encodeObject, urlParams} = require('./util').default;
-import {ThemeProvider as ReactCSSThemr} from 'react-css-themr';
-var appTheme = require('./appTheme');
 var {getHubParams} = require('./hubParams');
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
@@ -723,9 +721,7 @@ class ThemedDatapages extends React.Component {
 		});
 		return (
 			<MuiThemeProvider theme={pageTheme}>
-				<ReactCSSThemr theme={appTheme}>
-					<Datapages {...this.props}/>
-				</ReactCSSThemr>
+				<Datapages {...this.props}/>
 			</MuiThemeProvider>
 		);
 	}
