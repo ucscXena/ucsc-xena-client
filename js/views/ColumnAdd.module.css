@@ -22,7 +22,7 @@
 	opacity: 0;
 }
 
-/* Show add column on hover */ 
+/* Show add column on hover */
 .ColumnAdd:not(.last):hover {
 	opacity: 1;
 }
@@ -43,7 +43,6 @@
 
 /* "Click to Add Column" text */
 .text {
-	composes: mdCaption from '../../css/typography.module.css';
 	background-color: #fafafa; /* Match body background color */
 	color: black38;
 	height: 2px;

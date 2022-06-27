@@ -8,6 +8,7 @@
 
 // Core dependencies, components
 var React = require('react');
+import {Typography} from '@material-ui/core';
 var {Portal} = require('react-overlays');
 var columnZoom = require('../columnZoom');
 
@@ -53,7 +54,7 @@ class ZoomHelpTag extends React.Component {
 			<Portal container={document.body}>
 				{selection ? <div className={compStyles.zoomHelpTag}
 								  style={{left: tagPosLeft, right: tagPosRight, top: tagPosTop}}>
-					<div className={compStyles.zoomInstructions}>{tagInstruction}</div>
+					<Typography component='div' className={compStyles.zoomInstructions} variant='caption'>{tagInstruction}</Typography>
 				</div> : null}
 			</Portal>
 		);

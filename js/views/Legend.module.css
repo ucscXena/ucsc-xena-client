@@ -19,7 +19,6 @@
 }
 
 .label {
-	composes: mdCaption from '../../css/typography.module.css';
 	display: block;
 	margin-left: 20px;
 	font-weight: normal; /* BS override */
@@ -30,7 +29,6 @@
 }
 
 .colorBox {
-	composes: mdCaption from '../../css/typography.module.css';
 	float: left;
 	margin: 4px;
 	height: 15px;
@@ -40,7 +38,6 @@
 }
 
 .breakendBar {
-	composes: mdCaption from '../../css/typography.module.css';
 	float: left;
 	margin: 4px;
 	height: 15px;
@@ -58,7 +55,6 @@
 }
 
 .footnotes {
-	composes: mdCaption from '../../css/typography.module.css';
 	margin-top: 16px;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -66,7 +62,6 @@
 }
 
 .null {
-	composes: mdCaption from '../../css/typography.module.css';
 	display: block;
 	text-align: center;
 }

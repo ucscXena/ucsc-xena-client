@@ -14,7 +14,6 @@
 }
 
 .button {
-	composes: mdBody2 from '../../css/typography.module.css';
 	background-color: #f7f7f7;
 	letter-spacing: 0.5px;
 }

@@ -1,5 +1,6 @@
 
 var React = require('react');
+import {Typography} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 
 // Styles
@@ -24,26 +25,26 @@ class Legend extends React.Component {
 							className={compStyles.item}>
 						<div className={compStyles.colorBox}
 							style={{backgroundColor: c}}/>
-						<label className={compStyles.label}>
+						<Typography component='label' className={compStyles.label} variant='caption'>
 							{l}
-						</label>
+						</Typography>
 					</div>)).reverse(),
 			footnotesItems = footnotes ? footnotes.map((text, i) =>
-								<div key={i} className={compStyles.footnotes}>
+								<Typography key={i} component='div' className={compStyles.footnotes} variant='caption'>
 									{text}
-								</div>) :
+								</Typography>) :
 								null,
 			breakend = (
 				<div className={compStyles.item}>
 					<div className={compStyles.breakendBar}/>
-					<label className={compStyles.label}>breakend</label>
+					<Typography component='label' className={compStyles.label} variant='caption'>breakend</Typography>
 				</div>
 				),
 			nullNotation = (
 				<div title={nodata.text}>
-					<label className={compStyles.null} style={{backgroundColor: nodata.color}}>
+					<Typography component='label' className={compStyles.null} style={{backgroundColor: nodata.color}} variant='caption'>
 						{nodata.text}
-					</label>
+					</Typography>
 				</div>);
 
 		return (

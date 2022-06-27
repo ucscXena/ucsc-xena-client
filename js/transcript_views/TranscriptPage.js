@@ -1,5 +1,6 @@
 var _ = require('../underscore_ext').default;
 const React = require('react');
+import {Link} from '@material-ui/core';
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
@@ -161,8 +162,8 @@ class Transcripts extends React.Component {
 		return (
 				<div className={styles.main}>
 					<StateError onHide={this.onHideError} error={stateError}/>
-					<a className={styles.selectorsLink} style={{fontSize: "0.85em"}}
-						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</a>
+					<Link className={styles.selectorsLink} variant='caption'
+						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</Link>
 					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
 						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
 							<GeneSuggest assembly='hg38' label="Add Gene (e.g. KRAS)" value={this.state.input}

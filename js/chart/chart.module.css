@@ -77,7 +77,6 @@
 
 /* Column inside control panel */
 .column {
-	composes: mdBody1 from '../../css/typography.module.css';
 	max-width: 33%;
 }
 
@@ -99,7 +98,6 @@
 
 /* Stats container */
 .stats {
-	composes: mdCaption from '../../css/typography.module.css';
 	display: none;
 	overflow-y: auto;
 }

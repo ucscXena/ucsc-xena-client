@@ -17,7 +17,6 @@
 }
 
 .footerLinks {
-	composes: mdBody1 from '../css/typography.module.css';
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
@@ -39,7 +38,5 @@
 }
 
 .footerCR {
-	composes: mdCaption from '../css/typography.module.css';
-	font-weight: 300;
 	padding-top: 12px;
 }

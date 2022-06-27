@@ -20,6 +20,7 @@
 
 // Core dependencies, components
 var React = require('react');
+import {Typography} from '@material-ui/core';
 var classNames = require('classnames');
 
 // Styles
@@ -52,9 +53,9 @@ class ColumnAdd extends React.Component {
 				onClick={this.onClick}
 				onMouseOut={this.onMouseOut}
 				onMouseOver={this.onMouseOver}>
-				<div className={compStyles.text}>
+				<Typography className={compStyles.text} variant='caption'>
 					Click to {last ? 'Add' : 'Insert'} Column
-				</div>
+				</Typography>
 			</div>
 		);
 	}
