@@ -19,8 +19,8 @@ class XRadioMeta extends React.Component {
 		var {meta} = this.props;
 		return (
 			<Typography className={compStyles.XRadioMeta} component='ul' variant='caption'>
-				{_.map(meta, m =>
-					<React.Fragment key={m.label}>
+				{_.map(meta, (m, i) =>
+					<React.Fragment key={`${m.label}${i}`}>
 						<Divider light/>
 						<li className={compStyles.meta} key={m.label}>
 						<span className={compStyles.label}>{m.label}</span>
