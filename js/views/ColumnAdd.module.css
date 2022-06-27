@@ -5,9 +5,6 @@
  * Rules necessary for styling Column Add component.
  */
 
-@value black12 from '../../css/variables.css';
-@value black38 from '../../css/variables.css';
-
 .ColumnAdd {
 	cursor: pointer;
 	/* 15px padding + 1px width for line = 16px (this prevents jiggle when add column functionality is turned off and
@@ -35,7 +32,7 @@
 /* Vertical line */
 .ColumnAdd:before {
 	content: '';
-	background-color: black12;
+	background-color: rgba(0, 0, 0, 0.12);
 	display: block;
 	height: 100%;
 	width: 1px;
@@ -44,7 +41,6 @@
 /* "Click to Add Column" text */
 .text {
 	background-color: #fafafa; /* Match body background color */
-	color: black38;
 	height: 2px;
 	margin-top: -1px;
 	line-height: 0;

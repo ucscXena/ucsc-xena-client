@@ -5,9 +5,6 @@
  * Rules necessary for styling Xena sample zoom carriage component.
  */
 
-@value black24 from '../../css/variables.css';
-@value black54 from '../../css/variables.css';
-
 /* Zoom Carriage */
 .zoomCarriage {
 	left: 0;
@@ -21,7 +18,8 @@
 .carriage {
 	align-items: center;
 	background-color: rgba(255, 255, 255, 0.85);
-	border: 1px solid black24;
+	border-style: solid;
+	border-width: 1px;
 	border-radius: 1px;
 	box-sizing: border-box;
 	display: flex; /* Zoom control */
@@ -34,7 +32,8 @@
 
 /* Carriage lines */
 .carriageLines {
-	border: 0.5px dashed black24;
+	border-style: dashed;
+	border-width: 0.5px;
 	left: 15px;
 	position: absolute;
 	transition: none;

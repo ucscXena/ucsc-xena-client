@@ -8,16 +8,11 @@
  * http://react-toolbox.com/#/components/card for details.
  */
 
-@value black12 from '../../css/variables.css';
-@value black54 from '../../css/variables.css';
-@value black87 from '../../css/variables.css';
-
 .card {
 	overflow: visible;
 }
 /* Card title text */
 .cardTitle.large .title {
-	color: black87;
 	font-size: 14px; /* mdbody2 composes issue */
 	font-weight: 500; /* mdbody2 composes issue */
 	letter-spacing: .01em; /* mdbody2 composes issue */
@@ -26,7 +21,6 @@
 
 /* Card title text with avatar */
 .cardTitle.small .title {
-	color: black87;
 	font-size: 14px; /* mdbody2 composes issue */
 	font-weight: 500; /* mdbody2 composes issue */
 	letter-spacing: .01em; /* mdbody2 composes issue */
@@ -35,7 +29,6 @@
 
 /* Card subtitle */
 .cardTitle .subtitle{
-	color: black54; /* secondary composes issue */
 	font-weight: 500; /* mdbody2 composes issue */
 	margin-top: -4px;
 }
@@ -48,13 +41,11 @@
 
 /* Card text container */
 .cardText {
-	border-bottom: 1px solid black12;
 	padding: 24px 16px;
 }
 
 /* Card text styling */
 .cardText p {
-	color: black87;
 	line-height: 20px; /* mdbody1 composes issue */
 	white-space: normal; /* overriding whitespace from .Columns class */
 }

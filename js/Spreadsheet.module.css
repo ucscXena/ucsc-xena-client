@@ -5,8 +5,6 @@
  * Custom CSS of Xena spreadsheet.
  */
 
-@value black6 from '../css/variables.css';
-
 .Spreadsheet {
 	display: flex;
 	padding: 48px 0;
