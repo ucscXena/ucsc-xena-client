@@ -39,7 +39,7 @@ class XRadioGroup extends React.Component {
 					<RadioGroup onChange={this.onChange} value={value}>
 						{_.map(options, (o, i) => [
 							<FormControlLabel
-								key={o.label}
+								key={`${o.label}${i}`}
 								control={<Radio />}
 								label={o.label}
 								value={o.value}/>,

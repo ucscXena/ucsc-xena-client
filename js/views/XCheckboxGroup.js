@@ -108,18 +108,18 @@ class XCheckboxGroup extends PureComponent {
 			<XFormControl>
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				<FormGroup>
-					{_.map(options, group => [
+					{_.map(options, (group, g) => [
 						group.label ?
-							<React.Fragment key={group.label}>
+							<React.Fragment key={`${group.label}${g}`}>
 								<Box component={FormLabel} sx={sxFormLabel}>
 									<Box fontWeight={700}>{group.label}</Box>
 								</Box>
 								<Divider light/>
 							</React.Fragment> : null,
-						_.map(group.options, o => (
+						_.map(group.options, (o, i) => (
 						<FormControlLabel
 								control={<Checkbox checked={o.checked || false} onChange={this.onChange} value={o.value}/>}
-								key={o.label}
+								key={`${o.label}${i}`}
 								label={this.renderFormControlLabel(o.label, o.badge, hideBadge)}/>))
 					])}
 				</FormGroup>
