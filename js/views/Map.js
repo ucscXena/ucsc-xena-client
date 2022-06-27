@@ -704,10 +704,9 @@ function getStatusView(loading, error, onReload) {
 	if (error) {
 		return (
 			<div className={styles.status}>
-				<i onClick={onReload}
+				<IconButton onClick={onReload}
 				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={'material-icons'}>warning</i>
+				   aria-hidden='true'><Icon>warning</Icon></IconButton>
 			</div>);
 	}
 	return null;
