@@ -165,7 +165,6 @@ export const xenaTheme = createTheme(theme, {
 					...theme.typography.body1,
 					letterSpacing: 0,
 					margin: 0,
-					whiteSpace: 'normal', /* overriding whitespace from .Columns class */ /* TODO(cc) confirm required */
 				},
 			},
 		},
@@ -229,7 +228,7 @@ export const xenaTheme = createTheme(theme, {
 					WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
 				},
 				a: {
-					cursor: 'pointer', /* TODO(cc) check we want this - check Mui Link specification */
+					cursor: 'pointer',
 					fontWeight: 400,
 					textDecoration: 'none',
 					transition: 'border-bottom 0.35s',

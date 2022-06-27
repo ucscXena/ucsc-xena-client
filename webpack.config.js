@@ -2,17 +2,9 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 
-var reactToolboxVariables = require('./reactToolboxVariables');
-
 var postcssPlugins = [
 	require('postcss-for'),
-	require('postcss-cssnext')({
-		features: {
-			customProperties: {
-				variables: reactToolboxVariables
-			}
-		}
-	}),
+	require('postcss-cssnext'),
 	require('postcss-modules-values')
 ];
 
