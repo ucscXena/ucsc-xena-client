@@ -101,7 +101,11 @@ class BookmarkMenu extends React.Component {
 
 	onImport = () => {
 		this.refs.import.click();
-		this.handleMenuHide();
+		var listener = () => {
+			window.removeEventListener('focus', listener);
+			this.handleMenuHide();
+		};
+		window.addEventListener('focus', listener);
 	};
 
 	onImportSelected = (ev) => {
