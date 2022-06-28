@@ -43,7 +43,6 @@
 			ga('send', 'pageview');
 		}
 	</script>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   </head>
   <body id="body">
 	<div class="minWidthWrapper">
