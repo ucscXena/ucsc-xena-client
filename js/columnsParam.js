@@ -119,9 +119,11 @@ var columnOptions = column =>
 			columnOptSet(key, getIn(column, path))),
 		v => v !== invalid);
 
+var invalidColumn = (column, id) => id === 'samples' || column.fetchType === 'signature';
+
 var encode = x => encodeURIComponent(JSON.stringify(x));
 
 // extract from state
 export var getColumns = state =>
-	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), 'samples'),
+	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), invalidColumn),
 		column => merge(columnOptions(column), columnDatasetFields(column))));
