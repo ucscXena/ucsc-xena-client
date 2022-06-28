@@ -165,7 +165,6 @@ export const xenaTheme = createTheme(theme, {
 					...theme.typography.body1,
 					letterSpacing: 0,
 					margin: 0,
-					whiteSpace: 'normal', /* overriding whitespace from .Columns class */ /* TODO(cc) confirm required */
 				},
 			},
 		},
@@ -217,14 +216,23 @@ export const xenaTheme = createTheme(theme, {
 					WebkitFontSmoothing: 'antialiased',
 				},
 				body: {
+					fontFamily: "'Roboto', sans-serif",
 					fontSize: '1.6rem',
 					fontWeight: 400,
 				},
+				'*, *:before, *:after': {
+					border: 0,
+					margin: 0,
+					outline: 0,
+					padding: 0,
+					WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
+				},
 				a: {
-					cursor: 'pointer', /* TODO(cc) check we want this - check Mui Link specification */
+					cursor: 'pointer',
 					fontWeight: 400,
 					textDecoration: 'none',
 					transition: 'border-bottom 0.35s',
+					WebkitTransition: 'border-bottom 0.35s',
 				},
 				'h1, h2, h3, h4, h5, h6': {
 					marginBottom: '1rem',
@@ -252,6 +260,16 @@ export const xenaTheme = createTheme(theme, {
 				strong: {
 					fontWeight: 500,
 				},
+				'h1, h2, h3, h4, h5, h6, label, p, button, abbr, a, span, small': {
+					textSizeAdjust: '100%',
+				},
+				'input:not([type="checkbox"]):not([type="radio"]), button': {
+					appearance: 'none',
+					WebkitTouchCallout: 'none',
+				},
+				'input[required]:-moz-ui-invalid': {
+					boxShadow: 'none', /* Remove firefox default style for required inputs */
+				}
 			},
 		},
 		MuiDialogActions: {
@@ -376,6 +394,7 @@ export const xenaTheme = createTheme(theme, {
 				color: theme.palette.secondary.main,
 				cursor: 'pointer',
 				transition: 'color 0.35s',
+				WebkitTransition: 'color 0.35s',
 				'&:hover': {
 					color: xenaColor.PRIMARY_CONTRAST,
 				},

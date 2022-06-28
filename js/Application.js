@@ -9,7 +9,7 @@ import {StateError} from'./StateError';
 var _ = require('./underscore_ext').default;
 import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
-import '../css/index.css'; // Root styles file (reset, fonts, globals)
+import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
 var gaEvents = require('./gaEvents');
 //var Perf = require('react-dom/lib/ReactPerf');
