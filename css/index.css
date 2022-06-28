@@ -17,3 +17,9 @@
  * Required for applying styles that are outside of the React component hierarchy.
  */
 @import './xena.css';
+
+/*
+ * Fonts.
+ * Local font files for Material Icons.
+ */
+@import '../fonts/index.css';
