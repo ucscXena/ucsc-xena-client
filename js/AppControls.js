@@ -27,6 +27,7 @@ var sxControlBarInner = {
 	display: 'flex',
 	flex: 1,
 	maxWidth: '100vw', /* required for horizontal scroll */
+	minWidth: 'fit-content',
 	padding: '0 24px',
 };
 var sxFlex = {
