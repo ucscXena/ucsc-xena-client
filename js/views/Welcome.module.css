@@ -5,11 +5,7 @@
  * Rules necessary for styling welcome bar.
  */
 
-@value appMinWidth from '../../css/variables.css';
-
 .Welcome {
-	background-color: var(--color-primary);
-	color: white;
 	display: flex;
 	position: relative;
 }
@@ -53,19 +49,16 @@
 	color: white;
 }
 
-.closeIcon {
-	cursor: pointer;
-	font-size: 24px;
-	height: 24px;
+button.closeIcon {
 	position: absolute;
-	right: 8px;
-	top: 16px;
+	right: 2px;
+	top: 10px;
 }
 
 /**
  * Large +
  */
-@media screen and (min-width: appMinWidth) {
+@media screen and (min-width: 1280px) {
 
 	.Welcome {
 		height: 220px;
@@ -82,7 +75,7 @@
 		overflow: hidden;
 		padding-left: 0;
 		position: relative;
-		max-width: 475px; /* Snap at max width of image */
+		max-width: 476px; /* Snap at max width of image */
 	}
 
 	.imgXena {
@@ -90,6 +83,7 @@
 		left: 50%;
 		position: absolute;
 		transform: translateX(-50%);
+		width: 100%;
 	}
 
 	.bulletWrapper {
@@ -97,9 +91,9 @@
 		transform: translateX(-50%);
 	}
 
-		.closeIcon {
-		right: 24px;
-		top: 24px;
+	button.closeIcon {
+		right: 18px;
+		top: 18px;
 	}
 }
 

@@ -2,13 +2,7 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Font definitions for locally hosted Material Icons and Roboto.  Material Design typography requires Roboto normal @
- * 300, 400, 500.
- * XXX dropped Roboto because it wasn't being used.
- *
- * Must either host our own fonts (or reference from a service such as Google Fonts) as React Toolbox does not include
- * font definitions.
- *
+ * Font definitions for locally hosted Material Icons.
  * This fonts file is included in the core index.css and the rules below are therefore automatically applied to all
  * components.
  */

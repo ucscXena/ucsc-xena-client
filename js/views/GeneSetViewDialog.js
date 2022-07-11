@@ -1,8 +1,18 @@
 var React = require('react');
-import Dialog from "react-toolbox/lib/dialog";
+import {Box, Dialog, DialogContent, DialogTitle, Icon, IconButton, Typography} from '@material-ui/core';
 import Iframe from "react-iframe";
 import PureComponent from '../PureComponent';
-import genesetViewerStyle from "./genesetviewer.module.css";
+import {xenaColor} from '../xenaColor';
+
+// Styles
+import genesetViewerStyle from './genesetviewer.module.css';
+var sxCloseButton = {
+    alignSelf: 'flex-start',
+    color: xenaColor.BLACK_38,
+    '&:hover': {
+        backgroundColor: xenaColor.BLACK_6,
+    },
+};
 
 export const AVAILABLE_GENESET_COHORTS = [
   "TCGA Liver Cancer (LIHC)",
@@ -48,37 +58,35 @@ export class GeneSetViewDialog extends PureComponent {
   render() {
 
         let {showGeneSetWizard, onHide, geneSetUrl} = this.props;
-        const actions = [
-            {
-            children: [<i className='material-icons'>close</i>],
-            className: genesetViewerStyle.mainDialogClose,
-            onClick: this.props.onHide
-            },
-        ];
 
         return (
             <Dialog
-                actions={actions}
-                active={showGeneSetWizard}
+                BackdropProps={{style: {top: 64}}}
                 className={genesetViewerStyle.mainDialog}
-                onEscKeyDown={onHide}
-                onOverlayClick={onHide}
-                title='Differential Geneset Visualization'
-                theme={{
-                  dialog: genesetViewerStyle.dialogBase,
-                  wrapper: genesetViewerStyle.dialogWrapper,
-                }}
-                >
-                <Iframe url={geneSetUrl}
-                    src={geneSetUrl}
-                    width="100%"
-                    className={genesetViewerStyle.genesetiframe}
-                    height="350px"
-                    id="myId"
-                    display="block"
-                    loading='Loading wizard'
-                    position="relative"
-                />
+                fullWidth
+                maxWidth={'sm'}
+                onClose={onHide}
+                open={showGeneSetWizard}
+                PaperProps={{style: {alignSelf: 'flex-start'}}}>
+                <DialogTitle disableTypography>
+                    <Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
+                        <Typography variant='subtitle1'>Differential Geneset Visualization</Typography>
+                        <Box color='default' component={IconButton} onClick={onHide} sx={sxCloseButton}>
+                            <Icon>close</Icon>
+                        </Box>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <Iframe url={geneSetUrl}
+                            src={geneSetUrl}
+                            width="100%"
+                            height="350px"
+                            id="myId"
+                            display="block"
+                            loading='Loading wizard'
+                            position="relative"
+                    />
+                </DialogContent>
             </Dialog>
         );
     }

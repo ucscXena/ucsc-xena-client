@@ -37,7 +37,6 @@
 }
 
 .selectorsLink {
-	composes: mdCaption from '../../css/typography.module.css';
 	color: #337ab7;
 }
 

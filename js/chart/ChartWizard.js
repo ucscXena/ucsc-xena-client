@@ -1,49 +1,74 @@
 import PureComponent from '../PureComponent';
+var React = require('react');
 var gaEvents = require('../gaEvents');
-import {Card} from 'react-toolbox/lib/card';
-import {Button} from 'react-toolbox/lib/button';
-import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
-import {Dropdown} from 'react-toolbox/lib/dropdown';
+import {
+	Box,
+	Button,
+	Card,
+	CardActions,
+	CardContent,
+	CardHeader,
+	FormControl,
+	FormControlLabel,
+	FormLabel,
+	Icon,
+	IconButton,
+	MenuItem,
+	Radio,
+	RadioGroup,
+	TextField
+} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns, canDraw, boxOrViolinXDatasets, boxOrViolinYDatasets,
 	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';
-import {div, label, h2, i, a, span, el} from './react-hyper';
+import {h2, i, span, el} from './react-hyper';
 import classNames from 'classnames';
 
+var box = el(Box);
 var button = el(Button);
 var card = el(Card);
-var dropdown = el(Dropdown);
+var cardActions = el(CardActions);
+var cardContent = el(CardContent);
+var cardHeader = el(CardHeader);
+var formControl = el(FormControl);
+var formControlLabel = el(FormControlLabel);
+var formLabel = el(FormLabel);
+var icon = el(Icon);
+var iconButton = el(IconButton);
+var menuItem = el(MenuItem);
 var radioGroup = el(RadioGroup);
-var radioButton = el(RadioButton);
+var select = el(TextField);
 
 var styles = require('./ChartWizard.module.css');
+var sxModeLabel = {alignItems: 'center', display: 'grid', gridTemplateColumns: '100px auto'};
+var sxModes = {display: 'flex', flexDirection: 'column'};
+var sxModesContainer = {display: 'flex', justifyContent: 'center'};
 
 var closeButton = onClose =>
-	a(i({className: 'material-icons ' + styles.close, onClick: onClose}, 'close'));
+	iconButton({edge: 'end', onClick: onClose}, icon('close'));
 
 var doneButton = onDone =>
-	button({onClick: onDone, disabled: !onDone, label: 'Done', className: styles.done});
+	button({onClick: onDone, disabled: !onDone}, 'Done');
 
+var selectOptions = (options) => options.map(({label, value}) =>
+	menuItem({key: value, value: value}, label));
 
 var wizard = ({onClose, title, left = null, right = null}, ...children) =>
-	card({className: styles.wizard},
-		closeButton(onClose),
-		h2(title),
-		div(...children),
-		div({className: styles.actions}, left, right));
+	card({className: styles.wizard, elevation: 2},
+		cardHeader({action: closeButton(onClose), disableTypography: true, title: h2(title)}),
+		cardContent(...children),
+		cardActions(left, right));
 
-var iconI = icon => i({className: classNames('icon',  'icon-' + icon)});
+var iconI = icon => i({className: classNames('icon', 'icon-' + icon), style: {fontSize: 24, height: 24, width: 24}});
 
 //
 // compare subgroups selections
 //
 
 var boxOrViolinModes = [
-	{label: span({className: styles.radio}, span('Box plot'), iconI('box')),
-		value: 'boxplot'},
-	{label: span({className: styles.radio}, span('Violin plot'), iconI('violin')),
-		value: 'violin'}
+	{label: box({component: 'span', sx: sxModeLabel}, span('Box plot'), iconI('box')), value: 'boxplot'},
+	{label: box({component: 'span', sx: sxModeLabel}, span('Violin plot'), iconI('violin')), value: 'violin'}
 ];
 
 var yIsSet = ({ycolumn}) => v(ycolumn);
@@ -72,21 +97,19 @@ var needType = (state, appState) =>
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Compare subgroups", onClose,
-			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
-				className: styles.back}),
+			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(isValid(state) && onDone)},
-		div({className: styles.modes},
-			div(dropdown({label: 'Show data from', onChange: onY,
-				value: state.ycolumn, source: boxOrViolinYDatasets(appState)})),
-			div(dropdown({label: 'Subgroup samples by', onChange: onX,
-				value: state.xcolumn,
-				source: boxOrViolinXDatasets(appState)})),
+		box({sx: sxModesContainer}, box({sx: {...sxModes, gap: 8, width: 392}},
+			select({fullWidth: true, label: 'Show data from', onChange: onY,
+					select: true, value: state.ycolumn || ''}, selectOptions(boxOrViolinYDatasets(appState))),
+			select({fullWidth: true, label: 'Subgroup samples by', onChange: onX,
+				select: true, value: state.xcolumn || ''}, selectOptions(boxOrViolinXDatasets(appState))),
 			needType(state, appState) ?
-				div(label('I want a'),
-					radioGroup({name: 'boxOrViolin', onChange: onChart,
-						value: state.violin ? 'violin' : 'boxplot'},
-						...boxOrViolinModes.map(props => radioButton(props)))) :
-				null));
+				formControl(formLabel('I want a'),
+					radioGroup({name: 'boxOrViolin', onChange: onChart, value: state.violin ? 'violin' : 'boxplot'},
+						...boxOrViolinModes.map(({label, value}) =>
+							formControlLabel({control: <Radio />, key: value, label, value})))) :
+				null)));
 
 //
 // histogram/distribution selection
@@ -100,12 +123,11 @@ var histInit = ({chartState: {ycolumn, setColumn}}) => ({
 });
 var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) =>
 	wizard({title: 'See a Column Distribution', onClose,
-			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
-				className: styles.back}),
+			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(yIsSet(state) && onDone)},
-		div({className: styles.modes},
-			dropdown({label: 'Show data from', onChange: onY,
-			value: state.ycolumn, source: histDatasets(appState)})));
+		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
+			select({fullWidth: true, label: 'Show data from', onChange: onY,
+				select: true, value: state.ycolumn || ''}, selectOptions(histDatasets(appState))))));
 
 //
 // scatter plot selection
@@ -120,14 +142,13 @@ var scatterInit = ({columns, chartState: {ycolumn, xcolumn, setColumn}}) =>
 
 var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}) =>
 	wizard({title: "Scatter plot", onClose,
-			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
-				className: styles.back}),
+			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(xyIsSet(state) && onDone)},
-		div({className: styles.mode},
-			dropdown({onChange: onX, value: state.xcolumn, label: 'Pick the X axis',
-				source: scatterXDatasets(appState)})),
-			dropdown({onChange: onY, value: state.ycolumn, label: 'Pick the Y axis',
-				source: scatterYDatasets(appState)}));
+		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
+			select({fullWidth: true, label: 'Pick the X axis', onChange: onX,
+					select: true, value: state.xcolumn || ''}, selectOptions(scatterXDatasets(appState))),
+			select({fullWidth: true, label: 'Pick the Y axis', onChange: onY,
+					select: true, value: state.ycolumn || ''}, selectOptions(scatterYDatasets(appState))))));
 
 var noop = () => {};
 var init = {
@@ -155,15 +176,19 @@ var icons = {
 	scatter: iconI('scatter')
 };
 
-var modeButton = (appState, onMode) => props =>
-	button({onClick: onMode, icon: icons[props['data-mode']],
-		disabled: !canDraw[props['data-mode']](appState), ...props});
+var modeButton = (appState, onMode) => ({label, ...props}) =>
+	box({
+		component: (buttonProps) => button({color: 'default', disableElevation: true, variant: 'contained', ...buttonProps}, buttonProps.children),
+		endIcon: icons[props['data-mode']], fullWidth: true,
+		disabled: !canDraw[props['data-mode']](appState), onClick: onMode, ...props,
+		sx: {justifyContent: 'space-between'}
+	}, label);
 
 var startPage = ({onMode, onClose, props: {appState}}) =>
 	wizard({title: 'What do you want to do?', onClose,
-		left: button({onClick: onClose, label: 'Back', className: styles.back})},
-		div({className: styles.modes},
-			...startModes.map(modeButton(appState, onMode))));
+		left: box({sx: {flex: 1}}, button({color: 'default', onClick: onClose}, 'Back'))},
+		box({sx: sxModesContainer}, box({sx: {...sxModes, gap: 2}},
+			...startModes.map(modeButton(appState, onMode)))));
 
 var page = {
 	start: startPage,
@@ -200,8 +225,8 @@ export default class ChartWizard extends PureComponent {
 		}
 		callback([chartState.another ? 'chart' : 'heatmap']);
 	}
-	onChart = value => {
-		this.setState({violin: value === 'violin'});
+	onChart = event => {
+		this.setState({violin: event.target.value === 'violin'});
 	}
 	onDone = () => {
 		var {callback, appState} = this.props,
@@ -220,14 +245,16 @@ export default class ChartWizard extends PureComponent {
 				'setColumn', undefined,
 				'another', false)]);
 	}
-	onX = xcolumn => {
+	onX = event => {
+		var xcolumn = event.target.value;
 		var {ycolumn} = this.state;
 		this.setState({xcolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
 			this.setState({ycolumn: undefined});
 		}
 	}
-	onY = ycolumn => {
+	onY = event => {
+		var ycolumn = event.target.value;
 		var {xcolumn} = this.state;
 		this.setState({ycolumn});
 		if (ycolumn === xcolumn) { // disallow x = y

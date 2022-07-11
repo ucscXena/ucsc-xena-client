@@ -18,36 +18,45 @@
 
 
 // Core dependencies, components
-var classNames = require('classnames');
+import {AppBar, Box, Step, StepLabel, Stepper as MuiStepper} from '@material-ui/core';
 var React = require('react');
-import {AppBar as RTBAppBar} from 'react-toolbox/lib/app_bar';
 var _ = require('../underscore_ext').default;
+import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./Stepper.module.css');
+var sxStepperBar = {
+	alignItems: 'center',
+	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
+	display: 'flex',
+	height: 64,
+	padding: '0 24px',
+};
+var sxStepConnector = {
+	backgroundColor: xenaColor.GRAY_400,
+	flex: 1,
+	height: 1,
+	margin: '0 8px',
+};
 
 class Stepper extends React.Component {
 	render() {
-		const { steps, stateIndex, mode, flat, wideStep } = this.props;
-
-		let getStepClassName = (index) => {
-			return classNames({
-				[compStyles.step]: true,
-				[compStyles.wideStep]: wideStep,
-				[compStyles.completed]: index < stateIndex[mode],
-				[compStyles.active]: index === stateIndex[mode]
-			});
-		};
+		const { flat, steps, stateIndex, mode, wideStep } = this.props;
 		return (
-			<RTBAppBar flat={flat}>
-				<ul className={compStyles.Stepper}>
-					{_.map(steps, (step, index) =>
-						<li className={getStepClassName(index)} key={index}>
-							<div className={compStyles.stepperCircle}>{index + 1}</div>
-							<div className={compStyles.stepperText}>{step.label}</div>
-						</li>)}
-				</ul>
-			</RTBAppBar>
+			<AppBar>
+				<Box sx={{...sxStepperBar, ...(flat && {borderBottom: undefined})}}>
+					<MuiStepper activeStep={stateIndex[mode]} connector={null}>
+						{_.map(steps, (step, index) =>
+							<Box component={Step} key={index} sx={{width: wideStep ? '33.33%' : '25%'}}>
+								<StepLabel>
+									<Box component='span' sx={{alignItems: 'center', display: 'flex'}}>
+										<span>{step.label}</span>
+										<Box component='span' sx={sxStepConnector}/>
+									</Box>
+								</StepLabel>
+							</Box>)}
+					</MuiStepper>
+				</Box>
+			</AppBar>
 		);
 	}
 }

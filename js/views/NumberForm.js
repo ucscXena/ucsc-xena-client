@@ -1,6 +1,6 @@
 var React = require('react');
+import {TextField} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
-import Input from 'react-toolbox/lib/input';
 var {rxEvents} = require('../react-utils');
 
 var isValid = _.curry((min, max, value) => {
@@ -51,7 +51,8 @@ class NumberForm extends React.Component {
 			{value, focused} = this.state;
 		return (
 			<form>
-				<Input
+				<TextField
+					fullWidth
 					{...other}
 					onBlur={this.onBlur}
 					onFocus={this.onFocus}
@@ -59,7 +60,7 @@ class NumberForm extends React.Component {
 					value={'' + value}
 					label={`Custom survival time cutoff`}
 					placeholder={focused ? `Enter between ${min} and ${max}` : undefined}
-					onChange={this.on.change}/>
+					onChange={(e) => this.on.change(e.target.value)}/>
 			</form>
 		);
 	}

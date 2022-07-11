@@ -1,17 +1,16 @@
 var React = require('react');
-import Dialog from 'react-toolbox/lib/dialog';
+import {Box, Button, Dialog, DialogContent, Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {div, el, label, option, p, select, textNode}
 	from '../chart/react-hyper.js';
-var dialog = el(Dialog);
 var _ = require('../underscore_ext').default;
 import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
 import widgets from '../columnWidgets';
 import {item} from './Legend.module.css';
-import {Button} from 'react-toolbox/lib/button';
+import {xenaColor} from '../xenaColor';
 import {ScatterplotLayer, PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
 import DeckGL from '@deck.gl/react';
 
@@ -44,7 +43,23 @@ const darkTheme = createMuiTheme({
   }
 });
 
+var box = el(Box);
 var button = el(Button);
+var dialog = el(Dialog);
+var dialogContent = el(DialogContent);
+var icon = el(Icon);
+
+// Styles
+var sxCloseButton = {
+	alignSelf: 'flex-start',
+	color: xenaColor.BLACK_38,
+	position: 'absolute',
+	right: 8,
+	top: 8,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_6,
+	},
+};
 
 // https://gamedev.stackexchange.com/questions/53601/why-is-90-horz-60-vert-the-default-fps-field-of-view
 //var perspective = 60;
@@ -268,8 +283,8 @@ class SideBar extends PureComponent {
 			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
 			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
 			column ? p({className: styles.actions},
-				button({label: 'Hide all', onClick: this.props.onHideAll}),
-				button({label: 'Show all', onClick: this.props.onShowAll})) : null,
+				button({color: 'default', disableElevation: true, onClick: this.props.onHideAll, variant: 'contained'}, 'Hide all'),
+				button({color: 'default', disableElevation: true, onClick: this.props.onShowAll, variant: 'contained'}, 'Show all')) : null,
 			column ? div({className: styles.legend},
 				widgets.legend({column, data, clickable: true})) : null);
 	}
@@ -302,10 +317,9 @@ function getStatusView(loading, error, onReload) {
 	if (error) {
 		return (
 			<div className={styles.status}>
-				<i onClick={onReload}
+				<IconButton onClick={onReload}
 				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={'material-icons'}>warning</i>
+				   aria-hidden='true'><Icon>warning</Icon></IconButton>
 			</div>);
 	}
 	return null;
@@ -395,13 +409,7 @@ export class Map extends PureComponent {
 		}
 	}
 	render() {
-		var actions = [
-			{
-				children: [<i className='material-icons'>close</i>],
-				className: styles.mainDialogClose,
-				onClick: this.onHide
-			}],
-			{onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
+		var {onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
 				state: {tooltip}} = this;
 
 		var state = setHidden(this.props.state),
@@ -430,13 +438,9 @@ export class Map extends PureComponent {
 				hideColors, labels, view, image},
 			drawing = image ? vivDrawing : mapDrawing;
 
-		return dialog({active: true, actions, onEscKeyDown: this.onHide,
-					onOverlayClick: this.onHide,
-					className: styles.mainDialog,
-					theme: {overlay: styles.dialogOverlay,
-						body: styles.dialogBody
-					}},
-				div({className: styles.content},
+		return dialog({fullWidth: true, maxWidth: 'xl', open: mapState.open, onClose: this.onHide, PaperProps: {style: {height: '100%'}}},
+			box({component: IconButton, onClick: this.onHide, sx: sxCloseButton}, icon("close")),
+				dialogContent({className: styles.content},
 					div({className: styles.graphWrapper, ref: this.onRef},
 						getStatusView(loading, error, this.onReload),
 						drawing({onTooltip, onMove, data, container: this.state.container})),

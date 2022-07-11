@@ -2,17 +2,9 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 
-var reactToolboxVariables = require('./reactToolboxVariables');
-
 var postcssPlugins = [
 	require('postcss-for'),
-	require('postcss-cssnext')({
-		features: {
-			customProperties: {
-				variables: reactToolboxVariables
-			}
-		}
-	}),
+	require('postcss-cssnext'),
 	require('postcss-modules-values')
 ];
 
@@ -88,6 +80,10 @@ module.exports = {
 			},
 			{ test: /unicode-properties[/\\]unicode-properties.browser.cjs.js/, loader: "babel-loader" },
 			{ test: /src[/\\]assets/, loader: "arraybuffer-loader" },
+			// If a library includes a sourcemap tag the browser will get the
+			// url wrong unless we handle it with source-map-loader. Limit
+			// it to libs that need it, to avoid build overhead.
+			{ test: /rxjs[/\\].*\.js|sockjs-client|underscore[/\\]underscore\.js|react-draggable|showdown[/\\]dist/, enforce: "pre", use: ["source-map-loader"]},
 			{ test: /\.afm$/, loader: "raw-loader" },
 			{
 				test: /\.jsx?$/,

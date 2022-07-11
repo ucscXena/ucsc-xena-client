@@ -8,7 +8,9 @@
 
 // Core dependencies, components
 var React = require('react');
+import {Box, ThemeProvider, Typography} from '@material-ui/core';
 var ReactDOM = require('react-dom');
+import {xenaTheme} from './xenaTheme';
 
 // Styles
 var compStyles = require('./footer.module.css');
@@ -16,8 +18,8 @@ var compStyles = require('./footer.module.css');
 class Footer extends React.Component {
 	render() {
 		return (
-			<div className={compStyles.footer}>
-				<div className={compStyles.footerLinks}>
+			<Box component='div' className={compStyles.footer} bgcolor='primary.main'>
+				<Typography component='div' className={compStyles.footerLinks} variant='body1'>
 					<ul>
 						<li><a href='https://www.ucsc.edu/' target='_blank'>UCSC</a></li>
 						<li><a href='https://ucscgenomics.soe.ucsc.edu/' target='_blank'>UCSC Genomics Institute</a></li>
@@ -29,15 +31,16 @@ class Footer extends React.Component {
 						<li><a href='https://twitter.com/ucscxena' target='_blank'>Twitter</a></li>
 						<li><a href='https://github.com/ucscXena' target='_blank'>Github</a></li>
 					</ul>
-				</div>
-				<div className={compStyles.footerCR}>Copyright © 2016, The Regents of the University of California,
-					Santa Cruz All. Rights Reserved. Apache-2.0 license.
-				</div>
-			</div>
+				</Typography>
+				<Typography component='div' className={compStyles.footerCR} variant='caption'>
+					<Box component='span' fontWeight={300}>Copyright © 2016, The Regents of the University of California,
+					Santa Cruz All. Rights Reserved. Apache-2.0 license.</Box>
+				</Typography>
+			</Box>
 		);
 	}
 }
 
 var footer = document.getElementById('footer');
 
-ReactDOM.render(<Footer />, footer);
+ReactDOM.render(<ThemeProvider theme={xenaTheme}><Footer /></ThemeProvider>, footer);

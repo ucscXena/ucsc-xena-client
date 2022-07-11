@@ -9,9 +9,7 @@ import {StateError} from'./StateError';
 var _ = require('./underscore_ext').default;
 import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
-import '../css/index.css'; // Root styles file (reset, fonts, globals)
-import { ThemeProvider } from 'react-css-themr';
-import appTheme from './appTheme';
+import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
 var gaEvents = require('./gaEvents');
 //var Perf = require('react-dom/lib/ReactPerf');
@@ -139,18 +137,11 @@ class Application extends PureComponent {
 					{_.getIn(state, ['map', 'open']) ? <Map
 							callback={callback}
 							state={state} /> : null}
-					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
+					<StateError onHide={this.onHideError} error={stateError}/>
 				</div>
 			</div>
 		);
 	}
 }
 
-const ThemedApplication = (props) => {
-	return (
-		<ThemeProvider theme={appTheme}>
-			<Application {...props}/>
-		</ThemeProvider>);
-};
-
-module.exports = ThemedApplication;
+module.exports = Application;
