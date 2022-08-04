@@ -8,7 +8,7 @@ import Controller from './components/Controller';
 import DropzoneWrapper from './components/DropzoneWrapper';
 import Footer from './components/Footer';
 
-import './index.css';
+// import './index.css';
 
 /**
  * This component serves as batteries-included visualization for OME-compliant tiff or zarr images.
