@@ -610,12 +610,8 @@ function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions)
 		min = _.min(nndata),
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
-		N = nndata.length,
 		density = kde().sample(nndata)
-			(_.range(min, max, (max - min) / points))
-			// area is one. If we multiply by N, the area is N, and the y axis
-			// is samples per x-axis unit.
-			.map(([x, d]) => [x, d * N]);
+			(_.range(min, max, (max - min) / points));
 
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({

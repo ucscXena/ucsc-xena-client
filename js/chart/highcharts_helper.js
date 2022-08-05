@@ -113,7 +113,7 @@ function densityChart({chartOptions, Y}) {
 		},
 		yAxis: {
 			title: {
-				text: 'Samples per unit'
+				text: 'Density'
 			},
 			labels: {
 				format: '{value}'
