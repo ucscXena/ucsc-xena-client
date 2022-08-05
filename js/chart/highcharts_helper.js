@@ -445,7 +445,11 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 				animation: false,
 				turboThreshold: 0,
 				stickyTracking: false,
-				boostThreshold: 1000
+				// highcharts 6 seems to have bugs related to boost
+				// turning on & off with this threshold, so setting it to
+				// 1 to force it on. Also, it's much faster e.g. on pancan
+				// with boost always enabled.
+				boostThreshold: 1
 			}
 		}
 	};
