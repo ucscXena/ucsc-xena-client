@@ -4,6 +4,11 @@ import {xenaTheme} from './xenaTheme';
 
 export const xenaNavTheme = createTheme(xenaTheme, {
 	overrides: {
+		MuiAppBar: {
+			root: {
+				zIndex: 1350,
+			}
+		},
 		MuiButton: {
 			text: {
 				...xenaTheme.typography.body1,
@@ -19,6 +24,11 @@ export const xenaNavTheme = createTheme(xenaTheme, {
 			root: {
 				backgroundColor: xenaColor.GRAY,
 				margin: '12px 0',
+			},
+		},
+		MuiPopover: {
+			root: {
+				zIndex: "1350 !important",
 			},
 		},
 	},
