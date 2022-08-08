@@ -1265,10 +1265,10 @@ class Chart extends PureComponent {
 		// it in react, or make another wrapper component so react won't touch it.
 		// otoh, since we always re-render, it kinda works as-is.
 
-		return box({mx: 3, my: 12},
+		return box({position: 'relative', mx: 3, my: 12},
 				card({elevation: 2},
-					cardHeader({action: closeButton(this.onClose)}),
 					cardContent(
+						box({sx: {padding: 16, position: 'absolute', right: 0, top: 0}}, closeButton(this.onClose)),
 						box({sx: {display: 'grid', gap: 24, gridTemplateColumns: '1.5fr 1fr', justifyItems: 'flex-start'}},
 						HCV,
 						div({className: compStyles.right},

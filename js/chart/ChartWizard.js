@@ -100,9 +100,9 @@ var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(isValid(state) && onDone)},
 		box({sx: sxModesContainer}, box({sx: {...sxModes, gap: 8, width: 392}},
-			select({fullWidth: true, label: 'Show data from', onChange: onY,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Show data from', onChange: onY,
 					select: true, value: state.ycolumn || ''}, selectOptions(boxOrViolinYDatasets(appState))),
-			select({fullWidth: true, label: 'Subgroup samples by', onChange: onX,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Subgroup samples by', onChange: onX,
 				select: true, value: state.xcolumn || ''}, selectOptions(boxOrViolinXDatasets(appState))),
 			needType(state, appState) ?
 				formControl(formLabel('I want a'),
@@ -126,7 +126,7 @@ var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) 
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(yIsSet(state) && onDone)},
 		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
-			select({fullWidth: true, label: 'Show data from', onChange: onY,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Show data from', onChange: onY,
 				select: true, value: state.ycolumn || ''}, selectOptions(histDatasets(appState))))));
 
 //
@@ -145,9 +145,9 @@ var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(xyIsSet(state) && onDone)},
 		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
-			select({fullWidth: true, label: 'Pick the X axis', onChange: onX,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Pick the X axis', onChange: onX,
 					select: true, value: state.xcolumn || ''}, selectOptions(scatterXDatasets(appState))),
-			select({fullWidth: true, label: 'Pick the Y axis', onChange: onY,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Pick the Y axis', onChange: onY,
 					select: true, value: state.ycolumn || ''}, selectOptions(scatterYDatasets(appState))))));
 
 var noop = () => {};

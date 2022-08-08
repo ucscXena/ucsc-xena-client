@@ -410,6 +410,7 @@ export const xenaTheme = createTheme(theme, {
 				fontSize: 16,
 				paddingBottom: 0,
 				paddingTop: 0,
+				whiteSpace: 'normal',
 				'&:hover': {
 					backgroundColor: xenaColor.GRAY,
 				},
