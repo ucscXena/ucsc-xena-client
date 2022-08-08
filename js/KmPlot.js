@@ -422,8 +422,6 @@ class KmPlot extends PureComponent {
 
 	componentDidMount() {
 		document.documentElement.scrollTop = 0;
-		var body = document.getElementById("body");
-		body.style.overflow = "auto";
 	}
 
 	renderLoading() {
@@ -496,13 +494,13 @@ class KmPlot extends PureComponent {
 
 		return (
 			<Dialog
-				BackdropProps={{style: {top: 64}}}
 				className={kmStyle.mainDialog}
+				disableScrollLock
 				fullWidth
 				maxWidth={'md'}
 				onClose={this.hide}
 				open={true}
-				PaperProps={{style: {alignSelf: 'flex-start'}}}>
+				PaperProps={{style: {alignSelf: 'flex-start', marginTop: 96}}}>
 				<DialogTitle disableTypography>
 					<Box sx={{display: 'flex', gap: 8, justifyContent: 'space-between'}}>
 						<Typography variant='subtitle1'>Kaplan Meier {title}</Typography>
