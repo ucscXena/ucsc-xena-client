@@ -86,11 +86,11 @@ var ActionIcon = (i, tooltip, edge, onClick, disabled) => (
 	</Tooltip>
 );
 
-var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, onMap, mode}) => {
+var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, /*onMap, */mode}) => {
 	return (
 	<>
 		{ActionIcon(modeIcon[mode], modeHelp[!onMode || mode], false, onMode, !onMode)}
-		{ActionIcon('grade', 'Map', false, onMap, !onMap)}
+		{/*ActionIcon('grade', 'Map', false, onMap, !onMap)*/}
 		{ActionIcon('picture_as_pdf', 'Download as PDF', false, onPdf, !onPdf)}
 		{ActionIcon('cloud_download', 'Download as tsv', showWelcome, onDownload)}
 		{showWelcome ? null : ActionIcon('help', 'Show carousel', true, onShowWelcome)}
