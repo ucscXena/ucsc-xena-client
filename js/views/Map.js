@@ -85,13 +85,12 @@ const patchLayer = (data, color, radius, triggers, onHover) => new ScatterplotLa
 const patchLayerMap = (data, color, radius, onHover) => new PointCloudLayer({
 	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-	sizeUnits: 'meters',
+	sizeUnits: 'common',
 	data: data,
 	getPosition: d => d,
-	pointSize: 0.1,
+	pointSize: radius,
 	getColor: color,
 	getNormal: [1, 1, 1],
-	getRadius: radius,
 	pickable: true,
 	onHover
 });
