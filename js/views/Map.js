@@ -87,6 +87,7 @@ const patchLayerMap = (data, color, radius, onHover) => new PointCloudLayer({
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	sizeUnits: 'common',
 	data: data,
+	material: false,
 	getPosition: d => d,
 	pointSize: radius,
 	getColor: color,
