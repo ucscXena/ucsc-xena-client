@@ -211,6 +211,14 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 		pixPerRow = height / count;
 
 	drawSegments(vg, color, index, count, width, height, zoom, toDraw);
+	// Without the following line the canvas is cleared when we draw
+	// rectangles, below, on Apple M1/M2 Chrome browsers. I believe this is a
+	// chrome bug relating to the canvas origin-clean flag, that is getting
+	// messed up during putImageData in the drawSegments call. Reloading the
+	// page fixes the rendering, perhaps because during the first draw no
+	// cross-origin responses have arrived. There's no particular reason that
+	// getImageData should fix this, but it does.
+	vg.context().getImageData(0, 0, 1, 1);
 
 	var rects = stripes.map(([offset, len]) => [
 		0, (offset * pixPerRow),

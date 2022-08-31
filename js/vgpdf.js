@@ -77,7 +77,8 @@ module.exports = function (doc, vgw, vgh) {
 				putImageData: (img, x, y) => {
 					ctx.putImageData(img, x, y);
 					doc.image(el.toDataURL(), 0, 0);
-				}
+				},
+				getImageData: () => {}
 			};
 		},
 
