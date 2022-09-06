@@ -82,7 +82,7 @@ const patchLayer = (data, color, radius, triggers, onHover) => new ScatterplotLa
 	onHover
 });
 
-const patchLayerMap = (data, color, radius, onHover) => new PointCloudLayer({
+const patchLayerMap = (data, color, radius, triggers, onHover) => new PointCloudLayer({
 	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	sizeUnits: 'common',
@@ -91,10 +91,18 @@ const patchLayerMap = (data, color, radius, onHover) => new PointCloudLayer({
 	getPosition: d => d,
 	pointSize: radius,
 	getColor: color,
+	updateTriggers: {getColor: triggers},
 	getNormal: [1, 1, 1],
 	pickable: true,
 	onHover
 });
+
+var cvtColorScale = (colorColumn, colors, hideColors) =>
+	colorColumn ?
+		_.Let((scale = colorScales.colorScale(colors), hidden = new Set(hideColors)) =>
+			(coords, {index}) => _.Let((v = colorColumn[index]) =>
+				v == null || hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
+	: () => [0, 255, 0];
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
@@ -118,14 +126,11 @@ class MapDrawing extends PureComponent {
 			maxs = props.data.columns.map(_.maxnull),
 			centroids =  maxs.map((max, i) => (max + mins[i]) / 2);
 
-		var {colorColumn, colors} = this.props.data,
-			colorScale = colorColumn ?
-				_.Let((scale = colorScales.colorScale(colors)) =>
-					(coords, {index}) => toRGB(scale(colorColumn[index])))
-				: () => [0, 255, 0];
+		var {colorColumn, colors, hideColors} = this.props.data,
+			colorScale = cvtColorScale(colorColumn, colors, hideColors);
 		var data = transpose(this.props.data.columns);
 		var {radius} = this.props.data;
-		var mergeLayer = patchLayerMap(data, colorScale, radius, this.onHover);
+		var mergeLayer = patchLayerMap(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover);
 		var scale = x => x;
 		// XXX fix range & ticks
 		scale.range = () => [0, 20];
@@ -193,20 +198,15 @@ class VivDrawing extends PureComponent {
 		this.props.onTooltip(index === -1 ? null : index);
 	}
 	render() {
-		var hidden = new Set(this.props.data.hideColors);
 		if (!_.every(this.props.data.columns, _.identity)) {
 			return null;
 		}
-		var {colorColumn, colors, radius} = this.props.data,
-			colorScale = colorColumn ?
-				_.Let((scale = colorScales.colorScale(colors)) =>
-					(coords, {index}) => _.Let((v = colorColumn[index]) =>
-						v == null || hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
-				: () => [0, 255, 0];
+		var {colorColumn, colors, radius, hideColors} = this.props.data,
+			colorScale = cvtColorScale(colorColumn, colors, hideColors);
 		var {offset, image_scalef: scale} = this.props.data.image;
 		var data = transpose(this.props.data.columns).map(c =>
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hidden], this.onHover);
+		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover);
 		return /*this.state.source ? */avivator({
 			mergeLayers: [mergeLayer],
 			source: {urlOrFile: this.props.data.image.path}
@@ -302,8 +302,8 @@ function setHidden(state) {
 
 	return colorId && scaleType === 'ordinal' ?
 		// third element of an ordinal scale is the custom color setting
-		_.assocIn(state, ['columns', colorId, 'colors', 0, 2],
-			_.object(hideColors, hideColors.map(_.constant(gray)))) :
+		_.updateIn(state, ['columns', colorId, 'colors', 0, 2],
+			c => _.merge(c, _.object(hideColors, hideColors.map(_.constant(gray))))) :
 		state;
 }
 
@@ -412,7 +412,7 @@ export class Map extends PureComponent {
 		var {onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
 				state: {tooltip}} = this;
 
-		var state = setHidden(this.props.state),
+		var state = this.props.state,
 			mapState = _.get(state, 'map'),
 			[dsID, params] = _.get(mapState, 'map', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
@@ -444,7 +444,7 @@ export class Map extends PureComponent {
 					div({className: styles.graphWrapper, ref: this.onRef},
 						getStatusView(loading, error, this.onReload),
 						drawing({onTooltip, onMove, data, container: this.state.container})),
-					sideBar({tooltip, state, maps: availableMaps, mapValue,
+					sideBar({tooltip, state: setHidden(state), maps: availableMaps, mapValue,
 						onColor, onMap, onCode, onHideAll, onShowAll})));
 	}
 }
