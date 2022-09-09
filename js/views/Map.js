@@ -13,6 +13,7 @@ import {item} from './Legend.module.css';
 import {xenaColor} from '../xenaColor';
 import {ScatterplotLayer, PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
 import DeckGL from '@deck.gl/react';
+import {DataFilterExtension} from '@deck.gl/extensions';
 
 import AxesLayer from './axes-layer';
 
@@ -66,7 +67,14 @@ var sxCloseButton = {
 
 var deckGL = el(DeckGL);
 
-const patchLayer = (data, color, radius, triggers, onHover) => new ScatterplotLayer({
+var filterFn = (colorColumn, hideColors) =>
+	colorColumn ?
+		_.Let((hidden = new Set(hideColors)) =>
+			(coords, {index}) => _.Let((v = colorColumn[index]) =>
+				v == null || hidden.has(v) ? 0 : 1))
+	: () => 1;
+
+const patchLayer = (data, color, radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
 	id: `scatter-plot${getVivId(DETAIL_VIEW_ID)}`,
 	data: data,
 	stroked: true,
@@ -79,10 +87,13 @@ const patchLayer = (data, color, radius, triggers, onHover) => new ScatterplotLa
 	getLineColor: color,
 	updateTriggers: {getLineColor: triggers},
 	pickable: true,
-	onHover
+	onHover,
+	getFilterValue,
+	filterRange: [1, 1],
+	extensions: [new DataFilterExtension({filterSize: 1})]
 });
 
-const patchLayerMap = (data, color, radius, triggers, onHover) => new PointCloudLayer({
+const patchLayerMap = (data, color, radius, triggers, onHover, getFilterValue) => new PointCloudLayer({
 	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	sizeUnits: 'common',
@@ -91,18 +102,37 @@ const patchLayerMap = (data, color, radius, triggers, onHover) => new PointCloud
 	getPosition: d => d,
 	pointSize: radius,
 	getColor: color,
+	// XXX not sure if updateTriggers is necessary. The accessor functions
+	// that depend on these should already compare not-equal.
 	updateTriggers: {getColor: triggers},
 	getNormal: [1, 1, 1],
 	pickable: true,
-	onHover
+	onHover,
+	getFilterValue,
+	filterRange: [1, 1],
+	extensions: [new DataFilterExtension({filterSize: 1})]
 });
 
-var cvtColorScale = (colorColumn, colors, hideColors) =>
+var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?
-		_.Let((scale = colorScales.colorScale(colors), hidden = new Set(hideColors)) =>
-			(coords, {index}) => _.Let((v = colorColumn[index]) =>
-				v == null || hidden.has(v) ? [0, 0, 0, 0] : toRGB(scale(v))))
+		_.Let((scale = colorScales.colorScale(colors)) =>
+			(coords, {index}) => toRGB(scale(colorColumn[index])))
 	: () => [0, 255, 0];
+
+var nvolume = (mins, maxs) => _.mmap(mins, maxs, (min, max) => max - min)
+			.reduce((x, y) => x * y);
+
+// Pick a radius based on the data range, such that the data points
+// would fill a given percentage of the volume in the range, if they
+// were uniformly distributed.
+
+var pickRadius3d = (mins, maxs, len, pct = 0.2) =>
+	_.Let((volPerPoint = pct * nvolume(mins, maxs) / len) =>
+		Math.pow(volPerPoint, 0.33) / 2);
+
+var pickRadius2d = (mins, maxs, len, pct = 0.2) =>
+	_.Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
+		Math.pow(areaPerPoint, 0.5) / 2);
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
@@ -127,10 +157,10 @@ class MapDrawing extends PureComponent {
 			centroids =  maxs.map((max, i) => (max + mins[i]) / 2);
 
 		var {colorColumn, colors, hideColors} = this.props.data,
-			colorScale = cvtColorScale(colorColumn, colors, hideColors);
+			colorScale = cvtColorScale(colorColumn, colors),
+			filter = filterFn(colorColumn, hideColors);
 		var data = transpose(this.props.data.columns);
 		var {radius} = this.props.data;
-		var mergeLayer = patchLayerMap(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover);
 		var scale = x => x;
 		// XXX fix range & ticks
 		scale.range = () => [0, 20];
@@ -148,13 +178,14 @@ class MapDrawing extends PureComponent {
 			// zoom 0 is 1 unit to one pixel. To fit width, scale would be
 			// width / dataMax - dataMin. Scale is 2^zoom, so zoom is
 			// log2(scale).
-			let zoom = Math.min(Math.log2(width / (maxs[0] - mins[0])),
+			let zoom = 0.95 * Math.min(Math.log2(width / (maxs[0] - mins[0])),
 				Math.log2(height / (maxs[1] - mins[1])));
 			viewState = {
 				zoom,
 				minZoom: 0.5 * zoom,
 				maxZoom: 4 * zoom,
 				target: [(maxs[0] + mins[0]) / 2, (maxs[1] + mins[1]) / 2, 0]};
+			radius = radius || pickRadius2d(mins, maxs, props.data.columns[0].length);
 		} else {
 			views = new OrbitView();
 			let zoom = Math.min(Math.log2(width / (maxs[0] - mins[0])),
@@ -165,7 +196,9 @@ class MapDrawing extends PureComponent {
 				maxZoom: 4 * zoom,
 				target: centroids
 			};
+			radius = radius || pickRadius3d(mins, maxs, props.data.columns[0].length);
 		}
+		var mergeLayer = patchLayerMap(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
 		return deckGL({
 			layers: [mergeLayer, ...(twoD ? [] : [axesLayer()])],
 			views,
@@ -198,19 +231,24 @@ class VivDrawing extends PureComponent {
 		this.props.onTooltip(index === -1 ? null : index);
 	}
 	render() {
-		if (!_.every(this.props.data.columns, _.identity)) {
+		var {props} = this;
+		if (!_.every(props.data.columns, _.identity)) {
 			return null;
 		}
-		var {colorColumn, colors, radius, hideColors} = this.props.data,
-			colorScale = cvtColorScale(colorColumn, colors, hideColors);
-		var {offset, image_scalef: scale} = this.props.data.image;
-		var data = transpose(this.props.data.columns).map(c =>
+		var {colorColumn, colors, radius, hideColors} = props.data,
+			colorScale = cvtColorScale(colorColumn, colors),
+			filter = filterFn(colorColumn, hideColors);
+		var {offset, image_scalef: scale} = props.data.image;
+		var data = transpose(props.data.columns).map(c =>
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover);
-		return /*this.state.source ? */avivator({
+		var mins = props.data.columns.map(_.minnull),
+			maxs = props.data.columns.map(_.maxnull);
+		radius = radius || pickRadius2d(mins, maxs, props.data.columns[0].length);
+		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
+		return avivator({
 			mergeLayers: [mergeLayer],
-			source: {urlOrFile: this.props.data.image.path}
-		})/* : 'loading'*/;
+			source: {urlOrFile: props.data.image.path}
+		});
 	}
 }
 
@@ -431,7 +469,7 @@ export class Map extends PureComponent {
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			radius = _.get(params, 'spot_diameter', 200) / 2,
+			radius = params.spot_diameter && params.spot_diameter / 2,
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
