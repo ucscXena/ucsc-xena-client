@@ -243,7 +243,8 @@ class VivDrawing extends PureComponent {
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
 		var mins = props.data.columns.map(_.minnull),
 			maxs = props.data.columns.map(_.maxnull);
-		radius = radius || pickRadius2d(mins, maxs, props.data.columns[0].length);
+		radius = radius * scale ||
+			pickRadius2d(mins, maxs, props.data.columns[0].length);
 		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
 		return avivator({
 			mergeLayers: [mergeLayer],
