@@ -352,6 +352,12 @@ export const xenaTheme = createTheme(theme, {
 					pointerEvents: 'none',
 				},
 			},
+			sizeSmall: {
+				padding: 4,
+				'&.MuiIconButton-edgeStart': {
+					marginLeft: -4,
+				},
+			},
 		},
 		MuiInput: {
 			root: {
@@ -492,6 +498,11 @@ export const xenaTheme = createTheme(theme, {
 			root: {
 				padding: 0,
 				width: '100%',
+			},
+		},
+		MuiSvgIcon: {
+			fontSizeLarge: {
+				fontSize: 24,
 			},
 		},
 		MuiTooltip: {
