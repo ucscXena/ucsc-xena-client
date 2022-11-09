@@ -404,7 +404,7 @@ class VariableSelect extends PureComponent {
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colId, controls, datasets, features, preferred, analytic, title,
+			{colId, colMode, controls, datasets, features, preferred, analytic, title,
 				helpText, width} = this.props,
 			formError = getWarningText(matches, datasets, selected, warnings, value).join(' ')
 				|| error,
@@ -413,6 +413,7 @@ class VariableSelect extends PureComponent {
 			ModeForm = getModeFields[mode],
 			wizardProps = {
 				colId,
+				colMode,
 				controls,
 				subtitle,
 				title,
@@ -478,9 +479,10 @@ class LoadingNotice extends React.Component {
 		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
 		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
-			let {colId, controls, title, width} = this.props,
+			let {colId, colMode, controls, title, width} = this.props,
 				wizardProps = {
 					colId,
+					colMode,
 					controls,
 					loading: true,
 					loadingCohort: true,

@@ -14,20 +14,24 @@ import {computeSettings, typeWidth} from '../models/columns';
 // Configuration for first and second variable select cards that are displayed during wizard.
 var variableSelectConfig = {
 	'FIRST_COLUMN': {
+		colId: 'B',
+		colMode: 'WIZARD',
 		helpText: {
 			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 1,
-		title: 'First Variable'
+		title: 'Select Your First Variable',
 	},
 	'SECOND_COLUMN': {
+		colId: 'C',
+		colMode: 'WIZARD',
 		helpText: {
 			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 2,
-		title: 'Second Variable'
+		title: 'Select Your Second Variable',
 	}
 };
 
@@ -205,9 +209,10 @@ function addWizardColumns(Component) {
 							title='Edit Variable'
 							{...datasetSelectProps}
 							colId={el.props.label}
+							colMode='DEFAULT'
 							controls={cancelIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
+						editing === i ? [el, <VariableSelect key={i} actionKey={i} colMode='GHOST' pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
 			return withNewColumns.concat(
 				wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width));

@@ -7,6 +7,7 @@
  * State
  * -----
  * colId - ID of column (eg 'A', 'B'). Only applicable on edit of column.
+ * colMode - Column mode (eg 'DEFAULT', 'WIZARD').
  * controls - Icons and/or menu displayed at right of card title.
  * helpText - Text displayed under title/subtitle and above children.
  * title - Text displayed as title.
@@ -31,7 +32,10 @@ var CardAvatar = require('./CardAvatar');
 var sxWizardCard = {
 	display: 'flex',
 	flexDirection: 'column',
-	minHeight: 645, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+	minHeight: 665, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+};
+var sxWizardCardHeader = {
+	padding: '16px !important',
 };
 
 class WizardCard extends React.Component {
@@ -47,11 +51,15 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colId, controls, contentSpecificHelp,
+		var {children, colId, colMode, controls, contentSpecificHelp,
 			title, subtitle, valid, loading, loadingCohort, width} = this.props;
 		return (
 			<Box component={Card} sx={{...sxWizardCard, width: width}}>
-				<CardHeader action={controls} avatar={<CardAvatar colId={colId}/>}/>
+				<Box
+					component={CardHeader}
+					action={controls}
+					avatar={<CardAvatar colId={colId} colMode={colMode}/>}
+					sx={sxWizardCardHeader}/>
 				<Divider/>
 				<Box
 					component={CardHeader}
