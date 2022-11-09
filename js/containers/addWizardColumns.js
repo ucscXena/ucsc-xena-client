@@ -155,6 +155,7 @@ function addWizardColumns(Component) {
 		};
 
 		onCohortSelect = (cohort) => {
+			this.props.callback(['showWelcome', false]);
 			this.props.callback(['cohort', cohort, typeWidth.matrix]);
 		};
 

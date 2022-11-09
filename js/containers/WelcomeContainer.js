@@ -26,41 +26,49 @@ var links = [
 	['heatmap', 'dfc37064d62ea0c0302881c05277b7b3',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma']];
 
-
-var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
-
 var refresh = 5000; // ms between link switch
 
 class WelcomeContainer extends PureComponent {
 	state = {link: 0};
 
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
-		var events = rxEvents(this, 'mouseover', 'mouseout', 'bulletover');
-		var {mouseover, mouseout, bulletover} = events;
+		var events = rxEvents(this, 'arrowover', 'mouseover', 'mouseout');
+		var {arrowover, mouseover, mouseout} = events;
 
 		// Emit events on an interval, pausing if the user mouses-over
 		// the target link. The timer restarts on mouse-out, so it won't
 		// change immediately.
 		this.sub = Rx.Observable.of(true).merge(mouseout).flatMap(
-			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(bulletover)).map(() => undefined)
-		).merge(bulletover.map(evToIndex)).subscribe(i =>
-			this.setState({link: i === undefined ? (this.state.link + 1) % links.length : i}));
+			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(arrowover)).map(() => undefined)
+		).subscribe(() =>
+			this.setState({link: (this.state.link + 1) % links.length}));
 	}
 
 	componentWillUnmount() {
 		this.sub.unsubscribe();
 	}
 
+	// User interaction with the arrow buttons sets the active link state to the previous or next link.
+	onChangeLink = (increment) => {
+		let newIndex = this.state.link + increment; /* Increment active link index. */
+		const lastLinkIndex = links.length - 1;
+		if (newIndex < 0) {
+			newIndex = lastLinkIndex; /* If the new index is negative, the last link becomes active. */
+		} else if (newIndex > lastLinkIndex) {
+			newIndex = 0; /* If the new index is greater than the number of possible links, the first link becomes active. */
+		}
+		this.setState({link: newIndex});
+	}
+
 	render() {
-		var {link} = this.state;
+		var {link: i} = this.state;
 		return (
 			<Welcome
-				count={links.length}
-				i={link}
+				arrowProps={{onMouseOver: this.on.arrowover, onMouseOut: this.on.mouseout}}
 				linkProps={{onMouseOver: this.on.mouseover, onMouseOut: this.on.mouseout}}
-				bulletProps={{onMouseOver: this.on.bulletover, onMouseOut: this.on.mouseout}}
-				{...this.props}
-				link={links[link]} />);
+				links={links.slice(i).concat(links.slice(0, i))}
+				onChangeLink={this.onChangeLink}
+				{...this.props} />);
 	}
 }
 
