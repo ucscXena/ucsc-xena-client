@@ -71,7 +71,7 @@ function resetWizard(state) {
 // minimum width of 1280px)
 export var defaultWidth = viewportWidth => {
 	var width = (viewportWidth < 1280 ? 1280 : viewportWidth);
-	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
+	return Math.min(448, Math.floor((width - 48) / 3) - 16); // Allow for 2 x 24px gutter on viewport, plus 16px margin for column (max width 448px).
 };
 
 // XXX This same info appears in Datapages.js, and in various links.

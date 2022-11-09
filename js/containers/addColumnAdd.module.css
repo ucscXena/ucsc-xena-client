@@ -10,12 +10,6 @@
 	display: flex;
 }
 
-/* During wizard mode, add 16px to the right of each column as there is no "add column" enabled during wizard (or edit) 
- * to force gutter */
-.wizardModeMargins {
-	margin-right: 16px;
-}
-
 /* Scoot column to the left of "add column" component, to the left by 8px */
 .hoverLeft :global(.Column) {
 	margin-left: -8px;

@@ -1,17 +1,18 @@
 
 import PureComponent from '../PureComponent';
+import {Box} from '@material-ui/core';
 var {omit} = require('../underscore_ext').default;
 
 var React = require('react');
 
 class ColumnsWrapper extends React.Component {
 	render() {
-		var {children, append, onClick} = this.props;
+		var {appState: {wizardMode}, children, append, onClick} = this.props;
 		return (
-			<div onClick={onClick} className="Columns">
+			<Box onClick={onClick} className="Columns" sx={{gridGap: wizardMode ? 24 : undefined}}>
 				{children}
 				{append}
-			</div>);
+			</Box>);
 	}
 }
 
