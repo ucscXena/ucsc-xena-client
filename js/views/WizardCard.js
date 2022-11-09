@@ -32,7 +32,7 @@ var CardAvatar = require('./CardAvatar');
 var sxWizardCard = {
 	display: 'flex',
 	flexDirection: 'column',
-	minHeight: 645, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+	minHeight: 665, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
 };
 var sxWizardCardHeader = {
 	padding: '16px !important',
