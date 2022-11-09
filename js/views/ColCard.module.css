@@ -22,7 +22,7 @@
 
 /* Container around column label (A, B, C etc) and controls */
 .headerContainer {
-	height: 52px;
+	padding: 16px;
 }
 
 /* Zoom control */

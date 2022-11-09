@@ -21,33 +21,35 @@ import {xenaColor} from '../xenaColor';
 
 // Styles
 var sxGhostCard = {
-	border: `1px dashed ${xenaColor.BLACK_38}`,
+	border: `1px dashed ${xenaColor.GRAY_DARK}`,
+	borderRadius: 6,
 	minHeight: 645, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
 };
 var sxGhostHeader = {
-	borderBottom: `1px dashed ${xenaColor.BLACK_12}`,
+	alignItems: 'center',
+	borderBottom: `1px dashed ${xenaColor.GRAY_DARK}`,
+	display: 'flex',
+	gap: 16,
 	padding: 16,
 };
 var sxGhostTitle = {
-	...sxGhostHeader,
-	alignItems: 'center',
-	color: xenaColor.BLACK_38,
-	display: 'flex',
-	height: 61,
+	color: xenaColor.BLACK_54,
+	letterSpacing: 'normal !important',
+	margin: 0,
 };
 
 class GhostVariableSelect extends React.Component {
 	render() {
-		var {title, width} = this.props;
+		var {colId, title, width} = this.props;
 		return (
 			<Box sx={{...sxGhostCard, width: width}}>
 				<Box sx={sxGhostHeader}>
-					<CardAvatar/>
+					<CardAvatar colId={colId} colMode={'GHOST'}/>
+					<Box
+						component={Typography}
+						sx={sxGhostTitle}
+						variant='subtitle2'>{title}</Box>
 				</Box>
-				<Box
-					component={Typography}
-					sx={sxGhostTitle}
-					variant='caption'>{title}</Box>
 			</Box>
 		);
 	}

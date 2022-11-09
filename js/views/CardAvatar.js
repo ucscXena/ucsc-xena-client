@@ -8,6 +8,7 @@
  * State
  * -----
  * colId - ID of column (eg 'A', 'B').
+ * colMode - Mode of column (eg 'DEFAULT', 'GHOST', 'WIZARD').
  */
 
 
@@ -17,20 +18,41 @@ import {Box} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./CardAvatar.module.css');
+var sxDefaultAvatar = {
+	alignItems: 'center',
+	backgroundColor: xenaColor.GRAY_AVATAR,
+	borderRadius: '50%',
+	display: 'flex',
+	fontSize: 18,
+	fontWeight: 500,
+	height: 40,
+	justifyContent: 'center',
+	lineHeight: 40,
+	minWidth: 40, /* Required to maintain avatar shape. */
+	width: 40,
+};
 var sxGhostAvatar = {
-	border: `0.5px dashed ${xenaColor.BLACK_38}`,
+	...sxDefaultAvatar,
+	backgroundColor: 'transparent',
+	border: `1px dashed ${xenaColor.GRAY_DARK}`,
+	color: xenaColor.BLACK_54,
+};
+var sxWizardAvatar = {
+	...sxDefaultAvatar,
+	backgroundColor: xenaColor.ACCENT,
+	color: xenaColor.WHITE,
+};
+const AVATAR_SX = {
+	DEFAULT: sxDefaultAvatar,
+	GHOST: sxGhostAvatar,
+	WIZARD: sxWizardAvatar,
 };
 
 class CardAvatar extends React.Component {
 	render() {
-		var {colId} = this.props,
-			ghost = !colId;
+		var {colId, colMode = 'DEFAULT'} = this.props;
 		return (
-			<Box
-				className={compStyles.avatar}
-				bgcolor={ghost ? 'transparent' : xenaColor.BLACK_6}
-				sx={ghost ? sxGhostAvatar : undefined}>{colId}</Box>
+			<Box sx={AVATAR_SX[colMode]}>{colId}</Box>
 		);
 	}
 }

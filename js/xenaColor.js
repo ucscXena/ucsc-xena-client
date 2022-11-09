@@ -10,6 +10,8 @@ export const xenaColor = {
 	'BLACK_87': 'rgba(0, 0, 0, 0.87)',
 	'ERROR': '#ff0000',
 	'GRAY': '#eee',
+	'GRAY_AVATAR': '#F0F0F0',
+	'GRAY_DARK': '#E0E0E0',
 	'GRAY_LIGHT': '#f7f7f7',
 	'GRAY_400': '#bdbdbd',
 	'PRIMARY': '#1a535c',
