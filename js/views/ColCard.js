@@ -14,13 +14,14 @@
 
 // Core dependencies, components
 var React = require('react');
-import {Box, Card, CardHeader, Divider, Icon, Typography} from '@material-ui/core';
+import {Box, Card, CardHeader, Icon, Typography} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
 var classNames = require('classnames');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+import XColumnDivider from './XColumnDivider';
 
 // Styles
 var compStyles = require('./ColCard.module.css');
@@ -34,7 +35,7 @@ class ColCard extends React.Component {
 					action={controls}
 					avatar={zoomCard ? undefined : <CardAvatar colId={colId} colMode={colMode}/>}
 					className={classNames(compStyles.headerContainer, sortable && interactive && 'Sortable-handle')}/>
-				{!zoomCard && <Divider/>}
+				{!zoomCard && <XColumnDivider/>}
 				<Box
 					component={CardHeader} className={compStyles.titleContainer}
 					subheader={
@@ -53,7 +54,7 @@ class ColCard extends React.Component {
 						</>} subheaderTypographyProps={{color: 'textSecondary', component: 'p'}}
 					sx={{height: 60, position: 'relative'}}
 					title={title} titleTypographyProps={{component: 'h5'}}/>
-				{!zoomCard && <Divider/>}
+				{!zoomCard && <XColumnDivider/>}
 				<Box mt={2}>
 					{children}
 				</Box>
