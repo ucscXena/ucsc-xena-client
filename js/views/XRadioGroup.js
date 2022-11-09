@@ -18,9 +18,10 @@
 
 
 // Core dependencies, components
-import {Divider, FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
+import {FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
+import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';
 var XRadioMeta = require('./XRadioMeta');
 var XInputToolbar = require('./XInputToolbar');
@@ -46,7 +47,7 @@ class XRadioGroup extends React.Component {
 							o.meta ? <XRadioMeta key={i} meta={o.meta}/> : null])}
 					</RadioGroup>
 				</XFormControl>
-				<Divider/>
+				<XColumnDivider/>
 			</>
 		);
 	}

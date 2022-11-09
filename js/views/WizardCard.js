@@ -21,15 +21,18 @@
 
 
 // Core dependencies, components
-import {Box, Button, Card, CardActions, CardContent, CardHeader, Divider, Icon} from '@material-ui/core';
+import {Box, Button, Card, CardActions, CardContent, CardHeader, Icon} from '@material-ui/core';
 var React = require('react');
 import spinner from '../ajax-loader.gif';
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+import XColumnDivider from './XColumnDivider';
 
 // Styles
 var sxWizardCard = {
+	borderRadius: 6,
+	boxShadow: '0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);',
 	display: 'flex',
 	flexDirection: 'column',
 	minHeight: 665, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
@@ -60,7 +63,7 @@ class WizardCard extends React.Component {
 					action={controls}
 					avatar={<CardAvatar colId={colId} colMode={colMode}/>}
 					sx={sxWizardCardHeader}/>
-				<Divider/>
+				<XColumnDivider/>
 				<Box
 					component={CardHeader}
 					subheader={subtitle}
@@ -68,11 +71,11 @@ class WizardCard extends React.Component {
 					sx={{height: 60}}
 					title={title}
 					titleTypographyProps={{component: 'h5'}}/>
-				<Divider/>
+				<XColumnDivider/>
 				<Box flex='1'>
 					{contentSpecificHelp ? <CardContent><p>{contentSpecificHelp}</p></CardContent> : null}
 					{loadingCohort ? <CardContent><p>Loading datasets...</p></CardContent> : null}
-					{(contentSpecificHelp || loadingCohort) && <Divider/>}
+					{(contentSpecificHelp || loadingCohort) && <XColumnDivider/>}
 					{children}
 				</Box>
 				<CardActions>

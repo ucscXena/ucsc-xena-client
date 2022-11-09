@@ -34,6 +34,7 @@ var React = require('react');
 
 var _ = require('../underscore_ext').default;
 import {xenaColor} from '../xenaColor';
+import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';
 var XInputToolbar = require('./XInputToolbar');
 
@@ -124,7 +125,7 @@ class XCheckboxGroup extends PureComponent {
 					])}
 				</FormGroup>
 			</XFormControl>
-			<Divider/>
+			<XColumnDivider/>
 			</>
 		);
 	}
