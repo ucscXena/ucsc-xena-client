@@ -6,10 +6,11 @@
  *
  * State
  * -----
+ * colHeight - Min height of column.
  * colId - ID of column (eg 'A', 'B'). Only applicable on edit of column.
  * colMode - Column mode (eg 'DEFAULT', 'WIZARD').
  * controls - Icons and/or menu displayed at right of card title.
- * helpText - Text displayed under title/subtitle and above children.
+ * subheader - Text displayed under title (helper text).
  * title - Text displayed as title.
  * valid - True if wizard card is complete and done button is enabled.
  * width - Width of card.
@@ -21,7 +22,7 @@
 
 
 // Core dependencies, components
-import {Box, Button, Card, CardActions, CardContent, CardHeader, Icon} from '@material-ui/core';
+import {Box, Button, Card, CardActions, CardContent, CardHeader, Icon, Typography} from '@material-ui/core';
 var React = require('react');
 import spinner from '../ajax-loader.gif';
 
@@ -35,10 +36,21 @@ var sxWizardCard = {
 	boxShadow: '0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);',
 	display: 'flex',
 	flexDirection: 'column',
-	minHeight: 665, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
 };
 var sxWizardCardHeader = {
-	padding: '16px !important',
+	'&&': {
+		gap: 16,
+		padding: 16,
+	},
+	'& .MuiCardHeader-title': {
+		fontSize: 16,
+		letterSpacing: 'normal',
+	},
+	'& .MuiCardHeader-subheader': {
+		fontWeight: 400,
+		letterSpacing: 'normal',
+		lineHeight: '20px',
+	}
 };
 
 class WizardCard extends React.Component {
@@ -54,28 +66,28 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colId, colMode, controls, contentSpecificHelp,
-			title, subtitle, valid, loading, loadingCohort, width} = this.props;
+		var {children, colHeight, colId, colMode, controls, subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
+		minHeight = Math.max(colHeight || 0, 605);
 		return (
-			<Box component={Card} sx={{...sxWizardCard, width: width}}>
+			<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
 				<Box
 					component={CardHeader}
 					action={controls}
 					avatar={<CardAvatar colId={colId} colMode={colMode}/>}
-					sx={sxWizardCardHeader}/>
-				<XColumnDivider/>
-				<Box
-					component={CardHeader}
-					subheader={subtitle}
-					subheaderTypographyProps={{color: 'error'}}
-					sx={{height: 60}}
+					subheader={subheader}
+					subheaderTypographyProps={{noWrap: true}}
+					sx={sxWizardCardHeader}
 					title={title}
-					titleTypographyProps={{component: 'h5'}}/>
+					titleTypographyProps={{component: 'h6', noWrap: true}}/>
 				<XColumnDivider/>
 				<Box flex='1'>
-					{contentSpecificHelp ? <CardContent><p>{contentSpecificHelp}</p></CardContent> : null}
-					{loadingCohort ? <CardContent><p>Loading datasets...</p></CardContent> : null}
-					{(contentSpecificHelp || loadingCohort) && <XColumnDivider/>}
+					{/* TODO(cc) 'error' message refactored temporarily */}
+					{(loadingCohort || subtitle) && <>
+						<CardContent>
+							{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
+							{loadingCohort && <p>Loading datasets...</p>}
+						</CardContent>
+						<XColumnDivider/></>}
 					{children}
 				</Box>
 				<CardActions>
