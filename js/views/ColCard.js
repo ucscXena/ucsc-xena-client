@@ -25,36 +25,53 @@ import XColumnDivider from './XColumnDivider';
 
 // Styles
 var compStyles = require('./ColCard.module.css');
+var sxColCardHeader = {
+	'&&': {
+		gap: 16,
+	},
+	'& .MuiCardHeader-title': {
+		fontSize: 16,
+		letterSpacing: 'normal',
+	},
+	'& .MuiCardHeader-subheader': {
+		fontWeight: 400,
+		letterSpacing: 'normal',
+		lineHeight: '20px',
+	}
+};
 
 class ColCard extends React.Component {
 	render() {
-		var {children, sortable, controls, colId, colMode, interactive, onClick, subtitle, title, geneZoomText, zoomCard} = this.props;
+		var {children, sortable, controls, colId, colMode, interactive, onClick, subtitle,
+			title, geneZoomText, wizardMode, zoomCard} = this.props;
 		return (
 			<Card className={classNames('Column', {[compStyles.zoomCard]: zoomCard})} elevation={2}>
-				<CardHeader
+				<Box
+					component={CardHeader}
 					action={controls}
 					avatar={zoomCard ? undefined : <CardAvatar colId={colId} colMode={colMode}/>}
+					subheader={wizardMode ? subtitle : undefined}
+					subheaderTypographyProps={{noWrap: true}}
+					sx={wizardMode ? sxColCardHeader : undefined}
+					title={wizardMode ? title : undefined}
+					titleTypographyProps={{component: 'h6', noWrap: true}}
 					className={classNames(compStyles.headerContainer, sortable && interactive && 'Sortable-handle')}/>
 				{!zoomCard && <XColumnDivider/>}
-				<Box
-					component={CardHeader} className={compStyles.titleContainer}
-					subheader={
-						<>
-							{subtitle}
-							{geneZoomText ?
-								<Box
-									component='span' className={compStyles.zoomControl}
-									color={xenaColor.PRIMARY_CONTRAST} onClick={onClick}
-									title={geneZoomText}>
-									<Box
-										component={Typography} noWrap
-										sx={{fontSize: 8, mr: 1}} variant='inherit'>{geneZoomText}</Box>
-									<Box component={Icon} sx={{fontSize: '10px !important'}}>cancel</Box>
-								</Box> : null}
-						</>} subheaderTypographyProps={{color: 'textSecondary', component: 'p'}}
-					sx={{height: 60, position: 'relative'}}
-					title={title} titleTypographyProps={{component: 'h5'}}/>
-				{!zoomCard && <XColumnDivider/>}
+				{!wizardMode && <>
+					<Box component={CardHeader}
+						 className={compStyles.titleContainer}
+						 subheader={<>
+							 {subtitle}
+							 {geneZoomText ?
+								 <Box component='span' className={compStyles.zoomControl} color={xenaColor.PRIMARY_CONTRAST} onClick={onClick} title={geneZoomText}>
+									 <Box component={Typography} noWrap sx={{fontSize: 8, mr: 1}} variant='inherit'>{geneZoomText}</Box>
+									 <Box component={Icon} sx={{fontSize: '10px !important'}}>cancel</Box>
+								 </Box> : null}</>}
+						 subheaderTypographyProps={{color: 'textSecondary', component: 'p'}}
+						 sx={{height: 60, position: 'relative'}}
+						 title={title}
+						 titleTypographyProps={{component: 'h5'}}/>
+					{!zoomCard && <XColumnDivider/>}</>}
 				<Box mt={2}>
 					{children}
 				</Box>

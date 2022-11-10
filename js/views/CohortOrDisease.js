@@ -31,7 +31,6 @@ class CohortOrDisease extends React.Component {
 		var wizardProps = {
 			colId: 'A',
 			colMode: 'WIZARD',
-			helpText: 'If you would like help determining the data set to use, Xena can suggest data sets if you provide a primary disease or tissue of origin.',
 			onDone: this.onDone,
 			title: 'Select a Study to Explore',
 			valid: !!cohort,

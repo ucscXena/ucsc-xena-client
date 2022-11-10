@@ -23,7 +23,7 @@ import {xenaColor} from '../xenaColor';
 var sxGhostCard = {
 	border: `1px dashed ${xenaColor.GRAY_DARK}`,
 	borderRadius: 6,
-	minHeight: 665, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
+	minHeight: 605, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
 };
 var sxGhostHeader = {
 	alignItems: 'center',

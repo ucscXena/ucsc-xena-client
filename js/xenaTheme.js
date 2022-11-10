@@ -169,6 +169,9 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiCardHeader: {
+			content: {
+				minWidth: 0,
+			},
 			action: {
 				alignSelf: 'center',
 				display: 'flex',

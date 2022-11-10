@@ -31,6 +31,7 @@ import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from 
 import {setUserCodes} from '../models/denseMatrix';
 import {isChrom, getGeneMode} from '../models/columns';
 import {hidden} from '../nav';
+import {xenaColor} from '../xenaColor';
 
 // We're getting events with coords < 0. Not sure if this
 // is a side-effect of the react event system. This will
@@ -770,8 +771,7 @@ export default class Column extends PureComponent {
 	};
 
 	getControlWidth = () => {
-		return 98;
-//		return 136;
+		return 102;
 	};
 
 	onAbout = (ev, host, dataset) => {
@@ -804,7 +804,7 @@ export default class Column extends PureComponent {
 			chartDisabled = disableChart(column),
 			canDoGeneSetComparison = this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
-			refreshIcon = (<IconButton edge='end' onClick={onReset}><Icon>close</Icon></IconButton>),
+			refreshIcon = (<Box component={IconButton} edge='end' onClick={onReset} sx={{color: xenaColor.GRAY_DARKEST}}><Icon>close</Icon></Box>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
@@ -882,7 +882,8 @@ export default class Column extends PureComponent {
 												<MenuItem onClick={this.onViz}>Display</MenuItem>
 												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit}>Edit</MenuItem>
 												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
-											</Menu></>)}>
+											</Menu></>)}
+								 wizardMode={wizardMode}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
 									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?

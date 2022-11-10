@@ -17,7 +17,7 @@ var variableSelectConfig = {
 		colId: 'B',
 		colMode: 'WIZARD',
 		helpText: {
-			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Genotypic': 'Add a gene or position, and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 1,
@@ -27,7 +27,7 @@ var variableSelectConfig = {
 		colId: 'C',
 		colMode: 'WIZARD',
 		helpText: {
-			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Genotypic': 'Add a gene or position, and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 2,
@@ -173,7 +173,7 @@ function addWizardColumns(Component) {
 		};
 		addColumns() {
 			var {children, appState, wizard} = this.props,
-				{cohort, wizardMode, defaultWidth, servers} = appState,
+				{cohort, wizardMode, defaultWidth, servers, zoom} = appState,
 				{cohorts, cohortPreferred, cohortAnalytic, cohortMeta,
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
@@ -196,6 +196,7 @@ function addWizardColumns(Component) {
 					onSelect: this.onDatasetSelect,
 					width},
 				columns = React.Children.toArray(children),
+				colHeight = zoom.height + 205, // Card header (73px), title (61px) and canvas (63px + 8px) etc.
 				cancelIcon = <IconButton edge='end' onClick={this.onCancel}><Icon>cancel</Icon></IconButton>,
 				withEditor = columns.map(el =>
 					editing === el.props.id ?
@@ -208,11 +209,12 @@ function addWizardColumns(Component) {
 							dataset={appState.columns[editing].dsID}
 							title='Edit Variable'
 							{...datasetSelectProps}
+							colHeight={colHeight}
 							colId={el.props.label}
 							colMode='DEFAULT'
 							controls={cancelIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect key={i} actionKey={i} colMode='GHOST' pos={i} title='Add Variable'
+						editing === i ? [el, <VariableSelect key={i} actionKey={i} colHeight={colHeight} colMode='GHOST' pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
 			return withNewColumns.concat(
 				wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width));
