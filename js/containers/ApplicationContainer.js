@@ -15,7 +15,6 @@ var addColumnAdd = require('./addColumnAdd');
 var addLegend = require('./addLegend');
 var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
-var getStepperState = require('./getStepperState');
 var Application = require('../Application');
 //import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
@@ -144,7 +143,6 @@ class ApplicationContainer extends PureComponent {
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
-			stepperState = getStepperState(computedState.spreadsheet),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,
@@ -156,7 +154,6 @@ class ApplicationContainer extends PureComponent {
 					onResetSampleFilter={this.onResetSampleFilter}
 					onWizardMode={this.onWizardMode}
 					onShowWelcome={this.onShowWelcome}
-					stepperState={stepperState}
 					Spreadsheet={SpreadsheetContainer /* XXX */}
 					onHighlightChange={this.on.highlightChange}
 					onHighlightSelect={this.onHighlightSelect}
@@ -173,7 +170,6 @@ class ApplicationContainer extends PureComponent {
 					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
-					stepperState={stepperState}
 					searching={this.highlight}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}

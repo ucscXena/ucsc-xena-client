@@ -7,23 +7,11 @@ import {Map} from './views/Map';
 import SheetControls from './SheetControls';
 import {StateError} from'./StateError';
 var _ = require('./underscore_ext').default;
-import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
 import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
 var gaEvents = require('./gaEvents');
 //var Perf = require('react-dom/lib/ReactPerf');
-
-const stepperSteps = [
-	{ label: 'Select a Study to Explore' },
-	{ label: 'Select Your First Variable' },
-	{ label: 'Select Your Second Variable' }
-];
-const stepperStateIndex = {
-	'COHORT': 0,
-	'FIRST_COLUMN': 1,
-	'SECOND_COLUMN': 2
-};
 
 function clearZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
@@ -98,7 +86,7 @@ class Application extends PureComponent {
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
 //	};
 	render() {
-		let {state, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
+		let {state, stateError, children, loadPending, ...otherProps} = this.props,
 			{callback} = otherProps,
 			{editing, wizardMode, showWelcome, zoom} = state;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
@@ -110,13 +98,13 @@ class Application extends PureComponent {
 		return (
 			<div>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
-					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
-						null}
-					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
-						<AppControls {...otherProps} appState={state}
-									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
-						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
-										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}
+					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> : null}
+					{wizardMode ? null :
+						<div>
+							<AppControls {...otherProps} appState={state} zoom={zoom} onShowWelcome={this.onShowWelcome}/>
+							<SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
+										   statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/>
+						</div>}
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>
