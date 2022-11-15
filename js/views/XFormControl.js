@@ -11,7 +11,7 @@ import React from 'react';
 
 const useStyles = makeStyles({
 	root: {
-		padding: '12px 16px 24px',
+		padding: '24px 16px',
 	},
 });
 

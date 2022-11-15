@@ -307,15 +307,16 @@ export const xenaTheme = createTheme(theme, {
 		MuiFormControlLabel: {
 			label: {
 				fontSize: 16,
-				lineHeight: '18px',
+				letterSpacing: 'normal',
+				lineHeight: '24px',
 				minWidth: 0,
-				paddingLeft: 16,
+				paddingLeft: 14,
 			},
 			root: {
 				display: 'flex',
 				marginLeft: undefined,
 				marginRight: undefined,
-				marginTop: 16,
+				marginTop: 10,
 				width: '100%',
 			},
 		},
@@ -453,7 +454,7 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiRadio: {
 			root: {
-				color: xenaColor.BLACK_38,
+				color: xenaColor.GRAY_DARKEST,
 				height: 20,
 				padding: 0,
 				width: 20,
