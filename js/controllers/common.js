@@ -6,6 +6,7 @@ var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
+var {initialState} = require('../initialState');
 var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
 var {servers: allServers, publicServers} = require('../defaultServers');
@@ -151,7 +152,8 @@ var setCohortRelatedFields = (state, cohort) =>
 		'data', {},
 		'survival', null,
 		'map', undefined,
-		'km', _.assoc(state.km, ['id'], null));
+		'km', _.assoc(state.km, ['id'], null),
+		'zoom', initialState.spreadsheet.zoom);
 
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after
@@ -181,11 +183,7 @@ var setWizardAndMode = state =>
 			['mode'], 'heatmap');
 
 var setCohort = _.curry((cohort, width, state) =>
-		addSampleColumn(
-			setWizardAndMode(
-				resetZoom(
-					setCohortRelatedFields(state, cohort))),
-			width));
+		addSampleColumn(setWizardAndMode(setCohortRelatedFields(state, cohort)), width));
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
