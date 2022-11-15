@@ -47,7 +47,7 @@ function addColumnAdd(Component) {
 				lastIndex = children.length - 1,
 				columns = React.Children.map(children, (child, i) => (
 					<div
-						className={classNames(compStyles.visualizationOrWizardMode, hoverClass(i, hover))}
+						className={classNames(compStyles[wizardMode ? 'wizardMode' : 'visualizationMode'], hoverClass(i, hover))}
 						data-actionkey={child.props.actionKey}>
 
 						{child}

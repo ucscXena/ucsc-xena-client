@@ -45,7 +45,7 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 		}
 		if (stepperState === 'FIRST_COLUMN') {
 			return [
-				<VariableSelect key='c2' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<VariableSelect key='c2' optionalExit {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
 				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN} />];
 		}
 		if (stepperState === 'SECOND_COLUMN') {
@@ -171,6 +171,11 @@ function addWizardColumns(Component) {
 			this.props.callback(['add-column', posOrId,
 				...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
+
+		onWizardMode = (mode) => {
+			this.props.callback(['wizardMode', mode]);
+		};
+
 		addColumns() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers, zoom} = appState,
@@ -194,6 +199,7 @@ function addWizardColumns(Component) {
 					analytic: analytic,
 					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,
+					onWizardMode: this.onWizardMode,
 					width},
 				columns = React.Children.toArray(children),
 				colHeight = zoom.height + 205, // Card header (73px), title (61px) and canvas (63px + 8px) etc.
