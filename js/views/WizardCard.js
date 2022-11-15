@@ -66,6 +66,11 @@ class WizardCard extends React.Component {
 		this.props.onDone();
 	};
 
+	onDoneExitWizard = () => {
+		this.props.onWizardMode(false);
+		this.props.onDone();
+	}
+
 	onDoneInvalid = (ev) => {
 		var {valid, onDoneInvalid} = this.props;
 		if (onDoneInvalid && !valid) {
@@ -74,8 +79,10 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colHeight, colId, colMode, controls, subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-		minHeight = Math.max(colHeight || 0, 605);
+		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
+				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
+		minHeight = Math.max(colHeight || 0, 605),
+		showOptionalExit = optionalExit && onWizardMode && valid;
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -107,7 +114,7 @@ class WizardCard extends React.Component {
 						</span>
 					</CardActions>
 				</Box>
-				<XActionButton sx={sxWizardEarlyExit} onClick={this.onDone}>Skip Next Step</XActionButton>
+				{showOptionalExit && <XActionButton sx={sxWizardEarlyExit} onClick={this.onDoneExitWizard}>Skip Next Step</XActionButton>}
 			</>
 		);
 	}

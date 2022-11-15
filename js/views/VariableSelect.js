@@ -404,7 +404,8 @@ class VariableSelect extends PureComponent {
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colHeight, colId, colMode, controls, datasets, features, helpText, preferred, analytic, title, width} = this.props,
+			{colHeight, colId, colMode, controls, datasets, features, helpText, preferred, analytic,
+				onWizardMode, optionalExit, title, width} = this.props,
 			formError = getWarningText(matches, datasets, selected, warnings, value).join(' ')
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
@@ -415,6 +416,8 @@ class VariableSelect extends PureComponent {
 				colId,
 				colMode,
 				controls,
+				onWizardMode,
+				optionalExit,
 				subheader,
 				subtitle,
 				title,
