@@ -1,5 +1,5 @@
 export const xenaColor = {
-	'ACCENT': '#4cc9c0',
+	'ACCENT': '#30AFA6',
 	'BLACK_3': 'rgba(0, 0, 0, 0.03)',
 	'BLACK_6': 'rgba(0, 0, 0, 0.06)',
 	'BLACK_12': 'rgba(0, 0, 0, 0.12)',

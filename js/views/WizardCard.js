@@ -28,6 +28,7 @@ import spinner from '../ajax-loader.gif';
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+import XActionButton from "./XActionButton";
 import XColumnDivider from './XColumnDivider';
 
 // Styles
@@ -52,6 +53,13 @@ var sxWizardCardHeader = {
 		lineHeight: '20px',
 	}
 };
+var sxWizardEarlyExit = {
+	alignSelf: 'center',
+	fontSize: 15,
+	fontWeight: 500,
+	letterSpacing: '0.46px',
+	lineHeight: '26px'
+};
 
 class WizardCard extends React.Component {
 	onDone = () => {
@@ -69,35 +77,38 @@ class WizardCard extends React.Component {
 		var {children, colHeight, colId, colMode, controls, subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
 		minHeight = Math.max(colHeight || 0, 605);
 		return (
-			<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
-				<Box
-					component={CardHeader}
-					action={controls}
-					avatar={<CardAvatar colId={colId} colMode={colMode}/>}
-					subheader={subheader}
-					subheaderTypographyProps={{noWrap: true}}
-					sx={sxWizardCardHeader}
-					title={title}
-					titleTypographyProps={{component: 'h6', noWrap: true}}/>
-				<XColumnDivider/>
-				<Box flex='1'>
-					{/* TODO(cc) 'error' message refactored temporarily */}
-					{(loadingCohort || subtitle) && <>
-						<CardContent>
-							{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
-							{loadingCohort && <p>Loading datasets...</p>}
-						</CardContent>
-						<XColumnDivider/></>}
-					{children}
+			<>
+				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
+					<Box
+						component={CardHeader}
+						action={controls}
+						avatar={<CardAvatar colId={colId} colMode={colMode}/>}
+						subheader={subheader}
+						subheaderTypographyProps={{noWrap: true}}
+						sx={sxWizardCardHeader}
+						title={title}
+						titleTypographyProps={{component: 'h6', noWrap: true}}/>
+					<XColumnDivider/>
+					<Box flex='1'>
+						{/* TODO(cc) 'error' message refactored temporarily */}
+						{(loadingCohort || subtitle) && <>
+							<CardContent>
+								{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
+								{loadingCohort && <p>Loading datasets...</p>}
+							</CardContent>
+							<XColumnDivider/></>}
+						{children}
+					</Box>
+					<CardActions>
+						{loading ? <img alt='loading' src={spinner}/> : null}
+						{valid ? <Icon>done</Icon> : null}
+						<span onClick={this.onDoneInvalid}>
+							<Button disabled={!valid} onClick={this.onDone}>Done</Button>
+						</span>
+					</CardActions>
 				</Box>
-				<CardActions>
-					{loading ? <img alt='loading' src={spinner}/> : null}
-					{valid ? <Icon>done</Icon> : null}
-					<span onClick={this.onDoneInvalid}>
-						<Button disabled={!valid} onClick={this.onDone}>Done</Button>
-					</span>
-				</CardActions>
-			</Box>
+				<XActionButton sx={sxWizardEarlyExit} onClick={this.onDone}>Skip Next Step</XActionButton>
+			</>
 		);
 	}
 }
