@@ -116,6 +116,13 @@ export const xenaTheme = createTheme(theme, {
 					backgroundColor: xenaColor.BLACK_12,
 				},
 			},
+			containedSecondary: {
+				color: xenaColor.WHITE,
+				'&$disabled': {
+					backgroundColor: xenaColor.GRAY_DARK,
+					color: xenaColor.WHITE,
+				},
+			},
 			root: {
 				borderRadius: 2,
 				fontWeight: 500,
