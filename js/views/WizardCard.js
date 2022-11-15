@@ -22,14 +22,20 @@
 
 
 // Core dependencies, components
-import {Box, Button, Card, CardActions, CardContent, CardHeader, Icon, Typography} from '@material-ui/core';
+import {Box, Button, Card, CardActions, CardContent, CardHeader, Typography} from '@material-ui/core';
 var React = require('react');
-import spinner from '../ajax-loader.gif';
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
-import XActionButton from "./XActionButton";
+import XActionButton from './XActionButton';
 import XColumnDivider from './XColumnDivider';
+
+// Template variables
+var WIZARD_BUTTON_TEXT = {
+	A: 'To First Variable',
+	B: 'To Second Variable',
+	C: 'Done'
+};
 
 // Styles
 var sxWizardCard = {
@@ -37,6 +43,20 @@ var sxWizardCard = {
 	boxShadow: '0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);',
 	display: 'flex',
 	flexDirection: 'column',
+};
+var sxWizardCardActions = {
+	'&&': {
+		padding: 16,
+	},
+};
+var sxWizardCardButton = {
+	'&&': {
+		borderRadius: 4,
+		fontSize: 15,
+		letterSpacing: '0.46px',
+		lineHeight: '26px',
+		minHeight: 48,
+	}
 };
 var sxWizardCardHeader = {
 	'&&': {
@@ -80,7 +100,7 @@ class WizardCard extends React.Component {
 
 	render() {
 		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
-				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
+				subheader, title, subtitle, valid, loadingCohort, width} = this.props,
 		minHeight = Math.max(colHeight || 0, 605),
 		showOptionalExit = optionalExit && onWizardMode && valid;
 		return (
@@ -106,13 +126,14 @@ class WizardCard extends React.Component {
 							<XColumnDivider/></>}
 						{children}
 					</Box>
-					<CardActions>
-						{loading ? <img alt='loading' src={spinner}/> : null}
-						{valid ? <Icon>done</Icon> : null}
-						<span onClick={this.onDoneInvalid}>
-							<Button disabled={!valid} onClick={this.onDone}>Done</Button>
-						</span>
-					</CardActions>
+					{/* TODO insert column divider on completion of on-boarding changes to card content */}
+					{/*<XColumnDivider/>*/}
+					<Box component={CardActions} sx={sxWizardCardActions}>
+						<Box onClick={this.onDoneInvalid} flex={1}>
+							<Box component={Button} color='secondary' disabled={!valid} disableElevation fullWidth
+								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>{WIZARD_BUTTON_TEXT[colId] || 'Done'}</Box>
+						</Box>
+					</Box>
 				</Box>
 				{showOptionalExit && <XActionButton sx={sxWizardEarlyExit} onClick={this.onDoneExitWizard}>Skip Next Step</XActionButton>}
 			</>
