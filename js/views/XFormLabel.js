@@ -29,9 +29,9 @@ var sxXFormLabel = {
 
 class XFormLabel extends React.Component {
 	render() {
-		var {label} = this.props;
+		var {className, label} = this.props;
 		return (
-			<Box component={FormLabel} sx={sxXFormLabel}>{label}</Box>
+			<Box className={className} component={FormLabel} sx={sxXFormLabel}>{label}</Box>
 		);
 	}
 }

@@ -102,6 +102,48 @@ export const xenaTheme = createTheme(theme, {
 				color: theme.palette.text.primary,
 			},
 		},
+		MuiAutocomplete: {
+			clearIndicator: {
+				color: xenaColor.GRAY_DARKEST,
+				marginRight: -4,
+			},
+			endAdornment: {
+				right: '12px !important',
+				top: '50%',
+				transform: 'translateY(-50%)',
+			},
+			inputRoot: {
+				padding: '0 !important',
+				'&.Mui-error': {
+					'& .MuiAutocomplete-popupIndicator': {
+						color: theme.palette.error.main,
+					},
+				},
+			},
+			listbox: {
+				maxHeight: 456, /* Displays max of 9.5 results, where each result is 48px tall */
+				padding: 0,
+			},
+			option: {
+				paddingBottom: 14,
+				paddingTop: 14,
+			},
+			paper: {
+				...theme.typography.body1,
+				border: `1px solid ${xenaColor.GRAY_DARK}`,
+				borderRadius: 4,
+				boxShadow: '0 5px 5px 0 rgba(0, 0, 0, 0.2), 0 3px 14px 0 rgba(0, 0, 0, 0.12), 0 8px 10px 0 rgba(0, 0, 0, 0.14)',
+				fontSize: 16,
+				letterSpacing: 'normal',
+				margin: '8px 0',
+			},
+			popupIndicator: {
+				color: xenaColor.GRAY_DARKEST,
+			},
+			popupIndicatorOpen: {
+				transform: 'none',
+			},
+		},
 		MuiButton: {
 			contained: {
 				...theme.typography.body2,
@@ -402,6 +444,9 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiInputLabel: {
+			outlined: {
+				transform: 'translate(14px, 50%) scale(1)',
+			},
 			root: {
 				color: theme.palette.text.hint,
 			},
@@ -442,6 +487,39 @@ export const xenaTheme = createTheme(theme, {
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap',
+			},
+		},
+		MuiOutlinedInput: {
+			input: {
+				'&.Mui-disabled': {
+					opacity: 0.38,
+				},
+				'&::placeholder': {
+					color: xenaColor.GRAY_DARKEST,
+					opacity: 1,
+				},
+			},
+			inputAdornedEnd: {
+				padding: '12px 48px 12px 12px !important',
+			},
+			root: {
+				...theme.typography.subtitle2,
+				borderColor: xenaColor.GRAY_DARKEST,
+				borderRadius: 3,
+				'&.Mui-error': {
+					borderColor: theme.palette.error.main,
+				},
+				'&.Mui-focus': {
+					borderColor: xenaColor.GRAY_DARKEST,
+				},
+				'& .MuiOutlinedInput-notchedOutline': {
+					borderColor: 'inherit !important',
+					borderWidth: '1px !important',
+				},
+			},
+			notchedOutline: {
+				borderColor: xenaColor.GRAY_DARKEST,
+				borderRadius: 3,
 			},
 		},
 		MuiPaper: {
@@ -539,8 +617,16 @@ export const xenaTheme = createTheme(theme, {
 			elevation: 0,
 			position: 'relative',
 		},
+		MuiAutocomplete: {
+			autoHighlight: true,
+			blurOnSelect: true,
+			fullWidth: true,
+			openOnFocus: true,
+		},
 		MuiButton: {
 			color: 'secondary',
+			disableRipple: true,
+			disableTouchRipple: true,
 		},
 		MuiIconButton: {
 			disableRipple: true,

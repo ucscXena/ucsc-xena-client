@@ -1,5 +1,6 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
+import {Box} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
@@ -14,6 +15,13 @@ var {Observable, Scheduler} = require('../rx').default;
 import {getOpts} from '../columnsParam';
 var {servers} = require('../defaultServers');
 
+// Styles
+var sxSuggestForm = {
+	display: 'flex',
+	flexDirection: 'column',
+	gridGap: 16,
+	minWidth: 0
+};
 
 const LOCAL_DOMAIN = servers.localHub;
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -49,9 +57,6 @@ var preferredList = preferred => ([
 		options: preferred.map(({dsID, label}) => ({value: dsID, label}))
 	}
 ]);
-
-var RETURN = 13;
-var returnPressed = cb => cb ? ev => ev.keyCode === RETURN && cb() : undefined;
 
 function selectedOptions(selected, options) {
 	var smap = new Set(selected);
@@ -94,16 +99,15 @@ var firstAssembly = (datasets, selected) =>
 	_.findValue(selected, getAssembly(datasets));
 
 var GenotypicForm = props => (
-	<div>
+	<Box sx={sxSuggestForm}>
 		<GeneSuggest
 			dataset={props.selected.length === 1 &&
 				_.indexOf(['genomicMatrix', 'clinicalMatrix'], props.datasets[props.selected[0]].type) !== -1 ?
 				props.selected[0] : undefined}
 			assembly={firstAssembly(props.datasets, props.selected)}
-			error={props.error}
 			value={props.value}
-			onKeyDown={returnPressed(props.onReturn)}
 			onChange={props.onFieldChange}
+			suggestProps={{error: props.error, ...props.suggestProps}}
 			type='text'/>
 		<XCheckboxGroup
 			label='Dataset'
@@ -114,7 +118,7 @@ var GenotypicForm = props => (
 			options={selectedOptions(props.selected,
 				setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) :
 					preferredList(props.preferred)))}/>
-	</div>);
+	</Box>);
 
 var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
 
@@ -123,7 +127,7 @@ var allFeatureLabels = features => features.map((f, i) => ({value: i.toString(),
 var PhenotypicForm = props => {
 	var options = (props.advanced ? allFeatureLabels : basicFeatureLabels)(props.features, _.union(props.basicFeatures, props.selected));
 	return (
-		<div>
+		<Box sx={sxSuggestForm}>
 			<XCheckboxGroup
 				label='Phenotype'
 				additionalAction={!_.isEmpty(props.basicFeatures) && (props.advanced ? 'Show Basic' : 'Show All')}
@@ -133,30 +137,40 @@ var PhenotypicForm = props => {
 			{props.advanced ?
 				null :
 				(<PhenotypeSuggest
-					error={props.error}
-					value={props.value}
 					features={props.features}
-					onSuggestionSelected={(ev, {suggestion}) => props.onAddFeature(suggestion)}
-					onKeyDown={returnPressed(props.onAddFeature)}
-					onChange={props.onFieldChange} type='text'/>)}
-		</div>);
+					onChange={props.onAddFeature}
+					suggestProps={{error: props.error, ...props.suggestProps}}/>
+				)}
+		</Box>);
 };
 
 var AnalyticForm = props => {
 	var options = props.analytic.map(({label}, i) => ({value: i.toString(), label: label}));
 	return (
-		<div>
+		<Box sx={sxSuggestForm}>
 			<XCheckboxGroup
 				label='Variable'
 				onChange={props.onChange}
 				options={selectedOptions(props.selected, [{options}])}/>
-		</div>);
+		</Box>);
 };
 
 var getModeFields = {
 	Genotypic: GenotypicForm,
 	Phenotypic: PhenotypicForm,
 	Analytic: AnalyticForm
+};
+
+var getModeSuggestProps = {
+	Genotypic: {
+		formLabel: 'Add Gene or Position',
+		placeholder: 'Select Gene or Position'
+	},
+	Phenotypic: {
+		formLabel: 'Search Phenotype',
+		placeholder: 'Select Phenotype' /* TODO(cc) update to 'Phenotype' */
+	},
+	Analytic: {},
 };
 
 var applyInitialState = {
@@ -410,6 +424,7 @@ class VariableSelect extends PureComponent {
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
 			subheader = _.getIn(helpText, [mode]),
+			suggestProps = getModeSuggestProps[mode],
 			ModeForm = getModeFields[mode],
 			wizardProps = {
 				colHeight,
@@ -456,7 +471,8 @@ class VariableSelect extends PureComponent {
 					basicFeatures={basicFeatures}
 					onAddFeature={this.onAddFeature}
 					onAdvancedClick={this.on.advanced}
-					advanced={advanced[mode]}/>
+					advanced={advanced[mode]}
+					suggestProps={suggestProps}/>
 			</WizardCard>);
 	}
 }
