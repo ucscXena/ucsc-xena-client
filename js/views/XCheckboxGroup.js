@@ -34,7 +34,6 @@ var React = require('react');
 
 var _ = require('../underscore_ext').default;
 import {xenaColor} from '../xenaColor';
-import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';
 var XInputToolbar = require('./XInputToolbar');
 
@@ -105,7 +104,6 @@ class XCheckboxGroup extends PureComponent {
 	render() {
 		var {additionalAction, label, onAdditionalAction, options, hideBadge} = this.props;
 		return (
-			<>
 			<XFormControl>
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				<FormGroup>
@@ -125,8 +123,6 @@ class XCheckboxGroup extends PureComponent {
 					])}
 				</FormGroup>
 			</XFormControl>
-			<XColumnDivider/>
-			</>
 		);
 	}
 }

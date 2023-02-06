@@ -21,7 +21,6 @@
 import {FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
-import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';
 var XRadioMeta = require('./XRadioMeta');
 var XInputToolbar = require('./XInputToolbar');
@@ -34,21 +33,18 @@ class XRadioGroup extends React.Component {
 	render() {
 		var {additionalAction, label, onAdditionalAction, options, value} = this.props;
 		return (
-			<>
-				<XFormControl>
-					<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
-					<RadioGroup onChange={this.onChange} value={value}>
-						{_.map(options, (o, i) => [
-							<FormControlLabel
-								key={`${o.label}${i}`}
-								control={<Radio />}
-								label={o.label}
-								value={o.value}/>,
-							o.meta ? <XRadioMeta key={i} meta={o.meta}/> : null])}
-					</RadioGroup>
-				</XFormControl>
-				<XColumnDivider/>
-			</>
+			<XFormControl>
+				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
+				<RadioGroup onChange={this.onChange} value={value}>
+					{_.map(options, (o, i) => [
+						<FormControlLabel
+							key={`${o.label}${i}`}
+							control={<Radio />}
+							label={o.label}
+							value={o.value}/>,
+						o.meta ? <XRadioMeta key={i} meta={o.meta}/> : null])}
+				</RadioGroup>
+			</XFormControl>
 		);
 	}
 }

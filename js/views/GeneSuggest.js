@@ -1,20 +1,28 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
-import XAutosuggest from './XAutosuggest';
+import {Box} from '@material-ui/core';
+import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
-require('./GeneSuggest.css'); // react-autosuggest, global styles
 var limit = 8;
+
+// Styles
+var sxAutocomplete = {
+	'& .MuiAutocomplete-clearIndicator': {
+		visibility: 'visible'
+	}
+};
 
 // Return the start and end indices of the word in 'value'
 // under the cursor position.
 function currentWordPosition(value, position) {
 	var li = value.slice(0, position).lastIndexOf(' '),
 		i = li === -1 ? 0 : li + 1,
-		lj = value.slice(position).indexOf(' '),
+		lj = value.slice(position).search(/(,?\s+)/),
 		j = lj === -1 ? value.length : position + lj;
 	return [i, j];
 }
@@ -25,15 +33,11 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
-var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
+var renderInputComponent = ({ref, error, ...props}) => (
 	<XAutosuggestInput
-		error={!!(_.isString(error))}
-		fullWidth
+		error={Boolean(error)}
 		helperText={_.isString(error) ? error : null}
-		inputProps={{spellCheck: false}}
 		inputRef={el => ref(el)}
-		onChange={onChange}
-		label={label || 'Add Gene or Position'}
 		{...props} />
 );
 
@@ -55,6 +59,10 @@ var fetchSuggestions = (assembly, dataset, value) =>
 class GeneSuggest extends PureComponent {
 	state = {suggestions: []};
 
+	setInputRef = ref => {
+		this.inputRef = ref;
+	};
+
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'change');
 		this.change = events.change
@@ -67,86 +75,66 @@ class GeneSuggest extends PureComponent {
 		this.change.unsubscribe();
 	}
 
-	onSuggestionsFetchRequested = ({value}) => {
-		var position = this.input.selectionStart,
-			word = currentWord(value, position);
-
-		this.on.change(word);
+	// Returns the word at the cursor position of the input value.
+	getSuggestion = (inputValue) => {
+		var position = this.inputRef?.selectionStart || 0;
+		return currentWord(inputValue, position);
 	};
 
-	shouldRenderSuggestions = () => {
-		return true;
+	// Returns input value updated by new word.
+	updateSuggestion = (suggestion) => {
+		var position = this.inputRef.selectionStart,
+			value = this.inputRef.value,
+			[i, j] = currentWordPosition(value, position);
+		return value.slice(0, i) + suggestion + value.slice(j);
 	};
 
-	onSuggestionsClearRequested = () => {
-		this.on.change(undefined);
-	};
-
-	onChange = (ev, {newValue, method}) => {
-		// Don't update the value for 'up' and 'down' keys. If we do update
-		// the value, it gives us an in-place view of the suggestion (pasting
-		// the value into the input field), but the drawback is that it moves
-		// the cursor to the end of the line. This messes up multi-word input.
-		// We could try to preserve the cursor position, perhaps by passing a
-		// custom input renderer. But for now, just don't update the value for
-		// these events.
-		if (method !== 'up' && method !== 'down') {
-			this.props.onChange(newValue);
+	// Callback fired when the input value changes.
+	onInputChange = (ev, value, reason) => {
+		var currentSuggestion = this.getSuggestion(value) || '';
+		let newGeneSuggestion = value;
+		if (reason === 'reset') {
+			newGeneSuggestion = this.updateSuggestion(value) || '';
 		}
+		this.on.change(currentSuggestion);
+		this.props.onChange(newGeneSuggestion);
 	};
 
-	getSuggestionValue = (suggestion) => {
-		var position = this.input.selectionStart,
-			value = this.input.value,
-			[i, j] = currentWordPosition(value, position),
-			withSuggestion = value.slice(0, i) + suggestion + value.slice(j);
-
-		// splice the suggestion into the current word
-		return withSuggestion;
+	// Callback fired when the popup requests to be opened.
+	// Updates state with the current word matching the cursor position of the input value.
+	onOpen = () => {
+		var currentSuggestion = this.getSuggestion(this.props.value);
+		this.on.change(currentSuggestion);
 	};
-
-	setInput = (input) => {
-		var {inputRef} = this.props;
-		this.input = input;
-		if (inputRef) {
-			inputRef(this.input);
-		}
-	};
-
-	setAutosuggest = v => {
-		this.autosuggest = v;
-	}
-
-	onKeyDown = ev => {
-		// We'd like <return> to select a suggestion when suggestions are shown,
-		// but invoke "Done" when suggestions are not shown. react-autosuggest
-		// won't tell us when it's open. So, we have to inspect the child state
-		// to infer when it's open.
-		if (this.props.onKeyDown &&
-			(!_.getIn(this, ['autosuggest', 'state', 'isFocused']) ||
-				_.getIn(this, ['autosuggest', 'state', 'isCollapsed']))) {
-
-			this.props.onKeyDown(ev);
-		}
-	}
 
 	render() {
-		var {onChange, onKeyDown} = this,
-			{value = '', label, error} = this.props,
+		var {onInputChange, onOpen} = this,
+			{suggestProps, value = ''} = this.props,
 			{suggestions} = this.state;
 
 		return (
-			<XAutosuggest
-				inputRef={this.setInput}
-				autosuggestRef={this.setAutosuggest}
-				suggestions={suggestions}
-				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-				getSuggestionValue={this.getSuggestionValue}
-				shouldRenderSuggestions={this.shouldRenderSuggestions}
-				renderSuggestion={v => <span>{v}</span>}
-				renderInputComponent={renderInputComponent}
-				inputProps={{value, label, error, onKeyDown, onChange}}/>);
+			<Box
+				component={Autocomplete}
+				autoComplete={false}
+				blurOnSelect={false}
+				closeIcon={<CloseRounded fontSize={'large'}/>}
+				disableClearable={!value}
+				filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
+				forcePopupIcon={!value}
+				freeSolo
+				onInputChange={onInputChange}
+				onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
+				open={suggestions.length > 0}
+				options={suggestions}
+				popupIcon={<SearchRounded fontSize={'large'}/>}
+				renderInput={(props) => renderInputComponent({
+					...suggestProps, ...props,
+					onClick: onOpen,
+					ref: this.setInputRef,
+					inputProps: {...props.inputProps, value}
+				})}
+				sx={sxAutocomplete}/>
+		);
 	}
 }
 

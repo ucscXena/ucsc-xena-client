@@ -1,6 +1,6 @@
 var _ = require('../underscore_ext').default;
 const React = require('react');
-import {Link} from '@material-ui/core';
+import {Box, Link} from '@material-ui/core';
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
@@ -164,15 +164,13 @@ class Transcripts extends React.Component {
 					<StateError onHide={this.onHideError} error={stateError}/>
 					<Link className={styles.selectorsLink} variant='caption'
 						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</Link>
-					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
-						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
-							<GeneSuggest assembly='hg38' label="Add Gene (e.g. KRAS)" value={this.state.input}
-								onChange={ value => {this.setState({input: value.trim(), updateButton: true});} }/>
-						</div>
+					<Box sx={{alignItems: 'center', display: 'grid', gridGap: 16, gridTemplateColumns: '400px auto', justifyContent: 'flex-start', margin: '4px 0 20px', padding: '0 20px'}}>
+						<GeneSuggest assembly='hg38' suggestProps={{label: 'Add Gene (e.g. KRAS)'}} value={this.state.input}
+									 onChange={ value => {this.setState({input: value.trim(), updateButton: true});} }/>
 						{this.state.updateButton ?
 							<button className={styles.horizontalSegmentButton} onClick={this.onLoadData}>Update Gene</button> : null
 						}
-					</div>
+					</Box>
 					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{marginBottom: "10px"}}>
 							<span className={styles.selectors}>Study A</span>

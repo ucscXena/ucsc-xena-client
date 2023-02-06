@@ -58,6 +58,14 @@ var sxWizardCardButton = {
 		minHeight: 48,
 	}
 };
+var sxWizardCardContent = {
+	alignContent: 'flex-start',
+	display: 'grid',
+	flex: 1,
+	gridGap: 24,
+	px: 4,
+	py: 6,
+};
 var sxWizardCardHeader = {
 	'&&': {
 		gap: 16,
@@ -82,6 +90,19 @@ var sxWizardEarlyExit = {
 };
 
 class WizardCard extends React.Component {
+
+	constructor(props) {
+		super(props);
+		this.doneButtonRef = React.createRef();
+	}
+
+	componentDidUpdate() {
+		// TODO with https://github.com/ucscXena/ucsc-xena-client/issues/618
+		if (this.props.valid && this.doneButtonRef) {
+			// this.doneButtonRef.current.focus();
+		}
+	}
+
 	onDone = () => {
 		this.props.onDone();
 	};
@@ -89,7 +110,7 @@ class WizardCard extends React.Component {
 	onDoneExitWizard = () => {
 		this.props.onWizardMode(false);
 		this.props.onDone();
-	}
+	};
 
 	onDoneInvalid = (ev) => {
 		var {valid, onDoneInvalid} = this.props;
@@ -101,8 +122,8 @@ class WizardCard extends React.Component {
 	render() {
 		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
 				subheader, title, subtitle, valid, loadingCohort, width} = this.props,
-		minHeight = Math.max(colHeight || 0, 605),
-		showOptionalExit = optionalExit && onWizardMode && valid;
+			minHeight = Math.max(colHeight || 0, 605),
+			showOptionalExit = optionalExit && onWizardMode && valid;
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -116,21 +137,16 @@ class WizardCard extends React.Component {
 						title={title}
 						titleTypographyProps={{component: 'h6', noWrap: true}}/>
 					<XColumnDivider/>
-					<Box flex='1'>
+					<Box component={CardContent} sx={sxWizardCardContent}>
 						{/* TODO(cc) 'error' message refactored temporarily */}
-						{(loadingCohort || subtitle) && <>
-							<CardContent>
-								{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
-								{loadingCohort && <p>Loading datasets...</p>}
-							</CardContent>
-							<XColumnDivider/></>}
+						{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
+						{loadingCohort && <p>Loading datasets...</p>}
 						{children}
 					</Box>
-					{/* TODO insert column divider on completion of on-boarding changes to card content */}
-					{/*<XColumnDivider/>*/}
+					<XColumnDivider/>
 					<Box component={CardActions} sx={sxWizardCardActions}>
 						<Box onClick={this.onDoneInvalid} flex={1}>
-							<Box component={Button} color='secondary' disabled={!valid} disableElevation fullWidth
+							<Box component={Button} ref={this.doneButtonRef} color='secondary' disabled={!valid} disableElevation fullWidth
 								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>{WIZARD_BUTTON_TEXT[colId] || 'Done'}</Box>
 						</Box>
 					</Box>

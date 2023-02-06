@@ -259,8 +259,8 @@ class ImportForm extends React.Component {
 							</Box>}</>}
 						<FormControlLabel control={<Radio />} label='There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it.' value='publicCohort'/>
 						{cohortRadio === 'publicCohort' &&
-							<Box pl={'36px'}>
-								<CohortSuggest cohort={publicCohort} cohorts={_.pluck(cohorts, 'name')} onSelect={this.onPublicCohortChange}/>
+							<Box pl={'36px'} mt={4} maxWidth={500}>
+								<CohortSuggest cohort={publicCohort} cohorts={_.pluck(cohorts, 'name')} onSelect={this.onPublicCohortChange} suggestProps={{label: 'Select Study'}}/>
 							</Box>
 						}
 					</RadioGroup>

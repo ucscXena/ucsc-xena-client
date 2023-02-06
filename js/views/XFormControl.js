@@ -6,19 +6,12 @@
  */
 
 // Core dependencies, components
-import {FormControl, makeStyles} from '@material-ui/core';
+import {FormControl} from '@material-ui/core';
 import React from 'react';
 
-const useStyles = makeStyles({
-	root: {
-		padding: '24px 16px',
-	},
-});
-
 export default function XFormControl({children, ...props}) {
-	const classes = useStyles();
 	return (
-		<FormControl classes={{root: classes.root}} fullWidth {...props}>{children}</FormControl>
+		<FormControl fullWidth {...props}>{children}</FormControl>
 	);
 };
 
