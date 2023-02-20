@@ -7,23 +7,21 @@
  * State
  * -----
  * label - radio group field name.
- * additionalAction - display text of additional action.
  * options - array of radio options in format {label, value, meta: [{label, value}]}
  *
  * Actions
  * -------
- * onAdditionalAction - called when additional action link is clicked.
  * onChange - called when selected radio value is changed.
  */
 
 
 // Core dependencies, components
-import {FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
+import {Box, FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
 import XFormControl from './XFormControl';
+import XFormLabel from './XFormLabel';
 var XRadioMeta = require('./XRadioMeta');
-var XInputToolbar = require('./XInputToolbar');
 
 class XRadioGroup extends React.Component {
 	onChange = (event) => {
@@ -31,10 +29,10 @@ class XRadioGroup extends React.Component {
 	};
 
 	render() {
-		var {additionalAction, label, onAdditionalAction, options, value} = this.props;
+		var {label, options, value} = this.props;
 		return (
 			<XFormControl>
-				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
+				{label && <Box component={XFormLabel} label={label} sx={{mb: 0.5}}/>}
 				<RadioGroup onChange={this.onChange} value={value}>
 					{_.map(options, (o, i) => [
 						<FormControlLabel

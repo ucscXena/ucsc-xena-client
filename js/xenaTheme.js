@@ -112,6 +112,12 @@ export const xenaTheme = createTheme(theme, {
 				top: '50%',
 				transform: 'translateY(-50%)',
 			},
+			groupLabel: {
+				...theme.typography.body2,
+				color: theme.palette.text.primary,
+				fontWeight: 600, // Mimics Roboto font weight 500 specification.
+				padding: '12px 16px',
+			},
 			inputRoot: {
 				padding: '0 !important',
 				'&.Mui-error': {
@@ -259,6 +265,26 @@ export const xenaTheme = createTheme(theme, {
 				'& svg': {
 					fontSize: 24,
 				},
+			},
+		},
+		MuiChip: {
+			deleteIcon: {
+				color: xenaColor.GRAY_DARKEST,
+				fontSize: '20px !important',
+				margin: 0,
+			},
+			label: {
+				paddingLeft: 0,
+				paddingRight: 0,
+			},
+			root: {
+				...theme.typography.body1,
+				backgroundColor: xenaColor.GRAY_AVATAR,
+				color: theme.palette.common.black,
+				gap: 8,
+				letterSpacing: 'normal',
+				minWidth: 0,
+				padding: '6px 12px',
 			},
 		},
 		MuiCssBaseline: {
@@ -594,6 +620,44 @@ export const xenaTheme = createTheme(theme, {
 				fontSize: 24,
 			},
 		},
+		MuiToggleButton: {
+			root: {
+				...theme.typography.subtitle2,
+				backgroundColor: 'inherit',
+				border: 'none',
+				borderRadius: 4,
+				color: theme.palette.text.secondary,
+				flex: 1,
+				letterSpacing: 'normal',
+				padding: '6px 12px',
+				textTransform: 'capitalize',
+				'&:hover': {
+					backgroundColor: xenaColor.GRAY_LIGHT,
+				},
+				'&.Mui-selected': {
+					backgroundColor: theme.palette.common.white,
+					color: theme.palette.text.primary,
+					'&&:hover': {
+						backgroundColor: theme.palette.common.white,
+					},
+				},
+			},
+		},
+		MuiToggleButtonGroup: {
+			grouped: {
+				border: 'none !important', // Overrides 'grouped' css selector specificity.
+				borderRadius: '4px !important', // Overrides 'grouped' css selector specificity.
+				margin: '0 !important', // Overrides 'grouped' css selector specificity.
+			},
+			root: {
+				backgroundColor: xenaColor.GRAY_DARK,
+				borderRadius: 6,
+				display: 'grid',
+				gridAutoColumns: '1fr',
+				gridAutoFlow: 'column',
+				padding: 2,
+			},
+		},
 		MuiTooltip: {
 			tooltip: {
 				borderRadius: 2,
@@ -636,6 +700,9 @@ export const xenaTheme = createTheme(theme, {
 		},
 		MuiMenu: {
 			elevation: 2,
+		},
+		MuiToggleButton: {
+			disableRipple: true,
 		},
 	},
 });
