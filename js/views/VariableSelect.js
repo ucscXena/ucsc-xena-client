@@ -89,19 +89,16 @@ var firstAssembly = (datasets, selected) =>
 	selected.length === 0 ? defaultAssembly :
 	_.findValue(selected, getAssembly(datasets));
 
-var formActions = (isActions, onAdvancedClick, advanced) => {
-	if (isActions) {
-		return [{
-			onToggle: onAdvancedClick,
-			selected: !advanced,
-			value: 'basic'
-		}, {
-			onToggle: onAdvancedClick,
-			selected: advanced,
-			value: 'advanced'
-		}];
-	}
-};
+var formActions = (onAdvancedClick, advanced) => [{
+	onToggle: onAdvancedClick,
+	selected: !advanced,
+	value: 'basic'
+}, {
+	onToggle: onAdvancedClick,
+	selected: advanced,
+	value: 'advanced'
+}];
+
 
 var GenotypicForm = props => (
 	<Box sx={sxSuggestForm}>
@@ -116,7 +113,7 @@ var GenotypicForm = props => (
 			suggestProps={{error: props.error, ...props.suggestProps}}
 			type='text'/>
 		<XAutocompleteSuggest
-			actions={formActions(!_.isEmpty(props.preferred), props.onAdvancedClick, props.advanced)}
+			actions={!_.isEmpty(props.preferred) ? formActions(props.onAdvancedClick, props.advanced) : null}
 			hideBadge={props.hideAssembly}
 			onChange={props.onChange}
 			onPending={props.onPending}
@@ -135,7 +132,7 @@ var PhenotypicForm = props => {
 	return (
 		<Box sx={sxSuggestForm}>
 			<XAutocompleteSuggest
-				actions={formActions(!_.isEmpty(props.basicFeatures), props.onAdvancedClick, props.advanced)}
+				actions={!_.isEmpty(props.basicFeatures) ? formActions(props.onAdvancedClick, props.advanced) : null}
 				onChange={props.onChange}
 				onPending={props.onPending}
 				options={[{options}]}
@@ -409,7 +406,7 @@ class VariableSelect extends PureComponent {
 
 	onPending = (pending) => {
 		this.setState({pending});
-	}
+	};
 
 	render() {
 		var {mode, matches, hasCoord, advanced, valid, warnings,

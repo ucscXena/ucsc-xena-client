@@ -52,53 +52,37 @@ var sxOption = {
 	lineHeight: '20px',
 };
 
-/**
- * Returns options flattened with the property:
- * - 'group' added to each option - facilitating the MuiAutocomplete 'groupBy' functionality, and
- * - 'badge' removed from each option - should the badge not be displayed.
- * @param options - Options to flatten.
- * @param hideBadge - Badge is hidden.
- * @returns autocomplete options.
- */
-function getOptions(options, hideBadge) {
-	return options.flatMap(option => option.options.map(o => {
+var filterOptions = (options, {inputValue}) => {
+	const lcValue = inputValue.toLowerCase();
+	return options.filter(f => f.label.toLowerCase().indexOf(lcValue) !== -1);
+};
+
+// Returns options flattened with the property:
+// - 'group' added to each option - facilitating the MuiAutocomplete 'groupBy' functionality, and
+// - 'badge' removed from each option - should the badge not be displayed.
+var getOptions = (options, hideBadge) =>
+	options.flatMap(option => option.options.map(o => {
 		const cOption = {...o, group: option.label};
 		if (hideBadge) {
 			delete cOption.badge;
 		}
 		return cOption;
 	}));
-}
 
-/**
- * Renders autocomplete lists.
- * @returns autocomplete lists rendered as JSX element.
- */
-const Listbox = forwardRef(({children, ...props}, ref) => {
-	return (
-		<Box component={List} ref={ref} sx={sxListbox} {...props}>{children}</Box>
-	);
-});
+// Renders autocomplete lists.
+var Listbox = forwardRef(({children, ...props}, ref) =>
+	<Box component={List} ref={ref} sx={sxListbox} {...props}>{children}</Box>
+);
 
-/**
- * Returns the option rendered as JSX element.
- * @returns option rendered as JSX element.
- * @param option - Option.
- * @param selected - Selected state variable.
- * @returns autocomplete option rendered as JSX element.
- */
-function renderOption({badge, label, value}, {selected}) {
-	return (
-		<>
-			<Box component={Checkbox} checked={selected} value={value} sx={{justifySelf: 'center'}}/>
-			<Box sx={sxOption}>
-				<span>{label}</span>
-				{badge &&
-					<Box component='span' fontSize={14} fontWeight={600} sx={{...badge.style}}>{badge.label}</Box>}
-			</Box>
-		</>
-	);
-}
+// Renders the option.
+var renderOption = ({badge, label, value}, {selected}) =>
+	<>
+		<Box component={Checkbox} checked={selected} value={value} sx={{justifySelf: 'center'}}/>
+		<Box sx={sxOption}>
+			<span>{label}</span>
+			{badge && <Box component='span' fontSize={14} fontWeight={600} sx={{...badge.style}}>{badge.label}</Box>}
+		</Box>
+	</>;
 
 export default function XAutocompleteSuggest({
  actions,
@@ -114,12 +98,6 @@ export default function XAutocompleteSuggest({
 	const options = getOptions(suggestions, hideBadge);
 	const isGroupBy = options.every(option => option.group);
 	const values = selectedValues.map(selectedValue => options.find(option => option.value === selectedValue));
-
-	// Filters options to determine the options that are eligible.
-	const filterOptions = (options, {inputValue}) => {
-		const lcValue = inputValue.toLowerCase();
-		return options.filter(f => f.label.toLowerCase().indexOf(lcValue) !== -1);
-	};
 
 	// Autocomplete onChange (on selection of option).
 	const onSelect = ({key, type}, value, reason) => {
