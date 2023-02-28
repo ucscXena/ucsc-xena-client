@@ -9,30 +9,12 @@
 import {ToggleButton, ToggleButtonGroup} from '@material-ui/lab';
 import React, {useState} from 'react';
 
-/**
- * Returns the selected toggle button.
- * @param toggleButtons - Toggle buttons.
- * @param toggleValue - Selected value within the group.
- * @returns the selected toggle button action.
- */
-function getSelectedToggleButtonAction(
-	toggleButtons,
-	toggleValue
-) {
-	const onToggleFn = toggleButtons.find(({value}) => value === toggleValue);
-	return onToggleFn && onToggleFn.onToggle;
-}
+// Returns the selected toggle button.
+var getSelectedToggleButtonAction = (toggleButtons, toggleValue) =>
+	toggleButtons.find(({value}) => value === toggleValue).onToggle;
 
-/**
- * Initializes the toggle button group with the selected toggle button value.
- * @param toggleButtons - Toggle buttons.
- * @returns selected toggle button value.
- */
-function initToggleButtonValue(
-	toggleButtons
-) {
-	return toggleButtons.find(({selected}) => selected).value;
-}
+// Initializes the toggle button group with the selected toggle button value.
+var initToggleButtonValue = (toggleButtons) => toggleButtons.find(({selected}) => selected).value;
 
 export default function XToggleButtonGroup({className, toggleButtons}) {
 	const [toggleValue, setToggleValue] = useState(initToggleButtonValue(toggleButtons));

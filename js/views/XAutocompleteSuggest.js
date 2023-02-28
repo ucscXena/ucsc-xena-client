@@ -7,15 +7,15 @@
 
 // Core dependencies, components
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import {Box, Checkbox, List, Paper} from '@material-ui/core';
+import {Box, Checkbox, Chip, Icon, List, Paper} from '@material-ui/core';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import React, {forwardRef, useCallback, useEffect, useState} from 'react';
 var _ = require('../underscore_ext').default;
-import XAutocompleteActions from './XAutocompleteActions';
-import XAutocompleteSelectedValues from './XAutocompleteSelectedValues';
 import XAutosuggestInput from './XAutosuggestInput';
+import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';
 import {xenaColor} from '../xenaColor';
+import XToggleButtonGroup from './XToggleButtonGroup';
 
 // Styles
 var sxFormControl = {
@@ -50,6 +50,13 @@ var sxOption = {
 	flexDirection: 'column',
 	fontSize: 16,
 	lineHeight: '20px',
+};
+var sxSelectedValues = {
+	display: 'flex',
+	flexWrap: 'wrap',
+	gap: 8,
+	justifyContent: 'flex-start',
+	minWidth: 0,
 };
 
 var filterOptions = (options, {inputValue}) => {
@@ -146,7 +153,12 @@ export default function XAutocompleteSuggest({
 	const AutocompletePaper = useCallback(({children, ...props}) => {
 		return (
 			<Paper {...props} role='combobox' onMouseDown={(ev) => ev.preventDefault()}>
-				<XAutocompleteActions actions={autocompleteActions}/>
+				{autocompleteActions ? <>
+					<Box sx={{my: 2, padding: '8px 16px'}}>
+						<XToggleButtonGroup toggleButtons={autocompleteActions}/>
+					</Box>
+					<XColumnDivider/>
+				</> : null}
 				{children}
 			</Paper>
 		);
@@ -192,7 +204,16 @@ export default function XAutocompleteSuggest({
 					value={values}
 				/>
 			</Box>
-			<XAutocompleteSelectedValues onDelete={onDelete} selectedValues={values}/>
+			{values.length > 0 ?
+				<Box sx={sxSelectedValues}>
+					{values.map(({label, value}, i) =>
+						<Chip
+							key={`${value}${i}`}
+							deleteIcon={<Icon>close</Icon>}
+							label={label}
+							onClick={(ev) => onDelete(ev, value)}
+							onDelete={(ev) => onDelete(ev, value)}/>)}
+				</Box> : null}
 		</Box>
 	);
 }
