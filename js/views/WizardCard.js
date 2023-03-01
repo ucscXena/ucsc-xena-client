@@ -22,7 +22,16 @@
 
 
 // Core dependencies, components
-import {Box, Button, Card, CardActions, CardContent, CardHeader, Typography} from '@material-ui/core';
+import {
+	Box,
+	Button,
+	Card,
+	CardActions,
+	CardContent,
+	CardHeader,
+	CircularProgress,
+	Typography
+} from '@material-ui/core';
 var React = require('react');
 
 // App dependencies
@@ -38,6 +47,12 @@ var WIZARD_BUTTON_TEXT = {
 };
 
 // Styles
+var sxCircularProgress = {
+	display: 'flex',
+	left: -24,
+	position: 'absolute',
+	top: 5,
+};
 var sxWizardCard = {
 	borderRadius: 6,
 	boxShadow: '0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);',
@@ -57,6 +72,9 @@ var sxWizardCardButton = {
 		lineHeight: '26px',
 		minHeight: 48,
 	}
+};
+var sxWizardCardButtonLabel = {
+	position: 'relative', // Positions circular progress
 };
 var sxWizardCardContent = {
 	alignContent: 'flex-start',
@@ -120,7 +138,7 @@ class WizardCard extends React.Component {
 
 	render() {
 		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
-				subheader, title, subtitle, valid, loadingCohort, width} = this.props,
+				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
 			minHeight = Math.max(colHeight || 0, 605),
 			showOptionalExit = optionalExit && onWizardMode && valid;
 		return (
@@ -146,7 +164,12 @@ class WizardCard extends React.Component {
 					<Box component={CardActions} sx={sxWizardCardActions}>
 						<Box onClick={this.onDoneInvalid} flex={1}>
 							<Box component={Button} ref={this.doneButtonRef} color='secondary' disabled={!valid} disableElevation fullWidth
-								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>{WIZARD_BUTTON_TEXT[colId] || 'Done'}</Box>
+								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>
+									<Box sx={sxWizardCardButtonLabel}>
+										{loading && <Box sx={sxCircularProgress}><CircularProgress color='inherit' size={16} thickness={4}/></Box>}
+										{(WIZARD_BUTTON_TEXT[colId] || 'Done')}
+									</Box>
+							</Box>
 						</Box>
 					</Box>
 				</Box>
