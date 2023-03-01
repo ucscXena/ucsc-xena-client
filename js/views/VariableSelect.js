@@ -2,11 +2,10 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 import {Box} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
-var XCheckboxGroup = require('./XCheckboxGroup');
+import XAutocompleteSuggest from './XAutocompleteSuggest';
 var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
-var PhenotypeSuggest = require('./PhenotypeSuggest');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
@@ -58,14 +57,6 @@ var preferredList = preferred => ([
 	}
 ]);
 
-function selectedOptions(selected, options) {
-	var smap = new Set(selected);
-	return options.map(group =>
-		_.updateIn(group, ['options'],
-			options => options.map(opt => smap.has(opt.value) ?
-				_.assoc(opt, 'checked', true) : opt)));
-}
-
 var assemblyColors = {
 	hg18: '#527DA4',
 	hg19: '#ff5722',
@@ -98,6 +89,17 @@ var firstAssembly = (datasets, selected) =>
 	selected.length === 0 ? defaultAssembly :
 	_.findValue(selected, getAssembly(datasets));
 
+var formActions = (onAdvancedClick, advanced) => [{
+	onToggle: onAdvancedClick,
+	selected: !advanced,
+	value: 'basic'
+}, {
+	onToggle: onAdvancedClick,
+	selected: advanced,
+	value: 'advanced'
+}];
+
+
 var GenotypicForm = props => (
 	<Box sx={sxSuggestForm}>
 		<GeneSuggest
@@ -107,18 +109,19 @@ var GenotypicForm = props => (
 			assembly={firstAssembly(props.datasets, props.selected)}
 			value={props.value}
 			onChange={props.onFieldChange}
+			onPending={props.onPending}
 			suggestProps={{error: props.error, ...props.suggestProps}}
 			type='text'/>
-		<XCheckboxGroup
-			label='Dataset'
-			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
-			onAdditionalAction={props.onAdvancedClick}
-			onChange={props.onChange}
+		<XAutocompleteSuggest
+			actions={!_.isEmpty(props.preferred) ? formActions(props.onAdvancedClick, props.advanced) : null}
 			hideBadge={props.hideAssembly}
-			options={selectedOptions(props.selected,
-				setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) :
-					preferredList(props.preferred)))}/>
-	</Box>);
+			onChange={props.onChange}
+			onPending={props.onPending}
+			options={setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) : preferredList(props.preferred))}
+			selectedValues={props.selected}
+			suggestProps={{formLabel: 'Dataset', placeholder: 'Select Dataset'}}/>
+	</Box>
+);
 
 var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
 
@@ -128,19 +131,13 @@ var PhenotypicForm = props => {
 	var options = (props.advanced ? allFeatureLabels : basicFeatureLabels)(props.features, _.union(props.basicFeatures, props.selected));
 	return (
 		<Box sx={sxSuggestForm}>
-			<XCheckboxGroup
-				label='Phenotype'
-				additionalAction={!_.isEmpty(props.basicFeatures) && (props.advanced ? 'Show Basic' : 'Show All')}
-				onAdditionalAction={props.onAdvancedClick}
+			<XAutocompleteSuggest
+				actions={!_.isEmpty(props.basicFeatures) ? formActions(props.onAdvancedClick, props.advanced) : null}
 				onChange={props.onChange}
-				options={selectedOptions(props.selected, [{options}])}/>
-			{props.advanced ?
-				null :
-				(<PhenotypeSuggest
-					features={props.features}
-					onChange={props.onAddFeature}
-					suggestProps={{error: props.error, ...props.suggestProps}}/>
-				)}
+				onPending={props.onPending}
+				options={[{options}]}
+				selectedValues={props.selected}
+				suggestProps={{error: Boolean(props.error), ...props.suggestProps}}/>
 		</Box>);
 };
 
@@ -148,10 +145,12 @@ var AnalyticForm = props => {
 	var options = props.analytic.map(({label}, i) => ({value: i.toString(), label: label}));
 	return (
 		<Box sx={sxSuggestForm}>
-			<XCheckboxGroup
-				label='Variable'
+			<XAutocompleteSuggest
 				onChange={props.onChange}
-				options={selectedOptions(props.selected, [{options}])}/>
+				onPending={props.onPending}
+				options={[{options}]}
+				selectedValues={props.selected}
+				suggestProps={{...props.suggestProps}}/>
 		</Box>);
 };
 
@@ -167,10 +166,13 @@ var getModeSuggestProps = {
 		placeholder: 'Select Gene or Position'
 	},
 	Phenotypic: {
-		formLabel: 'Search Phenotype',
-		placeholder: 'Select Phenotype' /* TODO(cc) update to 'Phenotype' */
+		formLabel: 'Phenotype',
+		placeholder: 'Select Phenotype'
 	},
-	Analytic: {},
+	Analytic: {
+		formLabel: 'Variable',
+		placeholder: 'Select Variable'
+	},
 };
 
 var applyInitialState = {
@@ -298,6 +300,7 @@ class VariableSelect extends PureComponent {
 				Analytic: false
 			},
 			basicFeatures: featureIndexes(features, basicFeatures),
+			pending: false,
 			selected: {
 				Genotypic: {
 					true: [], // advanced
@@ -346,9 +349,8 @@ class VariableSelect extends PureComponent {
 				.startWith(this.state.advanced).publishReplay(1).refCount(),
 			selected = events.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
-				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
-						_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
-					this.state.selected)
+				.scan((selected, [{selectValue}, mode, advanced]) =>
+						_.assocIn(selected, [mode, advanced], selectValue), this.state.selected)
 				.startWith(this.state.selected).publishReplay(1).refCount(),
 			value = events.field
 				.withLatestFrom(mode, (field, mode) => ([field, mode]))
@@ -378,8 +380,8 @@ class VariableSelect extends PureComponent {
 		this.validSub.unsubscribe();
 	}
 
-	onChange = (selectValue, isOn) => {
-		this.on.select({selectValue, isOn});
+	onChange = (selectValue) => {
+		this.on.select({selectValue});
 	};
 
 	onDone = () => {
@@ -402,20 +404,13 @@ class VariableSelect extends PureComponent {
 		}
 	};
 
-	onAddFeature = (featureIn) => {
-		var {features} = this.props,
-			{basicFeatures, value, mode} = this.state,
-			i = (featureIn ? features.indexOf(featureIn) : _.findIndex(features, _.matcher({label: value[mode]}))).toString();
-		if (i !== "-1") {
-			this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
-			this.on.select({selectValue: i, isOn: true});
-		}
-		this.on.field("");
+	onPending = (pending) => {
+		this.setState({pending});
 	};
 
 	render() {
 		var {mode, matches, hasCoord, advanced, valid, warnings,
-				loading, error, unavailable, basicFeatures} = this.state,
+				loading, error, unavailable, basicFeatures, pending} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colHeight, colId, colMode, controls, datasets, features, helpText, preferred, analytic,
@@ -435,6 +430,7 @@ class VariableSelect extends PureComponent {
 				optionalExit,
 				subheader,
 				subtitle,
+				pending,
 				title,
 				onDone: this.onDone,
 				onDoneInvalid: this.onDoneInvalid,
@@ -459,8 +455,8 @@ class VariableSelect extends PureComponent {
 				<ModeForm
 					error={formError}
 					onChange={this.onChange}
-					onReturn={valid ? this.onDone : undefined}
 					onFieldChange={this.on.field}
+					onPending={this.onPending}
 					hideAssembly={!hasCoord}
 					datasets={datasets}
 					selected={selected}
@@ -469,7 +465,6 @@ class VariableSelect extends PureComponent {
 					preferred={preferred}
 					analytic={analytic}
 					basicFeatures={basicFeatures}
-					onAddFeature={this.onAddFeature}
 					onAdvancedClick={this.on.advanced}
 					advanced={advanced[mode]}
 					suggestProps={suggestProps}/>

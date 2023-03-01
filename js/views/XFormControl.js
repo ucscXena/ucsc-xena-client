@@ -2,7 +2,7 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Standard Xena form control, providing custom styles to Mui FormControl component for XCheckboxGroup and XRadioGroup.
+ * Standard Xena form control, providing custom styles to Mui FormControl component for XAutocompleteSuggest and XRadioGroup.
  */
 
 // Core dependencies, components

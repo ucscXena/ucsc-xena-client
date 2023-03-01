@@ -89,6 +89,12 @@ class GeneSuggest extends PureComponent {
 		return value.slice(0, i) + suggestion + value.slice(j);
 	};
 
+	// Setting pending to false facilitates setting the focus on
+	// the WizardCard component 'Done' button - should all card selected values be valid.
+	onBlur = () => {
+		this.props.onPending(false);
+	}
+
 	// Callback fired when the input value changes.
 	onInputChange = (ev, value, reason) => {
 		var currentSuggestion = this.getSuggestion(value) || '';
@@ -102,13 +108,16 @@ class GeneSuggest extends PureComponent {
 
 	// Callback fired when the popup requests to be opened.
 	// Updates state with the current word matching the cursor position of the input value.
+	// Setting pending to true will prevent setting the focus on the
+	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
 	onOpen = () => {
 		var currentSuggestion = this.getSuggestion(this.props.value);
 		this.on.change(currentSuggestion);
+		this.props.onPending(true);
 	};
 
 	render() {
-		var {onInputChange, onOpen} = this,
+		var {onBlur, onInputChange, onOpen} = this,
 			{suggestProps, value = ''} = this.props,
 			{suggestions} = this.state;
 
@@ -122,8 +131,9 @@ class GeneSuggest extends PureComponent {
 				filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
 				forcePopupIcon={!value}
 				freeSolo
-				onInputChange={onInputChange}
+				onBlur={onBlur}
 				onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
+				onInputChange={onInputChange}
 				open={suggestions.length > 0}
 				options={suggestions}
 				popupIcon={<SearchRounded fontSize={'large'}/>}

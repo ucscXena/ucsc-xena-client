@@ -6,19 +6,19 @@
  */
 
 // Core dependencies, components
-import {Box, Divider, makeStyles} from '@material-ui/core';
+import {Box, Divider} from '@material-ui/core';
 import React from 'react';
 import {xenaColor} from '../xenaColor';
 
-const useStyles = makeStyles(() => ({
-	root: () => ({
+// Styles
+var sxDivider = {
+	'&&': {
 		backgroundColor: xenaColor.GRAY_DARK,
-	}),
-}));
+	}
+};
 
-export default function XColumnDivider({...props}) {
-	const classes = useStyles();
+export default function XColumnDivider({className, ...props}) {
 	return (
-		<Box component={Divider} classes={{root: classes.root}} {...props}/>
+		<Box component={Divider} className={className} sx={sxDivider} {...props}/>
 	);
 };

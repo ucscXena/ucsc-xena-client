@@ -97,9 +97,8 @@ class WizardCard extends React.Component {
 	}
 
 	componentDidUpdate() {
-		// TODO with https://github.com/ucscXena/ucsc-xena-client/issues/618
-		if (this.props.valid && this.doneButtonRef) {
-			// this.doneButtonRef.current.focus();
+		if (!this.props.pending && this.props.valid && this.doneButtonRef) {
+			this.doneButtonRef.current.focus();
 		}
 	}
 
