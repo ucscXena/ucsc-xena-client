@@ -5,12 +5,16 @@ import PureComponent from '../PureComponent';
 var _ = require('../underscore_ext').default;
 import XAutosuggestInput from './XAutosuggestInput';
 
+var COHORT_UNASSIGNED = '(unassigned)';
+
 var renderInputComponent = ({...props}) => (
 	<XAutosuggestInput {...props} />);
 
 var getSuggestions = (value, cohorts) => {
 	const wordValues = value.toLowerCase().trim().split(/\s+/);
-	return cohorts.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
+	return cohorts
+		.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1))
+		.sort((a, b) => a === COHORT_UNASSIGNED ? 1 : b === COHORT_UNASSIGNED ? -1 : a < b ? -1 : 1);
 };
 
 export class CohortSuggest extends PureComponent {
