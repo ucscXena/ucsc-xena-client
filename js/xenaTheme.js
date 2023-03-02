@@ -1,5 +1,6 @@
 import {createTheme} from '@material-ui/core';
 import {xenaColor} from './xenaColor';
+import XAutocompletePopper from './views/XAutocompletePopper';
 
 const theme = createTheme({
 	palette: {
@@ -127,7 +128,7 @@ export const xenaTheme = createTheme(theme, {
 				},
 			},
 			listbox: {
-				maxHeight: 456, /* Displays max of 9.5 results, where each result is 48px tall */
+				maxHeight: 264, /* Displays max of 5.5 results, where each result is 48px tall */
 				padding: 0,
 			},
 			option: {
@@ -686,6 +687,7 @@ export const xenaTheme = createTheme(theme, {
 			blurOnSelect: true,
 			fullWidth: true,
 			openOnFocus: true,
+			PopperComponent: XAutocompletePopper,
 		},
 		MuiButton: {
 			color: 'secondary',
