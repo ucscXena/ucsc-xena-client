@@ -417,6 +417,13 @@ export const xenaTheme = createTheme(theme, {
 			},
 		},
 		MuiIconButton: {
+			colorInherit: {
+				'&.Mui-disabled': {
+					color: 'inherit',
+					opacity: 0.54,
+					userSelect: 'none',
+				},
+			},
 			edgeEnd: {
 				marginRight: -6,
 			},

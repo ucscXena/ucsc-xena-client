@@ -1,9 +1,7 @@
 
 import PureComponent from '../PureComponent';
 var React = require('react');
-var Rx = require('../rx').default;
 var Welcome = require('../views/Welcome');
-var {rxEvents} = require('../react-utils');
 
 var links = [
 	['heatmap', 'bc7f3f46b042bcf5c099439c2816ff01',
@@ -26,47 +24,20 @@ var links = [
 	['heatmap', 'dfc37064d62ea0c0302881c05277b7b3',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma']];
 
-var refresh = 5000; // ms between link switch
-
 class WelcomeContainer extends PureComponent {
 	state = {link: 0};
 
-	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
-		var events = rxEvents(this, 'arrowover', 'mouseover', 'mouseout');
-		var {arrowover, mouseover, mouseout} = events;
-
-		// Emit events on an interval, pausing if the user mouses-over
-		// the target link. The timer restarts on mouse-out, so it won't
-		// change immediately.
-		this.sub = Rx.Observable.of(true).merge(mouseout).flatMap(
-			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(arrowover)).map(() => undefined)
-		).subscribe(() =>
-			this.setState({link: (this.state.link + 1) % links.length}));
-	}
-
-	componentWillUnmount() {
-		this.sub.unsubscribe();
-	}
-
 	// User interaction with the arrow buttons sets the active link state to the previous or next link.
 	onChangeLink = (increment) => {
-		let newIndex = this.state.link + increment; /* Increment active link index. */
-		const lastLinkIndex = links.length - 1;
-		if (newIndex < 0) {
-			newIndex = lastLinkIndex; /* If the new index is negative, the last link becomes active. */
-		} else if (newIndex > lastLinkIndex) {
-			newIndex = 0; /* If the new index is greater than the number of possible links, the first link becomes active. */
-		}
-		this.setState({link: newIndex});
+		this.setState({link: this.state.link + increment});
 	}
 
 	render() {
 		var {link: i} = this.state;
 		return (
 			<Welcome
-				arrowProps={{onMouseOver: this.on.arrowover, onMouseOut: this.on.mouseout}}
-				linkProps={{onMouseOver: this.on.mouseover, onMouseOut: this.on.mouseout}}
-				links={links.slice(i).concat(links.slice(0, i))}
+				activeLink={i}
+				links={links}
 				onChangeLink={this.onChangeLink}
 				{...this.props} />);
 	}
