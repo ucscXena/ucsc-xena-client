@@ -421,7 +421,6 @@ export const xenaTheme = createTheme(theme, {
 				'&.Mui-disabled': {
 					color: 'inherit',
 					opacity: 0.54,
-					userSelect: 'none',
 				},
 			},
 			edgeEnd: {
