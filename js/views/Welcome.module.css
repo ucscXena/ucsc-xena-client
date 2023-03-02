@@ -43,9 +43,14 @@
 	display: flex;
 	gap: 8px;
 	height: 56px;
+	max-width: 264px;
 	min-width: 264px;
 	padding: 8px 12px;
 	width: 100%;
+}
+
+.welcomeExample.hidden {
+	display: none;
 }
 
 .welcomeExampleText {
