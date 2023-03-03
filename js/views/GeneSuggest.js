@@ -116,9 +116,11 @@ class GeneSuggest extends PureComponent {
 	// Updates state with the current word matching the cursor position of the input value.
 	// Setting pending to true will prevent setting the focus on the
 	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
-	onSelect = () => {
-		var currentSuggestion = this.getSuggestion(this.props.value);
-		this.on.change(currentSuggestion);
+	onSelect = (ev) => {
+		if (ev.nativeEvent.type === 'mouseup') {
+			var currentSuggestion = this.getSuggestion(this.props.value);
+			this.on.change(currentSuggestion);
+		}
 	};
 
 	render() {
