@@ -118,15 +118,18 @@ export default function XAutocompleteSuggest({
 		onChange(selectedValues);
 	};
 
+	// Setting pending to false facilitates setting the focus on
+	// the WizardCard component 'Done' button - should all card selected values be valid.
+	const onBlur = () => {
+		onPending(false);
+	};
+
 	// Callback fired when the popup requests to be closed.
 	// Clears input value on blur or escape key.
-	// Suggest form is 'inactive' and panel is closed. Setting pending to false facilitates setting the focus on
-	// the WizardCard component 'Done' button - should the selected values be valid.
 	const onClose = (ev, reason) => {
 		if (reason === 'blur' || reason === 'escape') {
 			setInputValue('');
 		}
-		onPending(false);
 	};
 
 	// Callback fired when the selected value is to be removed (i.e. selected value delete 'x' button is clicked).
@@ -135,18 +138,17 @@ export default function XAutocompleteSuggest({
 		onSelect(ev, newValues, 'remove-option');
 	}, [values]);
 
+	// Setting pending to true will prevent setting the focus on the
+	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
+	const onFocus = () => {
+		onPending(true);
+	};
+
 	// Callback fired when the input value changes.
 	const onInputChange = (ev, value, reason) => {
 		if (reason !== 'reset') {
 			setInputValue(value);
 		}
-	};
-
-	// Callback fired when the popup requests to be opened.
-	// Suggest form is 'active' and panel is open. Setting pending to true will prevent setting the focus on the
-	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
-	const onOpen = () => {
-		onPending(true);
 	};
 
 	// Returns the paper component to render the body of the popup.
@@ -194,11 +196,10 @@ export default function XAutocompleteSuggest({
 					onChange={onSelect}
 					onClose={onClose}
 					onInputChange={onInputChange}
-					onOpen={onOpen}
 					options={options}
 					PaperComponent={AutocompletePaper}
 					popupIcon={<SearchRounded fontSize={'large'}/>}
-					renderInput={(props) => <XAutosuggestInput {...{...suggestProps, ...props}}/>}
+					renderInput={(props) => <XAutosuggestInput {...{...suggestProps, ...props, onBlur: onBlur, onFocus: onFocus}}/>}
 					renderOption={renderOption}
 					renderTags={() => null}
 					value={values}
