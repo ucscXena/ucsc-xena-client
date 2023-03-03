@@ -22,6 +22,11 @@
 	opacity: 1;
 }
 
+/* Disable column interaction */
+.disableInteraction {
+	pointer-events: none;
+}
+
 /* Container around column label (A, B, C etc) and controls */
 .headerContainer {
 	padding: 16px;
