@@ -95,6 +95,12 @@ class GeneSuggest extends PureComponent {
 		this.props.onPending(false);
 	}
 
+	// Setting pending to true will prevent setting the focus on the
+	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
+	onFocus = () => {
+		this.props.onPending(true);
+	};
+
 	// Callback fired when the input value changes.
 	onInputChange = (ev, value, reason) => {
 		var currentSuggestion = this.getSuggestion(value) || '';
@@ -106,18 +112,17 @@ class GeneSuggest extends PureComponent {
 		this.props.onChange(newGeneSuggestion);
 	};
 
-	// Callback fired when the popup requests to be opened.
+	// Callback fired when input text is selected.
 	// Updates state with the current word matching the cursor position of the input value.
 	// Setting pending to true will prevent setting the focus on the
 	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
-	onOpen = () => {
+	onSelect = () => {
 		var currentSuggestion = this.getSuggestion(this.props.value);
 		this.on.change(currentSuggestion);
-		this.props.onPending(true);
 	};
 
 	render() {
-		var {onBlur, onInputChange, onOpen} = this,
+		var {onBlur, onFocus, onInputChange, onSelect} = this,
 			{suggestProps, value = ''} = this.props,
 			{suggestions} = this.state;
 
@@ -131,7 +136,6 @@ class GeneSuggest extends PureComponent {
 				filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
 				forcePopupIcon={!value}
 				freeSolo
-				onBlur={onBlur}
 				onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
 				onInputChange={onInputChange}
 				open={suggestions.length > 0}
@@ -139,7 +143,9 @@ class GeneSuggest extends PureComponent {
 				popupIcon={<SearchRounded fontSize={'large'}/>}
 				renderInput={(props) => renderInputComponent({
 					...suggestProps, ...props,
-					onClick: onOpen,
+					onBlur: onBlur,
+					onFocus: onFocus,
+					onSelect: onSelect,
 					ref: this.setInputRef,
 					inputProps: {...props.inputProps, value}
 				})}
