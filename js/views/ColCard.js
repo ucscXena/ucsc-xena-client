@@ -45,7 +45,7 @@ class ColCard extends React.Component {
 		var {children, sortable, controls, colId, colMode, interactive, onClick, subtitle,
 			title, geneZoomText, wizardMode, zoomCard} = this.props;
 		return (
-			<Card className={classNames('Column', {[compStyles.zoomCard]: zoomCard})} elevation={2}>
+			<Card className={classNames('Column', {[compStyles.disableInteraction]: !interactive}, {[compStyles.zoomCard]: zoomCard})} elevation={2}>
 				<Box
 					component={CardHeader}
 					action={controls}

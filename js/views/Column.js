@@ -804,7 +804,7 @@ export default class Column extends PureComponent {
 			chartDisabled = disableChart(column),
 			canDoGeneSetComparison = this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
-			refreshIcon = (<Box component={IconButton} edge='end' onClick={onReset} sx={{color: xenaColor.GRAY_DARKEST}}><Icon>close</Icon></Box>),
+			refreshIcon = (<Box component={IconButton} edge='end' onClick={onReset} sx={{color: xenaColor.GRAY_DARKEST, pointerEvents: "auto"}}><Icon>close</Icon></Box>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
@@ -849,7 +849,7 @@ export default class Column extends PureComponent {
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
 								 positionHeight={column.position ? positionHeight : 0} {...dragZoom}>
 						<ColCard colId={label}
-								 interactive={interactive}
+								 interactive={status !== 'loading' && interactive}
 								sortable={!first}
 								title={<DefaultTextInput
 									disabled={!interactive}
