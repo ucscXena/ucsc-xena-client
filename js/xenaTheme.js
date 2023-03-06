@@ -549,6 +549,9 @@ export const xenaTheme = createTheme(theme, {
 					borderColor: 'inherit !important',
 					borderWidth: '1px !important',
 				},
+				'& + .MuiFormHelperText-root': {
+					whiteSpace: 'normal',
+				},
 			},
 			notchedOutline: {
 				borderColor: xenaColor.GRAY_DARKEST,
