@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
-import {Box} from '@material-ui/core';
+import {Box, Paper as MPaper} from '@material-ui/core';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from './XAutosuggestInput';
@@ -15,6 +15,9 @@ var sxAutocomplete = {
 	'& .MuiAutocomplete-clearIndicator': {
 		visibility: 'visible'
 	}
+};
+var sxWarning = {
+	padding: '14px 16px',
 };
 
 // Return the start and end indices of the word in 'value'
@@ -32,6 +35,15 @@ function currentWord(value, position) {
 	var [i, j] = currentWordPosition(value, position);
 	return value.slice(i, j);
 }
+
+var Paper = ({children, warning, ...props}) => {
+	return (
+		<MPaper {...props}>
+			{warning && <Box color='error.main' sx={sxWarning}>{warning}</Box>}
+			{children}
+		</MPaper>
+	);
+};
 
 var renderInputComponent = ({ref, error, ...props}) => (
 	<XAutosuggestInput
@@ -57,7 +69,7 @@ var fetchSuggestions = (assembly, dataset, value) =>
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
 class GeneSuggest extends PureComponent {
-	state = {suggestions: []};
+	state = {open: false, suggestions: []};
 
 	setInputRef = ref => {
 		this.inputRef = ref;
@@ -92,12 +104,14 @@ class GeneSuggest extends PureComponent {
 	// Setting pending to false facilitates setting the focus on
 	// the WizardCard component 'Done' button - should all card selected values be valid.
 	onBlur = () => {
+		this.setState({open: false});
 		this.props.onPending(false);
 	}
 
 	// Setting pending to true will prevent setting the focus on the
 	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
 	onFocus = () => {
+		this.setState({open: true});
 		this.props.onPending(true);
 	};
 
@@ -126,7 +140,7 @@ class GeneSuggest extends PureComponent {
 	render() {
 		var {onBlur, onFocus, onInputChange, onSelect} = this,
 			{suggestProps, value = ''} = this.props,
-			{suggestions} = this.state;
+			{open, suggestions} = this.state;
 
 		return (
 			<Box
@@ -140,8 +154,9 @@ class GeneSuggest extends PureComponent {
 				freeSolo
 				onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
 				onInputChange={onInputChange}
-				open={suggestions.length > 0}
+				open={open && (suggestions.length > 0 || _.isString(suggestProps.error))}
 				options={suggestions}
+				PaperComponent={(props) => Paper({warning: suggestProps.error, ...props})}
 				popupIcon={<SearchRounded fontSize={'large'}/>}
 				renderInput={(props) => renderInputComponent({
 					...suggestProps, ...props,
