@@ -249,7 +249,7 @@ var supportsDEA = (column, data) =>
 	_.reject(_.uniq(_.getIn(data, ['req', 'values', 0])),
 		x => x == null).length > 1;
 
-function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}) {
+function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff, onBlitzGSEA}) {
 	var {column, isPublic, preferredExpression, data} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
@@ -261,6 +261,9 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}
 			null,
 		preferredExpression && supportsDEA(column, data) ?
 			<TooltipMenuItem onClick={onDiff} disabled={!isPublic} tooltip='Private data not allowed'>Differential expression</TooltipMenuItem> :
+			null,
+		preferredExpression && supportsDEA(column, data) ?
+			<TooltipMenuItem onClick={onBlitzGSEA} disabled={!isPublic} tooltip='Private data not allowed'>GSEA</TooltipMenuItem> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
@@ -708,8 +711,43 @@ export default class Column extends PureComponent {
 			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
 			filteredCodes = data.codes.filter((code, i) => uniqValues.includes(i)),
 			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
-			//notebook = 'http://localhost:5000';
+			//notebook = 'http://localhost:4000';
 			notebook = 'http://analysis.xenahubs.net';
+
+		var w = window.open(notebook);
+
+		var count = 0, d = 50;
+		var i = setInterval(function() {
+			w.postMessage(payload, '*');
+			count++;
+			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
+				clearInterval(i);
+				i = null;
+			}
+
+		}, d);
+		window.addEventListener("message", () => {
+			//	  if (event.origin !== "http://localhost:5000")
+			//		return;
+			if (i != null) {
+				clearInterval(i);
+				i = null;
+			}
+		}, false);
+	}
+
+	onBlitzGSEA = () => {
+		this.onColumnMenuClose();
+		gaEvents('spreadsheet', 'BlitzGSEA');
+		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
+				column} = this.props,
+			data = setUserCodes(column, dataIn),
+			samples = _.times(indicies.length, sampleFormat),
+			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
+			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
+			filteredCodes = data.codes.filter((code, i) => uniqValues.includes(i)),
+			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
+			notebook = 'http://blitzGSEA.xenahubs.net';
 
 		var w = window.open(notebook);
 
@@ -795,11 +833,11 @@ export default class Column extends PureComponent {
 					onSelect: this.onDragZoomSelectS
 				},
 			{width, dataset, columnLabel, fieldLabel, user} = column,
-			{onDiff, onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			{onDiff, onBlitzGSEA, onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap,
 				onShowIntrons, onSortVisible, onCluster, onSpecialDownload,
-				onDiff, isSig}),
+				onDiff, onBlitzGSEA, isSig}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
 			canDoGeneSetComparison = this.canDoGeneSetComparison(),
