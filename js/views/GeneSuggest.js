@@ -1,8 +1,9 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
-import {Box, Paper as MPaper} from '@material-ui/core';
+import {Box} from '@material-ui/core';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import XAutocompleteFormControl from './XAutocompleteFormControl';
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
@@ -15,9 +16,6 @@ var sxAutocomplete = {
 	'& .MuiAutocomplete-clearIndicator': {
 		visibility: 'visible'
 	}
-};
-var sxWarning = {
-	padding: '14px 16px',
 };
 
 // Return the start and end indices of the word in 'value'
@@ -36,19 +34,9 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
-var Paper = ({children, warning, ...props}) => {
-	return (
-		<MPaper {...props}>
-			{warning && <Box color='error.main' sx={sxWarning}>{warning}</Box>}
-			{children}
-		</MPaper>
-	);
-};
-
 var renderInputComponent = ({ref, error, ...props}) => (
 	<XAutosuggestInput
 		error={Boolean(error)}
-		helperText={_.isString(error) ? error : null}
 		inputRef={el => ref(el)}
 		{...props} />
 );
@@ -140,33 +128,38 @@ class GeneSuggest extends PureComponent {
 	render() {
 		var {onBlur, onFocus, onInputChange, onSelect} = this,
 			{suggestProps, value = ''} = this.props,
-			{open, suggestions} = this.state;
+			{open, suggestions} = this.state,
+			{formLabel, ...autosuggestInputProps} = suggestProps;
 
 		return (
-			<Box
-				component={Autocomplete}
-				autoComplete={false}
-				blurOnSelect={false}
-				closeIcon={<CloseRounded fontSize={'large'}/>}
-				disableClearable={!value}
-				filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
-				forcePopupIcon={!value}
-				freeSolo
-				onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
-				onInputChange={onInputChange}
-				open={open && (suggestions.length > 0 || _.isString(suggestProps.error))}
-				options={suggestions}
-				PaperComponent={(props) => Paper({warning: suggestProps.error, ...props})}
-				popupIcon={<SearchRounded fontSize={'large'}/>}
-				renderInput={(props) => renderInputComponent({
-					...suggestProps, ...props,
-					onBlur: onBlur,
-					onFocus: onFocus,
-					onSelect: onSelect,
-					ref: this.setInputRef,
-					inputProps: {...props.inputProps, value}
-				})}
-				sx={sxAutocomplete}/>
+			<XAutocompleteFormControl
+				formLabel={formLabel}
+				helperText={_.isString(suggestProps.error) ? suggestProps.error : undefined}>
+				<Box
+					component={Autocomplete}
+					autoComplete={false}
+					blurOnSelect={false}
+					closeIcon={<CloseRounded fontSize={'large'}/>}
+					disableClearable={!value}
+					filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
+					forcePopupIcon={!value}
+					freeSolo
+					onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
+					onInputChange={onInputChange}
+					open={open && suggestions.length > 0}
+					options={suggestions}
+					popupIcon={<SearchRounded fontSize={'large'}/>}
+					renderInput={(props) => renderInputComponent({
+						...autosuggestInputProps,
+						...props,
+						onBlur: onBlur,
+						onFocus: onFocus,
+						onSelect: onSelect,
+						ref: this.setInputRef,
+						inputProps: {...props.inputProps, value}
+					})}
+					sx={sxAutocomplete}/>
+			</XAutocompleteFormControl>
 		);
 	}
 }
