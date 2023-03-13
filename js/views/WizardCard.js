@@ -139,7 +139,7 @@ class WizardCard extends React.Component {
 	render() {
 		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
 				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-			minHeight = Math.max(colHeight || 0, 605),
+			minHeight = Math.max(colHeight || 0, 662),
 			showOptionalExit = optionalExit && onWizardMode && valid;
 		return (
 			<>

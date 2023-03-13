@@ -17,7 +17,7 @@ const initialState = {
 		wizardMode: true,
 		zoom: {
 			count: 0,
-			height: 460, // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
+			height: 518, // 518px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
 			index: 0
 		},
 	},
