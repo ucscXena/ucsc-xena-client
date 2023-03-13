@@ -28,7 +28,7 @@ function leftWidth(rect, width) {
 }
 
 function hasClass(el, c) {
-    return el.className.split(/ +/).indexOf(c) !== -1;
+    return (el.getAttribute("class") || "").split(/ +/).indexOf(c) !== -1;
 }
 
 function repeat(n, v) {
