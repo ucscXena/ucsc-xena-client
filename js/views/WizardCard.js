@@ -36,7 +36,6 @@ var React = require('react');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
-import XActionButton from './XActionButton';
 import XColumnDivider from './XColumnDivider';
 
 // Template variables
@@ -71,6 +70,7 @@ var sxWizardCardButton = {
 		letterSpacing: '0.46px',
 		lineHeight: '26px',
 		minHeight: 48,
+		minWidth: 90,
 	}
 };
 var sxWizardCardButtonLabel = {
@@ -98,13 +98,6 @@ var sxWizardCardHeader = {
 		letterSpacing: 'normal',
 		lineHeight: '20px',
 	}
-};
-var sxWizardEarlyExit = {
-	alignSelf: 'center',
-	fontSize: 15,
-	fontWeight: 500,
-	letterSpacing: '0.46px',
-	lineHeight: '26px'
 };
 
 class WizardCard extends React.Component {
@@ -137,10 +130,9 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
+		var {children, colHeight, colId, colMode, controls, optionalExit,
 				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-			minHeight = Math.max(colHeight || 0, 662),
-			showOptionalExit = optionalExit && onWizardMode && valid;
+			minHeight = Math.max(colHeight || 0, 662);
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -171,9 +163,9 @@ class WizardCard extends React.Component {
 									</Box>
 							</Box>
 						</Box>
+						{optionalExit && <Box component={Button} disabled={!valid} sx={sxWizardCardButton} onClick={this.onDoneExitWizard} variant='outlined'>Skip</Box>}
 					</Box>
 				</Box>
-				{showOptionalExit && <XActionButton sx={sxWizardEarlyExit} onClick={this.onDoneExitWizard}>Skip Next Step</XActionButton>}
 			</>
 		);
 	}

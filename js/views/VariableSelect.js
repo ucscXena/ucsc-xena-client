@@ -493,13 +493,14 @@ class LoadingNotice extends React.Component {
 		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
 		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
-			let {colId, colMode, controls, title, width} = this.props,
+			let {colId, colMode, controls, optionalExit, title, width} = this.props,
 				wizardProps = {
 					colId,
 					colMode,
 					controls,
 					loading: true,
 					loadingCohort: true,
+					optionalExit,
 					title,
 					width
 				};
