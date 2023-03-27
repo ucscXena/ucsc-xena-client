@@ -63,7 +63,7 @@ function fetchState(serverBus) {
 
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
-		_.assoc(state, 'wizardMode', false) : state;
+		_.assoc(state, 'wizardMode', false, 'zoom', _.assoc(state.zoom, ['height'], 518)) : state;
 }
 
 // Use min app width (1280px) if viewport width is currently smaller than min

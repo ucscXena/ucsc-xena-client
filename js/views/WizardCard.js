@@ -132,7 +132,7 @@ class WizardCard extends React.Component {
 	render() {
 		var {children, colHeight, colId, colMode, controls, optionalExit,
 				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-			minHeight = Math.max(colHeight || 0, 662);
+			minHeight = colHeight || 728;
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -163,7 +163,7 @@ class WizardCard extends React.Component {
 									</Box>
 							</Box>
 						</Box>
-						{optionalExit && <Box component={Button} disabled={!valid} sx={sxWizardCardButton} onClick={this.onDoneExitWizard} variant='outlined'>Skip</Box>}
+						{optionalExit && <Box component={Button} disabled={!valid} onClick={this.onDoneExitWizard} sx={sxWizardCardButton} variant='outlined'>Skip</Box>}
 					</Box>
 				</Box>
 			</>

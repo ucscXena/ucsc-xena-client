@@ -6,7 +6,6 @@ var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
-var {initialState} = require('../initialState');
 var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
 var {servers: allServers, publicServers} = require('../defaultServers');
@@ -153,7 +152,7 @@ var setCohortRelatedFields = (state, cohort) =>
 		'survival', null,
 		'map', undefined,
 		'km', _.assoc(state.km, ['id'], null),
-		'zoom', initialState.spreadsheet.zoom);
+		'zoom', _.assoc(state.zoom, ['height'], 584));
 
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after
