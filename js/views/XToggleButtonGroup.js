@@ -11,7 +11,7 @@ import React, {useState} from 'react';
 
 // Returns the selected toggle button.
 var getSelectedToggleButtonAction = (toggleButtons, toggleValue) =>
-	toggleButtons.find(({value}) => value === toggleValue).onToggle;
+	toggleButtons.find(({value}) => value === toggleValue)?.onToggle;
 
 // Initializes the toggle button group with the selected toggle button value.
 var initToggleButtonValue = (toggleButtons) => toggleButtons.find(({selected}) => selected).value;

@@ -14,7 +14,6 @@
 .wizardMode {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
 }
 
 /* Scoot column to the left of "add column" component, to the left by 8px */

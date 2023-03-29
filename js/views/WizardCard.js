@@ -36,7 +36,6 @@ var React = require('react');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
-import XActionButton from './XActionButton';
 import XColumnDivider from './XColumnDivider';
 
 // Template variables
@@ -45,6 +44,7 @@ var WIZARD_BUTTON_TEXT = {
 	B: 'To Second Variable',
 	C: 'Done'
 };
+var WIZARD_CARD_MAX_HEIGHT = 728;
 
 // Styles
 var sxCircularProgress = {
@@ -71,6 +71,7 @@ var sxWizardCardButton = {
 		letterSpacing: '0.46px',
 		lineHeight: '26px',
 		minHeight: 48,
+		minWidth: 90,
 	}
 };
 var sxWizardCardButtonLabel = {
@@ -98,13 +99,6 @@ var sxWizardCardHeader = {
 		letterSpacing: 'normal',
 		lineHeight: '20px',
 	}
-};
-var sxWizardEarlyExit = {
-	alignSelf: 'center',
-	fontSize: 15,
-	fontWeight: 500,
-	letterSpacing: '0.46px',
-	lineHeight: '26px'
 };
 
 class WizardCard extends React.Component {
@@ -137,10 +131,9 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colHeight, colId, colMode, controls, onWizardMode, optionalExit,
+		var {children, colHeight, colId, colMode, controls, optionalExit,
 				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-			minHeight = Math.max(colHeight || 0, 662),
-			showOptionalExit = optionalExit && onWizardMode && valid;
+			minHeight = colHeight || WIZARD_CARD_MAX_HEIGHT;
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -161,7 +154,7 @@ class WizardCard extends React.Component {
 						{children}
 					</Box>
 					<XColumnDivider/>
-					<Box component={CardActions} sx={sxWizardCardActions}>
+					<Box id={'wizardActions'} component={CardActions} sx={sxWizardCardActions}>
 						<Box onClick={this.onDoneInvalid} flex={1}>
 							<Box component={Button} ref={this.doneButtonRef} color='secondary' disabled={!valid} disableElevation fullWidth
 								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>
@@ -171,12 +164,15 @@ class WizardCard extends React.Component {
 									</Box>
 							</Box>
 						</Box>
+						{optionalExit && <Box component={Button} disabled={!valid} onClick={this.onDoneExitWizard} sx={sxWizardCardButton} variant='outlined'>Skip</Box>}
 					</Box>
 				</Box>
-				{showOptionalExit && <XActionButton sx={sxWizardEarlyExit} onClick={this.onDoneExitWizard}>Skip Next Step</XActionButton>}
 			</>
 		);
 	}
 }
 
-module.exports = WizardCard;
+module.exports = {
+	WizardCard,
+	WIZARD_CARD_MAX_HEIGHT
+};

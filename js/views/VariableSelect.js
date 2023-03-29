@@ -4,8 +4,8 @@ import {Box} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 import XAutocompleteSuggest from './XAutocompleteSuggest';
 var XRadioGroup = require('./XRadioGroup');
-var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
+var {WizardCard} = require('./WizardCard');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
@@ -493,13 +493,14 @@ class LoadingNotice extends React.Component {
 		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
 		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
-			let {colId, colMode, controls, title, width} = this.props,
+			let {colId, colMode, controls, optionalExit, title, width} = this.props,
 				wizardProps = {
 					colId,
 					colMode,
 					controls,
 					loading: true,
 					loadingCohort: true,
+					optionalExit,
 					title,
 					width
 				};

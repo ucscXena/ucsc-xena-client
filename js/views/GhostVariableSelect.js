@@ -17,13 +17,14 @@ var React = require('react');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+var {WIZARD_CARD_MAX_HEIGHT} = require('./WizardCard');
 import {xenaColor} from '../xenaColor';
 
 // Styles
 var sxGhostCard = {
 	border: `1px dashed ${xenaColor.GRAY_DARK}`,
 	borderRadius: 6,
-	minHeight: 662, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
+	minHeight: WIZARD_CARD_MAX_HEIGHT, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
 };
 var sxGhostHeader = {
 	alignItems: 'center',
