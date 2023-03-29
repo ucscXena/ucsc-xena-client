@@ -17,6 +17,10 @@ import XFormControl from './XFormControl';
 import {xenaColor} from '../xenaColor';
 import XToggleButtonGroup from './XToggleButtonGroup';
 
+// Template variables
+var ADVANCED_HEIGHT = 74; // 74px autocomplete advanced actions (73px autocomplete actions, 1px hr).
+var LISTBOX_MARGIN = 16;  // 16px listbox margin.
+
 // Styles
 var sxFormControl = {
 	'& .MuiAutocomplete-clearIndicator': {
@@ -110,7 +114,7 @@ export default function XAutocompleteSuggest({
 	const options = getOptions(suggestions, hideBadge);
 	const isGroupBy = options.every(option => option.group);
 	const values = selectedValues.map(selectedValue => options.find(option => option.value === selectedValue));
-	const listBoxHeight = availableCardHeight - 16 - (autocompleteActions ? 74 : 0); // 16px listbox margin, 74px optional for autocomplete actions (1px border, 73px autocomplete actions).
+	const listBoxHeight = availableCardHeight - LISTBOX_MARGIN - (autocompleteActions ? ADVANCED_HEIGHT : 0);
 
 	// Autocomplete onChange (on selection of option).
 	const onSelect = ({key, type}, value, reason) => {
