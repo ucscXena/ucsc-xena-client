@@ -6,6 +6,7 @@ var {userServers, setCohort, fetchSamples, fetchMap,
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 var {remapFields} = require('../models/searchSamples');
+var {initialState} = require('../initialState');
 var {fetchInlineState} = require('../inlineState');
 import {make, mount, compose} from './utils';
 var {JSONToqueryString} = require('../dom_helper');
@@ -63,7 +64,7 @@ function fetchState(serverBus) {
 
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
-		_.assoc(state, 'wizardMode', false, 'zoom', _.assoc(state.zoom, ['height'], 518)) : state;
+		_.assoc(state, 'wizardMode', false, 'zoom', _.assoc(state.zoom, ['height'], initialState.spreadsheet.zoom.height)) : state;
 }
 
 // Use min app width (1280px) if viewport width is currently smaller than min

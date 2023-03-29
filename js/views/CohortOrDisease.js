@@ -3,7 +3,7 @@ import {Box} from '@material-ui/core';
 import {CohortSuggest} from './CohortSuggest';
 var DiseaseSuggest = require('./DiseaseSuggest2');
 var XRadioGroup = require('./XRadioGroup');
-var WizardCard = require('./WizardCard');
+var {WizardCard} = require('./WizardCard');
 
 class CohortOrDisease extends React.Component {
 	state = {mode: 'cohort', cohort: null, matchedCohorts: []};

@@ -44,6 +44,7 @@ var WIZARD_BUTTON_TEXT = {
 	B: 'To Second Variable',
 	C: 'Done'
 };
+var WIZARD_CARD_MAX_HEIGHT = 728;
 
 // Styles
 var sxCircularProgress = {
@@ -132,7 +133,7 @@ class WizardCard extends React.Component {
 	render() {
 		var {children, colHeight, colId, colMode, controls, optionalExit,
 				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
-			minHeight = colHeight || 728;
+			minHeight = colHeight || WIZARD_CARD_MAX_HEIGHT;
 		return (
 			<>
 				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
@@ -153,7 +154,7 @@ class WizardCard extends React.Component {
 						{children}
 					</Box>
 					<XColumnDivider/>
-					<Box component={CardActions} sx={sxWizardCardActions}>
+					<Box id={'wizardActions'} component={CardActions} sx={sxWizardCardActions}>
 						<Box onClick={this.onDoneInvalid} flex={1}>
 							<Box component={Button} ref={this.doneButtonRef} color='secondary' disabled={!valid} disableElevation fullWidth
 								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>
@@ -171,4 +172,7 @@ class WizardCard extends React.Component {
 	}
 }
 
-module.exports = WizardCard;
+module.exports = {
+	WizardCard,
+	WIZARD_CARD_MAX_HEIGHT
+};
