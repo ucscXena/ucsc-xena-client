@@ -34,6 +34,7 @@ var getDataSubType = ({datasetMetadata}, datasets) =>
 
 var modeOptions = {
 	'': () => null,
+	dataset: () => null,
 	donor: () => null,
 	type: state => div('Select a cell type / cluster',
 		select(...clusterTypes(state))),
