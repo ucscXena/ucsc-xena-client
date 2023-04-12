@@ -158,7 +158,7 @@ var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	layout: (state, layout) => assoc(state, 'layout', layout),
-	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset)),
+	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', undefined)),
 	gene: (state, gene) => assoc(state, 'gene', gene),
 	'gene-post!': (serverBus, state, newState) => {
 		// XXX Should we assume this is a probe dataset, vs. a gene
