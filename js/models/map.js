@@ -1,16 +1,41 @@
-var _ = require('../underscore_ext').default;
-export function maps(cohort, cohortDatasets) {
-	if (!cohort || !cohortDatasets) {
-		return [];
-	}
-	var datasets = _.get(cohortDatasets, cohort.name);
-	var maps = [].concat(..._.values(datasets)).filter(d => _.has(d, 'map'))
+var {find, findValue, get, getIn, Let, has, pairs, values} = require('../underscore_ext').default;
+var cohortMaps = cohortDatasets => cohort =>  {
+	var datasets = get(cohortDatasets, cohort.cohort);
+	var maps = [].concat(...values(datasets)).filter(d => has(d, 'map'))
 		.map(ds => ds.map.map(m => [ds.dsID, m])).flat();
 	return maps;
+};
+
+export function maps(cohorts, cohortDatasets) {
+	if (!cohorts.length || !cohortDatasets) {
+		return [];
+	}
+	return cohorts.map(cohortMaps(cohortDatasets)).flat();
 }
 
+// XXX deprecate this call?
 export function defaultMap(cohort, cohortDatasets, {map, view}) {
 	var all = maps(cohort, cohortDatasets),
-		selected = map && _.find(all, m => m[0] === map[0]);
+		selected = map && find(all, m => m[0] === map[0]);
 	return selected ? {map, view} : {map: all[0], view: undefined};
 }
+
+export var hasDataset = state => getIn(state, ['dataset', 0]);
+export var datasetCohort = state =>
+	Let((dsID = hasDataset(state)) =>
+		values(state.cohortDatasets)
+		.map(server => values(server).flat()).flat().find(ds => ds.dsID === dsID)).cohort;
+
+var hasField = field => (state, cohort) =>
+	findValue(pairs(getIn(state, ['donorFields', cohort])),
+		([host, fields]) => findValue(fields,
+			f => f.field === field && [host, f.name]));
+
+export var hasDonor = hasField('_DONOR');
+export var hasDatasource = hasField('_DATASOURCE');
+
+export var hasGene = (state, cohort) =>
+	get(
+		findValue(getIn(state, ['defaultStudy', 'studyList']),
+			study => find(study.cohortList, c => c.cohort === cohort)),
+		'preferredDataset');

@@ -5,7 +5,10 @@ import Hub from '../hubPage';
 import Datapages from '../Datapages';
 import Transcripts from '../transcript_views/TranscriptPage';
 import ImportPage from '../import/ImportPage';
+import SingleCell from '../SingleCell';
+import PureComponent from '../PureComponent';
 import {xenaTheme} from '../xenaTheme';
+var {isEqual} = require('../underscore_ext').default;
 
 import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
@@ -17,13 +20,40 @@ const pages = {
 	'heatmap': Application,
 	'datapages': Datapages,
 	'transcripts': Transcripts,
-	'import': ImportPage
+	'import': ImportPage,
+	'singlecell': SingleCell
 };
+
+
+var ErrorMsg = ({error}) => (
+	<div style={{backgroundColor: 'red'}}>
+		<h1>Something went wrong</h1>
+		{error.toString()}<br/>
+		<pre style={{fontSize: '80%', lineHeight: '100%'}}>{error.stack}</pre>
+	</div>);
+
 const notFound = () => <p>Oops... can't find this page</p>;
-const PageContainer = (props) => {
-	let { page } = props.state;
-	let Page = pages[page] || notFound;
-	return <MuiThemeProvider theme={xenaTheme}><CssBaseline/><Page {...props}/></MuiThemeProvider>;
+export class PageContainer extends PureComponent {
+	state = {error: null}
+	componentDidUpdate(oldProps, oldState) {
+		if (oldState.error && !isEqual(oldProps.state, this.props.state)) {
+			// If app state has changed, try rendering.
+			this.setState({error: null});
+		}
+	}
+	render() {
+		var {props} = this,
+			{page} = props.state,
+			{error} = this.state,
+			Page = pages[page] || notFound;
+
+		return error ? ErrorMsg({error}) :
+			<MuiThemeProvider theme={xenaTheme}><CssBaseline/><Page {...props}/></MuiThemeProvider>;
+	}
 };
+
+if (process.env.NODE_ENV !== 'production') {
+	PageContainer.getDerivedStateFromError = error => ({error});
+}
 
 export default hotOrNot(PageContainer);

@@ -1,16 +1,12 @@
-var React = require('react');
-import {Box, Button, Dialog, DialogContent, Icon, IconButton} from '@material-ui/core';
+import {/*Button, */Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {div, el, label, option, p, select, textNode}
-	from '../chart/react-hyper.js';
+import {div, el, img} from '../chart/react-hyper.js';
 var _ = require('../underscore_ext').default;
-import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
-import widgets from '../columnWidgets';
-import {item} from './Legend.module.css';
-import {xenaColor} from '../xenaColor';
+//import widgets from '../columnWidgets';
+//import {item} from './Legend.module.css';
 import {ScatterplotLayer, PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
@@ -26,6 +22,9 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 // XXX Try to ditch this, in favor of the singlecell scales that
 // provide rgb.
 var toRGB = require('../color_helper').default.rgb;
+
+var iconButton = el(IconButton);
+var icon = el(Icon);
 
 function getVivId(id) { // XXX copied from viv
   return `-#${id}#`;
@@ -44,23 +43,9 @@ const darkTheme = createMuiTheme({
   }
 });
 
-var box = el(Box);
-var button = el(Button);
-var dialog = el(Dialog);
-var dialogContent = el(DialogContent);
-var icon = el(Icon);
+//var button = el(Button);
 
 // Styles
-var sxCloseButton = {
-	alignSelf: 'flex-start',
-	color: xenaColor.BLACK_38,
-	position: 'absolute',
-	right: 8,
-	top: 8,
-	'&:hover': {
-		backgroundColor: xenaColor.BLACK_6,
-	},
-};
 
 // https://gamedev.stackexchange.com/questions/53601/why-is-90-horz-60-vert-the-default-fps-field-of-view
 //var perspective = 60;
@@ -217,13 +202,8 @@ class MapDrawing extends PureComponent {
 }
 var mapDrawing = el(MapDrawing);
 
-function ThemedAvivator(props) {
-	return (
-      <ThemeProvider theme={darkTheme}>
-        <Avivator {...props} />
-      </ThemeProvider>);
-}
-var avivator = el(ThemedAvivator);
+var avivator = props => el(ThemeProvider)({theme: darkTheme}, el(Avivator)(props));
+
 
 class VivDrawing extends PureComponent {
 	state = {};
@@ -255,114 +235,68 @@ class VivDrawing extends PureComponent {
 
 var vivDrawing = el(VivDrawing);
 
-var colorOptions = state =>
-	[{value: 'none', label: 'None'}].concat(suitableColumns(state, false));
-
-var getOpt = opt => option({key: opt.value, ...opt});
-
-function colorSelector(state, onChange) {
-	var storedColumn = _.getIn(state, ['map', 'colorColumn']),
-		axisOpts = colorOptions(state),
-		value = storedColumn || 'none',
-		sel;
-
-	sel = select({className: 'form-control', value, onChange},
-		...axisOpts.map(getOpt));
-
-	return (
-		div({className: styles.column},
-			label(textNode('Color')), div(sel)));
-}
-
-function mapSelector(availableMaps, value, onChange) {
-	var opts = availableMaps.map(([, params], i) => ({value: i,
-			label: params.label})),
-		sel = select({className: 'form-control', value, onChange},
-			...opts.map(getOpt));
-
-	return (
-		div({className: styles.mapSelector},
-			label(textNode('Map')), div(sel)));
-}
-
-function firstMatch(el, selector) {
-	return el.matches(selector) ? el :
-		el.parentElement ? firstMatch(el.parentElement, selector) :
-		null;
-}
-
 function getColorColumn(state) {
+	return null;
 	var colorId = _.getIn(state, ['map', 'colorColumn']);
 	return state.columns[colorId] ? colorId : null;
 }
 
-var nbsp = '\u00A0';
-class SideBar extends PureComponent {
-	onColor = ev => {
-		this.props.onColor(ev.currentTarget.value);
-	}
-	onMap = ev => {
-		this.props.onMap(this.props.maps[ev.currentTarget.value]);
-	}
-	onClick = ev => {
-		var i = _.getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
-		if (i != null) {
-			this.props.onCode(parseInt(i, 10));
-		}
-	}
-	render() {
-		var {tooltip, maps, mapValue, state} = this.props,
-			id = getColorColumn(state),
-			column = state.columns[id],
-			data = _.getIn(state, ['data', id]);
+//var nbsp = '\u00A0';
+//class SideBar extends PureComponent {
+//	onColor = ev => {
+//		this.props.onColor(ev.currentTarget.value);
+//	}
+//	onClick = ev => {
+//		var i = _.getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
+//		if (i != null) {
+//			this.props.onCode(parseInt(i, 10));
+//		}
+//	}
+//	render() {
+//		var {tooltip, state} = this.props,
+//			id = getColorColumn(state),
+//			column = null, //state.columns[id],
+//			data = _.getIn(state, ['data', id]);
+//
+//		return div({className: styles.sideBar, onClick: this.onClick},
+//			colorSelector(state, this.onColor),
+//			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
+//			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
+//			column ? p({className: styles.actions},
+//				button({color: 'default', disableElevation: true, onClick: this.props.onHideAll, variant: 'contained'}, 'Hide all'),
+//				button({color: 'default', disableElevation: true, onClick: this.props.onShowAll, variant: 'contained'}, 'Show all')) : null,
+//			column ? div({className: styles.legend},
+//				widgets.legend({column, data, clickable: true})) : null);
+//	}
+//}
+//var sideBar = el(SideBar);
 
-		return div({className: styles.sideBar, onClick: this.onClick},
-			mapSelector(maps, mapValue, this.onMap),
-			colorSelector(state, this.onColor),
-			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
-			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
-			column ? p({className: styles.actions},
-				button({color: 'default', disableElevation: true, onClick: this.props.onHideAll, variant: 'contained'}, 'Hide all'),
-				button({color: 'default', disableElevation: true, onClick: this.props.onShowAll, variant: 'contained'}, 'Show all')) : null,
-			column ? div({className: styles.legend},
-				widgets.legend({column, data, clickable: true})) : null);
-	}
-}
-var sideBar = el(SideBar);
+//var gray = '#F0F0F0';
+//function setHidden(state) {
+//	var mapState = _.get(state, 'map'),
+//		colorId = getColorColumn(state),
+//		hideColors = _.getIn(mapState, ['hidden', colorId], []),
+//		// first element of a color spec is the type. Get the type of the first
+//		// color scale.
+//		scaleType = _.getIn(state, ['columns', colorId, 'colors', 0, 0]);
+//
+//	return colorId && scaleType === 'ordinal' ?
+//		// third element of an ordinal scale is the custom color setting
+//		_.updateIn(state, ['columns', colorId, 'colors', 0, 2],
+//			c => _.merge(c, _.object(hideColors, hideColors.map(_.constant(gray))))) :
+//		state;
+//}
 
-var gray = '#F0F0F0';
-function setHidden(state) {
-	var mapState = _.get(state, 'map'),
-		colorId = getColorColumn(state),
-		hideColors = _.getIn(mapState, ['hidden', colorId], []),
-		// first element of a color spec is the type. Get the type of the first
-		// color scale.
-		scaleType = _.getIn(state, ['columns', colorId, 'colors', 0, 0]);
-
-	return colorId && scaleType === 'ordinal' ?
-		// third element of an ordinal scale is the custom color setting
-		_.updateIn(state, ['columns', colorId, 'colors', 0, 2],
-			c => _.merge(c, _.object(hideColors, hideColors.map(_.constant(gray))))) :
-		state;
-}
-
-function getStatusView(loading, error, onReload) {
-	if (loading) {
-		return (
-			<div className={styles.status}>
-				<img style={{textAlign: 'center'}} src={spinner}/>
-			</div>);
-	}
-	if (error) {
-		return (
-			<div className={styles.status}>
-				<IconButton onClick={onReload}
-				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'><Icon>warning</Icon></IconButton>
-			</div>);
-	}
-	return null;
-}
+var getStatusView = (loading, error, onReload) =>
+	loading ? div({className: styles.status},
+				img({style: {textAlign: 'center'}, src: spinner})) :
+	error ? div({className: styles.status},
+				iconButton({
+						onClick: onReload,
+						title: 'Error loading data. Click to reload.',
+						ariaHidden: 'true'},
+					icon('warning'))) :
+	null;
 
 var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
 
@@ -378,25 +312,8 @@ export class Map extends PureComponent {
 	state = {
 		tooltip: null
 	}
-	onMove = view => {
-		// The threejs controls will emit an event when they are changed
-		// programmatically. The emitted event can't be blocked by temporarily
-		// silencing the callback. Maybe it's async. Also, the target
-		// can't be round-tripped accurately: if you set the target to the
-		// position passed in the event, it will generate a new event with
-		// a position that is different by a few low bits. To avoid an echo
-		// in the state, then, we do a fuzzy floating point compare, and drop
-		// events that are close.
-		var thresh = 10e-7,
-			{position: pos0, target: targ0} = this.props.state.map.view || {};
-
-		if (!pos0 || !targ0 || _.any(view.position, (v, i) => Math.abs(v - pos0[i]) > thresh)
-				|| _.any(view.target, (v, i) => Math.abs(v - targ0[i]) > thresh)) {
-
-			this.props.callback(['map-view', view]);
-		}
-	}
 	onTooltip = i => {
+		return;
 		if (i === null) {
 			this.setState({tooltip: null});
 			return;
@@ -436,24 +353,20 @@ export class Map extends PureComponent {
 	onShowAll = () => {
 		this.props.callback(['map-hide-codes', []]);
 	}
-	onHide = () => {
-		this.props.callback(['map', false]);
-	}
-	onReload = () => {
-		this.props.callback(['map', true]);
-	}
+//	onReload = () => {
+//		this.props.callback(['map', true]);
+//	}
 	onRef = ref => {
 		if (ref) {
 			this.setState({container: ref});
 		}
 	}
 	render() {
-		var {onTooltip, onMove, onColor, onCode, onHideAll, onShowAll, onMap,
-				state: {tooltip}} = this;
+		var {onTooltip} = this;
 
 		var state = this.props.state,
-			mapState = _.get(state, 'map'),
-			[dsID, params] = _.get(mapState, 'map', []),
+			mapState = _.get(state, ['singlecell']),
+			[dsID, params] = _.get(mapState, 'dataset', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
 			status = params.dimension.map(d => _.getIn(mapData, [d, 'status'])),
 			loading = _.any(status, s => s === 'loading'),
@@ -461,13 +374,9 @@ export class Map extends PureComponent {
 			columns = params.dimension
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
 			colorId = getColorColumn(state),
-			colorColumn = _.getIn(state, ['data', colorId,
-				'req', 'values', 0]),
+			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
 			hideColors = _.getIn(mapState, ['hidden', colorId]),
-			colors = _.getIn(state, ['columns', colorId, 'colors', 0]),
-			availableMaps = mapState.available,
-			mapValue = _.findIndex(availableMaps,
-				_.partial(_.isEqual, _.get(mapState, 'map'))),
+			colors = _.getIn(mapState, ['colorBy', 'scale']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
 			radius = params.spot_diameter && params.spot_diameter / 2,
@@ -477,13 +386,9 @@ export class Map extends PureComponent {
 				hideColors, labels, view, image},
 			drawing = image ? vivDrawing : mapDrawing;
 
-		return dialog({fullWidth: true, maxWidth: 'xl', open: mapState.open, onClose: this.onHide, PaperProps: {style: {height: '100%'}}},
-			box({component: IconButton, onClick: this.onHide, sx: sxCloseButton}, icon("close")),
-				dialogContent({className: styles.content},
-					div({className: styles.graphWrapper, ref: this.onRef},
-						getStatusView(loading, error, this.onReload),
-						drawing({onTooltip, onMove, data, container: this.state.container})),
-					sideBar({tooltip, state: setHidden(state), maps: availableMaps, mapValue,
-						onColor, onMap, onCode, onHideAll, onShowAll})));
+		return div({className: styles.content},
+				div({className: styles.graphWrapper, ref: this.onRef},
+					getStatusView(loading, error, this.onReload),
+					drawing({onTooltip, data, container: this.state.container})));
 	}
 }

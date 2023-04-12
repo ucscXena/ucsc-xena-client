@@ -1,7 +1,6 @@
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
-import {defaultMap} from '../models/map';
-var {userServers, setCohort, fetchSamples, fetchMap,
+var {userServers, setCohort, fetchSamples,
 	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
@@ -49,15 +48,6 @@ var setLoadingState = (state, params) =>
 	_.any(['bookmark', 'inlineState', 'columns'], p => _.get(params, p)) ?
 		_.assoc(state, 'loadPending', true) : state;
 
-var setMapLoading = state => _.Let(([dsID, {dimension}] = state.spreadsheet.map.map) =>
-	state.spreadsheet.map.open ?
-		_.updateIn(state, ['spreadsheet', 'map', 'data', dsID], data =>
-			dimension.filter(dim => _.getIn(state.spreadsheet.map,
-				['data', dsID, dim, 'status']) !== 'loaded')
-			.reduce((data, dim) => _.assocIn(data, [dim, 'status'], 'loading'),
-				data)) :
-		state);
-
 function fetchState(serverBus) {
 	serverBus.next(['inlineState', fetchInlineState()]);
 }
@@ -81,6 +71,7 @@ var getPage = path =>
 	path === '/hub/' ? 'hub' :
 	path === '/datapages/' ? 'datapages' :
 	path === '/import/' ? 'import' :
+	path === '/singlecell/' ? 'singlecell' :
 	'heatmap';
 
 var setPage = (state, path, params) =>
@@ -137,31 +128,6 @@ var controls = {
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat),
-	// ui will open map... requires selected map information, and any
-	// settings. Also need the data
-	'map': (state, open) =>
-		setMapLoading(_.updateIn(state, ['spreadsheet', 'map'], (mapState = {}) =>
-			_.merge(_.assoc(mapState, 'open', open),
-				open ? defaultMap(state.spreadsheet.cohort,
-					state.wizard.cohortDatasets, mapState) : {}))),
-	'map-post!': (serverBus, state, newState, open) => {
-		if (open) {
-			fetchMap(serverBus, newState);
-		}
-	},
-	'map-select': (state, map) => setMapLoading(_.assocIn(state,
-		['spreadsheet', 'map', 'map'], map,
-		['spreadsheet', 'map', 'view'], undefined)),
-	'map-select-post!': (serverBus, state, newState) => {
-		fetchMap(serverBus, newState);
-	},
-	'map-color': (state, column) =>
-		_.assocIn(state, ['spreadsheet', 'map', 'colorColumn'], column),
-	'map-hide-codes': (state, hidden) =>
-		_.assocIn(state, ['spreadsheet', 'map', 'hidden',
-			state.spreadsheet.map.colorColumn], hidden),
-	'map-view': (state, view) =>
-		_.assocIn(state, ['spreadsheet', 'map', 'view'], view)
 };
 
 var spreadsheetControls = {

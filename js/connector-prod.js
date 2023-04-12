@@ -76,8 +76,7 @@ module.exports = function({
 	serverCh,
 	uiBus,
 	uiCh,
-	main,
-	selector}) {
+	main}) {
 
 	var dom = {main},
 		updater = ac => uiBus.next(ac),
@@ -95,7 +94,7 @@ module.exports = function({
 	let stateObs = Rx.Observable.merge(serverCh, uiCh, historyObs).scan(runner, initialState).share();
 
 	stateObs.debounceTime(0, Rx.Scheduler.animationFrame)
-		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
+		.subscribe(state => ReactDOM.render(<Page callback={updater} state={state} />, dom.main));
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.

@@ -1,0 +1,36 @@
+/*.table .selected {
+	background-color: #5555EE;
+}*/
+
+.integration {
+	margin: 20px;
+}
+
+.integration > button {
+	margin-left: 70%;
+	margin-top: 20px;
+}
+
+.vizPage {
+	margin: 20px;
+}
+
+.vizBody {
+	display: flex;
+}
+
+.vizBody > :nth-child(1) {
+	flex-grow: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 400px;
+}
+
+.vizBody > :nth-child(2) {
+	width: 300px;
+}
+
+.tabs button {
+	min-width: unset;
+}

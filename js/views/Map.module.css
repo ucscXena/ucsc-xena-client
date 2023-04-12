@@ -9,16 +9,18 @@
 
 .graph {
 	cursor: url(cursor.png) 12 12, crosshair;
-	width: 100%;
-	height: 100%;
+/*	width: 100%;
+	height: 100%; */
 }
 
 /* required to set width of the status overlay */
 .graphWrapper {
 	position: relative;
+	width: 800px;
+	height: 400px;
 	margin-right: 5px;
 	border: 1px solid black;
-	background-color: #000000;
+/*	background-color: #000000;*/
 }
 
 .sideBar {
@@ -55,7 +57,7 @@
 	margin: auto;
 	width: 100%;
 	height: 100%;
-	background-color: #00000020;
+/*	background-color: #00000020;*/
 	position: absolute;
 }
 

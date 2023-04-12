@@ -1,0 +1,28 @@
+.selected {
+	background-color: #5555EE;
+}
+
+.table {
+	width: 70%;
+	margin-left: 10%;
+}
+
+.table thead {
+	background-color: #F0F0F0;
+}
+
+.table p {
+	margin: 0px;
+}
+
+.table td {
+	padding: 4px;
+}
+
+.table tr > :nth-child(2), .table tr > :nth-child(3) {
+	text-align: right;
+}
+
+.table tr > :nth-child(4) {
+	padding-left: 12px;
+}

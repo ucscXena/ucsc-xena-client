@@ -268,15 +268,6 @@ var spreadsheetControls = {
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
-	// XXX need to clear this cache at some point.
-	'map-data': (state, data, dsID, dims) =>
-			_.updateIn(state, ['map', 'data', dsID], dsData =>
-				_.merge(dsData,
-					_.object(dims, data.map(d => _.merge(d, {status: 'loaded'}))))),
-	'map-data-error': (state, error, dsID, dims) =>
-			_.updateIn(state, ['map', 'data', dsID], dsData =>
-				_.merge(dsData, _.object(dims,
-					dims.map(_.constant({status: 'error', error})))))
 };
 
 export default compose(

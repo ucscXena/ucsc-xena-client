@@ -3,7 +3,6 @@ import PureComponent from './PureComponent';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
-import {Map} from './views/Map';
 import SheetControls from './SheetControls';
 import {StateError} from'./StateError';
 var _ = require('./underscore_ext').default;
@@ -122,9 +121,6 @@ class Application extends PureComponent {
 							survivalKeys={_.keys(state.survival)}
 							km={state.km}
 							cohort={state.cohort.name} /> : null}
-					{_.getIn(state, ['map', 'open']) ? <Map
-							callback={callback}
-							state={state} /> : null}
 					<StateError onHide={this.onHideError} error={stateError}/>
 				</div>
 			</div>

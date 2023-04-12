@@ -20,6 +20,7 @@ var Application = require('../Application');
 var {schemaCheckThrow} = require('../schemaCheck');
 import wrapLaunchHelper from '../LaunchHelper';
 var migrateState = require('../migrateState');
+import selector from '../appSelector';
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -138,7 +139,7 @@ class ApplicationContainer extends PureComponent {
 
 	// XXX Change state to appState in Application, for consistency.
 	render() {
-		let {state, selector, callback, children} = this.props,
+		let {state, callback, children} = this.props,
 			{pickSamples} = this.state,
 			{stateError} = state,
 			computedState = selector(state),

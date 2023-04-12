@@ -490,6 +490,11 @@ var cohortPreferredURL = `${cohortMetaData}/defaultDataset.json`;
 var cohortPhenotypeURL = `${cohortMetaData}/defaultPhenotype.json`;
 
 var cohortAnalyticURL =  `${cohortMetaData}/analytic.json`;
+
+var cohortDefaultURL = `${cohortMetaData}/defaultCohortMetadata.json`;
+
+var defaultStudyURL = `${cohortMetaData}/defaultStudy.json`;
+
 // For testing
 //var analyticTest = encodeURIComponent(JSON.stringify({
 //	'TCGA Breast Cancer (BRCA)': [
@@ -551,5 +556,7 @@ module.exports = {
 	fetchCohortPreferred: fetchJSON(cohortPreferredURL),
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
 	fetchCohortAnalytic: fetchJSON(cohortAnalyticURL),
+	fetchCohortDefault: fetchJSON(cohortDefaultURL),
+	fetchDefaultStudy: fetchJSON(defaultStudyURL),
 	fetchTumorMap: fetchJSON(tumorMapURL),
 };
