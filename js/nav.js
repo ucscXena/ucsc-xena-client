@@ -65,6 +65,7 @@ var links = [
 	{label: 'Data Sets', nav: 'datapages'},
 	{label: 'Visualization', nav: 'heatmap'},
 	{label: 'Transcripts', nav: 'transcripts'},
+	{label: 'Singlecell', nav: 'singlecell'},
 	{label: 'Data Hubs', nav: 'hub'},
 	{label: 'View My Data', nav: 'datapages', params: {addHub: localHub, host: localHub}},
 ];
