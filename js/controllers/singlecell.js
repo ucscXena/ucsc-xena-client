@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, get, getIn, identity, Let, merge, object, pairs, pick, unique, updateIn} = require('../underscore_ext').default;
+var {assoc, assocIn, constant, get, getIn, identity, Let, merge, object, pairs, pick, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
@@ -51,12 +51,12 @@ var userStudyId = state => getIn(state, ['singlecell', 'integration']);
 var userStudy = state => studyById(state)(userStudyId(state));
 
 var studyCohorts = study => get(study, 'cohortList', []);
-var subStudies = (state, study) => get(study, 'subStudy', []).map(studyById(state));
+var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
+	studyById(state)(ref.studyID));
 
 export var allCohorts = state =>
 		Let((st = userStudy(state)) =>
-			unique(studyCohorts(st)
-				.concat(...subStudies(state, st).map(studyCohorts))));
+			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
 
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] :
