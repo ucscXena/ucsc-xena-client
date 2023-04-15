@@ -170,7 +170,7 @@ var controls = actionPrefix({
 	},
 	'reset': state => assoc(state, 'layout', undefined, 'dataset', undefined, 'integration', undefined, 'gene', undefined, 'colorBy', undefined),
 	'color-mode': (state, mode) =>
-		assocIn(state, ['colorBy', 'mode'], mode, ['colorBy', 'field'], undefined),
+		assocIn(state, ['colorBy', 'mode'], mode, ['colorBy', 'field'], undefined, ['gene'], undefined),
 	'color-mode-post!': (serverBus, state, newState, mode) => {
 		colorMode[mode](serverBus, newState, mode);
 	},
