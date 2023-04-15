@@ -58,7 +58,6 @@ export class GeneDatasetSuggest extends PureComponent {
 		var {onChange} = this,
 			{value, suggestProps} = this.props,
 			{suggestions} = this.state;
-		console.log({value});
 		return autocomplete({
 			closeIcon: closeRounded({fontSize: 'large'}),
 			forcePopupIcon: !value,
