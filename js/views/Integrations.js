@@ -1,4 +1,4 @@
-var {isArray} = require('../underscore_ext').default;
+var {isArray, isObject, Let, merge, updateIn} = require('../underscore_ext').default;
 
 import styles from './Integrations.module.css';
 
@@ -9,7 +9,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableRow from '@material-ui/core/TableRow';
 import TableHead from '@material-ui/core/TableHead';
 import Paper from '@material-ui/core/Paper';
-import {el, p} from '../chart/react-hyper';
+import {el} from '../chart/react-hyper';
 
 var table = el(Table);
 var tb = el(TableBody);
@@ -18,20 +18,47 @@ var tr = el(TableRow);
 var th = el(TableHead);
 var tableContainer = el(TableContainer);
 
-var exp = child => isArray(child) ? child : [child];
+// table cell. Expand arguments if necessary.
+var tcExp = arg => isArray(arg) ? tc(...arg) : tc(arg);
 
-var trCells = (props, cells) => tr(props, ...cells.map(cell => tc(...exp(cell))));
+var isProp = arg => isObject(arg) && !isArray(arg);
+
+// table row. Wrap contents in table cells. First element can be
+// props or content.
+var trCells = (poc, ...cells) =>
+	tr(isProp(poc) ? poc : tcExp(poc), ...cells.map(cell => tcExp(cell)));
+
+// layout table, given header and rows
 var tableLayout = (header, rows) =>
 	tableContainer({component: Paper, className: styles.table},
-		table(th(header), tb(...rows.map(row => trCells(...row)))));
+		table(th(trCells(...header)), tb(...rows.map(row => trCells(...row)))));
 
 var headers = ['Name', 'Donors', 'Cells/Spots', 'Data types'];
 
-export default ({list}) =>
-	tableLayout(
-		trCells({}, headers),
-		list.map(({onClick, highlight, label, donors, cells, assays}, i) =>
-			[{onClick, 'data-row': i, className: highlight ? styles.selected : ''},
-				[label, donors.map(d => p(d)),
-					cells.map(c => p(c)), assays.map(a => p(a))]]));
+var number = n => [{className: styles.number}, n.toString()];
 
+var cohortRow = ({donors, cells, assays}) => [number(donors), number(cells), assays];
+
+var studyProp = isStudy => ({className: isStudy ? styles.study : styles.sub});
+var labelRow = label => label && [studyProp(true), label, '', '', ''];
+
+// remove falsy elements
+var ident = a => a.filter(e => e);
+
+var setHighlight = (highlight, onClick, i) =>
+	Let((add = merge(highlight === i ? {className: styles.selected} : {},
+			{onClick: () => onClick(i)})) =>
+		row => updateIn(row, [0], props => merge(props, add)));
+
+var studyRows = (highlight, onClick) => ({label, studies}, i) => ident([
+	labelRow(label),
+	...studies.map(({label: l2, cohorts: [first, ...rest]}) =>
+		[[studyProp(!label),
+			[{rowSpan: rest.length + 1}, l2], ...cohortRow(first)],
+		 ...rest.map(c => [{}, ...cohortRow(c)])]).flat()
+]).map(setHighlight(highlight, onClick, i));
+
+export default ({list, onHighlight: onClick, highlight}) =>
+	tableLayout(
+		headers,
+		list.map(studyRows(highlight, onClick)).flat());

@@ -9,7 +9,7 @@ import styles from './SingleCell.module.css';
 import {maps} from './models/map';
 import {allCohorts} from './controllers/singlecell.js';
 import Integrations from './views/Integrations';
-var {/*spy, */assoc, assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, pick} = require('./underscore_ext').default;
+var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
 var map = el(Map);
 var button = el(Button);
@@ -31,47 +31,40 @@ var welcome = ({onEnter}) =>
 // so we don't have to search it for the current selection.
 var studyList = ['singlecell', 'defaultStudy', 'studyList'];
 
+// XXX take max & round to a few digits.
 var maxCells = (state, datasets = []) => Math.max(...datasets.map(({host, name}) =>
 	getIn(state, ['singlecell', 'datasetMetadata', host, name, 'count'], 0)));
-
-// XXX take max & round to a few digits.
-//var cells = (state, cohorts) => div(...cohorts.map(cohort => maxCells(state, cohort.preferredDataset).toString()));
-
-var cells = (state, cohorts) => cohorts.map(cohort => maxCells(state, cohort.preferredDataset).toString());
 
 var allAssays = state => cohort => (cohort.preferredDataset || []).map(({host, name}) =>
 	getIn(state, ['singlecell', 'datasetMetadata', host, name, 'assay'])).join(' / ');
 
-var assays = (state, cohorts) => cohorts.map(allAssays(state));
-
-var donors = cohorts => cohorts.map(cohort =>
-	get(cohort, 'donorNumber', '').toString());
-
 var findStudy = (studyList, studyID) =>
 	studyList.find(({study}) => study === studyID);
 
-// Follow subStudy and fill in cohort list
-var subs = studyList =>
-	studyList.map(study => study.subStudy ?
-		assoc(study, 'cohortList', study.subStudy.map(({studyID}) =>
-			findStudy(studyList, studyID).cohortList).flat()) :
-		study);
+var studyRows = (state, study, label = study.label) => ({
+	label,
+	cohorts: (study.cohortList || []).map(cohort => ({
+		donors: cohort.donorNumber,
+		cells: maxCells(state, cohort.preferredDataset),
+		assays: allAssays(state)(cohort)
+	}))
+});
 
-var integrationsList = (state, onHighlight, highlight) =>
-	subs(getIn(state, studyList, [])).map(
-		({label, cohortList = []}, row) => ({
-			onClick: onHighlight,
-			highlight: row === highlight,
-			label,
-			donors: donors(cohortList),
-			cells: cells(state, cohortList),
-			assays: assays(state, cohortList)
+var integrationsList = (state/*, onHighlight, highlight*/) =>
+	Let((slist = getIn(state, studyList, [])) =>
+		slist.map(itgr => itgr.subStudy ? {
+			label: itgr.label,
+			studies: itgr.subStudy.map(ss =>
+				studyRows(state, findStudy(slist, ss.studyID), ss.displayLabel))
+		} :
+		{
+			studies: [studyRows(state, itgr)]
 		}));
 
 var integration = ({onHighlight, onIntegration, state: {highlight}, props: {state}}) =>
 	div({className: styles.integration},
 		h2('Select an integration:'),
-		integrations({list: integrationsList(state, onHighlight, highlight)}),
+		integrations({list: integrationsList(state), onHighlight, highlight}),
 		button({onClick: onIntegration, disabled: highlight == null}, 'Next'));
 
 // Page layout after selecting integration
@@ -169,9 +162,9 @@ class SingleCellPage extends PureComponent {
 	onEnter = () => {
 		this.callback(['enter']);
 	}
-	onHighlight = ev => {
+	onHighlight = i => {
 		// highlight integration when clicked
-		this.setState({highlight: parseInt(ev.currentTarget.dataset.row, 10)});
+		this.setState({highlight: i});
 	}
 	onIntegration = () => {
 		var row = this.state.highlight;
