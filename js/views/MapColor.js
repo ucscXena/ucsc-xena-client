@@ -1,4 +1,4 @@
-var {spy, getIn} = require('../underscore_ext').default;
+var {getIn} = require('../underscore_ext').default;
 import {Select, MenuItem} from '@material-ui/core';
 import {div, el, p} from '../chart/react-hyper';
 import {datasetCohort, hasDataset, hasDatasource, hasDonor, hasGene} from '../models/map';
@@ -41,7 +41,7 @@ var modeOptions = {
 	gene: ({state: {singlecell}, gene, onGene}) =>
 		geneDatasetSuggest({label: 'Gene name', datasets:
 			getDataSubType(singlecell, hasGene(singlecell, datasetCohort(singlecell))),
-			onSelect: onGene, value: spy('gene', gene)})
+			onSelect: onGene, value: gene})
 };
 // state
 // 	{
