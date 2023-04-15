@@ -11,6 +11,7 @@ import {allCohorts} from './controllers/singlecell.js';
 import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
+import widgets from './columnWidgets';
 var map = el(Map);
 var button = el(Button);
 var xRadioGroup = el(XRadioGroup);
@@ -141,12 +142,25 @@ class MapTabs extends PureComponent {
 
 var mapTabs = el(MapTabs);
 
+var fieldType = 'probes';
+var legend = state => {
+	var valueType = getIn(state, ['mode']) !== 'gene' ? 'coded' : 'float',
+		heatmap = [getIn(state, ['field', 'req', 'values', 0])],
+		colors = [getIn(state, ['scale'])],
+		codes = getIn(state, ['field', 'codes']);
+
+	return heatmap[0] ?
+		widgets.legend({column: {fieldType, valueType, heatmap, colors, codes}}) :
+		null;
+};
+
 var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, props: {state}}) => div(
 	{className: styles.vizPage},
 	h2(integrationLabel(state), closeButton(onReset)),
 	div({className: styles.vizBody},
 		div(vizPanel({props: {state}})),
-		mapTabs({state, onLayout, onDataset, onGene, onColorBy})));
+		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy}),
+			legend(state.singlecell.colorBy))));
 
 var page = state =>
 	getIn(state, ['singlecell', 'integration']) ? viz :
