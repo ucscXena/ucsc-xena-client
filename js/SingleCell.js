@@ -6,7 +6,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Select, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {maps} from './models/map';
+import {maps, hasDataset} from './models/map';
 import {allCohorts} from './controllers/singlecell.js';
 import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
@@ -130,8 +130,8 @@ class MapTabs extends PureComponent {
 		return div( // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
-				tab({label: 'Color by'}),
-				tab({label: 'Cells in View'})),
+				tab({label: 'Color by', disabled: !hasDataset(state.singlecell)}),
+				tab({label: 'Cells in View', disabled: true})),
 			tabPanel({value, index: 0},
 				layoutSelect({onLayout, props: {state}}),
 				mapSelectIfLayout(available(state), state.singlecell.layout,
