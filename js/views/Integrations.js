@@ -1,4 +1,4 @@
-var {isArray, isObject, Let, merge, updateIn} = require('../underscore_ext').default;
+var {identity, isArray, isObject, Let, merge, updateIn} = require('../underscore_ext').default;
 
 import styles from './Integrations.module.css';
 
@@ -45,10 +45,13 @@ var labelRow = label => label && [studyProp(true), label, '', '', ''];
 // remove falsy elements
 var ident = a => a.filter(e => e);
 
+var addSelected = props => updateIn(props, ['className'],
+	cn => ident([cn, styles.selected]).join(' '));
+
 var setHighlight = (highlight, onClick, i) =>
-	Let((add = merge(highlight === i ? {className: styles.selected} : {},
-			{onClick: () => onClick(i)})) =>
-		row => updateIn(row, [0], props => merge(props, add)));
+	Let((addSel = highlight === i ? addSelected : identity) =>
+		row => updateIn(row, [0], props =>
+			merge(addSel(props), {onClick: () => onClick(i)})));
 
 var studyRows = (highlight, onClick) => ({label, studies}, i) => ident([
 	labelRow(label),
