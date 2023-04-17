@@ -13,7 +13,7 @@ import {DataFilterExtension} from '@deck.gl/extensions';
 
 import AxesLayer from './axes-layer';
 
-import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
+import {ThemeProvider, createTheme} from '@material-ui/core/styles';
 import {grey} from '@material-ui/core/colors';
 import Avivator from '../avivator/src/Avivator.jsx';
 import {DETAIL_VIEW_ID} from 'ucsc-xena-viv';
@@ -30,17 +30,27 @@ function getVivId(id) { // XXX copied from viv
   return `-#${id}#`;
 }
 
-const darkTheme = createMuiTheme({
-  palette: {
-    type: 'dark',
-    primary: grey,
-    secondary: grey
-  },
-  props: {
-    MuiButtonBase: {
-      disableRipple: true
-    }
-  }
+const darkTheme = createTheme({
+	palette: {
+		type: 'dark',
+		primary: grey,
+		secondary: grey
+	},
+	overrides: {
+		MuiButton: {
+			root: {
+				backgroundColor: '#424242bf',
+				'&:hover': {
+					backgroundColor: 'black',
+				},
+			},
+		},
+	},
+	props: {
+		MuiButtonBase: {
+			disableRipple: true,
+		}
+	}
 });
 
 //var button = el(Button);
