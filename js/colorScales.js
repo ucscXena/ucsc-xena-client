@@ -91,35 +91,14 @@ var createScale = (scaleFn, domain, strRange) => {
 	return fn;
 };
 
-// Rounding the domain in this fashion causes problems if the domain is small,
-// e.g. 10.33333 to 10.33337, because the endpoints may be rounded toward each
-// other, e.g. 10.3 to 10.3. To be effective here, it would need to consider
-// the scale of the domain before rounding. Instead, we keep full precision here
-// and round in the display, e.g. legend, and user color settings.
-//var setPrecision = x => parseFloat(x.toPrecision(2));
-
-var setPrecision = x => x;
-
 var scaleFloatSingle = (low, high, min, max) =>
 	createScale(linearColorScale, [min, max], [low, high]);
 
-var scaleFloatThresholdNegative = (low, zero, min, thresh) =>
-	createScale(linearColorScale, _.map([min, thresh], setPrecision), [low, zero]);
-
-var scaleFloatThresholdPositive = (zero, high, thresh, max) =>
-	createScale(linearColorScale, _.map([thresh, max], setPrecision), [zero, high]);
-
 var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
-	createScale(linearColorScale, _.map([min, minThresh, maxThresh, max], setPrecision), [low, zero, zero, high]);
-
-var scaleFloatThresholdLogNegative = (low, zero, min, thresh) =>
-	createScale(log2ColorScale, _.map([min, thresh], setPrecision), [low, zero]);
-
-var scaleFloatThresholdLogPositive = (zero, high, thresh, max) =>
-	createScale(log2ColorScale, _.map([thresh, max], setPrecision), [zero, high]);
+	createScale(linearColorScale, [min, minThresh, maxThresh, max], [low, zero, zero, high]);
 
 var scaleFloatLog = (low, high, min, max) =>
-	createScale(log2ColorScale, _.map([min, max], setPrecision), [low, high]);
+	createScale(log2ColorScale, [min, max], [low, high]);
 
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
@@ -189,20 +168,20 @@ noDataScale.domain = () => [];
 
 var colorScaleByType = {
 	'no-data': () => noDataScale,
-	'float-pos': (__, ...args) => scaleFloatSingle(...args),
-	'float-neg': (__, ...args) => scaleFloatSingle(...args),
-	'float': (__, ...args) => scaleFloatDouble(...args),
-	'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
-	'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
-	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
-	'float-thresh-log-pos': (__, ...args) => scaleFloatThresholdLogPositive(...args),
-	'float-thresh-log-neg': (__, ...args) => scaleFloatThresholdLogNegative(...args),
-	'float-log': (__, ...args) => scaleFloatLog(...args),
-	'trend-amplitude': (__, ...args) => scaleTrendAmplitude(...args),
-	'ordinal': (__, ...args) => ordinal(...args)
+	'float-pos': scaleFloatSingle,
+	'float-neg': scaleFloatSingle,
+	'float': scaleFloatDouble,
+	'float-thresh-pos': scaleFloatSingle,
+	'float-thresh-neg': scaleFloatSingle,
+	'float-thresh': scaleFloatThreshold,
+	'float-thresh-log-pos': scaleFloatLog,
+	'float-thresh-log-neg': scaleFloatLog,
+	'float-log': scaleFloatLog,
+	'trend-amplitude': scaleTrendAmplitude,
+	'ordinal': ordinal
 };
 
-var colorScale = ([type, ...args]) => colorScaleByType[type](type, ...args);
+var colorScale = ([type, ...args]) => colorScaleByType[type](...args);
 
 export {
 	colorScale,
