@@ -154,6 +154,8 @@ var spreadsheetControls = actionPrefix({
 	}
 });
 
+var colorDataset = state => state.datasetMetadata[state.gene.host][state.gene.name];
+
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
@@ -175,9 +177,12 @@ var controls = actionPrefix({
 		colorMode[mode](serverBus, newState, mode);
 	},
 	'color-field': (state, d, field) =>
-		Let((data = {...widgets.avg(field, d), ...d}) =>
+		Let((data = {...widgets.avg(field, d), ...d}, dataset = colorDataset(state)) =>
 			assocIn(state, ['colorBy', 'field'], data,
-				['colorBy', 'scale'], colorSpec(field, {}, data.codes, {values: data.req.values[0], mean: data.avg.mean[0]})))
+				['colorBy', 'scale'],
+				colorSpec({...field, defaultNormalization: dataset.colnormalization},
+					{}, data.codes,
+					{values: data.req.values[0], mean: data.avg.mean[0]})))
 	,
 //	'map-hide-codes': (state, hidden) =>
 //		assocIn(state, ['map', 'hidden',
