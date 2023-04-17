@@ -2,7 +2,7 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {div, el, h2, label, span, textNode} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Button, Icon, IconButton, MenuItem,
+import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Select, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
@@ -23,6 +23,7 @@ var tab = el(Tab);
 var tabs = el(Tabs);
 var integrations = el(Integrations);
 var mapColor = el(MapColor);
+var listSubheader = el(ListSubheader);
 
 var welcome = ({onEnter}) =>
 	div(span("Welcome to the Xena's multi-omic integration single cell portal"),
@@ -92,12 +93,14 @@ var layoutSelect = ({onLayout, props: {state}}) =>
 
 var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
+var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
+	Object.keys(g).sort().map(k => [listSubheader(k), g[k].map(getOpt)]));
+
 function mapSelect(availableMaps, layout, selected, onChange) {
-       var opts = availableMaps[layout].map(([, params], i) => ({'value': i,
-                       label: params.label})),
-		// XXX is 'form-control' doing anything here?
-               sel = select({className: 'form-control', value: selected ? findIndexDefault(availableMaps[layout], av => av[0] === selected[0], '') : '', onChange},
-                       ...opts.map(getOpt));
+       var opts = availableMaps[layout].map(([, {label, cohort}], i) => ({'value': i,
+                       label, cohort})),
+               sel = select({value: selected ? findIndexDefault(availableMaps[layout], av => av[0] === selected[0], '') : '', onChange},
+                       ...mapOpts(opts));
 
        return (
                div({className: styles.mapSelector},
@@ -134,8 +137,7 @@ class MapTabs extends PureComponent {
 				mapSelectIfLayout(available(state), state.singlecell.layout,
 					state.singlecell.dataset, onDataset)),
 			tabPanel({value, index: 1},
-				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene})
-			),
+				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene})),
 			tabPanel({value, index: 2}));
 	}
 }

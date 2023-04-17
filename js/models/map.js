@@ -1,8 +1,8 @@
-var {find, findValue, get, getIn, Let, has, pairs, values} = require('../underscore_ext').default;
-var cohortMaps = cohortDatasets => cohort =>  {
-	var datasets = get(cohortDatasets, cohort.cohort);
+var {find, findValue, get, getIn, Let, merge, has, pairs, values} = require('../underscore_ext').default;
+var cohortMaps = cohortDatasets => ({cohort}) =>  {
+	var datasets = get(cohortDatasets, cohort);
 	var maps = [].concat(...values(datasets)).filter(d => has(d, 'map'))
-		.map(ds => ds.map.map(m => [ds.dsID, m])).flat();
+		.map(ds => ds.map.map(m => [ds.dsID, merge(m, {cohort})])).flat();
 	return maps;
 };
 
