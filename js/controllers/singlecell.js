@@ -9,7 +9,7 @@ var Rx = require('../rx').default;
 var {of} = Rx.Observable;
 import {datasetCohort, hasDatasource, hasDonor} from '../models/map';
 import {colorSpec} from '../heatmapColors';
-import {project, scaleParams} from '../colorScales';
+import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 
 var fetchMethods = {
@@ -165,8 +165,8 @@ var colorScale = (state, data, field) =>
 				{values: data.req.values[0], mean: data.avg.mean[0]}));
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], min = minnull(d), max = maxnull(d),
-			p = project(scale), params = scaleParams(scale)) =>
-		({min: Math.min(...params, p(min)), max: Math.max(...params, p(max))}));
+			params = scaleParams(scale)) =>
+		({min: Math.min(...params, min), max: Math.max(...params, max)}));
 
 var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
 			.reduce((x, y) => x * y);

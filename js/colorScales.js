@@ -181,25 +181,6 @@ var colorScaleByType = {
 	'ordinal': ordinal
 };
 
-// Not sure about this. The problem is finding the min/max of the
-// scaled domain, for use in color scale sliders. This projects data
-// points to the scaled domain.
-var project = _.Let((notImpl = () => console.error('Not implemented'),
-		lin = x => x, log = Math.log2, m = {
-	'no-data': () => notImpl,
-	'float-pos': lin,
-	'float-neg': lin,
-	'float': lin,
-	'float-thresh-pos': lin,
-	'float-thresh-neg': lin,
-	'float-thresh': lin,
-	'float-thresh-log-pos': log,
-	'float-thresh-log-neg': log,
-	'float-log': log,
-	'trend-amplitude': notImpl,
-	'ordinal': notImpl
-}) => ([type]) => m[type]);
-
 var scaleParams = _.Let((m = {
 	'no-data': 0,
 	'float-pos': 3,
@@ -221,6 +202,5 @@ export {
 	colorScale,
 	categoryMore,
 	isoluminant,
-	project,
 	scaleParams
 };
