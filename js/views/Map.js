@@ -5,8 +5,6 @@ import {div, el, img} from '../chart/react-hyper.js';
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
-//import widgets from '../columnWidgets';
-//import {item} from './Legend.module.css';
 import {ScatterplotLayer, PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
@@ -52,8 +50,6 @@ const darkTheme = createTheme({
 		}
 	}
 });
-
-//var button = el(Button);
 
 // Styles
 
@@ -114,20 +110,7 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => toRGB(scale(colorColumn[index])))
 	: () => [0, 255, 0];
 
-var nvolume = (mins, maxs) => _.mmap(mins, maxs, (min, max) => max - min)
-			.reduce((x, y) => x * y);
 
-// Pick a radius based on the data range, such that the data points
-// would fill a given percentage of the volume in the range, if they
-// were uniformly distributed.
-
-var pickRadius3d = (mins, maxs, len, pct = 0.2) =>
-	_.Let((volPerPoint = pct * nvolume(mins, maxs) / len) =>
-		Math.pow(volPerPoint, 0.33) / 2);
-
-var pickRadius2d = (mins, maxs, len, pct = 0.2) =>
-	_.Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
-		Math.pow(areaPerPoint, 0.5) / 2);
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
@@ -180,7 +163,6 @@ class MapDrawing extends PureComponent {
 				minZoom: 0.5 * zoom,
 				maxZoom: 4 * zoom,
 				target: [(maxs[0] + mins[0]) / 2, (maxs[1] + mins[1]) / 2, 0]};
-			radius = radius || pickRadius2d(mins, maxs, props.data.columns[0].length);
 		} else {
 			views = new OrbitView();
 			let zoom = Math.min(Math.log2(width / (maxs[0] - mins[0])),
@@ -191,7 +173,6 @@ class MapDrawing extends PureComponent {
 				maxZoom: 4 * zoom,
 				target: centroids
 			};
-			radius = radius || pickRadius3d(mins, maxs, props.data.columns[0].length);
 		}
 		var mergeLayer = patchLayerMap(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
 		return deckGL({
@@ -231,10 +212,7 @@ class VivDrawing extends PureComponent {
 		var {offset, image_scalef: scale} = props.data.image;
 		var data = transpose(props.data.columns).map(c =>
 			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		var mins = props.data.columns.map(_.minnull),
-			maxs = props.data.columns.map(_.maxnull);
-		radius = radius * scale ||
-			pickRadius2d(mins, maxs, props.data.columns[0].length);
+		radius = radius * scale;
 		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
 		return avivator({
 			mergeLayers: [mergeLayer],
@@ -300,6 +278,7 @@ function getColorColumn(state) {
 var getStatusView = (loading, error, onReload) =>
 	loading ? div({className: styles.status},
 				img({style: {textAlign: 'center'}, src: spinner})) :
+		// XXX this is broken
 	error ? div({className: styles.status},
 				iconButton({
 						onClick: onReload,
@@ -308,6 +287,7 @@ var getStatusView = (loading, error, onReload) =>
 					icon('warning'))) :
 	null;
 
+// XXX still needed?
 var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
 
 var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
@@ -389,7 +369,8 @@ export class Map extends PureComponent {
 			colors = _.getIn(mapState, ['colorBy', 'scale']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			radius = params.spot_diameter && params.spot_diameter / 2,
+			radius = params.spot_diameter && params.spot_diameter / 2 ||
+				mapState.radius,
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,

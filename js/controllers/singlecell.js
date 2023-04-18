@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, get, getIn, identity, Let, merge, maxnull, minnull, object, pairs, pick, updateIn} = require('../underscore_ext').default;
+var {assoc, assocIn, constant, get, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pick, updateIn, values} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
@@ -168,6 +168,19 @@ var scaleBounds = (data, scale) =>
 			p = project(scale), params = scaleParams(scale)) =>
 		({min: Math.min(...params, p(min)), max: Math.max(...params, p(max))}));
 
+var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
+			.reduce((x, y) => x * y);
+
+var pickRadius = (mins, maxs, len, pct = 0.2) =>
+	Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
+		Math.pow(areaPerPoint, 1 / mins.length) / 2);
+
+var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
+var setRadius = state =>
+	Let((dsID = getIn(state.dataset, [0]), data = allCols(getIn(state, ['data', dsID])),
+		mins = data.map(minnull), maxs = data.map(maxnull),
+		radius = pickRadius(mins, maxs, data[0].length)) =>
+			assoc(state, ['radiusBase'], radius, ['radius'], radius));
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
@@ -198,14 +211,16 @@ var controls = actionPrefix({
 				['colorBy', 'scale'], scale,
 				['colorBy', 'scaleBounds'], scaleBounds(data, scale))),
 	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
+	radius: (state, radius) => assocIn(state, ['radius'], radius),
 //	'map-hide-codes': (state, hidden) =>
 //		assocIn(state, ['map', 'hidden',
 //			state.spreadsheet.map.colorColumn], hidden),
 	// XXX need to clear this cache at some point,
 	'map-data': (state, [samples, data], dsID, dims) =>
-			updateIn(assoc(state, 'samples', samples), ['data', dsID], dsData =>
-				merge(dsData,
-					object(dims, data.map(d => merge(d, {status: 'loaded'}))))),
+			setRadius(
+				updateIn(assoc(state, 'samples', samples), ['data', dsID], dsData =>
+					merge(dsData,
+						object(dims, data.map(d => merge(d, {status: 'loaded'})))))),
 	'map-data-error': (state, error, dsID, dims) =>
 			updateIn(state, ['data', dsID], dsData =>
 				merge(dsData, object(dims,

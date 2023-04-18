@@ -3,7 +3,7 @@ import nav from './nav';
 import {div, el, h2, label, span, textNode} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Button, Icon, IconButton, ListSubheader, MenuItem,
-	Select, Tab, Tabs} from '@material-ui/core';
+	Select, Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {maps, hasDataset} from './models/map';
@@ -25,6 +25,7 @@ var tabs = el(Tabs);
 var integrations = el(Integrations);
 var mapColor = el(MapColor);
 var listSubheader = el(ListSubheader);
+var slider = el(Slider);
 
 var welcome = ({onEnter}) =>
 	div(span("Welcome to the Xena's multi-omic integration single cell portal"),
@@ -125,13 +126,23 @@ var colorScale = state => getIn(state, ['colorBy', 'scale']);
 var scaleValue = state => Let((scale = colorScale(state)) =>
 	scale && scaleParams(scale));
 
+var dotRange = Let((ratio = 4) =>
+	radius => ({min: radius / ratio, max: radius * ratio,
+		step: radius * (ratio - 1 / ratio) / 200}));
+
+var dotSize = (state, onChange) =>
+	!state.dataset || !state.radiusBase ? null :
+	div(
+		label('Dot size'),
+		slider({...dotRange(state.radiusBase), value: state.radius, onChange}));
+
 class MapTabs extends PureComponent {
 	state = {value: 0}
 	onChange = (ev, value) => {
 		this.setState({value});
 	}
 	render() {
-		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, onScale, state}} = this;
+		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, onScale, onRadius, state}} = this;
 		return div( // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -140,7 +151,8 @@ class MapTabs extends PureComponent {
 			tabPanel({value, index: 0},
 				layoutSelect({onLayout, props: {state}}),
 				mapSelectIfLayout(available(state), state.singlecell.layout,
-					state.singlecell.dataset, onDataset)),
+					state.singlecell.dataset, onDataset),
+				dotSize(state.singlecell, onRadius)),
 			tabPanel({value, index: 1},
 				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene, scale: scaleValue(state.singlecell), onScale})),
 			tabPanel({value, index: 2}));
@@ -161,12 +173,12 @@ var legend = state => {
 		null;
 };
 
-var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, onScale, props: {state}}) => div(
+var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, onScale, onRadius, props: {state}}) => div(
 	{className: styles.vizPage},
 	h2(integrationLabel(state), closeButton(onReset)),
 	div({className: styles.vizBody},
 		div(vizPanel({props: {state}})),
-		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy, onScale}),
+		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy, onScale, onRadius}),
 			legend(state.singlecell.colorBy))));
 
 var page = state =>
@@ -214,6 +226,9 @@ class SingleCellPage extends PureComponent {
 			scale = colorBy.scale,
 			newScale = scale.slice(0, scale.length - params.length).concat(params);
 		this.callback(['color-scale', newScale]);
+	}
+	onRadius = (ev, r) => {
+		this.callback(['radius', r]);
 	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
