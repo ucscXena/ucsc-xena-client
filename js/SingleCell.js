@@ -12,6 +12,7 @@ import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
 import widgets from './columnWidgets';
+import {scaleParams} from './colorScales';
 var map = el(Map);
 var button = el(Button);
 var xRadioGroup = el(XRadioGroup);
@@ -120,13 +121,17 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index}, ...children);
 
+var colorScale = state => getIn(state, ['colorBy', 'scale']);
+var scaleValue = state => Let((scale = colorScale(state)) =>
+	scale && scaleParams(scale));
+
 class MapTabs extends PureComponent {
 	state = {value: 0}
 	onChange = (ev, value) => {
 		this.setState({value});
 	}
 	render() {
-		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, state}} = this;
+		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, onScale, state}} = this;
 		return div( // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -137,7 +142,7 @@ class MapTabs extends PureComponent {
 				mapSelectIfLayout(available(state), state.singlecell.layout,
 					state.singlecell.dataset, onDataset)),
 			tabPanel({value, index: 1},
-				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene})),
+				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene, scale: scaleValue(state.singlecell), onScale})),
 			tabPanel({value, index: 2}));
 	}
 }
@@ -156,12 +161,12 @@ var legend = state => {
 		null;
 };
 
-var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, props: {state}}) => div(
+var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, onScale, props: {state}}) => div(
 	{className: styles.vizPage},
 	h2(integrationLabel(state), closeButton(onReset)),
 	div({className: styles.vizBody},
 		div(vizPanel({props: {state}})),
-		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy}),
+		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy, onScale}),
 			legend(state.singlecell.colorBy))));
 
 var page = state =>
@@ -203,6 +208,12 @@ class SingleCellPage extends PureComponent {
 	}
 	onColorBy = ev => {
 		this.callback(['color-mode', ev.target.value]);
+	}
+	onScale = (ev, params) => {
+		var {colorBy} = this.props.state.singlecell,
+			scale = colorBy.scale,
+			newScale = scale.slice(0, scale.length - params.length).concat(params);
+		this.callback(['color-scale', newScale]);
 	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);

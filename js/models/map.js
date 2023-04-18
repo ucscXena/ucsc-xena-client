@@ -21,10 +21,13 @@ export function defaultMap(cohort, cohortDatasets, {map, view}) {
 }
 
 export var hasDataset = state => getIn(state, ['dataset', 0]);
-export var datasetCohort = state =>
+export var datasetMeta = state =>
 	Let((dsID = hasDataset(state)) =>
 		values(state.cohortDatasets)
-		.map(server => values(server).flat()).flat().find(ds => ds.dsID === dsID)).cohort;
+		.map(server => values(server).flat()).flat().find(ds => ds.dsID === dsID));
+
+// XXX deprecate this
+export var datasetCohort = state => datasetMeta(state).cohort;
 
 var hasField = field => (state, cohort) =>
 	findValue(pairs(getIn(state, ['donorFields', cohort])),

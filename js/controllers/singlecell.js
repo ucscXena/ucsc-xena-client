@@ -3,12 +3,13 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, get, getIn, identity, Let, merge, object, pairs, pick, updateIn} = require('../underscore_ext').default;
+var {assoc, assocIn, constant, get, getIn, identity, Let, merge, maxnull, minnull, object, pairs, pick, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
 import {datasetCohort, hasDatasource, hasDonor} from '../models/map';
 import {colorSpec} from '../heatmapColors';
+import {project, scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 
 var fetchMethods = {
@@ -154,7 +155,18 @@ var spreadsheetControls = actionPrefix({
 	}
 });
 
+var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 var colorDataset = state => state.datasetMetadata[state.gene.host][state.gene.name];
+var colorScale = (state, data, field) =>
+	Let((dataset = colorDataset(state)) =>
+		colorSpec(merge(field, {defaultNormalization: dataset.colnormalization}),
+				{}, data.codes,
+				{values: data.req.values[0], mean: data.avg.mean[0]}));
+var scaleBounds = (data, scale) =>
+	Let((d = data.req.values[0], min = minnull(d), max = maxnull(d),
+			p = project(scale), params = scaleParams(scale)) =>
+		({min: Math.min(...params, p(min)), max: Math.max(...params, p(max))}));
+
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
@@ -167,6 +179,9 @@ var controls = actionPrefix({
 		// dataset?
 		var {host, name, gene} = newState.gene,
 			field = probeFieldSpec({dsID: toDsID(host, name), name: gene});
+		// XXX Should we use models/column.js to populate column fields, vs.
+		// shimming it in various places? It's more general, but not sure if
+		// we need it.
 		serverBus.next(['singlecell-color-field',
 			fetch(field, newState.samples.samples), field]);
 	},
@@ -177,13 +192,11 @@ var controls = actionPrefix({
 		colorMode[mode](serverBus, newState, mode);
 	},
 	'color-field': (state, d, field) =>
-		Let((data = {...widgets.avg(field, d), ...d}, dataset = colorDataset(state)) =>
+		Let((data = setAvg(d, field), scale = colorScale(state, data, field)) =>
 			assocIn(state, ['colorBy', 'field'], data,
-				['colorBy', 'scale'],
-				colorSpec({...field, defaultNormalization: dataset.colnormalization},
-					{}, data.codes,
-					{values: data.req.values[0], mean: data.avg.mean[0]})))
-	,
+				['colorBy', 'scale'], scale,
+				['colorBy', 'scaleBounds'], scaleBounds(data, scale))),
+	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
 //	'map-hide-codes': (state, hidden) =>
 //		assocIn(state, ['map', 'hidden',
 //			state.spreadsheet.map.colorColumn], hidden),
