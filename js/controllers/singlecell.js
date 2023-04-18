@@ -156,7 +156,8 @@ var spreadsheetControls = actionPrefix({
 });
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
-var colorDataset = state => state.datasetMetadata[state.gene.host][state.gene.name];
+var colorDataset = state => state.colorBy.mode === 'gene' ?
+	state.datasetMetadata[state.gene.host][state.gene.name] : {};
 var colorScale = (state, data, field) =>
 	Let((dataset = colorDataset(state)) =>
 		colorSpec(merge(field, {defaultNormalization: dataset.colnormalization}),
