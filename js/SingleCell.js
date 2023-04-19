@@ -6,7 +6,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Select, Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {maps, hasDataset} from './models/map';
+import {maps, cellTypeCluster, hasDataset} from './models/map';
 import {allCohorts} from './controllers/singlecell.js';
 import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
@@ -95,6 +95,8 @@ var layoutSelect = ({onLayout, props: {state}}) =>
 
 var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
+// XXX change models::maps to return them grouped, so we don't have to do
+// this.
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
 	Object.keys(g).sort().map(k => [listSubheader(k), g[k].map(getOpt)]));
 
@@ -142,7 +144,7 @@ class MapTabs extends PureComponent {
 		this.setState({value});
 	}
 	render() {
-		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, onScale, onRadius, state}} = this;
+		var {onChange, state: {value}, props: {onLayout, onDataset, onGene, onColorBy, onScale, onRadius, onCellType, state}} = this;
 		return div( // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -154,7 +156,7 @@ class MapTabs extends PureComponent {
 					state.singlecell.dataset, onDataset),
 				dotSize(state.singlecell, onRadius)),
 			tabPanel({value, index: 1},
-				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene, scale: scaleValue(state.singlecell), onScale})),
+				mapColor({state, onColorBy, gene: state.singlecell.gene, onGene, scale: scaleValue(state.singlecell), onScale, onCellType})),
 			tabPanel({value, index: 2}));
 	}
 }
@@ -173,12 +175,12 @@ var legend = state => {
 		null;
 };
 
-var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, onScale, onRadius, props: {state}}) => div(
+var viz = ({onReset, onLayout, onDataset, onGene, onColorBy, onScale, onRadius, onCellType, props: {state}}) => div(
 	{className: styles.vizPage},
 	h2(integrationLabel(state), closeButton(onReset)),
 	div({className: styles.vizBody},
 		div(vizPanel({props: {state}})),
-		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy, onScale, onRadius}),
+		div(mapTabs({state, onLayout, onDataset, onGene, onColorBy, onScale, onRadius, onCellType}),
 			legend(state.singlecell.colorBy))));
 
 var page = state =>
@@ -230,6 +232,9 @@ class SingleCellPage extends PureComponent {
 	onRadius = (ev, r) => {
 		this.callback(['radius', r]);
 	}
+	onCellType = ev => {
+		this.callback(['cellType', ev.target.value]);
+	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
 	};
@@ -257,8 +262,15 @@ var mapSelector = createSelector(
 	state => getIn(state, ['singlecell', 'cohortDatasets']),
 	(cohorts, cohortDatasets) => maps(cohorts, cohortDatasets));
 
+var cellTypeSelector = createSelector(
+	state => allCohorts(state),
+	state => getIn(state, ['singlecell', 'cohortDatasets']),
+	(cohorts, cohortDatasets) => cellTypeCluster(cohorts, cohortDatasets));
+
 var selector = state => assocIn(state,
-	['singlecell', 'map', 'available'], mapSelector(state));
+	// XXX why two keys, 'map' and 'available'?
+	['singlecell', 'map', 'available'], mapSelector(state),
+	['singlecell', 'cellType'], cellTypeSelector(state));
 
 
 export default ({state, ...rest}) => singleCellPage({...rest, state: selector(state)});

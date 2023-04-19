@@ -205,6 +205,13 @@ var controls = actionPrefix({
 	'color-mode-post!': (serverBus, state, newState, mode) => {
 		colorMode[mode](serverBus, newState, mode);
 	},
+	cellType: (state, cellType) => assocIn(state, ['colorBy', 'cellType'], cellType),
+	'cellType-post!': (serverBus, state, newState, cellType) => {
+		var {dsID, feature} = cellType,
+			field = codedFieldSpec({dsID, name: feature});
+		serverBus.next(['singlecell-color-field',
+			fetch(field, state.samples.samples), field]);
+	},
 	'color-field': (state, d, field) =>
 		Let((data = setAvg(d, field), scale = colorScale(state, data, field)) =>
 			assocIn(state, ['colorBy', 'field'], data,

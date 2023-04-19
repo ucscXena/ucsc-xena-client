@@ -1,4 +1,4 @@
-var {getIn} = require('../underscore_ext').default;
+var {getIn, isEqual, Let} = require('../underscore_ext').default;
 import {Select, Slider, MenuItem} from '@material-ui/core';
 import {div, el, p} from '../chart/react-hyper';
 import {datasetCohort, hasDataset, hasDatasource, hasDonor, hasGene} from '../models/map';
@@ -17,7 +17,8 @@ var hasMode = {
 		hasDatasource(singlecell, datasetCohort(singlecell)),
 	donor: ({singlecell}) => hasDataset(singlecell) &&
 		hasDonor(singlecell, datasetCohort(singlecell)),
-	type: alwaysFalse,
+	// cellType: {[cohort]: []}
+	type: ({singlecell}) => singlecell.cellType[datasetCohort(singlecell)].length,
 	prop: alwaysFalse,
 	gene: ({singlecell}) => hasDataset(singlecell) &&
 		hasGene(singlecell, datasetCohort(singlecell))
@@ -25,7 +26,12 @@ var hasMode = {
 
 var availModes = state => modes.filter(mode => (hasMode[mode] || alwaysFalse)(state));
 
-var clusterTypes = () => [];
+var cellTypes = state => state.cellType[datasetCohort(state)];
+var cellTypeOpts = types => types.map(type => menuItem({value: type}, type.assay));
+
+// select component requires reference equality, so we have to find
+// the matching option here.
+var cellTypeValue = (types, value) => types.find(t => isEqual(t, value)) || '';
 
 var getDataSubType = ({datasetMetadata}, datasets) =>
 		datasets.map(({host, name}) => ({
@@ -49,8 +55,11 @@ var modeOptions = {
 	'': () => null,
 	dataset: () => null,
 	donor: () => null,
-	type: state => div('Select a cell type / cluster',
-		select(...clusterTypes(state))),
+	type: ({state: {singlecell}, onCellType: onChange}) =>
+		Let((types = cellTypes(singlecell)) =>
+			div(p('Select a cell type / cluster'),
+				select({value: cellTypeValue(types, singlecell.colorBy.cellType), onChange},
+					cellTypeOpts(types)))),
 	gene: ({state: {singlecell}, gene, onGene, scale, onScale}) =>
 		div(
 			geneDatasetSuggest({label: 'Gene name', datasets:
@@ -81,10 +90,10 @@ var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
 
 var modeValue = state => getIn(state, ['singlecell', 'colorBy', 'mode'], '');
 
-export default ({onColorBy, state, gene, onGene, scale, onScale}) =>
+export default ({onColorBy, state, gene, onGene, scale, onScale, onCellType}) =>
 	div(
 		p('Select how to color cells'),
 		select({value: modeValue(state), onChange: onColorBy},
 			availModes(state).map(modeOpt)),
-		modeOptions[modeValue(state)]({state, gene, onGene, scale, onScale})
+		modeOptions[modeValue(state)]({state, gene, onGene, scale, onScale, onCellType})
 	);
