@@ -18,7 +18,7 @@ var hasMode = {
 	donor: ({singlecell}) => hasDataset(singlecell) &&
 		hasDonor(singlecell, datasetCohort(singlecell)),
 	// cellType: {[cohort]: []}
-	type: ({singlecell}) => singlecell.cellType[datasetCohort(singlecell)].length,
+	type: ({singlecell}) => hasDataset(singlecell) && singlecell.cellType[datasetCohort(singlecell)].length,
 	prop: alwaysFalse,
 	gene: ({singlecell}) => hasDataset(singlecell) &&
 		hasGene(singlecell, datasetCohort(singlecell))
