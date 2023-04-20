@@ -1,5 +1,5 @@
-var {getIn, isEqual, Let} = require('../underscore_ext').default;
-import {Select, Slider, MenuItem} from '@material-ui/core';
+var {getIn, identity, isEqual, Let} = require('../underscore_ext').default;
+import {Select, Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {div, el, p} from '../chart/react-hyper';
 import {datasetCohort, hasDataset, hasDatasource, hasDonor, hasGene} from '../models/map';
 import geneDatasetSuggest from './GeneDatasetSuggest';
@@ -7,18 +7,20 @@ import geneDatasetSuggest from './GeneDatasetSuggest';
 var select = el(Select);
 var menuItem = el(MenuItem);
 var slider = el(Slider);
+var listSubheader = el(ListSubheader);
 
 var modes = ['dataset', 'donor', 'type', 'prob', 'gene'];
 
 var alwaysFalse = () => false;
 
+// XXX do hasDataset before calling these & remove the check from these methods
 var hasMode = {
 	dataset: ({singlecell}) => hasDataset(singlecell) &&
 		hasDatasource(singlecell, datasetCohort(singlecell)),
 	donor: ({singlecell}) => hasDataset(singlecell) &&
 		hasDonor(singlecell, datasetCohort(singlecell)),
 	// cellType: {[cohort]: []}
-	type: ({singlecell}) => hasDataset(singlecell) && singlecell.cellType[datasetCohort(singlecell)].length,
+	type: ({singlecell}) => hasDataset(singlecell) && (singlecell.cellType[datasetCohort(singlecell)].length || singlecell.labelTransfer[datasetCohort(singlecell)].length),
 	prop: alwaysFalse,
 	gene: ({singlecell}) => hasDataset(singlecell) &&
 		hasGene(singlecell, datasetCohort(singlecell))
@@ -26,12 +28,25 @@ var hasMode = {
 
 var availModes = state => modes.filter(mode => (hasMode[mode] || alwaysFalse)(state));
 
+var tfLabels = state => state.labelTransfer[datasetCohort(state)];
+
+var ident = a => a.map(identity);
+
 var cellTypes = state => state.cellType[datasetCohort(state)];
-var cellTypeOpts = types => types.map(type => menuItem({value: type}, type.assay));
+
+// cell type and transferred label options
+var cellTypeOpts = state =>
+	Let((types = cellTypes(state), labels = tfLabels(state)) => ident([
+		types.length && [listSubheader('Cell types / clusters'),
+			...cellTypes(state).map(type => menuItem({value: type}, type.label))],
+		labels.length && [listSubheader('Transferred cell types / clusters'),
+			...tfLabels(state).map(type => menuItem({value: type}, type.label))]]).flat());
 
 // select component requires reference equality, so we have to find
 // the matching option here.
-var cellTypeValue = (types, value) => types.find(t => isEqual(t, value)) || '';
+//var cellTypeValue = (types, value) => types.find(t => isEqual(t, value)) || '';
+var cellTypeValue = state => cellTypes(state).concat(tfLabels(state))
+	.find(t => isEqual(t, state.colorBy.cellType)) || '';
 
 var getDataSubType = ({datasetMetadata}, datasets) =>
 		datasets.map(({host, name}) => ({
@@ -56,10 +71,9 @@ var modeOptions = {
 	dataset: () => null,
 	donor: () => null,
 	type: ({state: {singlecell}, onCellType: onChange}) =>
-		Let((types = cellTypes(singlecell)) =>
-			div(p('Select a cell type / cluster'),
-				select({value: cellTypeValue(types, singlecell.colorBy.cellType), onChange},
-					cellTypeOpts(types)))),
+		div(p('Select a cell type / cluster'),
+			select({value: cellTypeValue(singlecell), onChange},
+				...cellTypeOpts(singlecell))),
 	gene: ({state: {singlecell}, gene, onGene, scale, onScale}) =>
 		div(
 			geneDatasetSuggest({label: 'Gene name', datasets:
@@ -94,6 +108,6 @@ export default ({onColorBy, state, gene, onGene, scale, onScale, onCellType}) =>
 	div(
 		p('Select how to color cells'),
 		select({value: modeValue(state), onChange: onColorBy},
-			availModes(state).map(modeOpt)),
+			...availModes(state).map(modeOpt)),
 		modeOptions[modeValue(state)]({state, gene, onGene, scale, onScale, onCellType})
 	);

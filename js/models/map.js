@@ -1,4 +1,4 @@
-var {find, findValue, get, getIn, Let, merge, has, object, pairs, pick, values} = require('../underscore_ext').default;
+var {find, findValue, get, getIn, Let, merge, has, object, pairs, values} = require('../underscore_ext').default;
 var cohortMaps = cohortDatasets => ({cohort}) =>  {
 	var datasets = get(cohortDatasets, cohort);
 	var maps = [].concat(...values(datasets)).filter(d => has(d, 'map'))
@@ -16,17 +16,35 @@ export function maps(cohorts, cohortDatasets) {
 var cohortCellTypeCluster = cohortDatasets => ({cohort}) =>
 	[cohort,
 		[].concat(...values(get(cohortDatasets, cohort)))
-			.filter(d => has(d, 'cluster') || 'cellType')
+			.filter(d => has(d, 'cluster') || has(d, 'cellType'))
 			.map(ds => (ds.cluster || []).concat(ds.cellType || [])
-				.map(m =>
-					merge({dsID: ds.dsID}, pick(m, ['assay', 'feature'])))).flat()];
+				.map(m => ({
+					dsID: ds.dsID,
+					field: m.feature,
+					label: m.assay
+				}))).flat()];
 
 export function cellTypeCluster(cohorts, cohortDatasets) {
-	if (!cohorts.length || !cohortDatasets) {
-		return [];
-	}
 	return object(cohorts.map(cohortCellTypeCluster(cohortDatasets)));
 }
+
+// XXX try to factor out the common bits in all these methods. Maybe
+// make one larger method that returns maps, cell types, and prob, under
+// three keys, vs. having a bunch of different selectors.
+var cohortLabelTransfer = cohortDatasets => ({cohort}) =>
+	[cohort,
+		[].concat(...values(get(cohortDatasets, cohort)))
+			.filter(d => has(d, 'labeltransfer'))
+			.map(ds => ds.labeltransfer.map(m => ({
+					dsID: ds.dsID,
+					field: m.transferredLabel,
+					label: m.assay
+				}))).flat()];
+
+export function labelTransfer(cohorts, cohortDatasets) {
+	return object(cohorts.map(cohortLabelTransfer(cohortDatasets)));
+}
+
 
 // XXX deprecate this call?
 export function defaultMap(cohort, cohortDatasets, {map, view}) {

@@ -55,6 +55,7 @@ var studyCohorts = study => get(study, 'cohortList', []);
 var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
 	studyById(state)(ref.studyID));
 
+// XXX move to model?
 export var allCohorts = state =>
 		Let((st = userStudy(state)) =>
 			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
@@ -89,13 +90,13 @@ var probeFieldSpec = ({dsID, name}) => ({
 	fields: [name]
 });
 
-var codedFieldSpec = ({dsID, name}) => ({
+var codedFieldSpec = ({dsID, field}) => ({
 	dsID,
 	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
 	valueType: 'coded',
 	fieldType: 'clinical',
 	colorClass: 'clinical',
-	fields: [name]
+	fields: [field]
 });
 
 function fetchMap(state, dims, samples) {
@@ -111,13 +112,13 @@ var noop = () => {};
 var colorMode = {
 	dataset: (serverBus, state) => {
 		var [host, name] = hasDatasource(state, datasetCohort(state)),
-			field = codedFieldSpec({dsID: toDsID(host, name), name: '_DATASOURCE'});
+			field = codedFieldSpec({dsID: toDsID(host, name), field: '_DATASOURCE'});
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},
 	donor: (serverBus, state) => {
 		var [host, name] = hasDonor(state, datasetCohort(state)),
-			field = codedFieldSpec({dsID: toDsID(host, name), name: '_DONOR'});
+			field = codedFieldSpec({dsID: toDsID(host, name), field: '_DONOR'});
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},
@@ -207,8 +208,7 @@ var controls = actionPrefix({
 	},
 	cellType: (state, cellType) => assocIn(state, ['colorBy', 'cellType'], cellType),
 	'cellType-post!': (serverBus, state, newState, cellType) => {
-		var {dsID, feature} = cellType,
-			field = codedFieldSpec({dsID, name: feature});
+		var field = codedFieldSpec(cellType);
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},

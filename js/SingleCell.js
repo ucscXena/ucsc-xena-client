@@ -6,7 +6,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Select, Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {maps, cellTypeCluster, hasDataset} from './models/map';
+import {maps, cellTypeCluster, hasDataset, labelTransfer} from './models/map';
 import {allCohorts} from './controllers/singlecell.js';
 import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, getIn, groupBy, isEqual, keys, Let, pick} = require('./underscore_ext').default;
@@ -98,7 +98,7 @@ var getOpt = opt => menuItem({value: opt.value}, opt.label);
 // XXX change models::maps to return them grouped, so we don't have to do
 // this.
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
-	Object.keys(g).sort().map(k => [listSubheader(k), g[k].map(getOpt)]));
+	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
        var opts = availableMaps[layout].map(([, {label, cohort}], i) => ({'value': i,
@@ -267,10 +267,16 @@ var cellTypeSelector = createSelector(
 	state => getIn(state, ['singlecell', 'cohortDatasets']),
 	(cohorts, cohortDatasets) => cellTypeCluster(cohorts, cohortDatasets));
 
+var labelTransferSelector = createSelector(
+	state => allCohorts(state),
+	state => getIn(state, ['singlecell', 'cohortDatasets']),
+	(cohorts, cohortDatasets) => labelTransfer(cohorts, cohortDatasets));
+
 var selector = state => assocIn(state,
 	// XXX why two keys, 'map' and 'available'?
 	['singlecell', 'map', 'available'], mapSelector(state),
-	['singlecell', 'cellType'], cellTypeSelector(state));
+	['singlecell', 'cellType'], cellTypeSelector(state),
+	['singlecell', 'labelTransfer'], labelTransferSelector(state));
 
 
 export default ({state, ...rest}) => singleCellPage({...rest, state: selector(state)});
