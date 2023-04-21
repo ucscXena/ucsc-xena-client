@@ -67,12 +67,23 @@ function fetchSubtypes(serverBus) {
 						.map(filterSubtypes)]);
 }
 
-var controls = {
-	'init-post!': (serverBus, state, newState) => {
-		var {gene, subtypeA, status} = newState.transcripts || {};
+function initalFetch(serverBus, state) {
+		var {gene, subtypeA, status} = state.transcripts || {};
 		fetchSubtypes(serverBus);
 		if ((status === 'loading' || status === 'error') && gene && subtypeA) {
-			fetchTranscripts(serverBus, newState.transcripts);
+			fetchTranscripts(serverBus, state.transcripts);
+		}
+}
+
+var controls = {
+	'init-post!': (serverBus, state, newState) => {
+		if (newState.page === 'transcripts') {
+			initalFetch(serverBus, newState);
+		}
+	},
+	'navigate-post!': (serverBus, state, newState, page) => {
+		if (page === 'transcripts' && !_.getIn(newState, ['transcripts', 'subtypes'])) {
+			initalFetch(serverBus, state);
 		}
 	},
 	loadGene: (state, gene, subtypeA, subtypeB, unit) => {

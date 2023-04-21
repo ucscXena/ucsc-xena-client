@@ -246,8 +246,8 @@ class TranscriptsContainer extends React.Component {
 	};
 
 	render() {
-		var {state, selector, ...props} = this.props;
-		return <Transcripts {...{...props, state: selector(state)}} getState={this.getState}/>;
+		var {state, ...props} = this.props;
+		return <Transcripts {...{...props, state}} getState={this.getState}/>;
 	}
 }
 
