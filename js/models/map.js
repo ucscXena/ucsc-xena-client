@@ -1,4 +1,4 @@
-var {find, findValue, get, getIn, Let, merge, pairs, values} = require('../underscore_ext').default;
+var {find, findValue, get, getIn, Let, merge, pairs, pick, values} = require('../underscore_ext').default;
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -9,7 +9,9 @@ var allCohortDatasets = (cohort, cohortDatasets) =>
 var cohortMaps = cohortDatasets => ({cohort}) =>
 	allCohortDatasets(cohort, cohortDatasets)
 		.map(ds => getProps(ds.map)
-			.map(m => [ds.dsID, merge(m, {cohort})])).flat();
+			.map(m => merge({dsID: ds.dsID, cohort},
+				pick(m, 'label', 'type', 'dimension', 'image', 'spot_diameter'))))
+		.flat();
 
 export var maps = (cohorts, cohortDatasets) =>
 	!cohorts.length || !cohortDatasets ? [] :
@@ -52,22 +54,14 @@ export var cohortFields = (cohort, cohortDatasets) =>
 		labelTransferProb: labelTransferProb(ds)
 	}));
 
-
-// XXX deprecate this call?
-export function defaultMap(cohort, cohortDatasets, {map, view}) {
-	var all = maps(cohort, cohortDatasets),
-		selected = map && find(all, m => m[0] === map[0]);
-	return selected ? {map, view} : {map: all[0], view: undefined};
-}
-
-export var hasDataset = state => getIn(state, ['dataset', 0]);
+export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
 export var datasetMeta = state =>
 	Let((dsID = hasDataset(state)) =>
-		// use dataset cohort, in the state.dataset[1]
+		// XXX use dataset cohort, in the state.dataset[1]
 		values(state.cohortDatasets)
 		.map(server => values(server).flat()).flat().find(ds => ds.dsID === dsID));
 
-export var datasetCohort = state => getIn(state, ['dataset', 1, 'cohort']);
+export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
 var hasField = field => (state, cohort) =>
 	findValue(pairs(getIn(state, ['donorFields', cohort])),

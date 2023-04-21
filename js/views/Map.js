@@ -355,7 +355,7 @@ export class Map extends PureComponent {
 		var {onTooltip} = this;
 
 		var mapState = this.props.state,
-			[dsID, params] = _.get(mapState, 'dataset', []),
+			{dsID, ...params} = _.get(mapState, 'dataset', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
 			status = params.dimension.map(d => _.getIn(mapData, [d, 'status'])),
 			loading = _.any(status, s => s === 'loading'),

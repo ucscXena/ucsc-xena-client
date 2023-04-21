@@ -17,7 +17,7 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cohortFields, datasetCohort, hasDataset, maps} from './models/map';
 import Integrations from './views/Integrations';
-var {assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, pick} = require('./underscore_ext').default;
+var {assoc, assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
 import widgets from './columnWidgets';
 import {scaleParams} from './colorScales';
@@ -39,8 +39,6 @@ var welcome = ({handlers: {onEnter}}) =>
 	div(span("Welcome to the Xena's multi-omic integration single cell portal"),
 		button({onClick: onEnter}, 'enter'));
 
-// XXX change cohortList to be an object instead of a list (in the controller),
-// so we don't have to search it for the current selection.
 var studyList = ['defaultStudy', 'studyList'];
 
 // XXX take max & round to a few digits.
@@ -88,7 +86,7 @@ var layouts = {
 };
 
 var available = state =>
-	groupBy(get(state, 'map'), ([, m]) => m.type);
+	groupBy(get(state, 'map'), 'type');
 
 var availableCategories = available => keys(pick(layouts, keys(available)));
 
@@ -104,15 +102,16 @@ var layoutSelect = ({onLayout, props: {state}}) =>
 
 var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
+var mapValue = (list, selected) =>
+	findIndexDefault(list, m => isEqual(m, selected), '');
 // XXX change models::maps to return them grouped, so we don't have to do
 // this.
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
 	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
-       var opts = availableMaps[layout].map(([, {label, cohort}], i) => ({'value': i,
-                       label, cohort})),
-               sel = select({value: selected ? findIndexDefault(availableMaps[layout], av => av[0] === selected[0], '') : '', onChange},
+       var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i)),
+               sel = select({value: mapValue(availableMaps[layout], selected), onChange},
                        ...mapOpts(opts));
 
        return (

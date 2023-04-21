@@ -84,9 +84,8 @@ var codedFieldSpec = ({dsID, field}) => ({
 	fields: [field]
 });
 
-function fetchMap(state, dims, samples) {
-	var [dsID] = state.dataset,
-		queries = dims.map(name => fetch(probeFieldSpec({dsID, name}),
+function fetchMap(dsID, dims, samples) {
+	var queries = dims.map(name => fetch(probeFieldSpec({dsID, name}),
 			samples.samples));
 
 	return Rx.Observable.zipArray(queries);
@@ -113,7 +112,7 @@ var colorMode = {
 	undefined: noop
 };
 
-var setMapLoading = state => Let(([dsID, {dimension}] = state.dataset) =>
+var setMapLoading = state => Let(({dsID, dimension} = state.dataset) =>
 	updateIn(state, ['data', dsID], data =>
 		dimension.filter(dim => getIn(data, [dim, 'status']) !== 'loaded')
 		.reduce((data, dim) => assocIn(data, [dim, 'status'], 'loading'),
@@ -126,17 +125,15 @@ var actionPrefix = actions =>
 
 var spreadsheetControls = actionPrefix({
 	'dataset-post!': (serverBus, state, newState) => {
-		// XXX this needs to pull cohorts from the study
-		// Or do we wait until a dataset is selected?
 		var {singlecell} = newState,
-			[dsID, params] = singlecell.dataset,
-			dims = params.dimension.filter(dim => getIn(singlecell,
+			{dsID, dimension} = singlecell.dataset,
+			dims = dimension.filter(dim => getIn(singlecell,
 				['data', dsID, dim, 'status']) !== 'loaded');
 		serverBus.next(['singlecell-map-data',
 			// take(1) because samplesQuery can throw an error if one host is down.
 			// XXX Does this create a race? Maybe need a catch here?
 			samplesQuery(userServers(newState.spreadsheet), {name: datasetCohort(singlecell)}, Infinity)
-				.take(1).concatMap(samples => fetchMap(singlecell, dims, samples)
+				.take(1).concatMap(samples => fetchMap(dsID, dims, samples)
 					.map(data => [samples, data])), dsID, dims]);
 	}
 });
@@ -163,7 +160,7 @@ var pickRadius = (mins, maxs, len, pct = 0.2) =>
 
 var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
 var setRadius = state =>
-	Let((dsID = getIn(state.dataset, [0]), data = allCols(getIn(state, ['data', dsID])),
+	Let(({dsID} = state.dataset, data = allCols(getIn(state, ['data', dsID])),
 		mins = data.map(minnull), maxs = data.map(maxnull),
 		radius = pickRadius(mins, maxs, data[0].length)) =>
 			assoc(state, ['radiusBase'], radius, ['radius'], radius));
