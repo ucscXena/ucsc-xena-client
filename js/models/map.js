@@ -55,11 +55,6 @@ export var cohortFields = (cohort, cohortDatasets) =>
 	}));
 
 export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
-export var datasetMeta = state =>
-	Let((dsID = hasDataset(state)) =>
-		// XXX use dataset cohort, in the state.dataset[1]
-		values(state.cohortDatasets)
-		.map(server => values(server).flat()).flat().find(ds => ds.dsID === dsID));
 
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
