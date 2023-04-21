@@ -3,11 +3,12 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, get, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pick, updateIn, values} = require('../underscore_ext').default;
+var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pick, updateIn, values} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
-import {datasetCohort, hasDatasource, hasDonor} from '../models/map';
+import {datasetCohort, hasDatasource, hasDonor, userStudyId, allCohorts}
+	from '../models/map';
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -44,29 +45,13 @@ var allDatasets = state =>
 	Let((list = cohortList(state)) =>
 		list.map(({preferredDataset = []}) => preferredDataset.map(ds => ['datasetMetadata', ds.host, ds.name])).flat());
 
-var studyById = state => id =>
-		getIn(state, ['singlecell', 'defaultStudy', 'studyList'], [])
-			.find(s => s.study === id);
-
-var userStudyId = state => getIn(state, ['singlecell', 'integration']);
-var userStudy = state => studyById(state)(userStudyId(state));
-
-var studyCohorts = study => get(study, 'cohortList', []);
-var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
-	studyById(state)(ref.studyID));
-
-// XXX move to model?
-export var allCohorts = state =>
-		Let((st = userStudy(state)) =>
-			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
-
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] :
 		[['defaultStudy'],
 			...(getIn(state, ['singlecell', 'defaultStudy']) ?
 				allDatasets(state) : []),
-			...(userStudyId(state) ?
-				Let((cohorts = allCohorts(state)) =>
+			...(userStudyId(state.singlecell) ?
+				Let((cohorts = allCohorts(state.singlecell)) =>
 					userServers(state.spreadsheet)
 					.map(server =>
 						cohorts.map(cohort =>
@@ -158,7 +143,7 @@ var spreadsheetControls = actionPrefix({
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 var colorDataset = state => state.colorBy.mode === 'gene' ?
-	state.datasetMetadata[state.gene.host][state.gene.name] : {};
+	state.datasetMetadata[state.colorBy.gene.host][state.colorBy.gene.name] : {};
 var colorScale = (state, data, field) =>
 	Let((dataset = colorDataset(state)) =>
 		colorSpec(merge(field, {defaultNormalization: dataset.colnormalization}),
@@ -188,11 +173,11 @@ var controls = actionPrefix({
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	layout: (state, layout) => assoc(state, 'layout', layout),
 	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', undefined)),
-	gene: (state, gene) => assoc(state, 'gene', gene),
+	gene: (state, gene) => assocIn(state, ['colorBy', 'gene'], gene),
 	'gene-post!': (serverBus, state, newState) => {
 		// XXX Should we assume this is a probe dataset, vs. a gene
 		// dataset?
-		var {host, name, gene} = newState.gene,
+		var {host, name, gene} = newState.colorBy.gene,
 			field = probeFieldSpec({dsID: toDsID(host, name), name: gene});
 		// XXX Should we use models/column.js to populate column fields, vs.
 		// shimming it in various places? It's more general, but not sure if
@@ -200,9 +185,9 @@ var controls = actionPrefix({
 		serverBus.next(['singlecell-color-field',
 			fetch(field, newState.samples.samples), field]);
 	},
-	'reset': state => assoc(state, 'layout', undefined, 'dataset', undefined, 'integration', undefined, 'gene', undefined, 'colorBy', undefined),
+	'reset': state => assoc(state, 'layout', undefined, 'dataset', undefined, 'integration', undefined, 'colorBy', undefined),
 	'color-mode': (state, mode) =>
-		assocIn(state, ['colorBy', 'mode'], mode, ['colorBy', 'field'], undefined, ['gene'], undefined),
+		assocIn(state, ['colorBy', 'mode'], mode, ['colorBy', 'field'], undefined, ['colorBy', 'gene'], undefined),
 	'color-mode-post!': (serverBus, state, newState, mode) => {
 		colorMode[mode](serverBus, newState, mode);
 	},
@@ -229,9 +214,6 @@ var controls = actionPrefix({
 				['colorBy', 'scaleBounds'], scaleBounds(data, scale))),
 	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
 	radius: (state, radius) => assocIn(state, ['radius'], radius),
-//	'map-hide-codes': (state, hidden) =>
-//		assocIn(state, ['map', 'hidden',
-//			state.spreadsheet.map.colorColumn], hidden),
 	// XXX need to clear this cache at some point,
 	'map-data': (state, [samples, data], dsID, dims) =>
 			setRadius(

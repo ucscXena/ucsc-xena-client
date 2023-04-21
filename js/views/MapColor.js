@@ -100,7 +100,7 @@ var modeOptions = {
 		div(
 			geneDatasetSuggest({label: 'Gene name', datasets:
 				getDataSubType(state, hasGene(state, datasetCohort(state))),
-				onSelect: onGene, value: state.gene}),
+				onSelect: onGene, value: state.colorBy.gene}),
 			colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
 				null)
 };

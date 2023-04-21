@@ -82,3 +82,18 @@ export var hasGene = (state, cohort) =>
 		findValue(getIn(state, ['defaultStudy', 'studyList']),
 			study => find(study.cohortList, c => c.cohort === cohort)),
 		'preferredDataset');
+
+var studyById = state => id =>
+		getIn(state, ['defaultStudy', 'studyList'], [])
+			.find(s => s.study === id);
+
+export var userStudyId = state => get(state, 'integration');
+var userStudy = state => studyById(state)(userStudyId(state));
+
+var studyCohorts = study => get(study, 'cohortList', []);
+var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
+	studyById(state)(ref.studyID));
+
+export var allCohorts = state =>
+		Let((st = userStudy(state)) =>
+			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));

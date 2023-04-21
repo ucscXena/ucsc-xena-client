@@ -15,8 +15,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Select, Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {maps, hasDataset, datasetCohort, cohortFields} from './models/map';
-import {allCohorts} from './controllers/singlecell.js';
+import {allCohorts, cohortFields, datasetCohort, hasDataset, maps} from './models/map';
 import Integrations from './views/Integrations';
 var {assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
@@ -283,7 +282,7 @@ var {createSelectorCreator, defaultMemoize} = require('reselect');
 var createSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 var mapSelector = createSelector(
-	state => allCohorts({singlecell: state}),
+	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
 	(cohorts, cohortDatasets) => maps(cohorts, cohortDatasets));
 
