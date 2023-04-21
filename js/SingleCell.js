@@ -260,13 +260,14 @@ class SingleCellPage extends PureComponent {
 		this.props.callback(['navigate', page, params]);
 	};
 
-	componentDidUpdate() {
+	componentDidMount() {
 		const {getState, onImport, state: {isPublic}} = this.props,
 			{onNavigate} = this;
 
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport, onNavigate, activeLink: 'singlecell'});
 	}
+
 	render() {
 		var {state: {highlight}, props: {state},
 			handlers: {onNavigate, ...handlers}} = this;
