@@ -354,8 +354,7 @@ export class Map extends PureComponent {
 	render() {
 		var {onTooltip} = this;
 
-		var state = this.props.state,
-			mapState = _.get(state, ['singlecell']),
+		var mapState = this.props.state,
 			[dsID, params] = _.get(mapState, 'dataset', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
 			status = params.dimension.map(d => _.getIn(mapData, [d, 'status'])),
@@ -363,9 +362,7 @@ export class Map extends PureComponent {
 			error = _.any(status, s => s === 'error'),
 			columns = params.dimension
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
-			colorId = getColorColumn(state),
 			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
-			hideColors = _.getIn(mapState, ['hidden', colorId]),
 			colors = _.getIn(mapState, ['colorBy', 'scale']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
@@ -374,7 +371,7 @@ export class Map extends PureComponent {
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
-				hideColors, labels, view, image},
+				labels, view, image},
 			drawing = image ? vivDrawing : mapDrawing;
 
 		return div({className: styles.content},

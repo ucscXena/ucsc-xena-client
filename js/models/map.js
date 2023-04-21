@@ -1,49 +1,56 @@
-var {find, findValue, get, getIn, Let, merge, has, object, pairs, values} = require('../underscore_ext').default;
-var cohortMaps = cohortDatasets => ({cohort}) =>  {
-	var datasets = get(cohortDatasets, cohort);
-	var maps = [].concat(...values(datasets)).filter(d => has(d, 'map'))
-		.map(ds => ds.map.map(m => [ds.dsID, merge(m, {cohort})])).flat();
-	return maps;
+var {find, findValue, get, getIn, Let, merge, pairs, values} = require('../underscore_ext').default;
+
+var getProps = (...arrs) => arrs.map(a => a || []).flat();
+
+// array of cohort datasets from all hosts
+var allCohortDatasets = (cohort, cohortDatasets) =>
+	values(get(cohortDatasets, cohort)).flat();
+
+var cohortMaps = cohortDatasets => ({cohort}) =>
+	allCohortDatasets(cohort, cohortDatasets)
+		.map(ds => getProps(ds.map)
+			.map(m => [ds.dsID, merge(m, {cohort})])).flat();
+
+export var maps = (cohorts, cohortDatasets) =>
+	!cohorts.length || !cohortDatasets ? [] :
+	cohorts.map(cohortMaps(cohortDatasets)).flat();
+
+
+var cellTypeCluster = datasets =>
+	datasets.map(ds => getProps(ds.cluster, ds.cellType)
+		.map(m => ({
+			dsID: ds.dsID,
+			field: m.feature,
+			label: m.assay
+		}))).flat();
+
+var labelTransfer = datasets =>
+	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
+			dsID: ds.dsID,
+			field: m.transferredLabel,
+			label: m.assay
+		}))).flat();
+
+var labelTransferProb = datasets =>
+	datasets.map(ds => getProps(ds.labeltransferfullprob).map(m => ({
+			dsID: ds.dsID,
+			category: m.category,
+			label: m.assay
+		}))).flat();
+
+var empty = {
+	cellType: [],
+	labelTransfer: [],
+	labelTransferProb: []
 };
 
-export function maps(cohorts, cohortDatasets) {
-	if (!cohorts.length || !cohortDatasets) {
-		return [];
-	}
-	return cohorts.map(cohortMaps(cohortDatasets)).flat();
-}
-
-var cohortCellTypeCluster = cohortDatasets => ({cohort}) =>
-	[cohort,
-		[].concat(...values(get(cohortDatasets, cohort)))
-			.filter(d => has(d, 'cluster') || has(d, 'cellType'))
-			.map(ds => (ds.cluster || []).concat(ds.cellType || [])
-				.map(m => ({
-					dsID: ds.dsID,
-					field: m.feature,
-					label: m.assay
-				}))).flat()];
-
-export function cellTypeCluster(cohorts, cohortDatasets) {
-	return object(cohorts.map(cohortCellTypeCluster(cohortDatasets)));
-}
-
-// XXX try to factor out the common bits in all these methods. Maybe
-// make one larger method that returns maps, cell types, and prob, under
-// three keys, vs. having a bunch of different selectors.
-var cohortLabelTransfer = cohortDatasets => ({cohort}) =>
-	[cohort,
-		[].concat(...values(get(cohortDatasets, cohort)))
-			.filter(d => has(d, 'labeltransfer'))
-			.map(ds => ds.labeltransfer.map(m => ({
-					dsID: ds.dsID,
-					field: m.transferredLabel,
-					label: m.assay
-				}))).flat()];
-
-export function labelTransfer(cohorts, cohortDatasets) {
-	return object(cohorts.map(cohortLabelTransfer(cohortDatasets)));
-}
+export var cohortFields = (cohort, cohortDatasets) =>
+	!cohort ? empty :
+	Let((ds = allCohortDatasets(cohort, cohortDatasets)) => ({
+		cellType: cellTypeCluster(ds),
+		labelTransfer: labelTransfer(ds),
+		labelTransferProb: labelTransferProb(ds)
+	}));
 
 
 // XXX deprecate this call?

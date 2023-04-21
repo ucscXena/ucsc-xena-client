@@ -212,6 +212,16 @@ var controls = actionPrefix({
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},
+	prob: (state, prob) => assocIn(state, ['colorBy', 'prob'], prob),
+	probCell: (state, probCell) => assocIn(state, ['colorBy', 'probCell'], probCell),
+	'probCell-post!': (serverBus, state, newState) => {
+		var field = probeFieldSpec({
+			dsID: newState.colorBy.prob.dsID,
+			name: newState.colorBy.probCell
+		});
+		serverBus.next(['singlecell-color-field',
+			fetch(field, newState.samples.samples), field]);
+	},
 	'color-field': (state, d, field) =>
 		Let((data = setAvg(d, field), scale = colorScale(state, data, field)) =>
 			assocIn(state, ['colorBy', 'field'], data,
