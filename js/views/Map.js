@@ -368,8 +368,7 @@ export class Map extends PureComponent {
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			radius = params.spot_diameter && params.spot_diameter / 2 ||
-				mapState.radius,
+			{radius} = mapState,
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,

@@ -151,9 +151,10 @@ var pickRadius = (mins, maxs, len, pct = 0.2) =>
 
 var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
 var setRadius = state =>
-	Let(({dsID} = state.dataset, data = allCols(getIn(state, ['data', dsID])),
+	Let(({dsID, spot_diameter: sd} = state.dataset,
+		data = allCols(getIn(state, ['data', dsID])),
 		mins = data.map(minnull), maxs = data.map(maxnull),
-		radius = pickRadius(mins, maxs, data[0].length)) =>
+		radius = sd ? sd / 2 : pickRadius(mins, maxs, data[0].length)) =>
 			assoc(state, ['radiusBase'], radius, ['radius'], radius));
 
 var controls = actionPrefix({
