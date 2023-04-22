@@ -7,7 +7,7 @@ var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mm
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
-import {datasetCohort, hasDatasource, hasDonor, userStudyId, allCohorts}
+import {datasetCohort, hasDatasource, hasDonor, allCohorts}
 	from '../models/map';
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
@@ -49,15 +49,13 @@ var singlecellData = state =>
 		[['defaultStudy'],
 			...(getIn(state, ['singlecell', 'defaultStudy']) ?
 				allDatasets(state) : []),
-			...(userStudyId(state.singlecell) ?
-				Let((cohorts = allCohorts(state.singlecell)) =>
-					userServers(state.spreadsheet)
-					.map(server =>
-						cohorts.map(cohort =>
-							[['cohortDatasets', cohort.cohort, server],
-								['donorFields', cohort.cohort, server]]).flat())
-					.flat()) :
-				[]),
+			...Let((cohorts = allCohorts(state.singlecell)) =>
+				userServers(state.spreadsheet)
+				.map(server =>
+					cohorts.map(cohort =>
+						[['cohortDatasets', cohort.cohort, server],
+							['donorFields', cohort.cohort, server]]).flat())
+				.flat()),
 		];
 
 // XXX implement invalidatePath
