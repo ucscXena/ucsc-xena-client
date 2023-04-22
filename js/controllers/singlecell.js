@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pick, updateIn, values} = require('../underscore_ext').default;
+var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pluck, pick, updateIn, values} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
@@ -27,13 +27,12 @@ var fetchMethods = {
 var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
-	cohortDatasets: identity, // XXX fix this!
-	donorFields: identity, // XXX fix this!
 	// ['cohortDatasets', cohort, server]
 	// ['donorFields', cohort, server]
-	// limit cache to one cohort
+	// limit cache to cohorts in study
 	default: (state, path) =>
-		updateIn(state, ['singlecell', path[0]], item => pick(item, path[1]))
+		Let((cohorts = pluck(allCohorts(state.singlecell), 'cohort')) =>
+			updateIn(state, ['singlecell', path[0]], item => pick(item, cohorts)))
 };
 
 
