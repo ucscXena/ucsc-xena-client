@@ -1,13 +1,15 @@
+var {Fragment} = require('react');
 var {getIn, identity, isEqual, Let} = require('../underscore_ext').default;
-import {Select, Slider, ListSubheader, MenuItem} from '@material-ui/core';
-import {div, el, p} from '../chart/react-hyper';
+import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
+import {div, el} from '../chart/react-hyper';
 import {datasetCohort, hasDataset, hasDatasource, hasDonor, hasGene} from '../models/map';
 import geneDatasetSuggest from './GeneDatasetSuggest';
+import xSelect from './xSelect';
 
-var select = el(Select);
 var menuItem = el(MenuItem);
 var slider = el(Slider);
 var listSubheader = el(ListSubheader);
+var fragment = el(Fragment);
 
 var modes = ['dataset', 'donor', 'type', 'prob', 'gene'];
 
@@ -85,15 +87,24 @@ var modeOptions = {
 	dataset: () => null,
 	donor: () => null,
 	type: ({state, onCellType: onChange}) =>
-		div(p('Select a cell type / cluster'),
-			select({value: cellTypeValue(state), onChange},
-				...cellTypeOpts(state))),
+		div(xSelect({
+				id: 'celltype',
+				label: 'Select a cell type / cluster',
+				value: cellTypeValue(state), onChange
+			}, ...cellTypeOpts(state))),
 	prob: ({state, scale, onProb, onProbCell, onScale}) =>
-		div(p('Select a transferred cell type / cluster'),
-			select({value: probValue(state), onChange: onProb}, ...probOpts(state)),
-			p('Select cell type'),
-			select({value: probCellValue(state), onChange: onProbCell},
-				...probCellOpts(state)),
+		fragment(xSelect({
+					id: 'prob',
+					label: 'Select a transferred cell type / cluster',
+					value: probValue(state),
+					onChange: onProb
+				}, ...probOpts(state)),
+			xSelect({
+					id: 'prob-cell',
+					label: 'Select cell type',
+					value: probCellValue(state),
+					onChange: onProbCell
+				}, ...probCellOpts(state)),
 			colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
 				null),
 	gene: ({state, onGene, scale, onScale}) =>
@@ -127,8 +138,10 @@ var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
 var modeValue = state => getIn(state, ['colorBy', 'mode'], '');
 
 export default ({handlers: {onColorBy, ...handlers}, scale, state}) =>
-	div(
-		p('Select how to color cells'),
-		select({value: modeValue(state), onChange: onColorBy},
-			...availModes(state).map(modeOpt)),
+	fragment(xSelect({
+				id: 'color-mode',
+				label: 'Select how to color cells',
+				value: modeValue(state),
+				onChange: onColorBy
+			}, ...availModes(state).map(modeOpt)),
 		modeOptions[modeValue(state)]({state, scale, ...handlers}));

@@ -9,10 +9,10 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {div, el, h2, label, span, textNode} from './chart/react-hyper';
+import {div, el, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Button, Icon, IconButton, ListSubheader, MenuItem,
-	Select, Slider, Tab, Tabs} from '@material-ui/core';
+	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cohortFields, datasetCohort, hasDataset, maps} from './models/map';
@@ -21,10 +21,10 @@ var {assoc, assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, 
 import MapColor from './views/MapColor';
 import widgets from './columnWidgets';
 import {scaleParams} from './colorScales';
+import xSelect from './views/xSelect';
 var map = el(Map);
 var button = el(Button);
 var xRadioGroup = el(XRadioGroup);
-var select = el(Select);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -95,7 +95,7 @@ var integrationLabel = state =>
 
 
 var layoutSelect = ({onLayout, props: {state}}) =>
-	xRadioGroup({label: 'Select layout', value: state.layout || '',
+	xRadioGroup({label: 'Select a layout type', value: state.layout || '',
 		onChange: onLayout,
 		options:
 		availableCategories(available(state)).map(l => ({label: layouts[l], value: l}))});
@@ -110,13 +110,12 @@ var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
 	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
-       var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i)),
-               sel = select({value: mapValue(availableMaps[layout], selected), onChange},
-                       ...mapOpts(opts));
-
-       return (
-               div({className: styles.mapSelector},
-                       label(textNode(`Select a ${layouts[layout]} layout`)), div(sel)));
+	var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i));
+	return xSelect({
+		id: 'map-select',
+		label: `Select a ${layouts[layout]} layout`,
+		value: mapValue(availableMaps[layout], selected),
+		onChange}, ...mapOpts(opts));
 }
 
 var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
@@ -130,7 +129,7 @@ var vizPanel = ({props: {state}}, {dataset, layout} = state) =>
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 
 var tabPanel = ({value, index}, ...children) =>
-	div({hidden: value !== index}, ...children);
+	div({hidden: value !== index, className: styles.panel}, ...children);
 
 var colorScale = state => getIn(state, ['colorBy', 'scale']);
 var scaleValue = state => Let((scale = colorScale(state)) =>

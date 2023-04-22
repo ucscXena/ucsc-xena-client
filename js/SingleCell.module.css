@@ -19,6 +19,10 @@
 	display: flex;
 }
 
+.panel > * {
+	margin-top: 30px;
+}
+
 .vizBody > :nth-child(1) {
 	flex-grow: 1;
 	display: flex;
