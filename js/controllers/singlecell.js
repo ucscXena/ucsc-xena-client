@@ -166,7 +166,7 @@ var setRadius = state =>
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
-	integration: (state, cohort) => assoc(state, 'integration', cohort),
+	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', undefined),
 	layout: (state, layout) => assoc(state, 'layout', layout),
 	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', undefined)),
 	gene: (state, gene) => assocIn(state, ['colorBy', 'gene'], gene),
