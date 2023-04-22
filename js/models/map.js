@@ -85,3 +85,7 @@ var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
 export var allCohorts = state =>
 		Let((st = userStudy(state)) =>
 			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
+
+export var dotRange = Let((ratio = 4) =>
+	radius => ({min: radius / ratio, max: radius * ratio,
+		step: radius * (ratio - 1 / ratio) / 200}));

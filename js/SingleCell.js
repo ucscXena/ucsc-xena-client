@@ -15,7 +15,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cohortFields, datasetCohort, hasDataset, maps} from './models/map';
+import {allCohorts, cohortFields, datasetCohort, dotRange, hasDataset, maps} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, pick} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
@@ -135,15 +135,11 @@ var colorScale = state => getIn(state, ['colorBy', 'scale']);
 var scaleValue = state => Let((scale = colorScale(state)) =>
 	scale && scaleParams(scale));
 
-var dotRange = Let((ratio = 4) =>
-	radius => ({min: radius / ratio, max: radius * ratio,
-		step: radius * (ratio - 1 / ratio) / 200}));
-
 var dotSize = (state, onChange) =>
 	!state.dataset || !state.radiusBase ? null :
 	div(
 		label('Dot size'),
-		slider({...dotRange(state.radiusBase), value: state.radius, onChange}));
+		slider({...dotRange(state.radiusBase), marks: [{value: state.radiusBase}], value: state.radius, onChange}));
 
 class MapTabs extends PureComponent {
 	state = {value: 0}

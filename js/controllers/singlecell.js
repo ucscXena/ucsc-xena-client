@@ -7,7 +7,7 @@ var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mm
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
-import {datasetCohort, hasDatasource, hasDonor, allCohorts}
+import {allCohorts, datasetCohort, dotRange, hasDatasource, hasDonor}
 	from '../models/map';
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
@@ -212,8 +212,10 @@ var controls = actionPrefix({
 			['colorBy', 'status'], 'error',
 			['colorBy', 'error'], error),
 	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
-	radius: (state, radius) => assocIn(state, ['radius'], radius),
-	// XXX need to clear this cache at some point,
+	radius: (state, r) => Let(
+		(r0 = state.radius, rb = state.radiusBase, {step} = dotRange(rb)) =>
+			(r - r0) * (r - rb) > 0 && Math.abs(r - rb) < step * 10 ? state :
+			assocIn(state, ['radius'], r)),
 	'map-data': (state, [samples, data], dsID, dims) =>
 			setRadius(
 				updateIn(assoc(state, 'samples', samples), ['data', dsID], dsData =>
