@@ -18,6 +18,10 @@
 	cursor: pointer;
 }
 
+.inline .item {
+	display: inline-block;
+}
+
 .label {
 	display: block;
 	margin-left: 20px;

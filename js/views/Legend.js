@@ -17,8 +17,9 @@ class Legend extends React.Component {
 
 	render() {
 		var {labels, colors, titles, max, labelheader, footnotes, addBreakend = 0,
-				addNullNotation = 0, clickable = false} = this.props,
-			style = classNames(clickable ? compStyles.clickable : null),
+				addNullNotation = 0, inline, clickable} = this.props,
+			style = classNames(clickable && compStyles.clickable,
+				inline && compStyles.inline),
 			ellipsis = labels.length > max,
 			items = _.map(_.last(_.zip(labels, colors, titles), max), ([l, c, t], i) =>
 				(<div key={i} data-i={Math.max(labels.length - max, 0) + i} title={t}

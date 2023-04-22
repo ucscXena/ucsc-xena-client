@@ -35,6 +35,12 @@
 	width: 300px;
 }
 
+/* I'm sure this bad design. Add top margin to legend. */
+.vizBody > :nth-child(2) > :nth-child(2) {
+	margin-top: 30px;
+}
+
+
 .tabs button {
 	min-width: unset;
 }

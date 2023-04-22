@@ -176,7 +176,8 @@ var legend = state => {
 		codes = getIn(state, ['field', 'codes']);
 
 	return heatmap[0] ?
-		widgets.legend({column: {fieldType, valueType, heatmap, colors, codes}}) :
+		widgets.legend({inline: true,
+			column: {fieldType, valueType, heatmap, colors, codes}}) :
 		null;
 };
 
