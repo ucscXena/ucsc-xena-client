@@ -90,23 +90,15 @@ function fetchMap(dsID, dims, samples) {
 
 var toDsID = (host, name) => JSON.stringify({host, name});
 var noop = () => {};
+var fetchColorField = (getDataset, field) => (serverBus, state) => {
+		var [host, name] = getDataset(state, datasetCohort(state)),
+			fieldSpec = codedFieldSpec({dsID: toDsID(host, name), field});
+		serverBus.next(['singlecell-color-field',
+			fetch(fieldSpec, state.samples.samples), fieldSpec]);
+};
 var colorMode = {
-	dataset: (serverBus, state) => {
-		var [host, name] = hasDatasource(state, datasetCohort(state)),
-			field = codedFieldSpec({dsID: toDsID(host, name), field: '_DATASOURCE'});
-		serverBus.next(['singlecell-color-field',
-			fetch(field, state.samples.samples), field]);
-	},
-	donor: (serverBus, state) => {
-		var [host, name] = hasDonor(state, datasetCohort(state)),
-			field = codedFieldSpec({dsID: toDsID(host, name), field: '_DONOR'});
-		serverBus.next(['singlecell-color-field',
-			fetch(field, state.samples.samples), field]);
-	},
-	type: noop,
-	prob: noop,
-	gene: noop,
-	undefined: noop
+	dataset: fetchColorField(hasDatasource, '_DATASOURCE'),
+	donor: fetchColorField(hasDonor, '_DONOR')
 };
 
 var setMapLoading = state => Let(({dsID, dimension} = state.dataset) =>
@@ -134,6 +126,8 @@ var spreadsheetControls = actionPrefix({
 					.map(data => [samples, data])), dsID, dims]);
 	}
 });
+
+var setColorLoading = state => assocIn(state, ['colorBy', 'status'], 'loading');
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 var colorDataset = state => state.colorBy.mode === 'gene' ?
@@ -167,7 +161,7 @@ var controls = actionPrefix({
 	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', undefined),
 	layout: (state, layout) => assoc(state, 'layout', layout),
 	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', undefined)),
-	gene: (state, gene) => assocIn(state, ['colorBy', 'gene'], gene),
+	gene: (state, gene) => assocIn(setColorLoading(state), ['colorBy', 'gene'], gene),
 	'gene-post!': (serverBus, state, newState) => {
 		// XXX Should we assume this is a probe dataset, vs. a gene
 		// dataset?
@@ -181,18 +175,23 @@ var controls = actionPrefix({
 	},
 	'reset': state => assoc(state, 'layout', undefined, 'dataset', undefined, 'integration', undefined, 'colorBy', undefined),
 	'color-mode': (state, mode) =>
-		assocIn(state, ['colorBy', 'mode'], mode, ['colorBy', 'field'], undefined, ['colorBy', 'gene'], undefined),
+		assocIn(colorMode[mode] ? setColorLoading(state) : state,
+			['colorBy', 'mode'], mode,
+			['colorBy', 'field'], undefined,
+			['colorBy', 'gene'], undefined),
 	'color-mode-post!': (serverBus, state, newState, mode) => {
-		colorMode[mode](serverBus, newState, mode);
+		(colorMode[mode] || noop)(serverBus, newState, mode);
 	},
-	cellType: (state, cellType) => assocIn(state, ['colorBy', 'cellType'], cellType),
+	cellType: (state, cellType) => assocIn(setColorLoading(state),
+		['colorBy', 'cellType'], cellType),
 	'cellType-post!': (serverBus, state, newState, cellType) => {
 		var field = codedFieldSpec(cellType);
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},
 	prob: (state, prob) => assocIn(state, ['colorBy', 'prob'], prob),
-	probCell: (state, probCell) => assocIn(state, ['colorBy', 'probCell'], probCell),
+	probCell: (state, probCell) => assocIn(setColorLoading(state),
+		['colorBy', 'probCell'], probCell),
 	'probCell-post!': (serverBus, state, newState) => {
 		var field = probeFieldSpec({
 			dsID: newState.colorBy.prob.dsID,
@@ -203,9 +202,15 @@ var controls = actionPrefix({
 	},
 	'color-field': (state, d, field) =>
 		Let((data = setAvg(d, field), scale = colorScale(state, data, field)) =>
-			assocIn(state, ['colorBy', 'field'], data,
+			assocIn(state,
+				['colorBy', 'status'], 'loaded',
+				['colorBy', 'field'], data,
 				['colorBy', 'scale'], scale,
 				['colorBy', 'scaleBounds'], scaleBounds(data, scale))),
+	'color-field-error': (state, error) =>
+		assocIn(state,
+			['colorBy', 'status'], 'error',
+			['colorBy', 'error'], error),
 	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
 	radius: (state, radius) => assocIn(state, ['radius'], radius),
 	// XXX need to clear this cache at some point,

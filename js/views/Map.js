@@ -357,13 +357,15 @@ export class Map extends PureComponent {
 		var mapState = this.props.state,
 			{dsID, ...params} = _.get(mapState, 'dataset', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
-			status = params.dimension.map(d => _.getIn(mapData, [d, 'status'])),
+			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
+			colors = _.getIn(mapState, ['colorBy', 'scale']),
+			colorMode = _.getIn(mapState, ['colorBy', 'mode']),
+			status = params.dimension.map(d => _.getIn(mapData, [d, 'status']))
+				.concat(colorMode ? _.getIn(mapState, ['colorBy', 'status']) : []),
 			loading = _.any(status, s => s === 'loading'),
 			error = _.any(status, s => s === 'error'),
 			columns = params.dimension
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
-			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
-			colors = _.getIn(mapState, ['colorBy', 'scale']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
 			radius = params.spot_diameter && params.spot_diameter / 2 ||
