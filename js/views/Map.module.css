@@ -7,12 +7,6 @@
 	flex-grow: 1;
 }
 
-.graph {
-	cursor: url(cursor.png) 12 12, crosshair;
-/*	width: 100%;
-	height: 100%; */
-}
-
 /* required to set width of the status overlay */
 .graphWrapper {
 	position: relative;
@@ -21,37 +15,7 @@
 	margin-right: 5px;
 	border: 1px solid black;
 	cursor: url(cursor.png) 12 12, crosshair;
-/*	background-color: #000000;*/
 }
-
-.sideBar {
-	display: flex;
-	flex-direction: column;
-	max-width: 200px;
-	height: 100%;
-}
-
-.sideBar * {
-	flex-grow: 0;
-	max-width: 100%;
-}
-
-.actions button {
-	font-size: 80%;
-	height: 30px;
-	line-height: 30px;
-}
-
-.mapSelector {
-	padding-top: 40px;
-}
-
-.legend {
-	flex-grow: 1;
-	min-height: 0;
-	overflow-y: auto;
-}
-
 
 .status {
 	flex-grow: 1;
