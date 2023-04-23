@@ -180,6 +180,7 @@ class MapDrawing extends PureComponent {
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+			getCursor: () => 'inherit',
 			initialViewState: {
 				pitch: 0,
 				bearing: 0,
