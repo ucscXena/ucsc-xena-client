@@ -10,6 +10,7 @@ export var el = type => (...args) =>
 
 export var a = el('a');
 export var b = el('b');
+export var br = el('br');
 export var canvas = el('canvas');
 export var div = el('div');
 export var h1 = el('h1');

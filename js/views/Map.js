@@ -223,12 +223,6 @@ class VivDrawing extends PureComponent {
 
 var vivDrawing = el(VivDrawing);
 
-function getColorColumn(state) {
-	return null;
-	var colorId = _.getIn(state, ['map', 'colorColumn']);
-	return state.columns[colorId] ? colorId : null;
-}
-
 //var nbsp = '\u00A0';
 //class SideBar extends PureComponent {
 //	onColor = ev => {
@@ -302,23 +296,6 @@ export class Map extends PureComponent {
 	state = {
 		tooltip: null
 	}
-	onTooltip = i => {
-		return;
-		if (i === null) {
-			this.setState({tooltip: null});
-			return;
-		}
-		var {state} = this.props;
-		var sampleID = state.cohortSamples[i];
-		var colorID = getColorColumn(state) || 'none';
-		var value, valTxt;
-		if (colorID !== 'none') {
-			value = state.data[colorID].req.values[0][i];
-			valTxt = _.get(state.data[colorID].codes, value, String(value));
-		}
-
-		this.setState({tooltip: {sampleID, valTxt}});
-	}
 	onColor = column => {
 		this.props.callback(['map-color', column]);
 	}
@@ -352,7 +329,7 @@ export class Map extends PureComponent {
 		}
 	}
 	render() {
-		var {onTooltip} = this;
+		var {onTooltip} = this.props;
 
 		var mapState = this.props.state,
 			{dsID, ...params} = _.get(mapState, 'dataset', []),

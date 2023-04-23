@@ -9,7 +9,7 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {div, el, h2, label, span} from './chart/react-hyper';
+import {br, div, el, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
@@ -121,8 +121,8 @@ function mapSelect(availableMaps, layout, selected, onChange) {
 var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
 	layout ? mapSelect(availableMaps, layout, selected, onChange) : div();
 
-var vizPanel = ({props: {state}}, {dataset, layout} = state) =>
-	dataset ? map({state}) :
+var vizPanel = ({props: {state, onTooltip}}, {dataset, layout} = state) =>
+	dataset ? map({state, onTooltip}) :
 	layout ? h2(`Select a ${layouts[layout]} layout`) :
 	h2('Select a layout type');
 
@@ -181,13 +181,19 @@ var legend = state => {
 		null;
 };
 
-var viz = ({handlers: {onReset, ...handlers}, props: {state}}) => div(
-	{className: styles.vizPage},
-	h2(integrationLabel(state), closeButton(onReset)),
-	div({className: styles.vizBody},
-		div(vizPanel({props: {state}})),
-		div(mapTabs({state, handlers}),
-			legend(state.colorBy))));
+var tooltipView = tooltip =>
+	div({className: styles.tooltip},
+		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt] : ['']));
+
+var viz = ({handlers: {onReset, onTooltip, ...handlers}, tooltip, props: {state}}) =>
+	div(
+		{className: styles.vizPage},
+		h2(integrationLabel(state), closeButton(onReset)),
+		div({className: styles.vizBody},
+			div(vizPanel({props: {state, onTooltip}})),
+			div(mapTabs({state, handlers}),
+				tooltipView(tooltip),
+				legend(state.colorBy))));
 
 var page = state =>
 	get(state, 'integration') ? viz :
@@ -195,7 +201,7 @@ var page = state =>
 	welcome;
 
 class SingleCellPage extends PureComponent {
-	state = {highlight: undefined};
+	state = {highlight: undefined, tooltip: null};
 	constructor() {
 		super();
 		this.handlers = pick(this, (v, k) => k.startsWith('on'));
@@ -203,6 +209,21 @@ class SingleCellPage extends PureComponent {
 	callback = ([action, ...params]) => {
 		// set scope for actions, to prevent aliasing with other controllers.
 		this.props.callback(['singlecell-' + action, ...params]);
+	}
+	onTooltip = i => {
+		if (i === null) {
+			this.setState({tooltip: null});
+			return;
+		}
+		var {state} = this.props,
+			sampleID = getIn(state, ['samples', 'samples', i]),
+			colorVals = getIn(state, ['colorBy', 'field', 'req', 'values', 0]),
+			hasColor = colorVals && getIn(state, ['colorBy', 'mode']),
+			value = hasColor && get(colorVals, i),
+			valTxt = hasColor ? getIn(state, ['colorBy', 'field', 'codes', value],
+				String(value)) : '';
+
+		this.setState({tooltip: {sampleID, valTxt}});
 	}
 	onEnter = () => {
 		this.callback(['enter']);
@@ -265,10 +286,10 @@ class SingleCellPage extends PureComponent {
 	}
 
 	render() {
-		var {state: {highlight}, props: {state},
+		var {props: {state},
 			handlers: {onNavigate, ...handlers}} = this;
 
-		return page(state)({highlight, props: {state}, handlers});
+		return page(state)({...this.state, props: {state}, handlers});
 	}
 }
 
