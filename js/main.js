@@ -20,6 +20,7 @@ import importController from './controllers/import';
 import PageContainer from './containers/PageContainer';
 import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
+var {initialState} = require('./initialState');
 
 const connector = require('./connector');
 const createStore = require('./store');
@@ -80,4 +81,4 @@ const main = window.document.getElementById('main');
 // controllers run in the opposite order as listed in compose().
 const controller = compose(connectionController(store.uiBus), hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
 
-connector({...store, controller, main, Page: PageContainer, persist: true, history: false});
+connector({...store, initialState, controller, main, Page: PageContainer, persist: true, history: false});

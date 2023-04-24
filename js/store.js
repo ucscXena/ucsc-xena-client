@@ -2,7 +2,6 @@
 var Rx = require('./rx').default;
 var _ = require('./underscore_ext').default;
 var {getErrorProps, logError} = require('./errors');
-var {initialState} = require('./initialState');
 
 module.exports = function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
@@ -43,7 +42,6 @@ module.exports = function () {
 		uiCh,
 		uiBus,
 		serverCh,
-		serverBus,
-		initialState
+		serverBus
 	};
 };
