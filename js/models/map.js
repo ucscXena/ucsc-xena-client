@@ -23,21 +23,21 @@ var cellTypeCluster = datasets =>
 		.map(m => ({
 			dsID: ds.dsID,
 			field: m.feature,
-			label: m.assay
+			label: m.label
 		}))).flat();
 
 var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
 			dsID: ds.dsID,
 			field: m.transferredLabel,
-			label: m.assay
+			label: m.label
 		}))).flat();
 
 var labelTransferProb = datasets =>
 	datasets.map(ds => getProps(ds.labeltransferfullprob).map(m => ({
 			dsID: ds.dsID,
 			category: m.category,
-			label: m.assay
+			label: m.label
 		}))).flat();
 
 var empty = {
