@@ -9,7 +9,7 @@ import urlParams from './urlParams';
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
-var {controlRunner} = require('./controlRunner');
+var controlRunner = require('./controlRunner').default;
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I
 // suspect.
