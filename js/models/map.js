@@ -19,7 +19,7 @@ export var maps = (cohorts, cohortDatasets) =>
 
 
 var cellTypeCluster = datasets =>
-	datasets.map(ds => getProps(ds.cluster, ds.cellType)
+	datasets.map(ds => getProps(ds.cluster, ds.celltype)
 		.map(m => ({
 			dsID: ds.dsID,
 			field: m.feature,
