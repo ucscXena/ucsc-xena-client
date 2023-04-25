@@ -60,7 +60,7 @@ var deckGL = el(DeckGL);
 
 var filterFn = (colorColumn, hideColors) =>
 	colorColumn ?
-		_.Let((hidden = new Set(hideColors)) =>
+		_.Let((hidden = new Set(hideColors || [])) =>
 			(coords, {index}) => _.Let((v = colorColumn[index]) =>
 				v == null || hidden.has(v) ? 0 : 1))
 	: () => 1;
@@ -226,15 +226,6 @@ var vivDrawing = el(VivDrawing);
 
 //var nbsp = '\u00A0';
 //class SideBar extends PureComponent {
-//	onColor = ev => {
-//		this.props.onColor(ev.currentTarget.value);
-//	}
-//	onClick = ev => {
-//		var i = _.getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
-//		if (i != null) {
-//			this.props.onCode(parseInt(i, 10));
-//		}
-//	}
 //	render() {
 //		var {tooltip, state} = this.props,
 //			id = getColorColumn(state),
@@ -251,23 +242,6 @@ var vivDrawing = el(VivDrawing);
 //			column ? div({className: styles.legend},
 //				widgets.legend({column, data, clickable: true})) : null);
 //	}
-//}
-//var sideBar = el(SideBar);
-
-//var gray = '#F0F0F0';
-//function setHidden(state) {
-//	var mapState = _.get(state, 'map'),
-//		colorId = getColorColumn(state),
-//		hideColors = _.getIn(mapState, ['hidden', colorId], []),
-//		// first element of a color spec is the type. Get the type of the first
-//		// color scale.
-//		scaleType = _.getIn(state, ['columns', colorId, 'colors', 0, 0]);
-//
-//	return colorId && scaleType === 'ordinal' ?
-//		// third element of an ordinal scale is the custom color setting
-//		_.updateIn(state, ['columns', colorId, 'colors', 0, 2],
-//			c => _.merge(c, _.object(hideColors, hideColors.map(_.constant(gray))))) :
-//		state;
 //}
 
 var getStatusView = (loading, error, onReload) =>
@@ -337,6 +311,7 @@ export class Map extends PureComponent {
 			mapData = _.getIn(mapState, ['data', dsID]),
 			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
 			colors = _.getIn(mapState, ['colorBy', 'scale']),
+			hideColors = _.getIn(mapState, ['colorBy', 'hidden']),
 			colorMode = _.getIn(mapState, ['colorBy', 'mode']),
 			status = params.dimension.map(d => _.getIn(mapData, [d, 'status']))
 				.concat(colorMode ? _.getIn(mapState, ['colorBy', 'status']) : []),
@@ -350,7 +325,7 @@ export class Map extends PureComponent {
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
-				labels, view, image},
+				labels, view, image, hideColors},
 			drawing = image ? vivDrawing : mapDrawing;
 
 		return div({className: styles.content},

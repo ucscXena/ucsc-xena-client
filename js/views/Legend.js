@@ -17,8 +17,8 @@ class Legend extends React.Component {
 
 	render() {
 		var {labels, colors, titles, max, labelheader, footnotes, addBreakend = 0,
-				addNullNotation = 0, inline, clickable} = this.props,
-			style = classNames(clickable && compStyles.clickable,
+				addNullNotation = 0, inline, onClick} = this.props,
+			style = classNames(onClick && compStyles.clickable,
 				inline && compStyles.inline),
 			ellipsis = labels.length > max,
 			items = _.map(_.last(_.zip(labels, colors, titles), max), ([l, c, t], i) =>
@@ -50,7 +50,7 @@ class Legend extends React.Component {
 
 		return (
 			<div className={style}>
-				{items ? <div className={compStyles.column}>
+				{items ? <div className={compStyles.column} onClick={onClick}>
 							{labelheader ? <label className={compStyles.header}>{labelheader}</label> : null}
 							{items}
 							{addBreakend ? breakend : null}

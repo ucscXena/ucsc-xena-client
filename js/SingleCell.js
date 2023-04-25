@@ -17,11 +17,12 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cohortFields, datasetCohort, dotRange, hasDataset, maps} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, pick} = require('./underscore_ext').default;
+var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
 import MapColor from './views/MapColor';
 import widgets from './columnWidgets';
 import {scaleParams} from './colorScales';
 import xSelect from './views/xSelect';
+import {item} from './views/Legend.module.css';
 var map = el(Map);
 var button = el(Button);
 var xRadioGroup = el(XRadioGroup);
@@ -34,6 +35,11 @@ var integrations = el(Integrations);
 var mapColor = el(MapColor);
 var listSubheader = el(ListSubheader);
 var slider = el(Slider);
+
+var firstMatch = (el, selector) =>
+	el.matches(selector) ? el :
+		el.parentElement ? firstMatch(el.parentElement, selector) :
+		null;
 
 var welcome = ({handlers: {onEnter}}) =>
 	div(span("Welcome to the Xena's multi-omic integration single cell portal"),
@@ -168,15 +174,19 @@ class MapTabs extends PureComponent {
 
 var mapTabs = el(MapTabs);
 
+var gray = '#F0F0F0';
 var fieldType = 'probes';
-var legend = state => {
+var legend = (state, onCode) => {
 	var valueType = getIn(state, ['field', 'codes']) ? 'coded' : 'float',
 		heatmap = [getIn(state, ['field', 'req', 'values', 0])],
-		colors = [get(state, 'scale')],
+		scale = get(state, 'scale'),
+		hidden = get(state, 'hidden'),
+		colors = [hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
+			: scale],
 		codes = getIn(state, ['field', 'codes']);
 
 	return heatmap[0] ?
-		widgets.legend({inline: true,
+		widgets.legend({inline: true, onClick: onCode,
 			column: {fieldType, valueType, heatmap, colors, codes}}) :
 		null;
 };
@@ -185,7 +195,7 @@ var tooltipView = tooltip =>
 	div({className: styles.tooltip},
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt] : ['']));
 
-var viz = ({handlers: {onReset, onTooltip, ...handlers}, tooltip, props: {state}}) =>
+var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers}, tooltip, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -193,7 +203,7 @@ var viz = ({handlers: {onReset, onTooltip, ...handlers}, tooltip, props: {state}
 			div(vizPanel({props: {state, onTooltip}})),
 			div(mapTabs({state, handlers}),
 				tooltipView(tooltip),
-				legend(state.colorBy))));
+				legend(state.colorBy, onCode))));
 
 var page = state =>
 	get(state, 'integration') ? viz :
@@ -272,6 +282,16 @@ class SingleCellPage extends PureComponent {
 	}
 	onProbCell = ev => {
 		this.callback(['probCell', ev.target.value]);
+	}
+	onCode = ev => {
+		var iStr = getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
+
+		if (iStr != null) {
+			var i = parseInt(iStr, 10),
+				hidden = getIn(this.props.state, ['colorBy', 'hidden']) || [],
+				next = (contains(hidden, i) ? without : conj)(hidden, i);
+			this.callback(['hidden', next]);
+		}
 	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);

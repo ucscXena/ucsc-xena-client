@@ -179,6 +179,7 @@ var controls = actionPrefix({
 		assocIn(colorMode[mode] ? setColorLoading(state) : state,
 			['colorBy', 'mode'], mode,
 			['colorBy', 'field'], undefined,
+			['colorBy', 'hidden'], undefined,
 			['colorBy', 'gene'], undefined),
 	'color-mode-post!': (serverBus, state, newState, mode) => {
 		(colorMode[mode] || noop)(serverBus, newState, mode);
@@ -213,6 +214,7 @@ var controls = actionPrefix({
 			['colorBy', 'status'], 'error',
 			['colorBy', 'error'], error),
 	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
+	hidden: (state, codes) => assocIn(state, ['colorBy', 'hidden'], codes),
 	radius: (state, r) => Let(
 		(r0 = state.radius, rb = state.radiusBase, {step} = dotRange(rb)) =>
 			(r - r0) * (r - rb) > 0 && Math.abs(r - rb) < step * 10 ? state :
