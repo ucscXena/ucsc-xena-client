@@ -145,7 +145,7 @@ var scaleBounds = (data, scale) =>
 var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
 			.reduce((x, y) => x * y);
 
-var pickRadius = (mins, maxs, len, pct = 0.2) =>
+var pickRadius = (mins, maxs, len, pct = 0.01) =>
 	Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
 		Math.pow(areaPerPoint, 1 / mins.length) / 2);
 
