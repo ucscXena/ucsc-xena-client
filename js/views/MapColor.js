@@ -115,16 +115,6 @@ var modeOptions = {
 			colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
 				null)
 };
-// state
-// 	{
-//    colorBy: {
-// 	    mode: ['donor', 'type', 'prop', 'gene'] | undefined,
-// 	    donor: {field}
-// 	    type: {feature},
-// 	    prob: {feature, type, high, low}
-// 	    gene: {dataset, gene, high, low}
-//    }
-// 	}
 
 var modeLabel = {
 	dataset: 'By dataset',

@@ -155,7 +155,7 @@ class MapTabs extends PureComponent {
 	render() {
 		var {onChange, state: {value}, props: {handlers:
 				{onLayout, onDataset, onRadius, ...handlers}, state}} = this;
-		return div( // XXX use a Box vs div?
+		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
 				tab({label: 'Color by', disabled: !hasDataset(state)}),
@@ -191,6 +191,20 @@ var legend = (state, onCode) => {
 		null;
 };
 
+var legendTitleMode = {
+	dataset: () => 'Data source',
+	donor: () => 'Donor',
+	type: state => getIn(state, ['cellType', 'label']) || '',
+	prob: state => state.probCell ?
+		`${state.prob.label}: ${state.probCell}` : '',
+	gene: state => state.gene ? `${state.gene.gene} - ${state.gene.dataSubType}` : '',
+	null: () => ''
+};
+
+var legendTitle = state =>
+	span({className: styles.legendTitle},
+		legendTitleMode[get(state, 'mode') || null](state));
+
 var datasetLabel = state =>
 	state.dataset ? h3(state.dataset.label) : null;
 
@@ -205,9 +219,11 @@ var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers}, tooltip, props:
 		datasetLabel(state),
 		div({className: styles.vizBody},
 			div(vizPanel({props: {state, onTooltip}})),
-			div(mapTabs({state, handlers}),
-				tooltipView(tooltip),
-				legend(state.colorBy, onCode))));
+			div({className: styles.sidebar},
+				mapTabs({state, handlers}),
+				legendTitle(state.colorBy),
+				legend(state.colorBy, onCode),
+				tooltipView(tooltip))));
 
 var page = state =>
 	get(state, 'integration') ? viz :
