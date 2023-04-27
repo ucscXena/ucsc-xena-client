@@ -159,9 +159,9 @@ var setRadius = state =>
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
-	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', undefined),
+	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', null),
 	layout: (state, layout) => assoc(state, 'layout', layout),
-	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', undefined)),
+	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', null)),
 	gene: (state, gene) => assocIn(setColorLoading(state), ['colorBy', 'gene'], gene),
 	'gene-post!': (serverBus, state, newState) => {
 		// XXX Should we assume this is a probe dataset, vs. a gene
@@ -174,13 +174,9 @@ var controls = actionPrefix({
 		serverBus.next(['singlecell-color-field',
 			fetch(field, newState.samples.samples), field]);
 	},
-	'reset': state => assoc(state, 'layout', undefined, 'dataset', undefined, 'integration', undefined, 'colorBy', undefined),
+	'reset': state => assoc(state, 'layout', null, 'dataset', null, 'integration', null, 'colorBy', null),
 	'color-mode': (state, mode) =>
-		assocIn(colorMode[mode] ? setColorLoading(state) : state,
-			['colorBy', 'mode'], mode,
-			['colorBy', 'field'], undefined,
-			['colorBy', 'hidden'], undefined,
-			['colorBy', 'gene'], undefined),
+		assoc(colorMode[mode] ? setColorLoading(state) : state, 'colorBy', {mode}),
 	'color-mode-post!': (serverBus, state, newState, mode) => {
 		(colorMode[mode] || noop)(serverBus, newState, mode);
 	},
@@ -191,7 +187,8 @@ var controls = actionPrefix({
 		serverBus.next(['singlecell-color-field',
 			fetch(field, state.samples.samples), field]);
 	},
-	prob: (state, prob) => assocIn(state, ['colorBy', 'prob'], prob),
+	prob: (state, prob) => assocIn(state, ['colorBy', 'prob'], prob,
+		['colorBy', 'probCell'], null),
 	probCell: (state, probCell) => assocIn(setColorLoading(state),
 		['colorBy', 'probCell'], probCell),
 	'probCell-post!': (serverBus, state, newState) => {
