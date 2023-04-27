@@ -216,7 +216,7 @@ class VivDrawing extends PureComponent {
 		radius = radius * scale;
 		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
 		return avivator({
-			mergeLayers: [mergeLayer],
+			mergeLayers: colors ? [mergeLayer] : [],
 			source: {urlOrFile: props.data.image.path}
 		});
 	}
