@@ -9,7 +9,7 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {br, div, el, h2, label, span} from './chart/react-hyper';
+import {br, div, el, h2, h3, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
@@ -191,6 +191,9 @@ var legend = (state, onCode) => {
 		null;
 };
 
+var datasetLabel = state =>
+	state.dataset ? h3(state.dataset.label) : null;
+
 var tooltipView = tooltip =>
 	div({className: styles.tooltip},
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt] : ['']));
@@ -199,6 +202,7 @@ var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers}, tooltip, props:
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
+		datasetLabel(state),
 		div({className: styles.vizBody},
 			div(vizPanel({props: {state, onTooltip}})),
 			div(mapTabs({state, handlers}),
