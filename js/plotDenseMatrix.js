@@ -150,7 +150,7 @@ function renderFloatLegend(props) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], codes, colors = [], inline, onClick} = props;
+	var {data: [data] = [], codes, colors = [], inline, max, onClick} = props;
 	var legendProps;
 	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
@@ -164,12 +164,12 @@ function renderCodedLegend(props) {
 		return <span />;
 	}
 
-	return <Legend {...legendProps} onClick={onClick} inline={inline}/>;
+	return <Legend {...legendProps} onClick={onClick} max={max} inline={inline}/>;
 }
 
 var HeatmapLegend = hotOrNot(class extends PureComponent {
 	render() {
-		var {column, onClick, inline} = this.props,
+		var {column, onClick, inline, max} = this.props,
 			{units, heatmap, colors, valueType, vizSettings, defaultNormalization,
 				codes} = column,
 			props = {
@@ -181,7 +181,8 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 				defaultNormalization,
 				inline,
 				units,
-				vizSettings
+				vizSettings,
+				max
 			};
 
 		return (props.coded ? renderCodedLegend :
