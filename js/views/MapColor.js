@@ -73,13 +73,16 @@ var getDataSubType = ({datasetMetadata}, datasets) =>
 var colorData = state => getIn(state, ['colorBy', 'field', 'req', 'values', 0]);
 var getSteps = ({min, max}) => (max - min) / 200;
 
+var labelFormat = v => v.toPrecision(2);
 var sliderOpts = (state, scale, onScale) => ({
 	value: scale,
 	onChange: onScale,
 	// Our scales can go beyond the min/max of the data if the mean is biased
 	// toward one bound.
 	...state.colorBy.scaleBounds,
-	step: getSteps(state.colorBy.scaleBounds)
+	step: getSteps(state.colorBy.scaleBounds),
+	valueLabelDisplay: 'auto',
+	valueLabelFormat: labelFormat
 });
 
 var modeOptions = {
