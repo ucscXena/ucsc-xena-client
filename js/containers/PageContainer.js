@@ -38,7 +38,7 @@ export class PageContainer extends PureComponent {
 	componentDidUpdate(oldProps, oldState) {
 		if (oldState.error && !isEqual(oldProps.state, this.props.state)) {
 			// If app state has changed, try rendering.
-			this.setState({error: null});
+			this.setState({error: null}); //eslint-disable-line react/no-did-update-set-state
 		}
 	}
 	render() {
