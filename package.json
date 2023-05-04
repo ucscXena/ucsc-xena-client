@@ -115,6 +115,7 @@
     "highcharts": "^6.0.7",
     "iconv-lite": "^0.6.3",
     "jStat": "1.5.3",
+    "just-diff": "^6.0.2",
     "linear-algebra": "3.1.1",
     "lz-string": "^1.4.4",
     "minhash": "0.0.9",

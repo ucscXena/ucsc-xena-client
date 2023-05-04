@@ -1,4 +1,4 @@
-var {find, findValue, get, getIn, Let, merge, pairs, pick, values} = require('../underscore_ext').default;
+var {deepMerge, every, find, findValue, first, get, getIn, identity, Let, merge, minnull, maxnull, mmap, object, pairs, pick, values} = require('../underscore_ext').default;
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -41,24 +41,27 @@ var labelTransferProb = datasets =>
 		}))).flat();
 
 var empty = {
-	cellType: [],
-	labelTransfer: [],
-	labelTransferProb: []
+	cellType: {},
+	labelTransfer: {},
+	labelTransferProb: {}
 };
 
-export var cohortFields = (cohort, cohortDatasets) =>
-	!cohort ? empty :
-	Let((ds = allCohortDatasets(cohort, cohortDatasets)) => ({
-		cellType: cellTypeCluster(ds),
-		labelTransfer: labelTransfer(ds),
-		labelTransferProb: labelTransferProb(ds)
-	}));
+//{'cellType': {[cohort]: [cellType, ...], ...}, ...}}
+export var cohortFields = (cohorts, cohortDatasets) =>
+	!cohorts.length ? empty :
+	deepMerge(
+		...cohorts.map(({cohort}) =>
+			Let((ds = allCohortDatasets(cohort, cohortDatasets)) =>
+				object(
+					['cellType', 'labelTransfer', 'labelTransferProb'],
+					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds)]
+					.map(d => ({[cohort]: d}))))));
 
 export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
 
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
-var hasField = field => (state, cohort) =>
+var hasField = field => (state, cohort = datasetCohort(state)) =>
 	findValue(pairs(getIn(state, ['donorFields', cohort])),
 		([host, fields]) => findValue(fields,
 			f => f.field === field && [host, f.name]));
@@ -66,7 +69,13 @@ var hasField = field => (state, cohort) =>
 export var hasDonor = hasField('_DONOR');
 export var hasDatasource = hasField('_DATASOURCE');
 
-export var hasGene = (state, cohort) =>
+export var hasCellType = (state, cohort = datasetCohort(state)) =>
+	state.cellType[cohort].length || state.labelTransfer[cohort].length;
+
+export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
+	state.labelTransferProb[cohort].length;
+
+export var hasGene = (state, cohort = datasetCohort(state)) =>
 	get(
 		findValue(getIn(state, ['defaultStudy', 'studyList']),
 			study => find(study.cohortList, c => c.cohort === cohort)),
@@ -89,3 +98,73 @@ export var allCohorts = state =>
 export var dotRange = Let((ratio = 4) =>
 	radius => ({min: radius / ratio, max: radius * ratio,
 		step: radius * (ratio - 1 / ratio) / 200}));
+
+var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
+			.reduce((x, y) => x * y);
+
+var pickRadius = (mins, maxs, len, pct = 0.01) =>
+	Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
+		Math.pow(areaPerPoint, 1 / mins.length) / 2);
+
+var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
+export var setRadius = (sd, datasetData) =>
+	Let((data = allCols(datasetData)) =>
+		!(data.length && every(data, identity)) ? NaN :
+		Let((mins = data.map(minnull), maxs = data.map(maxnull)) =>
+			sd ? sd / 2 : pickRadius(mins, maxs, data[0].length)));
+
+export var getRadius = state => get(state, 'radius') || get(state, 'radiusBase');
+
+export var getSamples = state => getIn(state,
+	['samples', datasetCohort(state), 'samples']);
+
+export var dataLoading = state =>
+	Let(({dsID, dimension} = state.dataset) =>
+		dimension.some(dim =>
+			!getIn(state, ['data', dsID, dim, 'req']) ||
+				getIn(state, ['_outOfDate', 'data', dsID, dim])));
+
+export var dataError = state =>
+	Let(({dsID, dimension} = state.dataset) =>
+		dimension.some(dim =>
+			!getIn(state, ['_outOfDate', 'data', dsID, dim]) &&
+			getIn(state, ['data', dsID, dim, 'status']) === 'error'));
+
+export var colorLoading = state =>
+	getIn(state, ['colorBy', 'field', 'mode']) &&
+	(!getIn(state, ['colorBy', 'data']) ||
+		getIn(state, ['_outOfDate', 'colorBy', 'data']));
+
+export var colorError = state =>
+	getIn(state, ['colorBy', 'field', 'mode']) &&
+	!getIn(state, ['_outOfDate', 'colorBy', 'data']) &&
+	getIn(state, ['colorBy', 'data', 'status']) === 'error';
+
+export var getDataSubType = (state, host, name) =>
+	getIn(state.datasetMetadata, [host, name, 'dataSubType']);
+
+var toDsID = a => JSON.stringify(pick(a, 'host', 'name'));
+// select component requires reference equality, so we have to find
+// the matching option here.
+export var cellTypeValue = state =>
+	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
+			cohort = datasetCohort(state)) =>
+		state.cellType[cohort].concat(state.labelTransfer[cohort])
+			.find(t => t.dsID === dsID && t.field === field) || '');
+
+export var probValue = state =>
+	Let((dsID = toDsID(state.colorBy.field)) =>
+		state.labelTransferProb[datasetCohort(state)].find(t => t.dsID === dsID) || '');
+
+var LetIf = (v, f) => v && f(v) ;
+
+export var defaultColor = (state, cohort) =>
+	LetIf(hasDonor(state, cohort), ([host, name]) =>
+		({mode: 'donor', host, name, field: '_DONOR'})) ||
+	LetIf(hasDatasource(state, cohort), ([host, name]) =>
+		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
+	hasCellType(state, cohort) &&
+		Let(({dsID, field} = first(state.cellType[cohort]) ||
+			first(state.labelTransfer[cohort]), {host, name} = JSON.parse(dsID)) =>
+				({mode: 'type', host, name, field})) ||
+	{};

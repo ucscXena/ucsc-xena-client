@@ -111,28 +111,27 @@ var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, wizardData, cachePolicy, 'wizard');
 
 var invalidateCohorts = Let(({any} = matchKeys) =>
-	function ({wizard}) {
-		invalidatePath(wizard, ['cohortMeta']);
-		invalidatePath(wizard, ['cohortPreferred']);
-		invalidatePath(wizard, ['cohortPhenotype']);
-		invalidatePath(wizard, ['cohortAnalytic']);
-		invalidatePath(wizard, ['serverCohorts', any]);
-		invalidatePath(wizard, ['cohortDatasets', any, any]);
-		invalidatePath(wizard, ['cohortFeatures', any, any, any]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['cohortMeta']);
+		invalidatePath(serverBus, ['cohortPreferred']);
+		invalidatePath(serverBus, ['cohortPhenotype']);
+		invalidatePath(serverBus, ['cohortAnalytic']);
+		invalidatePath(serverBus, ['serverCohorts', any]);
+		invalidatePath(serverBus, ['cohortDatasets', any, any]);
+		invalidatePath(serverBus, ['cohortFeatures', any, any, any]);
 	});
 
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (_, __, {wizard}) {
-		invalidatePath(wizard, ['serverCohorts', localHub]);
-		invalidatePath(wizard, ['cohortDatasets', any, localHub]);
-		invalidatePath(wizard, ['cohortFeatures', any, localHub, any]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['serverCohorts', localHub]);
+		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
+		invalidatePath(serverBus, ['cohortFeatures', any, localHub, any]);
 	});
 
 var controls = {
 	'localStatus-post!': invalidateLocalHub,
 	'localQueue-post!': invalidateLocalHub,
-	'refresh-cohorts-post!': (serverBus, state, newState) =>
-		invalidateCohorts(newState),
+	'refresh-cohorts-post!': invalidateCohorts
 };
 
 export default compose(fetchController, make(controls));

@@ -15,10 +15,10 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cohortFields, datasetCohort, dotRange, hasDataset, maps} from './models/map';
+import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getDataSubType, getRadius, getSamples, hasDataset, maps, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
-import MapColor from './views/MapColor';
+var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
+import mapColor from './views/MapColor';
 import widgets from './columnWidgets';
 import {scaleParams} from './colorScales';
 import xSelect from './views/xSelect';
@@ -32,7 +32,6 @@ var icon = el(Icon);
 var tab = el(Tab);
 var tabs = el(Tabs);
 var integrations = el(Integrations);
-var mapColor = el(MapColor);
 var listSubheader = el(ListSubheader);
 var slider = el(Slider);
 
@@ -110,8 +109,7 @@ var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
 var mapValue = (list, selected) =>
 	findIndexDefault(list, m => isEqual(m, selected), '');
-// XXX change models::maps to return them grouped, so we don't have to do
-// this.
+
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
 	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
 
@@ -137,7 +135,7 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
-var colorScale = state => getIn(state, ['colorBy', 'scale']);
+var colorScale = state => getIn(state, ['colorBy', 'data', 'scale']);
 var scaleValue = state => Let((scale = colorScale(state)) =>
 	scale && scaleParams(scale));
 
@@ -145,7 +143,7 @@ var dotSize = (state, onChange) =>
 	!state.dataset || !state.radiusBase ? null :
 	div(
 		label('Dot size'),
-		slider({...dotRange(state.radiusBase), marks: [{value: state.radiusBase}], value: state.radius, onChange}));
+		slider({...dotRange(state.radiusBase), marks: [{value: state.radiusBase}], value: getRadius(state), onChange}));
 
 class MapTabs extends PureComponent {
 	state = {value: 0}
@@ -167,7 +165,8 @@ class MapTabs extends PureComponent {
 				dotSize(state, onRadius)),
 			tabPanel({value, index: 1},
 				// XXX move scale lookup to MapColors?
-				mapColor({state, scale: scaleValue(state), handlers})),
+				mapColor({key: datasetCohort(state), state,
+					scale: scaleValue(state), handlers})),
 			tabPanel({value, index: 2}));
 	}
 }
@@ -177,13 +176,13 @@ var mapTabs = el(MapTabs);
 var gray = '#F0F0F0';
 var fieldType = 'probes';
 var legend = (state, onCode) => {
-	var valueType = getIn(state, ['field', 'codes']) ? 'coded' : 'float',
-		heatmap = [getIn(state, ['field', 'req', 'values', 0])],
-		scale = get(state, 'scale'),
+	var codes = getIn(state, ['data', 'codes']),
+		valueType = codes ? 'coded' : 'float',
+		heatmap = [getIn(state, ['data', 'req', 'values', 0])],
+		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
 		colors = [hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
-			: scale],
-		codes = getIn(state, ['field', 'codes']);
+			: scale];
 
 	return heatmap[0] ?
 		widgets.legend({inline: true, max: Infinity, onClick: onCode,
@@ -192,18 +191,21 @@ var legend = (state, onCode) => {
 };
 
 var legendTitleMode = {
-	dataset: () => 'Data source',
+	datasource: () => 'Data source',
 	donor: () => 'Donor',
-	type: state => getIn(state, ['cellType', 'label']) || '',
-	prob: state => state.probCell ?
-		`${state.prob.label}: ${state.probCell}` : '',
-	gene: state => state.gene ? `${state.gene.gene} - ${state.gene.dataSubType}` : '',
+	type: state => cellTypeValue(state).label,
+	prob: state => getIn(state, ['colorBy', 'field', 'field']) ?
+		Let(({field} = state.colorBy.field) =>
+			`${probValue(state).label}: ${field}`) : '',
+	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?
+		Let(({host, name, field} = state.colorBy.field) =>
+			`${field} - ${getDataSubType(state, host, name)}`) : '',
 	null: () => ''
 };
 
 var legendTitle = state =>
 	span({className: styles.legendTitle},
-		legendTitleMode[get(state, 'mode') || null](state));
+		legendTitleMode[getIn(state, ['colorBy', 'field', 'mode']) || null](state));
 
 var datasetLabel = state =>
 	state.dataset ? h3(state.dataset.label) : null;
@@ -221,7 +223,7 @@ var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers}, tooltip, props:
 			div(vizPanel({props: {state, onTooltip}})),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
-				legendTitle(state.colorBy),
+				legendTitle(state),
 				legend(state.colorBy, onCode),
 				tooltipView(tooltip))));
 
@@ -246,11 +248,11 @@ class SingleCellPage extends PureComponent {
 			return;
 		}
 		var {state} = this.props,
-			sampleID = getIn(state, ['samples', 'samples', i]),
-			colorVals = getIn(state, ['colorBy', 'field', 'req', 'values', 0]),
-			hasColor = colorVals && getIn(state, ['colorBy', 'mode']),
+			sampleID = getSamples(state)[i],
+			colorVals = getIn(state, ['colorBy', 'data', 'req', 'values', 0]),
+			hasColor = colorVals && getIn(state, ['colorBy', 'field', 'mode']),
 			value = hasColor && get(colorVals, i),
-			valTxt = hasColor ? getIn(state, ['colorBy', 'field', 'codes', value],
+			valTxt = hasColor ? getIn(state, ['colorBy', 'data', 'codes', value],
 				String(value)) : '';
 
 		this.setState({tooltip: {sampleID, valTxt}});
@@ -273,35 +275,21 @@ class SingleCellPage extends PureComponent {
 	onDataset = ev => {
 		var {state} = this.props,
 			{layout} = state,
-			i = parseInt(ev.target.value, 10);
-		this.callback(['dataset', available(state)[layout][i]]);
-	}
-	onGene = gene => {
-		this.callback(['gene', gene]);
+			i = parseInt(ev.target.value, 10),
+			dataset = available(state)[layout][i],
+			colorBy = defaultColor(state, dataset.cohort) ;
+		this.callback(['dataset', dataset, {field: colorBy}]);
 	}
 	onReset = () => {
 		this.callback(['reset']);
 	}
-	onColorBy = ev => {
-		this.callback(['color-mode', ev.target.value]);
+	onColorBy = colorBy => {
+		this.callback(['colorBy', colorBy]);
 	}
 	onScale = (ev, params) => {
-		var {colorBy} = this.props.state,
-			scale = colorBy.scale,
+		var scale = getIn(this.props.state, ['colorBy', 'data', 'scale']),
 			newScale = scale.slice(0, scale.length - params.length).concat(params);
-		this.callback(['color-scale', newScale]);
-	}
-	onRadius = (ev, r) => {
-		this.callback(['radius', r]);
-	}
-	onCellType = ev => {
-		this.callback(['cellType', ev.target.value]);
-	}
-	onProb = ev => {
-		this.callback(['prob', ev.target.value]);
-	}
-	onProbCell = ev => {
-		this.callback(['probCell', ev.target.value]);
+		this.callback(['colorScale', newScale]);
 	}
 	onCode = ev => {
 		var iStr = getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
@@ -312,6 +300,9 @@ class SingleCellPage extends PureComponent {
 				next = (contains(hidden, i) ? without : conj)(hidden, i);
 			this.callback(['hidden', next]);
 		}
+	}
+	onRadius = (ev, r) => {
+		this.callback(['radius', r, this.props.state.radiusBase]);
 	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
@@ -344,13 +335,19 @@ var mapSelector = createSelector(
 	(cohorts, cohortDatasets) => maps(cohorts, cohortDatasets));
 
 var cohortFieldsSelector = createSelector(
-	state => datasetCohort(state),
+	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
 	cohortFields);
 
-var selector = state => assocIn(
+var radiusSelector = createSelector(
+	state => getIn(state, ['dataset', 'spot_diameter']),
+	state => getIn(state, ['data', getIn(state, ['dataset', 'dsID'])]),
+	setRadius);
+
+var selector = state => assoc(
 	merge(state, cohortFieldsSelector(state)),
-	['map'], mapSelector(state)
+	'radiusBase', radiusSelector(state),
+	'map', mapSelector(state)
 );
 
 

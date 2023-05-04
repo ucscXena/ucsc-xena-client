@@ -20,6 +20,7 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 // XXX Try to ditch this, in favor of the singlecell scales that
 // provide rgb.
 var toRGB = require('../color_helper').default.rgb;
+import {colorError, colorLoading, dataError, dataLoading, getRadius} from '../models/map';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -271,30 +272,15 @@ export class Map extends PureComponent {
 	state = {
 		tooltip: null
 	}
-	onColor = column => {
-		this.props.callback(['map-color', column]);
-	}
-	onMap = map => {
-		this.props.callback(['map-select', map]);
-	}
-	onCode = i => {
-		var {state} = this.props,
-			color = state.map.colorColumn,
-			hidden = _.getIn(state.map, ['hidden', color], []),
-			has = _.contains(hidden, i),
-			next = has ? _.without(hidden, i) : hidden.concat([i]);
-
-		this.props.callback(['map-hide-codes', next]);
-	}
-	onHideAll = () => {
-		var {state} = this.props,
-			colorId = state.map.colorColumn,
-			count = state.data[colorId].codes.length;
-		this.props.callback(['map-hide-codes', _.range(count)]);
-	}
-	onShowAll = () => {
-		this.props.callback(['map-hide-codes', []]);
-	}
+//	onHideAll = () => {
+//		var {state} = this.props,
+//			colorId = state.map.colorColumn,
+//			count = state.data[colorId].codes.length;
+//		this.props.callback(['map-hide-codes', _.range(count)]);
+//	}
+//	onShowAll = () => {
+//		this.props.callback(['map-hide-codes', []]);
+//	}
 //	onReload = () => {
 //		this.props.callback(['map', true]);
 //	}
@@ -309,19 +295,16 @@ export class Map extends PureComponent {
 		var mapState = this.props.state,
 			{dsID, ...params} = _.get(mapState, 'dataset', []),
 			mapData = _.getIn(mapState, ['data', dsID]),
-			colorColumn = _.getIn(mapState, ['colorBy', 'field', 'req', 'values', 0]),
-			colors = _.getIn(mapState, ['colorBy', 'scale']),
+			colorColumn = _.getIn(mapState, ['colorBy', 'data', 'req', 'values', 0]),
+			colors = _.getIn(mapState, ['colorBy', 'data', 'scale']),
 			hideColors = _.getIn(mapState, ['colorBy', 'hidden']),
-			colorMode = _.getIn(mapState, ['colorBy', 'mode']),
-			status = params.dimension.map(d => _.getIn(mapData, [d, 'status']))
-				.concat(colorMode ? _.getIn(mapState, ['colorBy', 'status']) : []),
-			loading = _.any(status, s => s === 'loading'),
-			error = _.any(status, s => s === 'error'),
+			loading = dataLoading(mapState) || colorLoading(mapState),
+			error = dataError(mapState) || colorError(mapState),
 			columns = params.dimension
 				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
-			{radius} = mapState,
+			radius = getRadius(mapState),
 			// don't create an image parameter while doing this
 			image = setHost(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,

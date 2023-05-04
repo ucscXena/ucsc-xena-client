@@ -380,7 +380,7 @@ function listSetsEqual(l1, l2) {
 // E.g. ['a', matchKey.any] will match ['a', 'b'], ['a', 'c'] in
 // {a: {b: 0, c: 1}}
 var any = {};
-var matchKeys = (obj, path, i = 0)  =>
+var matchKeys = (obj, path, i = 0) =>
 	i === path.length ? [path] :
 	path[i] === any ? Object.keys(obj)
 		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flat() :
@@ -388,6 +388,11 @@ var matchKeys = (obj, path, i = 0)  =>
 	matchKeys(obj[path[i]], path, i + 1);
 
 matchKeys.any = any;
+
+var matchPath = (pattern, path) =>
+	pattern.every((k, i) => pattern[i] === path[i] || pattern[i] === any);
+
+matchPath.any = any;
 
 function anyRange(coll, start, end, pred = _.identity, i = start) {
 	return i === end ? false :
@@ -500,6 +505,7 @@ _.mixin({
 	insert,
 	listSetsEqual,
 	matchKeys,
+	matchPath,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,

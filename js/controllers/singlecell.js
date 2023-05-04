@@ -3,30 +3,77 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, constant, getIn, identity, Let, merge, maxnull, minnull, mmap, object, pairs, pluck, pick, updateIn, values} = require('../underscore_ext').default;
+var {assoc, assocIn, getIn, identity, Let, merge, maxnull, minnull, object, pairs, pluck, pick, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
-import {allCohorts, datasetCohort, dotRange, hasDatasource, hasDonor}
+import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset}
 	from '../models/map';
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 
-var fetchMethods = {
-	// XXX add error handling with catch()
-	defaultStudy: () => fetchDefaultStudy,
+var fieldType = {
+	donor: ['clinical', 'coded'],
+	datasource: ['clinical', 'coded'],
+	type: ['clinical', 'coded'],
+	prob: ['clinical', 'float'],
+	gene: ['probes', 'float']
+};
 
-	// XXX error checking on if m exists?
+var fieldSpec = (dsID, fields, fieldType, valueType) => ({
+	fetchType: 'xena',
+	colorClass: 'default',
+	dsID,
+	valueType,
+	fieldType,
+	fields
+});
+
+var toDsID = (host, name) => JSON.stringify({host, name});
+
+var fieldSpecMode = ({mode, host, name, field}) =>
+	fieldSpec(toDsID(host, name), [field], ...fieldType[mode]);
+
+var fetchMap = (dsID, field, samples) =>
+	fetch(fieldSpec(dsID, field, 'probes', 'float'), samples);
+
+var setAvg = (data, field) => merge(data, widgets.avg(field, data));
+
+var colorScale = (data, field) =>
+	colorSpec(field, {}, data.codes,
+			{values: data.req.values[0], mean: data.avg.mean[0]});
+
+var scaleBounds = (data, scale) =>
+	Let((d = data.req.values[0], min = minnull(d), max = maxnull(d),
+			params = scaleParams(scale)) =>
+		({min: Math.min(...params, min), max: Math.max(...params, max)}));
+
+var colorParams = colorBy => color =>
+	Let((field = fieldSpecMode(colorBy), data = setAvg(color, field),
+			scale = colorScale(data, field)) =>
+		assoc(data,
+			'scale', scale,
+			'scaleBounds', scaleBounds(data, scale)));
+
+var fetchMethods = {
+	defaultStudy: () => fetchDefaultStudy,
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
-	donorFields: (cohort, server) => donorFields(server, cohort)
+	donorFields: (cohort, server) => donorFields(server, cohort),
+	samples: (cohort, servers) =>
+		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
+	data: (dsID, dim, samples) => fetchMap(dsID, dim, samples.samples),
+	colorBy: (_, field, samples) =>
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field))
 };
 
 var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
+	colorBy: identity, // always updates in-place
+	data: (state, [dsID]) => pick(state.singlecell.data, dsID),
 	// ['cohortDatasets', cohort, server]
 	// ['donorFields', cohort, server]
 	// limit cache to cohorts in study
@@ -42,189 +89,62 @@ var cohortList = state => getIn(state, ['singlecell', 'defaultStudy', 'studyList
 
 var allDatasets = state =>
 	Let((list = cohortList(state)) =>
-		list.map(({preferredDataset = []}) => preferredDataset.map(ds => ['datasetMetadata', ds.host, ds.name])).flat());
+		list.map(({preferredDataset = []}) =>
+			preferredDataset.map(ds => ['datasetMetadata', ds.host, ds.name])).flat());
+
+var concat = (...arr) => arr.filter(identity).flat();
 
 var singlecellData = state =>
-	state.page !== 'singlecell' ? [] :
-		[['defaultStudy'],
-			...(getIn(state, ['singlecell', 'defaultStudy']) ?
-				allDatasets(state) : []),
-			...Let((cohorts = allCohorts(state.singlecell)) =>
-				userServers(state.spreadsheet)
-				.map(server =>
-					cohorts.map(cohort =>
-						[['cohortDatasets', cohort.cohort, server],
-							['donorFields', cohort.cohort, server]]).flat())
-				.flat()),
-		];
+	state.page !== 'singlecell' ? [] : concat(
+		[['defaultStudy']],
+		getIn(state, ['singlecell', 'defaultStudy']) && allDatasets(state),
+		// XXX rewrite using references
+		Let((cohorts = allCohorts(state.singlecell)) =>
+			userServers(state.spreadsheet)
+			.map(server =>
+				cohorts.map(cohort =>
+					[['cohortDatasets', cohort.cohort, server],
+						['donorFields', cohort.cohort, server]]).flat())
+			.flat()),
+		hasDataset(state.singlecell) &&
+			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
+		hasDataset(state.singlecell) && getSamples(state.singlecell) &&
+			Let(({dsID, dimension} = state.singlecell.dataset) =>
+				dimension.map(dim =>
+					['data', dsID, dim,
+						['singlecell', 'samples', datasetCohort(state.singlecell)]])),
+		getIn(state.singlecell, ['colorBy', 'field', 'field']) ?
+			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []
+	);
 
-// XXX implement invalidatePath
+// Don't yet need invalidatePath
 var {controller: fetchController/*, invalidatePath*/} =
 	query(fetchMethods, singlecellData, cachePolicy, 'singlecell');
-
-// XXX duplicated in common.js
-var probeFieldSpec = ({dsID, name}) => ({
-	dsID,
-	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
-	valueType: 'float',
-	fieldType: 'probes',
-	colorClass: 'clinical',
-	fields: [name]
-});
-
-var codedFieldSpec = ({dsID, field}) => ({
-	dsID,
-	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
-	valueType: 'coded',
-	fieldType: 'clinical',
-	colorClass: 'clinical',
-	fields: [field]
-});
-
-function fetchMap(dsID, dims, samples) {
-	var queries = dims.map(name => fetch(probeFieldSpec({dsID, name}),
-			samples.samples));
-
-	return Rx.Observable.zipArray(queries);
-}
-
-var toDsID = (host, name) => JSON.stringify({host, name});
-var noop = () => {};
-var fetchColorField = (getDataset, field) => (serverBus, state) => {
-		var [host, name] = getDataset(state, datasetCohort(state)),
-			fieldSpec = codedFieldSpec({dsID: toDsID(host, name), field});
-		serverBus.next(['singlecell-color-field',
-			fetch(fieldSpec, state.samples.samples), fieldSpec]);
-};
-var colorMode = {
-	dataset: fetchColorField(hasDatasource, '_DATASOURCE'),
-	donor: fetchColorField(hasDonor, '_DONOR')
-};
-
-var setMapLoading = state => Let(({dsID, dimension} = state.dataset) =>
-	updateIn(state, ['data', dsID], data =>
-		dimension.filter(dim => getIn(data, [dim, 'status']) !== 'loaded')
-		.reduce((data, dim) => assocIn(data, [dim, 'status'], 'loading'),
-			data)));
 
 // append 'singlecell-' to actions, so we don't have any aliasing with
 // other controllers.
 var actionPrefix = actions =>
 	object(pairs(actions).map(([k, v]) => ['singlecell-' + k, v]));
 
-var spreadsheetControls = actionPrefix({
-	'dataset-post!': (serverBus, state, newState) => {
-		var {singlecell} = newState,
-			{dsID, dimension} = singlecell.dataset,
-			dims = dimension.filter(dim => getIn(singlecell,
-				['data', dsID, dim, 'status']) !== 'loaded');
-		serverBus.next(['singlecell-map-data',
-			// take(1) because samplesQuery can throw an error if one host is down.
-			// XXX Does this create a race? Maybe need a catch here?
-			samplesQuery(userServers(newState.spreadsheet), {name: datasetCohort(singlecell)}, Infinity)
-				.take(1).concatMap(samples => fetchMap(dsID, dims, samples)
-					.map(data => [samples, data])), dsID, dims]);
-	}
-});
-
-var setColorLoading = state => assocIn(state, ['colorBy', 'status'], 'loading');
-
-var setAvg = (data, field) => merge(data, widgets.avg(field, data));
-var colorDataset = state => state.colorBy.mode === 'gene' ?
-	state.datasetMetadata[state.colorBy.gene.host][state.colorBy.gene.name] : {};
-var colorScale = (state, data, field) =>
-	Let((dataset = colorDataset(state)) =>
-		colorSpec(merge(field, {defaultNormalization: dataset.colnormalization}),
-				{}, data.codes,
-				{values: data.req.values[0], mean: data.avg.mean[0]}));
-var scaleBounds = (data, scale) =>
-	Let((d = data.req.values[0], min = minnull(d), max = maxnull(d),
-			params = scaleParams(scale)) =>
-		({min: Math.min(...params, min), max: Math.max(...params, max)}));
-
-var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
-			.reduce((x, y) => x * y);
-
-var pickRadius = (mins, maxs, len, pct = 0.01) =>
-	Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
-		Math.pow(areaPerPoint, 1 / mins.length) / 2);
-
-var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
-var setRadius = state =>
-	Let(({dsID, spot_diameter: sd} = state.dataset,
-		data = allCols(getIn(state, ['data', dsID])),
-		mins = data.map(minnull), maxs = data.map(maxnull),
-		radius = sd ? sd / 2 : pickRadius(mins, maxs, data[0].length)) =>
-			assoc(state, ['radiusBase'], radius, ['radius'], radius));
-
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
-	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', null),
-	layout: (state, layout) => assoc(state, 'layout', layout),
-	dataset: (state, dataset) => setMapLoading(assoc(state, 'dataset', dataset, 'colorBy', null)),
-	gene: (state, gene) => assocIn(setColorLoading(state), ['colorBy', 'gene'], gene),
-	'gene-post!': (serverBus, state, newState) => {
-		// XXX Should we assume this is a probe dataset, vs. a gene
-		// dataset?
-		var {host, name, gene} = newState.colorBy.gene,
-			field = probeFieldSpec({dsID: toDsID(host, name), name: gene});
-		// XXX Should we use models/column.js to populate column fields, vs.
-		// shimming it in various places? It's more general, but not sure if
-		// we need it.
-		serverBus.next(['singlecell-color-field',
-			fetch(field, newState.samples.samples), field]);
-	},
-	'reset': state => assoc(state, 'layout', null, 'dataset', null, 'integration', null, 'colorBy', null),
-	'color-mode': (state, mode) =>
-		assoc(colorMode[mode] ? setColorLoading(state) : state, 'colorBy', {mode}),
-	'color-mode-post!': (serverBus, state, newState, mode) => {
-		(colorMode[mode] || noop)(serverBus, newState, mode);
-	},
-	cellType: (state, cellType) => assocIn(setColorLoading(state),
-		['colorBy', 'cellType'], cellType),
-	'cellType-post!': (serverBus, state, newState, cellType) => {
-		var field = codedFieldSpec(cellType);
-		serverBus.next(['singlecell-color-field',
-			fetch(field, state.samples.samples), field]);
-	},
-	prob: (state, prob) => assocIn(state, ['colorBy', 'prob'], prob,
-		['colorBy', 'probCell'], null),
-	probCell: (state, probCell) => assocIn(setColorLoading(state),
-		['colorBy', 'probCell'], probCell),
-	'probCell-post!': (serverBus, state, newState) => {
-		var field = probeFieldSpec({
-			dsID: newState.colorBy.prob.dsID,
-			name: newState.colorBy.probCell
-		});
-		serverBus.next(['singlecell-color-field',
-			fetch(field, newState.samples.samples), field]);
-	},
-	'color-field': (state, d, field) =>
-		Let((data = setAvg(d, field), scale = colorScale(state, data, field)) =>
-			assocIn(state,
-				['colorBy', 'status'], 'loaded',
-				['colorBy', 'field'], data,
-				['colorBy', 'scale'], scale,
-				['colorBy', 'scaleBounds'], scaleBounds(data, scale))),
-	'color-field-error': (state, error) =>
-		assocIn(state,
-			['colorBy', 'status'], 'error',
-			['colorBy', 'error'], error),
-	'color-scale': (state, scale) => assocIn(state, ['colorBy', 'scale'], scale),
+	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', {}),
+	layout: (state, layout) => assoc(state, 'layout', layout, 'colorBy', {}),
+	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
+		'colorBy', colorBy),
+	reset: state => assoc(state, 'layout', null, 'dataset', null, 'data', {},
+		'integration', null, 'colorBy', {}),
+	colorBy: (state, colorBy) => assocIn(state, ['colorBy', 'field'], colorBy),
+	colorScale: (state, scale) => assocIn(state, ['colorBy', 'data', 'scale'], scale),
 	hidden: (state, codes) => assocIn(state, ['colorBy', 'hidden'], codes),
-	radius: (state, r) => Let(
-		(r0 = state.radius, rb = state.radiusBase, {step} = dotRange(rb)) =>
+	// Make the default radius "sticky". Unfortunately, also makes nearby
+	// points sticky if the drag operation starts there. Need to move this
+	// to the view so we can track mousedown.
+	radius: (state, r, rb) => Let(
+		(r0 = state.radius, {step} = dotRange(rb)) =>
 			(r - r0) * (r - rb) > 0 && Math.abs(r - rb) < step * 10 ? state :
 			assocIn(state, ['radius'], r)),
-	'map-data': (state, [samples, data], dsID, dims) =>
-			setRadius(
-				updateIn(assoc(state, 'samples', samples), ['data', dsID], dsData =>
-					merge(dsData,
-						object(dims, data.map(d => merge(d, {status: 'loaded'})))))),
-	'map-data-error': (state, error, dsID, dims) =>
-			updateIn(state, ['data', dsID], dsData =>
-				merge(dsData, object(dims,
-					dims.map(constant({status: 'error', error})))))
 });
 
-export default compose(fetchController, make(spreadsheetControls), mount(make(controls), ['singlecell']));
+export default compose(fetchController, mount(make(controls), ['singlecell']));

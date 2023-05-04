@@ -225,23 +225,18 @@ var {controller: fetchController, invalidatePath} =
 // ['dataset', localHub, *]
 // ['cohortDatasets', *, localHub]
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (state) {
-		var datapages = get(state, 'datapages', {});
-		invalidatePath(datapages, ['cohorts', localHub]);
-		invalidatePath(datapages, ['hubMeta', localHub]);
-		invalidatePath(datapages, ['samples', localHub, any]);
-		invalidatePath(datapages, ['identifiers', localHub, any]);
-		invalidatePath(datapages, ['dataset', localHub, any]);
-		invalidatePath(datapages, ['cohortDatasets', any, localHub]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['cohorts', localHub]);
+		invalidatePath(serverBus, ['hubMeta', localHub]);
+		invalidatePath(serverBus, ['samples', localHub, any]);
+		invalidatePath(serverBus, ['identifiers', localHub, any]);
+		invalidatePath(serverBus, ['dataset', localHub, any]);
+		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
 	});
 
-function hubChangePost(serverBus, state, newState) {
-	invalidateLocalHub(newState);
-}
-
 var controls = {
-	'localStatus-post!': hubChangePost,
-	'localQueue-post!': hubChangePost,
+	'localStatus-post!': invalidateLocalHub,
+	'localQueue-post!': invalidateLocalHub,
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
 };

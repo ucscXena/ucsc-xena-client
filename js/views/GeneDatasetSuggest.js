@@ -23,13 +23,13 @@ var fetchSuggestions = (datasets, value) =>
 		...datasets.map(({name, host}) =>
 			matchPartialField(host, name, value, limit).catch(() => empty)),
 		(...dsMatches) => mmap(datasets, dsMatches,
-			(dataset, matches) => matches.map(gene => ({gene,  ...dataset})))
+			(dataset, matches) => matches.map(field => ({field,  ...dataset})))
 			.flat());
 
-var getOptionLabel = ({gene, dataSubType}) => `${gene} - ${dataSubType}`;
+var getOptionLabel = ({field, dataSubType}) => `${field} - ${dataSubType}`;
 var filterOptions = (options, {inputValue}) =>
-	options.filter(({gene}) =>
-		gene.toLowerCase().startsWith(inputValue.trim().toLowerCase()));
+	options.filter(({field}) =>
+		field.toLowerCase().startsWith(inputValue.trim().toLowerCase()));
 
 export class GeneDatasetSuggest extends PureComponent {
 	state = {suggestions: []};
