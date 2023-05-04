@@ -36,7 +36,7 @@ var fieldSpecMode = ({mode, host, name, field}) =>
 	fieldSpec(toDsID(host, name), [field], ...fieldType[mode]);
 
 var fetchMap = (dsID, field, samples) =>
-	fetch(fieldSpec(dsID, field, 'probes', 'float'), samples);
+	fetch(fieldSpec(dsID, [field], 'probes', 'float'), samples);
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 
@@ -62,6 +62,7 @@ var fetchMethods = {
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
 	donorFields: (cohort, server) => donorFields(server, cohort),
+	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
 	data: (dsID, dim, samples) => fetchMap(dsID, dim, samples.samples),
@@ -73,7 +74,8 @@ var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
 	colorBy: identity, // always updates in-place
-	data: (state, [dsID]) => pick(state.singlecell.data, dsID),
+	data: (state, dsID) =>
+		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
 	// ['cohortDatasets', cohort, server]
 	// ['donorFields', cohort, server]
 	// limit cache to cohorts in study
@@ -94,6 +96,8 @@ var allDatasets = state =>
 
 var concat = (...arr) => arr.filter(identity).flat();
 
+var hasColorBy = state => getIn(state.singlecell, ['colorBy', 'field', 'field']);
+
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
 		[['defaultStudy']],
@@ -113,7 +117,7 @@ var singlecellData = state =>
 				dimension.map(dim =>
 					['data', dsID, dim,
 						['singlecell', 'samples', datasetCohort(state.singlecell)]])),
-		getIn(state.singlecell, ['colorBy', 'field', 'field']) ?
+		hasColorBy(state) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []
 	);
