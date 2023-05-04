@@ -7,7 +7,7 @@ var {Subject} = Rx;
 var createStore = require('../js/store');
 var controlRunner = require('../js/controlRunner').default;
 import {make as makeControls, compose} from '../js/controllers/utils';
-import query from '../js/controllers/query2';
+import query from '../js/controllers/query';
 import {diff} from 'just-diff';
 
 //var query = require('../js/controllers/query');
