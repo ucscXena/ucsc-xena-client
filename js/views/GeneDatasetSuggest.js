@@ -38,7 +38,8 @@ export class GeneDatasetSuggest extends PureComponent {
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.debounceTime(200)
-			.switchMap(value => value === undefined ? empty : fetchSuggestions(this.props.datasets, value))
+			.startWith('')
+			.switchMap(value => fetchSuggestions(this.props.datasets, value))
 			.subscribe(suggestions => this.setState({suggestions}));
 	}
 
@@ -47,7 +48,9 @@ export class GeneDatasetSuggest extends PureComponent {
 	}
 
 	onChange = (ev, value) => {
-		this.props.onSelect(value);
+		if (value) {
+			this.props.onSelect(value);
+		}
 	};
 
 	onInputChange = (ev, value/*, reason*/) => {
