@@ -277,7 +277,8 @@ class SingleCellPage extends PureComponent {
 			{layout} = state,
 			i = parseInt(ev.target.value, 10),
 			dataset = available(state)[layout][i],
-			colorBy = defaultColor(state, dataset.cohort) ;
+			colorBy = dataset.image ? {} : defaultColor(state, dataset.cohort);
+
 		this.callback(['dataset', dataset, {field: colorBy}]);
 	}
 	onReset = () => {
