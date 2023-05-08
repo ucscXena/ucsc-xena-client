@@ -45,9 +45,11 @@ var colorScale = (data, field) =>
 			{values: data.req.values[0], mean: data.avg.mean[0]});
 
 var scaleBounds = (data, scale) =>
-	Let((d = data.req.values[0], min = minnull(d), max = maxnull(d),
-			params = scaleParams(scale)) =>
-		({min: Math.min(...params, min), max: Math.max(...params, max)}));
+	Let((d = data.req.values[0], params = scaleParams(scale),
+			min = Math.min(...params, minnull(d)),
+			max = Math.max(...params, maxnull(d)),
+			over = 0.1 * (max - min)) =>
+		({min: min - over, max: max + over}));
 
 var colorParams = colorBy => color =>
 	Let((field = fieldSpecMode(colorBy), data = setAvg(color, field),
