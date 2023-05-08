@@ -102,9 +102,13 @@ export var dotRange = Let((ratio = 4) =>
 var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
 			.reduce((x, y) => x * y);
 
-var pickRadius = (mins, maxs, len, pct = 0.01) =>
-	Let((areaPerPoint = pct * nvolume(mins, maxs) / len) =>
-		Math.pow(areaPerPoint, 1 / mins.length) / 2);
+// In a latent space, more dimensions will pack points more tightly together
+// when they are projected to the 2d viewport. Here we estimate the radius of
+// the data points as a whole, using the bounds of the data, then compute a
+// dot radius based on fill percentage of a 2d view.
+var pickRadius = (mins, maxs, len, pct = 0.3) =>
+	Let((R = Math.pow(nvolume(mins, maxs),  1 / mins.length)) =>
+		 pct * R / Math.sqrt(len));
 
 var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
 export var setRadius = (sd, datasetData) =>
