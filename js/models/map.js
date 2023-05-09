@@ -102,6 +102,11 @@ export var dotRange = Let((ratio = 4) =>
 var nvolume = (mins, maxs) => mmap(mins, maxs, (min, max) => max - min)
 			.reduce((x, y) => x * y);
 
+export var getData = state =>
+	Let(({dsID, dimension} = get(state, 'dataset') || {}) =>
+		getIn(state, ['data', dsID, JSON.stringify(dimension)]));
+
+
 // In a latent space, more dimensions will pack points more tightly together
 // when they are projected to the 2d viewport. Here we estimate the radius of
 // the data points as a whole, using the bounds of the data, then compute a
@@ -110,9 +115,8 @@ var pickRadius = (mins, maxs, len, pct = 0.3) =>
 	Let((R = Math.pow(nvolume(mins, maxs),  1 / mins.length)) =>
 		 pct * R / Math.sqrt(len));
 
-var allCols = data => values(data).map(c => getIn(c, ['req', 'values', 0]));
 export var setRadius = (sd, datasetData) =>
-	Let((data = allCols(datasetData)) =>
+	Let((data = getIn(datasetData, ['req', 'values'], [])) =>
 		!(data.length && every(data, identity)) ? NaN :
 		Let((mins = data.map(minnull), maxs = data.map(maxnull)) =>
 			sd ? sd / 2 : pickRadius(mins, maxs, data[0].length)));
@@ -123,16 +127,14 @@ export var getSamples = state => getIn(state,
 	['samples', datasetCohort(state), 'samples']);
 
 export var dataLoading = state =>
-	Let(({dsID, dimension} = state.dataset) =>
-		dimension.some(dim =>
-			!getIn(state, ['data', dsID, dim, 'req']) ||
-				getIn(state, ['_outOfDate', 'data', dsID, dim])));
+	Let(({dsID, dimension} = state.dataset, dims = JSON.stringify(dimension)) =>
+		!getIn(state, ['data', dsID, dims]) ||
+		getIn(state, ['_outOfDate', 'data', dsID, dims]));
 
 export var dataError = state =>
-	Let(({dsID, dimension} = state.dataset) =>
-		dimension.some(dim =>
-			!getIn(state, ['_outOfDate', 'data', dsID, dim]) &&
-			getIn(state, ['data', dsID, dim, 'status']) === 'error'));
+	Let(({dsID, dimension} = state.dataset, dims = JSON.stringify(dimension)) =>
+		!getIn(state, ['_outOfDate', 'data', dsID, dims]) &&
+		getIn(state, ['data', dsID, dims, 'status']) === 'error');
 
 export var colorLoading = state =>
 	getIn(state, ['colorBy', 'field', 'mode']) &&

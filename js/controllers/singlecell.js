@@ -35,8 +35,8 @@ var toDsID = (host, name) => JSON.stringify({host, name});
 var fieldSpecMode = ({mode, host, name, field}) =>
 	fieldSpec(toDsID(host, name), [field], ...fieldType[mode]);
 
-var fetchMap = (dsID, field, samples) =>
-	fetch(fieldSpec(dsID, [field], 'probes', 'float'), samples);
+var fetchMap = (dsID, fields, samples) =>
+	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 
@@ -67,7 +67,7 @@ var fetchMethods = {
 	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
-	data: (dsID, dim, samples) => fetchMap(dsID, dim, samples.samples),
+	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	colorBy: (_, field, samples) =>
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field))
 };
@@ -103,8 +103,11 @@ var hasColorBy = state => getIn(state.singlecell, ['colorBy', 'field', 'field'])
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
 		[['defaultStudy']],
+		// There is overlap between cohortDatasets and datasetMetadata, but
+		// it's not worth resolving because they are needed at different times.
+		// We need datasetMetadata to draw the integration list, and need
+		// cohortDatasets after the user has selected an integration.
 		getIn(state, ['singlecell', 'defaultStudy']) && allDatasets(state),
-		// XXX rewrite using references
 		Let((cohorts = allCohorts(state.singlecell)) =>
 			userServers(state.spreadsheet)
 			.map(server =>
@@ -116,9 +119,8 @@ var singlecellData = state =>
 			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
 		hasDataset(state.singlecell) && getSamples(state.singlecell) &&
 			Let(({dsID, dimension} = state.singlecell.dataset) =>
-				dimension.map(dim =>
-					['data', dsID, dim,
-						['singlecell', 'samples', datasetCohort(state.singlecell)]])),
+				[['data', dsID, JSON.stringify(dimension),
+					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
 		hasColorBy(state) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []

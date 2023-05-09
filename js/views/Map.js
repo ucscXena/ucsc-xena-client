@@ -20,7 +20,7 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 // XXX Try to ditch this, in favor of the singlecell scales that
 // provide rgb.
 var toRGB = require('../color_helper').default.rgb;
-import {colorError, colorLoading, dataError, dataLoading, getRadius} from '../models/map';
+import {colorError, colorLoading, dataError, dataLoading, getData, getRadius} from '../models/map';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -120,7 +120,7 @@ class MapDrawing extends PureComponent {
 	}
 	render() {
 		var {props} = this;
-		if (!_.every(props.data.columns, _.identity)) {
+		if (!props.data.columns) {
 			return null;
 		}
 		if (!this.props.container) {
@@ -294,14 +294,13 @@ export class Map extends PureComponent {
 
 		var mapState = this.props.state,
 			{dsID, ...params} = _.get(mapState, 'dataset', []),
-			mapData = _.getIn(mapState, ['data', dsID]),
+			mapData = getData(mapState),
 			colorColumn = _.getIn(mapState, ['colorBy', 'data', 'req', 'values', 0]),
 			colors = _.getIn(mapState, ['colorBy', 'data', 'scale']),
 			hideColors = _.getIn(mapState, ['colorBy', 'hidden']),
 			loading = dataLoading(mapState) || colorLoading(mapState),
 			error = dataError(mapState) || colorError(mapState),
-			columns = params.dimension
-				.map(d => _.getIn(mapData, [d, 'req', 'values', 0])),
+			columns = _.getIn(mapData, ['req', 'values']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
 			radius = getRadius(mapState),

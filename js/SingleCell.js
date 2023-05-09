@@ -15,7 +15,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getDataSubType, getRadius, getSamples, hasDataset, maps, probValue, setRadius} from './models/map';
+import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, maps, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
 import mapColor from './views/MapColor';
@@ -342,7 +342,7 @@ var cohortFieldsSelector = createSelector(
 
 var radiusSelector = createSelector(
 	state => getIn(state, ['dataset', 'spot_diameter']),
-	state => getIn(state, ['data', getIn(state, ['dataset', 'dsID'])]),
+	state => getData(state),
 	setRadius);
 
 var selector = state => assoc(
