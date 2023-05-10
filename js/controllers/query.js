@@ -56,9 +56,16 @@ export default function source(fetchMethods, dataRequest, cachePolicy, mount) {
 		updateIn(state, [mount, '_outOfDate', ...path.slice(0, path.length - 1)],
 			p => p && dissoc(p, last(path)));
 
+	// XXX This is O(n^2). Our watch lists are very small, so probably doesn't
+	// matter. Alternatives are to stringify, or to store watches as trees instead
+	// of paths.
+	var addNew = path => (watch, ref) =>
+		Let((v = [path, ref], e = watch.find(wi => isEqual(wi, v))) =>
+			e ? watch : watch.concat([v]));
+
 	// Set watch on new state
 	var setWatch = (state, path, refs) =>
-		updateIn(state, [mount, '_watch'], w => (w || []).concat(refs.map(ref => [path, ref])));
+		updateIn(state, [mount, '_watch'], (w = []) => refs.reduce(addNew(path), w));
 
 	// Drop watch on things we've cleared from cache
 	// XXX If cache immediately removes it on insertion, we retain the watch?
