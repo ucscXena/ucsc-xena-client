@@ -15,7 +15,7 @@ import {Button, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, maps, probValue, setRadius} from './models/map';
+import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, maps, otherValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
 import mapColor from './views/MapColor';
@@ -200,6 +200,7 @@ var legendTitleMode = {
 	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?
 		Let(({host, name, field} = state.colorBy.field) =>
 			`${field} - ${getDataSubType(state, host, name)}`) : '',
+	other: state => otherValue(state).field,
 	null: () => ''
 };
 
@@ -277,7 +278,9 @@ class SingleCellPage extends PureComponent {
 			{layout} = state,
 			i = parseInt(ev.target.value, 10),
 			dataset = available(state)[layout][i],
-			colorBy = dataset.image ? {} : defaultColor(state, dataset.cohort);
+			colorBy = dataset.image ? {} :
+				dataset.cohort === datasetCohort(state) ? state.colorBy.field :
+				defaultColor(state, dataset.cohort);
 
 		this.callback(['dataset', dataset, {field: colorBy}]);
 	}
@@ -338,6 +341,7 @@ var mapSelector = createSelector(
 var cohortFieldsSelector = createSelector(
 	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
+	state => get(state, 'cohortFeatures'),
 	cohortFields);
 
 var radiusSelector = createSelector(

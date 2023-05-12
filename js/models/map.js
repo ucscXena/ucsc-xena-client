@@ -1,4 +1,4 @@
-var {deepMerge, every, find, findValue, first, get, getIn, identity, Let, merge, minnull, maxnull, mmap, object, pairs, pick, values} = require('../underscore_ext').default;
+var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn, identity, Let, map, mapObject, merge, minnull, maxnull, mmap, object, omit, pairs, pick, updateIn, values} = require('../underscore_ext').default;
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -30,6 +30,7 @@ var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
 			dsID: ds.dsID,
 			field: m.transferredLabel,
+			prob: m.transferProbability,
 			label: m.label
 		}))).flat();
 
@@ -43,11 +44,12 @@ var labelTransferProb = datasets =>
 var empty = {
 	cellType: {},
 	labelTransfer: {},
-	labelTransferProb: {}
+	labelTransferProb: {},
+	other: {}
 };
 
 //{'cellType': {[cohort]: [cellType, ...], ...}, ...}}
-export var cohortFields = (cohorts, cohortDatasets) =>
+export var curatedFields = (cohorts, cohortDatasets) =>
 	!cohorts.length ? empty :
 	deepMerge(
 		...cohorts.map(({cohort}) =>
@@ -56,6 +58,51 @@ export var cohortFields = (cohorts, cohortDatasets) =>
 					['cellType', 'labelTransfer', 'labelTransferProb'],
 					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds)]
 					.map(d => ({[cohort]: d}))))));
+
+var studyById = (state, id) =>
+		getIn(state, ['defaultStudy', 'studyList'], [])
+			.find(s => s.study === id);
+
+var userStudy = state => studyById(state, get(state, 'integration'));
+
+var studyCohorts = study => get(study, 'cohortList', []);
+var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
+	studyById(state, ref.studyID));
+
+export var allCohorts = state =>
+		Let((st = userStudy(state)) =>
+			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
+
+var ignore = ['_DONOR', '_SAMPLE', 'sampleID', '_DATASOURCE'];
+var dropIgnored = features =>
+	mapObject(features, datasets =>
+		mapObject(datasets, fields => omit(fields, ignore)));
+
+var dropFields = (features, [dsID, fields]) =>
+	Let(({host, name} = JSON.parse(dsID)) =>
+		updateIn(features, [host, name], ds => omit(ds, fields)));
+
+var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
+var cohortOther = (cohort, state, features) =>
+	Let((labelTransfer = getIn(state, ['labelTransfer', cohort])
+			.map(f => [f.dsID, [f.field, f.prob]]),
+		labelTransferProb = getIn(state, ['labelTransferProb', cohort])
+			.map(f => [f.dsID, f.category]),
+		cellType = getIn(state, ['cellType', cohort]).map(f => [f.dsID, [f.field]]),
+		pruned = [labelTransfer, labelTransferProb, cellType].flat()
+			.reduce(dropFields, dropIgnored(features))) =>
+
+		flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
+			map(fields, (p, field) => ({host, name, field, type: type(p)})))));
+
+var otherFields = (cohorts, state, cohortFeatures) =>
+	deepMerge(...cohorts.map(({cohort}) =>
+		({[cohort]: cohortOther(cohort, state, get(cohortFeatures, cohort, []))})));
+
+export var cohortFields = (cohorts, cohortDatasets, cohortFeatures) =>
+	Let((fields = curatedFields(cohorts, cohortDatasets)) =>
+		assoc(fields, 'other', otherFields(cohorts, fields, cohortFeatures)));
+
 
 export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
 
@@ -75,25 +122,14 @@ export var hasCellType = (state, cohort = datasetCohort(state)) =>
 export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
 	state.labelTransferProb[cohort].length;
 
+export var hasOther = (state, cohort = datasetCohort(state)) =>
+	state.other[cohort].length;
+
 export var hasGene = (state, cohort = datasetCohort(state)) =>
 	get(
 		findValue(getIn(state, ['defaultStudy', 'studyList']),
 			study => find(study.cohortList, c => c.cohort === cohort)),
 		'preferredDataset');
-
-var studyById = (state, id) =>
-		getIn(state, ['defaultStudy', 'studyList'], [])
-			.find(s => s.study === id);
-
-var userStudy = state => studyById(state, get(state, 'integration'));
-
-var studyCohorts = study => get(study, 'cohortList', []);
-var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
-	studyById(state, ref.studyID));
-
-export var allCohorts = state =>
-		Let((st = userStudy(state)) =>
-			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
 
 export var dotRange = Let((ratio = 4) =>
 	radius => ({min: radius / ratio, max: radius * ratio,
@@ -157,6 +193,13 @@ export var cellTypeValue = state =>
 			cohort = datasetCohort(state)) =>
 		state.cellType[cohort].concat(state.labelTransfer[cohort])
 			.find(t => t.dsID === dsID && t.field === field) || '');
+
+export var otherValue = state =>
+	Let(({host, name, field} = state.colorBy.field,
+			cohort = datasetCohort(state)) =>
+		state.other[cohort]
+			.find(other => other.name === name && other.host === host
+				&& other.field === field) || '');
 
 export var probValue = state =>
 	Let((dsID = toDsID(state.colorBy.field)) =>

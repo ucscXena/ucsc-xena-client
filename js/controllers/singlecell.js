@@ -2,7 +2,7 @@ import query from './query';
 import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
-var {fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
+var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
 var {assoc, assocIn, getIn, identity, Let, merge, maxnull, minnull, object, pairs, pluck, pick, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
@@ -12,13 +12,15 @@ import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset}
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
+import {isPhenotype} from '../models/dataType';
 
 var fieldType = {
-	donor: ['clinical', 'coded'],
-	datasource: ['clinical', 'coded'],
-	type: ['clinical', 'coded'],
-	prob: ['clinical', 'float'],
-	gene: ['probes', 'float']
+	donor: () => ['clinical', 'coded'],
+	datasource: () => ['clinical', 'coded'],
+	type: () => ['clinical', 'coded'],
+	prob: () => ['clinical', 'float'],
+	gene: () => ['probes', 'float'],
+	other: type => ['clinical', type]
 };
 
 var fieldSpec = (dsID, fields, fieldType, valueType) => ({
@@ -32,8 +34,8 @@ var fieldSpec = (dsID, fields, fieldType, valueType) => ({
 
 var toDsID = (host, name) => JSON.stringify({host, name});
 
-var fieldSpecMode = ({mode, host, name, field}) =>
-	fieldSpec(toDsID(host, name), [field], ...fieldType[mode]);
+var fieldSpecMode = ({mode, host, name, field, type}) =>
+	fieldSpec(toDsID(host, name), [field], ...fieldType[mode](type));
 
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
@@ -63,6 +65,8 @@ var fetchMethods = {
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
+	cohortFeatures: (cohort, server, dataset) =>
+		allFieldMetadata(server, dataset).catch(() => of([])),
 	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
@@ -79,6 +83,7 @@ var cachePolicy = {
 	data: (state, dsID) =>
 		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
 	// ['cohortDatasets', cohort, server]
+	// ['cohortFeatures', cohort, server, dsName]
 	// ['donorFields', cohort, server]
 	// limit cache to cohorts in study
 	default: (state, path) =>
@@ -111,9 +116,13 @@ var singlecellData = state =>
 		Let((cohorts = allCohorts(state.singlecell)) =>
 			userServers(state.spreadsheet)
 			.map(server =>
-				cohorts.map(cohort =>
-					[['cohortDatasets', cohort.cohort, server],
-						['donorFields', cohort.cohort, server]]).flat())
+				cohorts.map(({cohort}) =>
+					[['cohortDatasets', cohort, server],
+						['donorFields', cohort, server],
+					...getIn(state.singlecell, ['cohortDatasets', cohort, server], []).
+						filter(isPhenotype)
+						.map(ds => ['cohortFeatures', cohort, server, ds.name])])
+				.flat())
 			.flat()),
 		hasDataset(state.singlecell) &&
 			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
@@ -123,8 +132,7 @@ var singlecellData = state =>
 					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
 		hasColorBy(state) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
-				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []
-	);
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
 // Don't yet need invalidatePath
 var {controller: fetchController/*, invalidatePath*/} =
@@ -143,7 +151,8 @@ var controls = actionPrefix({
 		'colorBy', colorBy, 'radius', null),
 	reset: state => assoc(state, 'layout', null, 'dataset', null, 'data', {},
 		'integration', null, 'colorBy', {}, 'radius', null),
-	colorBy: (state, colorBy) => assocIn(state, ['colorBy', 'field'], colorBy),
+	colorBy: (state, colorBy) => assocIn(state, ['colorBy', 'field'], colorBy,
+		['colorBy', 'hidden'], null),
 	colorScale: (state, scale) => assocIn(state, ['colorBy', 'data', 'scale'], scale),
 	hidden: (state, codes) => assocIn(state, ['colorBy', 'hidden'], codes),
 	// Make the default radius "sticky". Unfortunately, also makes nearby

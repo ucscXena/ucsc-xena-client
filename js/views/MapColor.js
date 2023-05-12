@@ -2,8 +2,8 @@ import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
 var {assoc, assocIn, get, getIn, identity, Let, pick} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
-import {div, el} from '../chart/react-hyper';
-import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset, hasDatasource, hasDonor, hasGene, hasTransferProb, probValue} from '../models/map';
+import {el} from '../chart/react-hyper';
+import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset, hasDatasource, hasDonor, hasGene, hasOther, hasTransferProb, otherValue, probValue} from '../models/map';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
 
@@ -12,7 +12,7 @@ var slider = el(Slider);
 var listSubheader = el(ListSubheader);
 var fragment = el(Fragment);
 
-var modes = ['datasource', 'donor', 'type', 'prob', 'gene'];
+var modes = ['datasource', 'donor', 'type', 'prob', 'gene', 'other'];
 
 var alwaysFalse = () => false;
 
@@ -21,7 +21,8 @@ var hasMode = {
 	donor: hasDonor,
 	type: hasCellType,
 	prob: hasTransferProb,
-	gene: hasGene
+	gene: hasGene,
+	other: hasOther
 };
 
 var availModes = state => !hasDataset(state) ? [] :
@@ -38,6 +39,10 @@ var cellTypeOpts = state =>
 			...cellType.map(value => menuItem({value}, value.label))],
 		labelTransfer.length && [listSubheader('Transferred cell types / clusters'),
 			...labelTransfer.map(value => menuItem({value}, value.label))]]).flat());
+
+// XXX Use label
+var otherOpts = state => state.other[datasetCohort(state)]
+	.map(value => menuItem({value}, value.field));
 
 var probOpts = state =>
 	state.labelTransferProb[datasetCohort(state)]
@@ -74,16 +79,26 @@ var sliderOpts = (state, scale, onScale) => ({
 	valueLabelFormat: labelFormat
 });
 
+var isFloat = state => get(otherValue(state), 'type') === 'float';
+
 var modeOptions = {
 	'': () => null,
 	datasource: () => null,
 	donor: () => null,
 	type: ({state, onCellType: onChange}) =>
-		div(xSelect({
+		fragment(xSelect({
 				id: 'celltype',
 				label: 'Select a cell type / cluster',
 				value: cellTypeValue(state), onChange
 			}, ...cellTypeOpts(state))),
+	other: ({state, onOther: onChange, scale, onScale}) =>
+		fragment(xSelect({
+				id: 'other',
+				label: 'Select a phenotype',
+				value: otherValue(state), onChange
+			}, ...otherOpts(state)),
+			isFloat(state) && colorData(state) ?
+				slider(sliderOpts(state, scale, onScale)) : null),
 	prob: ({state, scale, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
 			fragment(xSelect({
@@ -101,7 +116,7 @@ var modeOptions = {
 				colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
 					null)),
 	gene: ({state, onGene, scale, onScale}) =>
-		div(
+		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:
 				setDataSubType(state, hasGene(state, datasetCohort(state))),
 				onSelect: onGene, value: geneValue(state)}),
@@ -114,7 +129,8 @@ var modeLabel = {
 	donor: 'By donor',
 	type: 'By cell type/cluster',
 	prob: 'By cell type/cluster probability',
-	gene: 'By gene'
+	gene: 'By gene',
+	other: 'By other phenotype'
 };
 var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
 
@@ -152,6 +168,14 @@ class MapColor extends PureComponent {
 			{host, name} = JSON.parse(type.dsID),
 			{field} = type,
 			newState = {mode: 'type', host, name, field};
+
+		this.setState({colorBy: newState});
+		this.props.handlers.onColorBy(newState);
+	}
+	onOther = ev => {
+		var other = ev.target.value,
+			{host, name, field, type} = other,
+			newState = {mode: 'other', host, name, field, type};
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);

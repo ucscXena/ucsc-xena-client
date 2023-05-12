@@ -1,7 +1,7 @@
 var {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} = require('../underscore_ext').default;
 var xenaQuery = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
-import {ignoredType} from '../models/dataType';
+import {ignoredType, isPhenotype} from '../models/dataType';
 var Rx = require('../rx').default;
 var {userServers} = require('./common');
 import {make, compose} from './utils';
@@ -40,11 +40,6 @@ var fetchCohortAnalytic = () =>
 
 var fetchTumorMap = () =>
 	xenaQuery.fetchTumorMap.map(res => res).catch(() => {});
-
-var phenoPat = /^phenotype/i;  // match ../viwes/VariableSelect.js definition of phenotype data
-var isPhenotype = ds => ds.type === 'clinicalMatrix' &&
-		(!ds.dataSubType || ds.dataSubType.match(phenoPat));
-
 
 // {wizard: {cohortDatasets: {[cohort]: {[server]: [dataset, ...]}}}}
 var allPhenoDatasets = (state, cohort, servers) =>

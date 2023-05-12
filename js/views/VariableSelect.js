@@ -8,7 +8,7 @@ var GeneSuggest = require('./GeneSuggest');
 var {WizardCard} = require('./WizardCard');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
-var {ignoredType} = require('../models/dataType');
+var {ignoredType, isPhenotype} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
 var {Observable, Scheduler} = require('../rx').default;
 import {getOpts} from '../columnsParam';
@@ -25,11 +25,7 @@ var sxSuggestForm = {
 const LOCAL_DOMAIN = servers.localHub;
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
-const ignoredClinical = (type, subtype) =>
-	type === 'clinicalMatrix' && (!subtype || subtype.match(/^phenotype/i));  // match ../controllers/wizard.js definition of phenotype data
-
-var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) &&
-	!ignoredClinical(type, dataSubType);
+var notIgnored = ds => !_.contains(ignoredType, ds.type) && !isPhenotype(ds);
 
 var category = ({dsID, dataSubType}) =>
 	dsID.includes(LOCAL_DOMAIN) ? LOCAL_DOMAIN_LABEL : (dataSubType ? dataSubType : 'others');
