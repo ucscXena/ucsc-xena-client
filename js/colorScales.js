@@ -185,7 +185,7 @@ var scaleParams = _.Let((m = {
 	'no-data': 0,
 	'float-pos': 3,
 	'float-neg': 3,
-	'float': 3,
+	'float': 4,
 	'float-thresh-pos': 3,
 	'float-thresh-neg': 3,
 	'float-thresh': 4,
