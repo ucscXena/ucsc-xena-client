@@ -6,6 +6,7 @@ import Datapages from '../Datapages';
 import Transcripts from '../transcript_views/TranscriptPage';
 import ImportPage from '../import/ImportPage';
 import SingleCell from '../SingleCell';
+import Img from '../Img';
 import PureComponent from '../PureComponent';
 import {xenaTheme} from '../xenaTheme';
 var {isEqual} = require('../underscore_ext').default;
@@ -21,7 +22,8 @@ const pages = {
 	'datapages': Datapages,
 	'transcripts': Transcripts,
 	'import': ImportPage,
-	'singlecell': SingleCell
+	'singlecell': SingleCell,
+	'img': Img
 };
 
 

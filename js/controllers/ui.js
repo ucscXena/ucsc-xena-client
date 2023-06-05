@@ -72,6 +72,7 @@ var getPage = path =>
 	path === '/datapages/' ? 'datapages' :
 	path === '/import/' ? 'import' :
 	path === '/singlecell/' ? 'singlecell' :
+	path === '/img/' ? 'img' :
 	'heatmap';
 
 var setPage = (state, path, params) =>
