@@ -14,17 +14,13 @@ import XAutosuggestInput from './views/XAutosuggestInput';
 var xAutosuggestInput = el(XAutosuggestInput);
 var autocomplete = el(Autocomplete);
 
-//var {categoryMore} = require('./colorScales');
 var {RGBToHex} = require('./color_helper').default;
-
-//var colors = categoryMore.map(rgb);
 
 var deckGL = el(DeckGL);
 var checkbox = el(Checkbox);
 
 var colors = [
 	[0.0, 0.0, 1.0],
-//	[1.0, 0.0, 0.0], // XXX for testing repeat color at different layers
 	[0.0, 1.0, 0.0],
 	[1.0, 0.0, 0.0],
 	[0.0, 1.0, 1.0],
@@ -34,28 +30,11 @@ var colors = [
 var colorsCss = colors.map(c => RGBToHex(...c.map(v => v * 255)));
 var layers = 6;
 
-/* eslint-disable no-unused-vars */
-var fromAlpha = i =>
-	`color.a = min(1., max(color.a - lower, 0.) / (upper - lower));
-	color.r = ${colors[i % colors.length][0].toFixed(1)};
-	color.g = ${colors[i % colors.length][1].toFixed(1)};
-	color.b = ${colors[i % colors.length][2].toFixed(1)};`;
-
-//	`color.a = min(${(1 / (i + 1)).toFixed(4)}, max(color.r - lower, 0.) / (upper - lower) / ${(i + 1).toFixed(4)});
-//	`color.a = min(${(1 / (layers - i)).toFixed(4)}, max(color.r - lower, 0.) / (upper - lower) / ${(layers - i).toFixed(4)});
 var fromGray = i =>
 	`color.a = min(1., max(color.r - lower, 0.) / (upper - lower));
 	color.r = ${colors[i % colors.length][0].toFixed(1)};
 	color.g = ${colors[i % colors.length][1].toFixed(1)};
 	color.b = ${colors[i % colors.length][2].toFixed(1)};`;
-
-//var fromGray = i =>
-//	`color.a = ${(1 / (layers - i)).toFixed(4)};
-//	color.r = min(max(color.r - lower, 0.) / (upper - lower), 1.) * ${colors[i % colors.length][0].toFixed(1)};
-//	color.g = min(max(color.g - lower, 0.) / (upper - lower), 1.) * ${colors[i % colors.length][1].toFixed(1)};
-//	color.b = min(max(color.b - lower, 0.) / (upper - lower), 1.) * ${colors[i % colors.length][2].toFixed(1)};
-//`;
-/* eslint-enable no-unused-vars */
 
 class XenaBitmapLayer extends BitmapLayer {
 	getShaders() {
@@ -88,20 +67,18 @@ var channelSelect = ({channels, value, onChange}) =>
 		value
 	});
 
-var directory = sessionStorage.png ? 'pyramid-png-gray' : 'pyramid';
+var baseUrl = 'http://localhost:8081';
+//var baseUrl = '';
 
-//var baseUrl = 'http://localhost:8081';
-var baseUrl = '';
-
-var tileLayer2 = (name, index, opacity, visible/*, tintColor*/) =>
+var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) =>
 	new TileLayer({
 		id: `tile-layer-${index}`,
-		data: `${baseUrl}/${directory}/c${name}-{z}-{y}-{x}.png`,
+		data: `${path}/c${name}-{z}-{y}-{x}.png`,
 		minZoom: 0,
-		maxZoom: 7,
-		tileSize: 512,
+		maxZoom: levels,
+		tileSize,
 		// extent appears to be in the dimensions of the lowest-resolution image.
-		extent: [0, 0, 136, 105],
+		extent: [0, 0, size[0], size[1]],
 		opacity: 1.0, // XXX no effect? It's mixed in before FILTER_COLOR???
 		zoomOffset: 1,
 		refinementStrategy: 'no-overlap',
@@ -109,7 +86,6 @@ var tileLayer2 = (name, index, opacity, visible/*, tintColor*/) =>
 		// Have to include 'opacity' in props to force an update, because the
 		// update algorithm doesn't see sublayer props.
 		limits: opacity,
-//		tintColor,
 		renderSubLayers: props => {
 			var {bbox: {left, top, right, bottom}} = props.tile;
 
@@ -143,27 +119,30 @@ var colorRange = ({min, max}) =>
 	Let((over = (max - min) * 0.2) =>
 		({min: Math.max(0, (min - over) / 256), max: Math.min(1, (max + over) / 256)}));
 
-export default class Img2 extends PureComponent {//eslint-disable-line no-unused-vars
+export default class Img extends PureComponent {//eslint-disable-line no-unused-vars
 	state = {}
+	static defaultProps = {
+		image: `${baseUrl}/MEL08-1-1`
+	}
 	onOpacity = i => (ev, op) => {
 		var {opacity} = this.state;
 		this.setState({opacity: [...opacity.slice(0, i), op, ...opacity.slice(i + 1)]});
 	}
 	componentDidMount() {
-		var stats = {
-			url: `${baseUrl}/pyramid/stats.json`,
+		var metadata = {
+			url: `${this.props.image}/metadata.json`,
 			responseType: 'text', method: 'GET', crossDomain: true};
 
-		ajax(stats).map(r => JSON.parse(r.response)).subscribe(m => {
-			var stats = m.stats.map((l, i) => ({i, ...l})),
+		ajax(metadata).map(r => JSON.parse(r.response)).subscribe(m => {
+			var stats = m.channels.map((l, i) => ({i, ...l})),
 				opacity = stats.map(({min, max}) => [min / 256, max / 256]),
 				channels = pluck(stats, 'name'),
 				inView = m.defaults ?
 					m.defaults.slice(0, layers).map(c => channels.indexOf(c)) :
 					range(Math.min(layers, stats.length)),
-				visible = times(layers, () => true);
-//				color = stats.map((s, i) => colors[i % colors.length]);
-	 		this.setState({stats, opacity, /*color, */inView, visible});
+				visible = times(layers, () => true),
+				{size, tileSize, levels} = m;
+			this.setState({stats, opacity, inView, levels, size, tileSize, visible});
 		});
 	}
 	onVisible = i => (ev, checked) => {
@@ -191,7 +170,8 @@ export default class Img2 extends PureComponent {//eslint-disable-line no-unused
 			};
 
 		return div({style: {display: 'flex'}},
-			div({style: {position: 'relative', width: 800, height: 600, border: '3px solid black'}},
+			div({style: {position: 'relative', width: 800, height: 600,
+					border: '3px solid black'}},
 				deckGL({
 //					onWebGLInitialized: gl => {
 //						console.log('init', gl);
@@ -207,7 +187,15 @@ export default class Img2 extends PureComponent {//eslint-disable-line no-unused
 					glOptions: {
 						alpha: false
 					},
-					layers: inView.map((c, i) => tileLayer2(c, i, this.state.opacity[c], this.state.visible[i], colors[i % colors.length])),
+					layers: inView.map((c, i) =>
+						tileLayer({
+							name: c, path: this.props.image,
+							// XXX rename opacity
+							index: i, opacity: this.state.opacity[c],
+							levels: this.state.levels,
+							size: this.state.size,
+							tileSize: this.state.tileSize,
+							visible: this.state.visible[i]})),
 					views,
 					controller: true,
 					coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -226,8 +214,10 @@ export default class Img2 extends PureComponent {//eslint-disable-line no-unused
 			...inView.map((c, i) =>
 				span(
 					checkbox({checked: this.state.visible[i], onChange: onVisible(i)}),
-					span({style: {display: 'inline-block', width: 20, height: 20, backgroundColor: colorsCss[i % colors.length]}}),
-					channelSelect({channels: pluck(stats, 'name'), value: stats[c].name, onChange: this.onChannel(i)}),
+					span({style: {display: 'inline-block', width: 20, height: 20,
+						backgroundColor: colorsCss[i % colors.length]}}),
+					channelSelect({channels: pluck(stats, 'name'),
+						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.01,
 						value: this.state.opacity[c], onChange: this.onOpacity(c)})))));
 	}
