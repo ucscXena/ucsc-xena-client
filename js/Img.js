@@ -75,7 +75,7 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 		id: `tile-layer-${index}`,
 		data: `${path}/c${name}-{z}-{y}-{x}.png`,
 		minZoom: 0,
-		maxZoom: levels,
+		maxZoom: levels - 1,
 		tileSize,
 		// extent appears to be in the dimensions of the lowest-resolution image.
 		extent: [0, 0, size[0], size[1]],
@@ -115,9 +115,11 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 //			(gl, param) => Let((p = gl.getParameter(param)) =>
 //				funcs.find(x => gl[x] === p)));
 
+// Adds 20% of range over and under the min/max of the dataset.
+// The color scales will clamp the result to [0, 1].
 var colorRange = ({min, max}) =>
 	Let((over = (max - min) * 0.2) =>
-		({min: Math.max(0, (min - over) / 256), max: Math.min(1, (max + over) / 256)}));
+		({min: (min - over) / 256, max: (max + over) / 256}));
 
 export default class Img extends PureComponent {//eslint-disable-line no-unused-vars
 	state = {}
@@ -135,7 +137,7 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 
 		ajax(metadata).map(r => JSON.parse(r.response)).subscribe(m => {
 			var stats = m.channels.map((l, i) => ({i, ...l})),
-				opacity = stats.map(({min, max}) => [min / 256, max / 256]),
+				opacity = stats.map(({lower, upper}) => [lower / 256, upper / 256]),
 				channels = pluck(stats, 'name'),
 				inView = m.defaults ?
 					m.defaults.slice(0, layers).map(c => channels.indexOf(c)) :
