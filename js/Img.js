@@ -13,6 +13,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from './views/XAutosuggestInput';
 var xAutosuggestInput = el(XAutosuggestInput);
 var autocomplete = el(Autocomplete);
+import styles from './Img.module.css';
 
 var {RGBToHex} = require('./color_helper').default;
 
@@ -64,6 +65,7 @@ var channelSelect = ({channels, value, onChange}) =>
 		disableClearable: true,
 		options: channels,
 		renderInput: props => xAutosuggestInput(props),
+		className: styles.select,
 		value
 	});
 
@@ -215,9 +217,7 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			div({style: {width: 200, margin: 20, float: 'right'}},
 			...inView.map((c, i) =>
 				span(
-					checkbox({checked: this.state.visible[i], onChange: onVisible(i)}),
-					span({style: {display: 'inline-block', width: 20, height: 20,
-						backgroundColor: colorsCss[i % colors.length]}}),
+					checkbox({checked: this.state.visible[i], style: {color: colorsCss[i % colors.length]}, onChange: onVisible(i)}),
 					channelSelect({channels: pluck(stats, 'name'),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.01,
