@@ -126,7 +126,9 @@ var colorRange = ({min, max}) =>
 export default class Img extends PureComponent {//eslint-disable-line no-unused-vars
 	state = {}
 	static defaultProps = {
-		image: `${baseUrl}/MEL08-1-1`
+		image: `${baseUrl}/MEL08-1-1`,
+		width: 800,
+		height: 600
 	}
 	onOpacity = i => (ev, op) => {
 		var {opacity} = this.state;
@@ -163,18 +165,18 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			return null;
 		}
 		var views = new OrthographicView({far: -1, near: 1}),
-			{stats, inView} = this.state,
-			zoom = 0,
+			{stats, inView, size: [iwidth, iheight]} = this.state,
+			{width, height} = this.props,
 			{onVisible} = this,
 			viewState = {
-				zoom,
+				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
 				minZoom: -2,
 				maxZoom: 10,
-				target: [250, 250]
+				target: [iwidth / 2, iheight / 2]
 			};
 
 		return div({style: {display: 'flex'}},
-			div({style: {position: 'relative', width: 800, height: 600,
+			div({style: {position: 'relative', width, height,
 					border: '3px solid black'}},
 				deckGL({
 //					onWebGLInitialized: gl => {
