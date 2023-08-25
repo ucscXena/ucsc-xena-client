@@ -58,11 +58,13 @@ var findStudy = (studyList, studyID) =>
 
 var studyRows = (state, study, label = study.label) => ({
 	label,
-	cohorts: (study.cohortList || []).map(cohort => ({
-		donors: cohort.donorNumber,
-		cells: maxCells(state, cohort.preferredDataset),
-		assays: allAssays(state)(cohort)
-	}))
+	cohorts: (study.cohortList || [])
+		.filter(cohort => get(cohort.preferredDataset, 'length'))
+		.map(cohort => ({
+			donors: cohort.donorNumber,
+			cells: maxCells(state, cohort.preferredDataset),
+			assays: allAssays(state)(cohort)
+		}))
 });
 
 var integrationsList = state =>
