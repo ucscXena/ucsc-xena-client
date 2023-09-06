@@ -124,6 +124,8 @@ var singlecellData = state =>
 						.map(ds => ['cohortFeatures', cohort, server, ds.name])])
 				.flat())
 			.flat()),
+// If moving Img state to app state, fetch image metadata here.
+//		Let((img = hasImage(state.singlecell)) => img && [['image', imagePath(img)]]),
 		hasDataset(state.singlecell) &&
 			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
 		hasDataset(state.singlecell) && getSamples(state.singlecell) &&

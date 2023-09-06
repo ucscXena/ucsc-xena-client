@@ -1,12 +1,15 @@
 import PureComponent from './PureComponent';
 import {div, el, span} from './chart/react-hyper';
 import DeckGL from '@deck.gl/react';
-import {BitmapLayer, OrthographicView} from 'deck.gl';
+import {DataFilterExtension} from '@deck.gl/extensions';
+import {BitmapLayer, ScatterplotLayer, OrthographicView} from 'deck.gl';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
+import * as colorScales from './colorScales';
+var toRGB = require('./color_helper').default.rgb;
 var slider = el(Slider);
-var {assoc, findIndex, Let, pluck, range, times} = require('./underscore_ext').default;
+var {assoc, findIndex, Let, pluck, range, times, transpose} = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 var {ajax} = Rx.Observable;
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -20,7 +23,7 @@ var {RGBToHex} = require('./color_helper').default;
 var deckGL = el(DeckGL);
 var checkbox = el(Checkbox);
 
-var colors = [
+var layerColors = [
 	[0.0, 0.0, 1.0],
 	[0.0, 1.0, 0.0],
 	[1.0, 0.0, 0.0],
@@ -28,14 +31,14 @@ var colors = [
 	[1.0, 0.0, 1.0],
 	[1.0, 1.0, 0.0],
 ];
-var colorsCss = colors.map(c => RGBToHex(...c.map(v => v * 255)));
+var colorsCss = layerColors.map(c => RGBToHex(...c.map(v => v * 255)));
 var layers = 6;
 
 var fromGray = i =>
 	`color.a = min(1., max(color.r - lower, 0.) / (upper - lower));
-	color.r = ${colors[i % colors.length][0].toFixed(1)};
-	color.g = ${colors[i % colors.length][1].toFixed(1)};
-	color.b = ${colors[i % colors.length][2].toFixed(1)};`;
+	color.r = ${layerColors[i % layerColors.length][0].toFixed(1)};
+	color.g = ${layerColors[i % layerColors.length][1].toFixed(1)};
+	color.b = ${layerColors[i % layerColors.length][2].toFixed(1)};`;
 
 class XenaBitmapLayer extends BitmapLayer {
 	getShaders() {
@@ -69,9 +72,6 @@ var channelSelect = ({channels, value, onChange}) =>
 		value
 	});
 
-var baseUrl = 'http://localhost:8081';
-//var baseUrl = '';
-
 var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) =>
 	new TileLayer({
 		id: `tile-layer-${index}`,
@@ -103,30 +103,47 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 	});
 
 
-//var eqToString =
-//	Let((eqs = ['FUNC_ADD', 'FUNC_SUBTRACT', 'FUNC_REVERSE_SUBTRACT']) =>
-//		gl => Let((eq = gl.getParameter(gl.BLEND_EQUATION)) =>
-//			eqs.find(x => gl[x] === eq)));
-//
-//var funcToString =
-//	Let((funcs = ['ZERO', 'ONE', 'SRC_COLOR', 'ONE_MINUS_SRC_COLOR',
-//		'DST_COLOR', 'ONE_MINUS_DST_COLOR', 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA',
-//		'DST_ALPHA', 'ONE_MINUS_DST_ALPHA', 'CONSTANT_COLOR',
-//		'ONE_MINUS_CONSTANT_COLOR', 'CONSTANT_ALPHA',
-//		'ONE_MINUS_CONSTANT_ALPHA', 'SRC_ALPHA_SATURATE']) =>
-//			(gl, param) => Let((p = gl.getParameter(param)) =>
-//				funcs.find(x => gl[x] === p)));
-
 // Adds 20% of range over and under the min/max of the dataset.
 // The color scales will clamp the result to [0, 1].
 var colorRange = ({min, max}) =>
 	Let((over = (max - min) * 0.2) =>
 		({min: (min - over) / 256, max: (max + over) / 256}));
 
+var cvtColorScale = (colorColumn, colors) =>
+	colorColumn ?
+		Let((scale = colorScales.colorScale(colors)) =>
+			(coords, {index}) => toRGB(scale(colorColumn[index])))
+	: () => [0, 255, 0];
+
+var filterFn = (colorColumn, hideColors) =>
+	colorColumn ?
+		Let((hidden = new Set(hideColors || [])) =>
+			(coords, {index}) => Let((v = colorColumn[index]) =>
+				v == null || hidden.has(v) ? 0 : 1))
+	: () => 1;
+
+const dataLayer = (data, color, radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
+	id: `scatter-plot`,
+	data,
+	stroked: true,
+	getLineWidth: 50,
+	filled: false,
+	getPosition: d => d.coordinates,
+	lineWidthMinPixels: 2,
+	lineWidthMaxPixels: 3,
+	getRadius: radius,
+	getLineColor: color,
+	updateTriggers: {getLineColor: triggers},
+	pickable: true,
+	onHover,
+	getFilterValue,
+	filterRange: [1, 1],
+	extensions: [new DataFilterExtension({filterSize: 1})]
+});
+
 export default class Img extends PureComponent {//eslint-disable-line no-unused-vars
 	state = {}
 	static defaultProps = {
-		image: `${baseUrl}/MEL08-1-1`,
 		width: 800,
 		height: 600
 	}
@@ -134,9 +151,14 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 		var {opacity} = this.state;
 		this.setState({opacity: [...opacity.slice(0, i), op, ...opacity.slice(i + 1)]});
 	}
+	onHover = ev => {
+		var i = ev.index;
+		this.props.onTooltip(i < 0 ? null : i);
+	}
 	componentDidMount() {
+		var {image} = this.props.data;
 		var metadata = {
-			url: `${this.props.image}/metadata.json`,
+			url: `${image.path}/metadata.json`,
 			responseType: 'text', method: 'GET', crossDomain: true};
 
 		ajax(metadata).map(r => JSON.parse(r.response)).subscribe(m => {
@@ -164,6 +186,21 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 		if (!this.state.stats) {
 			return null;
 		}
+
+		var {colorColumn, hideColors, image, colors, columns, radius} = this.props.data,
+			colorScale = cvtColorScale(colorColumn, colors),
+			filter = filterFn(colorColumn, hideColors),
+			{offset, image_scalef: scalef} = image,
+			// XXX I don't know where this factor of 128 is coming from, but
+			// it relates the image coordinates to the data coordinates.
+			scale = scalef / 128,
+			data = transpose(columns).map(c =>
+				({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
+
+		radius = radius * scale;
+
+		var mergeLayer = dataLayer(data, colorScale, radius,
+			[colorColumn, colors, hideColors], this.onHover, filter);
 		var views = new OrthographicView({far: -1, near: 1}),
 			{stats, inView, size: [iwidth, iheight]} = this.state,
 			{width, height} = this.props,
@@ -175,33 +212,26 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 				target: [iwidth / 2, iheight / 2]
 			};
 
-		return div({style: {display: 'flex'}},
+		return div({style: {display: 'flex', flexDirection: 'row-reverse'}},
 			div({style: {position: 'relative', width, height,
 					border: '3px solid black'}},
 				deckGL({
-//					onWebGLInitialized: gl => {
-//						console.log('init', gl);
-//						console.log('attr', gl.getContextAttributes());
-//						console.log('eq', eqToString(gl));
-//						console.log('src', funcToString(gl, gl.BLEND_SRC_RGB));
-//						console.log('dst', funcToString(gl, gl.BLEND_DST_RGB));
-//						console.log('src alpha', funcToString(gl, gl.BLEND_SRC_ALPHA));
-//						console.log('dst alpha', funcToString(gl, gl.BLEND_DST_ALPHA));
-////						console.log('eq', gl.getParameter(gl.BLEND_EQUATION));
-////						console.log('alpha', gl.getParameter(gl.ALPHA_BITS));
-//					},
 					glOptions: {
 						alpha: false
 					},
-					layers: inView.map((c, i) =>
-						tileLayer({
-							name: c, path: this.props.image,
-							// XXX rename opacity
-							index: i, opacity: this.state.opacity[c],
-							levels: this.state.levels,
-							size: this.state.size,
-							tileSize: this.state.tileSize,
-							visible: this.state.visible[i]})),
+					layers: [
+						...inView.map((c, i) =>
+							tileLayer({
+								name: c, path: image.path,
+								// XXX rename opacity
+								index: i, opacity: this.state.opacity[c],
+								levels: this.state.levels,
+								size: this.state.size,
+								tileSize: this.state.tileSize,
+								visible: this.state.visible[i]})),
+						...(colors ? [mergeLayer] : [])
+
+					],
 					views,
 					controller: true,
 					coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -219,7 +249,7 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			div({style: {width: 200, margin: 20, float: 'right'}},
 			...inView.map((c, i) =>
 				span(
-					checkbox({checked: this.state.visible[i], style: {color: colorsCss[i % colors.length]}, onChange: onVisible(i)}),
+					checkbox({checked: this.state.visible[i], style: {color: colorsCss[i % layerColors.length]}, onChange: onVisible(i)}),
 					channelSelect({channels: pluck(stats, 'name'),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.01,

@@ -106,7 +106,27 @@ export var cohortFields = (cohorts, cohortDatasets, cohortFeatures) =>
 
 export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
 
+export var isDir = path => path && Let((segments = path.split(/\//)) =>
+		segments[segments.length - 1].indexOf('.') === -1);
+
+// Check if there's a jpeg pyramid image.
+export var hasImage = state =>
+	Let((path = getIn(state, ['dataset', 'image', 0])) => path && isDir(path.path));
+
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
+
+var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
+var fudgeMEL08 = path => path.replace(/MEL08-1-1.pyramidal_8bit.jpeg.ome.tif/, 'MEL08-1-1');
+var fudgePath = path => fudgeOme(fudgeMEL08(path));
+
+var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
+	host + '/download' + path;
+
+export function imagePath(dsID, image) {
+	var {host} = JSON.parse(dsID);
+	return image && assoc(image, 'path',
+		relativeOrAbsolute(host, fudgePath(image.path)));
+}
 
 var hasField = field => (state, cohort = datasetCohort(state)) =>
 	findValue(pairs(getIn(state, ['donorFields', cohort])),

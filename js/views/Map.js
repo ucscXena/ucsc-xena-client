@@ -20,7 +20,8 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 // XXX Try to ditch this, in favor of the singlecell scales that
 // provide rgb.
 var toRGB = require('../color_helper').default.rgb;
-import {colorError, colorLoading, dataError, dataLoading, getData, getRadius} from '../models/map';
+import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath, isDir} from '../models/map';
+import Img from '../Img';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -195,11 +196,11 @@ class MapDrawing extends PureComponent {
 }
 var mapDrawing = el(MapDrawing);
 
+var imgDrawing = el(Img);
+
 var avivator = props => el(ThemeProvider)({theme: darkTheme}, el(Avivator)(props));
 
-
 class VivDrawing extends PureComponent {
-	state = {};
 	onHover = ({index}) => {
 		this.props.onTooltip(index === -1 ? null : index);
 	}
@@ -257,17 +258,6 @@ var getStatusView = (loading, error, onReload) =>
 					icon('warning'))) :
 	null;
 
-// XXX still needed?
-var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
-
-var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
-	host + '/download' + path;
-
-function setHost(dsID, image) {
-	var {host} = JSON.parse(dsID);
-	return image && _.assoc(image, 'path', relativeOrAbsolute(host, fudgeOme(image.path)));
-}
-
 export class Map extends PureComponent {
 	state = {
 		tooltip: null
@@ -305,10 +295,12 @@ export class Map extends PureComponent {
 			labels = _.get(params, 'dimension', []),
 			radius = getRadius(mapState),
 			// don't create an image parameter while doing this
-			image = setHost(dsID, _.getIn(params, ['image', 0])),
+			image = imagePath(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
 				labels, view, image, hideColors},
-			drawing = image ? vivDrawing : mapDrawing;
+			drawing = !image ? mapDrawing :
+						isDir(image.path) ? imgDrawing :
+						vivDrawing;
 
 		return div({className: styles.content},
 				div({className: styles.graphWrapper, ref: this.onRef},
