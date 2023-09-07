@@ -42,9 +42,17 @@ var fetchMap = (dsID, fields, samples) =>
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 
+
+// XXX override 'float' scale with 'float-mid', because we don't
+// want symmetric positive/negative ranges.
+var setFloatScale = scale =>
+	Let(([type, ...args] = scale) =>
+		type === 'float' ? ['float-mid', ...args] :
+		scale);
+
 var colorScale = (data, field) =>
-	colorSpec(field, {}, data.codes,
-			{values: data.req.values[0], mean: data.avg.mean[0]});
+	setFloatScale(colorSpec(field, {}, data.codes,
+			{values: data.req.values[0], mean: data.avg.mean[0]}));
 
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),

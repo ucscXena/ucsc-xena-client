@@ -112,6 +112,13 @@ function scaleFloatDouble(low, zero, high, min, max) {
 	return createScale(linearColorScale, [-absmax, 0, absmax], [low, zero, high]);
 }
 
+// Three-color scale with computed midpoint
+function scaleFloatDoubleMid(low, zero, high, min, max) {
+	var mid = (min + max) / 2;
+
+	return createScale(linearColorScale, [min, mid, max], [low, zero, high]);
+}
+
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
 var rgbToArray = obj => [obj.r, obj.g, obj.b];
 
@@ -171,6 +178,7 @@ var colorScaleByType = {
 	'float-pos': scaleFloatSingle,
 	'float-neg': scaleFloatSingle,
 	'float': scaleFloatDouble,
+	'float-mid': scaleFloatDoubleMid,
 	'float-thresh-pos': scaleFloatSingle,
 	'float-thresh-neg': scaleFloatSingle,
 	'float-thresh': scaleFloatThreshold,
@@ -181,11 +189,13 @@ var colorScaleByType = {
 	'ordinal': ordinal
 };
 
+// Utility for MapColor controls, that returns the scale data range
 var scaleParams = _.Let((m = {
 	'no-data': 0,
 	'float-pos': 3,
 	'float-neg': 3,
 	'float': 4,
+	'float-mid': 4,
 	'float-thresh-pos': 3,
 	'float-thresh-neg': 3,
 	'float-thresh': 4,
