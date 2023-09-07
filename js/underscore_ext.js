@@ -410,6 +410,8 @@ var transpose = coll =>
 // mutating 'push' that returns the array
 var push = (arr, v) => (arr.push(v), arr);
 
+var sorted = (arr, ...args) => arr.slice(0).sort(...args);
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -523,6 +525,7 @@ _.mixin({
 	reverse,
 	scan,
 	splice,
+	sorted,
 	spy,
 	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 	transpose,

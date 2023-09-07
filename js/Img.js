@@ -9,7 +9,7 @@ import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
 var toRGB = require('./color_helper').default.rgb;
 var slider = el(Slider);
-var {assoc, findIndex, Let, pluck, range, times, transpose} = require('./underscore_ext').default;
+var {assoc, findIndex, Let, pluck, range, sorted, times, transpose} = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 var {ajax} = Rx.Observable;
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -250,7 +250,7 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			...inView.map((c, i) =>
 				span(
 					checkbox({checked: this.state.visible[i], style: {color: colorsCss[i % layerColors.length]}, onChange: onVisible(i)}),
-					channelSelect({channels: pluck(stats, 'name'),
+					channelSelect({channels: sorted(pluck(stats, 'name')),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.01,
 						value: this.state.opacity[c], onChange: this.onOpacity(c)})))));
