@@ -37,7 +37,8 @@ var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
 	var values = data.values,
-		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
+		[low, zero, high] = settings.colors || defaultColors[settings.colorClass ||
+			colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
 		minStart = settings.minstart,
@@ -99,7 +100,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		transformedMax = originalMax;
 	}
 
-	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
+	var	[low, zero, high] = settings.colors ||
+			defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minstart,
 		maxStart = settings.maxstart,
 		spec,

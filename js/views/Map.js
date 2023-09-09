@@ -17,9 +17,6 @@ import Avivator from '../avivator/src/Avivator.jsx';
 import {DETAIL_VIEW_ID} from 'ucsc-xena-viv';
 var {transpose} = require('../underscore_ext').default;
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
-// XXX Try to ditch this, in favor of the singlecell scales that
-// provide rgb.
-var toRGB = require('../color_helper').default.rgb;
 import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath, isDir} from '../models/map';
 import Img from '../Img';
 
@@ -109,7 +106,7 @@ const patchLayerMap = (data, color, radius, triggers, onHover, getFilterValue) =
 var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?
 		_.Let((scale = colorScales.colorScale(colors)) =>
-			(coords, {index}) => toRGB(scale(colorColumn[index])))
+			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
 

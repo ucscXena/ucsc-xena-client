@@ -51,7 +51,7 @@ var setFloatScale = scale =>
 		scale);
 
 var colorScale = (data, field) =>
-	setFloatScale(colorSpec(field, {}, data.codes,
+	setFloatScale(colorSpec(field, {colors: ['#0000ff', null, '#ff0000']}, data.codes,
 			{values: data.req.values[0], mean: data.avg.mean[0]}));
 
 var scaleBounds = (data, scale) =>

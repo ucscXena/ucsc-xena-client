@@ -28,8 +28,10 @@ var categoryMore = [
 //		"#c7c7c7"  // light grey
 	];
 
+var categoryMoreRgb = categoryMore.map(rgb);
+
 var round = Math.round;
-function linearColorScale(domain, range) {
+function linearOpaqueColorScale(domain, range) {
 	function scale(v, i = 0) {
 		if (v < domain[i]) {
 			if (i === 0) {
@@ -49,6 +51,35 @@ function linearColorScale(domain, range) {
 	}
 	return scale;
 }
+
+function linearTransparentColorScale(domain, range) {
+	var proj = _.times(range.length - 1, i =>
+		range[i] === null ? [range[i + 1], 1, 0] : [range[i], -1, 1]);
+
+	function scale(v, i = 0) {
+		if (v < domain[i]) {
+			if (i === 0) {
+				let [color, , b] = proj[0];
+				return [...color, b * 255];
+			}
+			let [color, m, b] = proj[i - 1];
+			let dx = v - domain[i - 1],
+				x = domain[i] - domain[i - 1];
+
+			return [...color, round((m * dx / x + b) * 255)];
+		}
+		if (i === domain.length - 1) {
+			let [color, , b] = proj[i - 1];
+			return [...color, (1 - b) * 255];
+		}
+		return scale(v, i + 1);
+	}
+	return scale;
+}
+
+var linearColorScale = (domain, range) =>
+	(range.indexOf(null) === -1 ? linearOpaqueColorScale :
+		linearTransparentColorScale)(domain, range);
 
 // for now, only support one range
 var log2ColorScale = ([d0, d1], [r0, r1]) => {
@@ -100,10 +131,20 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 var scaleFloatLog = (low, high, min, max) =>
 	createScale(log2ColorScale, [min, max], [low, high]);
 
+var mapper = (obj, fn) => _.isArray(obj) ? obj.map(fn) : _.mapObject(obj, fn);
+
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
 var ordinal = (count, custom) => {
-	return v => custom && custom[v] ? custom[v] : categoryMore[v % categoryMore.length];
+	// XXX why does this not handle nulls, like our other scales?
+	var customRgb = custom && mapper(custom, rgb),
+		fn = v => custom && custom[v] ? custom[v] :
+			categoryMore[v % categoryMore.length];
+
+	fn.rgb = v => customRgb && customRgb[v] ? customRgb[v] :
+		categoryMoreRgb[v % categoryMoreRgb.length];
+
+	return fn;
 };
 
 function scaleFloatDouble(low, zero, high, min, max) {

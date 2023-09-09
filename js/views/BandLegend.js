@@ -1,7 +1,6 @@
 
 import React from 'react';
 import CanvasDrawing2 from '../CanvasDrawing2';
-var {rgb} = require('../color_helper').default;
 
 //// Styles
 var compStyles = require('./BandLegend.module.css');
@@ -12,13 +11,13 @@ function draw(vg, opts) {
 		img = ctx.createImageData(width, height);
 
 	for (let i = 0; i < width; ++i) {
-		let color = rgb(colorScale((max - min) * i / width + min));
+		let color = colorScale.rgb((max - min) * i / width + min);
 		for (let j = 0; j < height + 4; ++j) {
 			let k = 4 * (j * width + i);
 			img.data[k] = color[0];
 			img.data[k + 1] = color[1];
 			img.data[k + 2] = color[2];
-			img.data[k + 3] = 255;
+			img.data[k + 3] = color.hasOwnProperty(3) ? color[3] : 255;
 		}
 	}
 

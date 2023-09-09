@@ -7,7 +7,6 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
-var toRGB = require('./color_helper').default.rgb;
 var slider = el(Slider);
 var {assoc, findIndex, Let, pluck, range, sorted, times, transpose} = require('./underscore_ext').default;
 var Rx = require('./rx').default;
@@ -112,7 +111,7 @@ var colorRange = ({min, max}) =>
 var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?
 		Let((scale = colorScales.colorScale(colors)) =>
-			(coords, {index}) => toRGB(scale(colorColumn[index])))
+			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
 var filterFn = (colorColumn, hideColors) =>
