@@ -54,7 +54,9 @@ function linearOpaqueColorScale(domain, range) {
 
 function linearTransparentColorScale(domain, range) {
 	var proj = _.times(range.length - 1, i =>
-		range[i] === null ? [range[i + 1], 1, 0] : [range[i], -1, 1]);
+		range[i] !== null ? [range[i], -1, 1] :
+		range[i + 1] !== null ? [range[i + 1], 1, 0] :
+		[[0, 0, 0], 0, 0]);
 
 	function scale(v, i = 0) {
 		if (v < domain[i]) {
