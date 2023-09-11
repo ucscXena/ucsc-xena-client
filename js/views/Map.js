@@ -177,7 +177,7 @@ class MapDrawing extends PureComponent {
 		var mergeLayer = patchLayerMap(data, colorScale, radius, isOrdinal(colors),
 			[colorColumn, colors, hideColors], this.onHover, filter);
 		return deckGL({
-			layers: [mergeLayer, ...(twoD ? [] : [axesLayer()])],
+			layers: [...(twoD ? [] : [axesLayer()]), mergeLayer],
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
