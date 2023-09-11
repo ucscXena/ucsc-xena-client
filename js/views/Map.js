@@ -83,9 +83,10 @@ const patchLayer = (data, color, radius, triggers, onHover, getFilterValue) => n
 	extensions: [new DataFilterExtension({filterSize: 1})]
 });
 
-const patchLayerMap = (data, color, radius, triggers, onHover, getFilterValue) => new PointCloudLayer({
+const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFilterValue) => new PointCloudLayer({
 	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+	parameters: {depthTest},
 	sizeUnits: 'common',
 	data: data,
 	material: false,
@@ -109,7 +110,7 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
-
+var isOrdinal = ([type]) => type === 'ordinal';
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
@@ -173,7 +174,8 @@ class MapDrawing extends PureComponent {
 				target: centroids
 			};
 		}
-		var mergeLayer = patchLayerMap(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
+		var mergeLayer = patchLayerMap(data, colorScale, radius, isOrdinal(colors),
+			[colorColumn, colors, hideColors], this.onHover, filter);
 		return deckGL({
 			layers: [mergeLayer, ...(twoD ? [] : [axesLayer()])],
 			views,
