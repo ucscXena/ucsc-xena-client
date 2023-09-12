@@ -110,7 +110,7 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
-var isOrdinal = ([type]) => type === 'ordinal';
+var isOrdinal = colors => colors && colors[0] === 'ordinal';
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
