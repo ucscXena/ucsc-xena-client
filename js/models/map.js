@@ -115,18 +115,12 @@ export var hasImage = state =>
 
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
-var fudgeOme = path => path.replace(/mosaic_DAPI_z2.tif/, 'mosaic_DAPI_z2_ome.tif');
-var fudgeMEL08 = path => path.replace(/MEL08-1-1.pyramidal_8bit.jpeg.ome.tif/, 'MEL08-1-1');
-var fudgeST = path => path.replace(/.*ST_Visum_tissue_hires_image.ome.tif/, 'https://xenapublicimages.s3.amazonaws.com/ST_Visum_tissue_hires_image');
-var fudgePath = path => fudgeOme(fudgeMEL08(path));
-
 var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
 	host + '/download' + path;
 
 export function imagePath(dsID, image) {
 	var {host} = JSON.parse(dsID);
-	return image && assoc(image, 'path',
-		fudgeST(relativeOrAbsolute(host, fudgePath(image.path))));
+	return image && assoc(image, 'path', relativeOrAbsolute(host, image.path));
 }
 
 var hasField = field => (state, cohort = datasetCohort(state)) =>
