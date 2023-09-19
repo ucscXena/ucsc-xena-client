@@ -74,7 +74,7 @@ var channelSelect = ({channels, value, onChange}) =>
 var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) =>
 	new TileLayer({
 		id: `tile-layer-${index}`,
-		data: `${path}/c${name}-{z}-{y}-{x}.png`,
+		data: `${path}/${name}-{z}-{y}-{x}.png`,
 		minZoom: 0,
 		maxZoom: levels - 1,
 		tileSize,
@@ -86,18 +86,22 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 		visible,
 		// Have to include 'opacity' in props to force an update, because the
 		// update algorithm doesn't see sublayer props.
-		limits: opacity,
+		limits: opacity, // XXX does this do anything?
 		renderSubLayers: props => {
 			var {bbox: {left, top, right, bottom}} = props.tile;
 
-			return new XenaBitmapLayer(props, {
-				data: null,
-				image: props.data,
-				lower: opacity[0],
-				upper: opacity[1],
-				i: index,
-				bounds: [left, bottom, right, top]
-			});
+			return index !== null ? new XenaBitmapLayer(props, {
+					data: null,
+					image: props.data,
+					lower: opacity[0],
+					upper: opacity[1],
+					i: index,
+					bounds: [left, bottom, right, top]
+				}) : new BitmapLayer(props, {
+					data: null,
+					image: props.data,
+					bounds: [left, bottom, right, top]
+				});
 		}
 	});
 
@@ -168,8 +172,9 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 					m.defaults.slice(0, layers).map(c => channels.indexOf(c)) :
 					range(Math.min(layers, stats.length)),
 				visible = times(layers, () => true),
-				{size, tileSize, levels} = m;
-			this.setState({stats, opacity, inView, levels, size, tileSize, visible});
+				{size, tileSize, levels, background} = m;
+			this.setState({stats, opacity, inView, levels, size,
+				tileSize, background, visible});
 		});
 	}
 	onVisible = i => (ev, checked) => {
@@ -190,9 +195,10 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors),
 			{offset, image_scalef: scalef} = image,
-			// XXX I don't know where this factor of 128 is coming from, but
-			// it relates the image coordinates to the data coordinates.
-			scale = scalef / 128,
+			// TileLayer operates on the scale of the smallest downsample.
+			// Adjust the scale here for the number of downsamples, so the data
+			// overlay lines up.
+			scale = scalef / (1 << this.state.levels - 1),
 			data = transpose(columns).map(c =>
 				({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
 
@@ -219,9 +225,18 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 						alpha: false
 					},
 					layers: [
+						...(this.state.background ? [tileLayer({
+							name: 'i', path: image.path,
+							// XXX rename opacity
+							index: null, opacity: 255,
+							levels: this.state.levels,
+							size: this.state.size,
+							tileSize: this.state.tileSize,
+							visible: true
+						})] : []),
 						...inView.map((c, i) =>
 							tileLayer({
-								name: c, path: image.path,
+								name: `c${c}`, path: image.path,
 								// XXX rename opacity
 								index: i, opacity: this.state.opacity[c],
 								levels: this.state.levels,
