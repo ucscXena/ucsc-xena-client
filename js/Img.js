@@ -194,15 +194,16 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 		var {colorColumn, hideColors, image, colors, columns, radius} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors),
-			{offset, image_scalef: scalef} = image,
+			{offset, image_scalef: scale} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
 			// overlay lines up.
-			scale = scalef / (1 << this.state.levels - 1),
+			adj = (1 << this.state.levels - 1),
 			data = transpose(columns).map(c =>
-				({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
+				({coordinates: [(scale * c[0] + offset[0]) / adj,
+					(scale * c[1] + offset[1]) / adj]}));
 
-		radius = radius * scale;
+		radius = radius * scale / adj;
 
 		var mergeLayer = dataLayer(data, colorScale, radius,
 			[colorColumn, colors, hideColors], this.onHover, filter);
