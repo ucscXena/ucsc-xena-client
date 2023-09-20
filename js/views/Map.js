@@ -5,50 +5,19 @@ import {div, el, img} from '../chart/react-hyper.js';
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
-import {ScatterplotLayer, PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
+import {PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
 
 import AxesLayer from './axes-layer';
 
-import {ThemeProvider, createTheme} from '@material-ui/core/styles';
-import {grey} from '@material-ui/core/colors';
-import Avivator from '../avivator/src/Avivator.jsx';
-import {DETAIL_VIEW_ID} from 'ucsc-xena-viv';
 var {transpose} = require('../underscore_ext').default;
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
-import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath, isDir} from '../models/map';
+import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
-
-function getVivId(id) { // XXX copied from viv
-  return `-#${id}#`;
-}
-
-const darkTheme = createTheme({
-	palette: {
-		type: 'dark',
-		primary: grey,
-		secondary: grey
-	},
-	overrides: {
-		MuiButton: {
-			root: {
-				backgroundColor: '#424242bf',
-				'&:hover': {
-					backgroundColor: 'black',
-				},
-			},
-		},
-	},
-	props: {
-		MuiButtonBase: {
-			disableRipple: true,
-		}
-	}
-});
 
 // Styles
 
@@ -63,25 +32,6 @@ var filterFn = (colorColumn, hideColors) =>
 			(coords, {index}) => _.Let((v = colorColumn[index]) =>
 				v == null || hidden.has(v) ? 0 : 1))
 	: () => 1;
-
-const patchLayer = (data, color, radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
-	id: `scatter-plot${getVivId(DETAIL_VIEW_ID)}`,
-	data: data,
-	stroked: true,
-	getLineWidth: 50,
-	filled: false,
-	getPosition: d => d.coordinates,
-	lineWidthMinPixels: 2,
-	lineWidthMaxPixels: 3,
-	getRadius: radius,
-	getLineColor: color,
-	updateTriggers: {getLineColor: triggers},
-	pickable: true,
-	onHover,
-	getFilterValue,
-	filterRange: [1, 1],
-	extensions: [new DataFilterExtension({filterSize: 1})]
-});
 
 const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFilterValue) => new PointCloudLayer({
 	id: 'scatter',
@@ -197,34 +147,6 @@ var mapDrawing = el(MapDrawing);
 
 var imgDrawing = el(Img);
 
-var avivator = props => el(ThemeProvider)({theme: darkTheme}, el(Avivator)(props));
-
-class VivDrawing extends PureComponent {
-	onHover = ({index}) => {
-		this.props.onTooltip(index === -1 ? null : index);
-	}
-	render() {
-		var {props} = this;
-		if (!_.every(props.data.columns, _.identity)) {
-			return null;
-		}
-		var {colorColumn, colors, radius, hideColors} = props.data,
-			colorScale = cvtColorScale(colorColumn, colors),
-			filter = filterFn(colorColumn, hideColors);
-		var {offset, image_scalef: scale} = props.data.image;
-		var data = transpose(props.data.columns).map(c =>
-			({coordinates: [scale * c[0] + offset[0], scale * c[1] + offset[1]]}));
-		radius = radius * scale;
-		var mergeLayer = patchLayer(data, colorScale, radius, [colorColumn, colors, hideColors], this.onHover, filter);
-		return avivator({
-			mergeLayers: colors ? [mergeLayer] : [],
-			source: {urlOrFile: props.data.image.path}
-		});
-	}
-}
-
-var vivDrawing = el(VivDrawing);
-
 //var nbsp = '\u00A0';
 //class SideBar extends PureComponent {
 //	render() {
@@ -297,9 +219,7 @@ export class Map extends PureComponent {
 			image = imagePath(dsID, _.getIn(params, ['image', 0])),
 			data = {columns, colorColumn, radius, colors,
 				labels, view, image, hideColors},
-			drawing = !image ? mapDrawing :
-						isDir(image.path) ? imgDrawing :
-						vivDrawing;
+			drawing = image ? imgDrawing : mapDrawing;
 
 		return div({className: styles.content},
 				div({className: styles.graphWrapper, ref: this.onRef},
