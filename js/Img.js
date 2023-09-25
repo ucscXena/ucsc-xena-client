@@ -8,7 +8,7 @@ import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
 var slider = el(Slider);
-var {assoc, findIndex, Let, pluck, range, sorted, times, transpose} = require('./underscore_ext').default;
+var {assoc, findIndex, Let, pluck, range, sorted, transpose, uniq} = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 var {ajax} = Rx.Observable;
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -168,10 +168,12 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			var stats = m.channels.map((l, i) => ({i, ...l})),
 				opacity = stats.map(({lower, upper}) => [lower / 256, upper / 256]),
 				channels = pluck(stats, 'name'),
-				inView = m.defaults ?
-					m.defaults.slice(0, layers).map(c => channels.indexOf(c)) :
-					range(Math.min(layers, stats.length)),
-				visible = times(layers, () => true),
+				// inView is channels in the webgl model.
+				// visible is which channels are enabled.
+				// Pick inView from defaults, or initial channels.
+				inView = uniq((m.defaults || []).map(c => channels.indexOf(c))
+						.concat(range(stats.length))).slice(0, layers),
+				visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
 				{size, tileSize, levels, background} = m;
 			this.setState({stats, opacity, inView, levels, size,
 				tileSize, background, visible});
