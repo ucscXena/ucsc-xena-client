@@ -1,5 +1,4 @@
-'use strict';
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {publicServers} = require('./defaultServers');
 

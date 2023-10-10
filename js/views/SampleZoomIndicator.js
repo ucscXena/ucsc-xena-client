@@ -6,7 +6,6 @@
  *
  */
 
-'use strict';
 
 // TODO review insertion of div with height refer Column.js line 688
 
@@ -15,7 +14,7 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 
 // App dependencies
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var CanvasDrawing = require('../CanvasDrawing');
 var ColCard = require('./ColCard');
 var {drawSamples} = require('../drawSamples');
@@ -55,4 +54,4 @@ class SampleZoomIndicator extends PureComponent {
 	}
 };
 
-module.exports = SampleZoomIndicator;
+export default SampleZoomIndicator;

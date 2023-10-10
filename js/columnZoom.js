@@ -5,12 +5,11 @@
  * Zoom-related functions - transforms of drag and drag select events.
  */
 
-'use strict';
 
 // Dependencies
 var {chromRangeFromScreen} = require('./exonLayout');
 var multi = require('./multi');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 // Selectors
 var directionSelector = ({direction}) => direction;
@@ -35,7 +34,10 @@ var zoom = {
 
 var direction = (start, end) => Math.abs(start.x - end.x) > Math.abs(start.y - end.y) ? 'h' : 'v';
 
-var directionWithGeneModel = ({start, end, zone}) => zone === 'a' ? 'h' : direction(start, end);
+var directionWithGeneModel = ({start, end, zone}) =>
+	zone === 'a' ? 'h' :
+	zone === 'f' ? 'v' :
+	direction(start, end);
 
 var directionSamplesOnly = () => 'v';
 
@@ -307,4 +309,14 @@ var geneZoomed = (column) =>
 	zoom.geneZoomed.add(fieldType, geneZoomed);
 });
 
-module.exports = zoom;
+var zoomPct = column =>
+	Math.round(zoom.geneZoomLength(column) / zoom.maxGeneZoomLength(column) * 100);
+
+var lt1Txt = x => x < 1 ? '< 1' : x.toString();
+
+var zoomText = column =>
+	(zoom.supportsGeneZoom(column) && zoom.geneZoomed(column)) ?
+	`Zoomed to ${lt1Txt(zoomPct(column))}%` : '';
+
+
+module.exports = {zoomText, ...zoom};

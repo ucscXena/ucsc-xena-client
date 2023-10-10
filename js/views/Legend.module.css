@@ -5,22 +5,24 @@
  * Styles for column legends.
  */
 
-
-.Legend {
-	margin-top: 24px;
-}
-
 .column {
-	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12); /* Based on <Card> */
-	border-radius: 2px;
+	border-radius: 6px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2); /* Based on <Card> */
 }
 
 .item {
 	overflow: auto
 }
 
+.clickable .item, .clickable .item label {
+	cursor: pointer;
+}
+
+.inline .item {
+	display: inline-block;
+}
+
 .label {
-	composes: mdCaption from '../../css/typography.module.css';
 	display: block;
 	margin-left: 20px;
 	font-weight: normal; /* BS override */
@@ -31,13 +33,23 @@
 }
 
 .colorBox {
-	composes: mdCaption from '../../css/typography.module.css';
 	float: left;
 	margin: 4px;
 	height: 15px;
 	width: 15px;
 	border: 1px;
 	border-style: solid;
+}
+
+.breakendBar {
+	float: left;
+	margin: 4px;
+	height: 15px;
+	width: 2px;
+	margin-right: 18px;
+	border: 1px;
+	border-style: solid;
+	background: black;
 }
 
 .header {
@@ -47,7 +59,6 @@
 }
 
 .footnotes {
-	composes: mdCaption from '../../css/typography.module.css';
 	margin-top: 16px;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -55,7 +66,6 @@
 }
 
 .null {
-	composes: mdCaption from '../../css/typography.module.css';
 	display: block;
 	text-align: center;
 }

@@ -1,15 +1,14 @@
-'use strict';
 
 // Domain logic for segmented datasets.
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
-var heatmapColors = require('../heatmapColors');
+import * as heatmapColors from '../heatmapColors';
 var parsePos = require('../parsePos');
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
@@ -238,12 +237,14 @@ function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFor
 	};
 }
 
-var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
+var avgOrNull = (rows, xzoom, zero) => rows ? (_.isEmpty(rows) ? zero : segmentAverage(rows, xzoom)) : null;
 
-function avgSegWithZoom(count, byPosition, zoom) {
+function avgSegWithZoom(count, samplesInResp, zero, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
-		perSamp = _.groupBy(matches, 'sample');
-	return _.times(count, i => avgOrNull(perSamp[i], zoom));
+		perSamp = _.groupBy(matches, 'sample'),
+		perSamplesInResp = _.object(samplesInResp, samplesInResp.map(i => perSamp[i] || []));
+
+	return _.times(count, i => avgOrNull(perSamplesInResp[i], zoom, zero));
 }
 
 function chromLimits(pos) {
@@ -272,8 +273,17 @@ function averageSegments(column, data, count, index) {
 			start: max(limits.start, _.getIn(column, ['xzoom', 'start'], -Infinity)),
 			end: min(limits.end, _.getIn(column, ['xzoom', 'end'], Infinity))
 		},
-		values = [avgSegWithZoom(count, index.byPosition, xzoom)],
-		geneValues = [avgSegWithZoom(count, index.byPosition, {start: limits.start, end: limits.end})];
+		samplesInResp = _.getIn(data, ['req', 'samplesInResp']),
+		zeroOrigin = _.getIn(column, ['vizSettings', 'origin'], undefined),
+		norm = _.getIn(column, ['vizSettings', 'colNormalization']),
+		zeroNorm = norm === 'normal2' ? 2 : norm === 'none' ? 0 : undefined,
+		defaultNorm = _.getIn(column, ['defaultNormalization']),
+		zeroDefaultNorm = defaultNorm === 'normal2' ? 2 : defaultNorm === 'none' ? 0 : undefined,
+		zero = zeroOrigin !== undefined ? zeroOrigin :
+			zeroNorm !== undefined ? zeroNorm :
+			zeroDefaultNorm !== undefined ? zeroDefaultNorm : 0,
+		values = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, xzoom)],
+		geneValues = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, {start: limits.start, end: limits.end})];
 
 	return {
 		avg: {

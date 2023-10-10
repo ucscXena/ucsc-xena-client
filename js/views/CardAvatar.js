@@ -8,24 +8,51 @@
  * State
  * -----
  * colId - ID of column (eg 'A', 'B').
+ * colMode - Mode of column (eg 'DEFAULT', 'GHOST', 'WIZARD').
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');
-var classNames = require('classnames');
+import {Box} from '@material-ui/core';
+import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./CardAvatar.module.css');
+var sxDefaultAvatar = {
+	alignItems: 'center',
+	backgroundColor: xenaColor.GRAY_AVATAR,
+	borderRadius: '50%',
+	display: 'flex',
+	fontSize: 18,
+	fontWeight: 500,
+	height: 40,
+	justifyContent: 'center',
+	lineHeight: 40,
+	minWidth: 40, /* Required to maintain avatar shape. */
+	width: 40,
+};
+var sxGhostAvatar = {
+	...sxDefaultAvatar,
+	backgroundColor: 'transparent',
+	border: `1px dashed ${xenaColor.GRAY_DARK}`,
+	color: xenaColor.BLACK_54,
+};
+var sxWizardAvatar = {
+	...sxDefaultAvatar,
+	backgroundColor: xenaColor.ACCENT,
+	color: xenaColor.WHITE,
+};
+const AVATAR_SX = {
+	DEFAULT: sxDefaultAvatar,
+	GHOST: sxGhostAvatar,
+	WIZARD: sxWizardAvatar,
+};
 
 class CardAvatar extends React.Component {
 	render() {
-		var {colId, zoomCard} = this.props,
-			ghost = !colId,
-			noAvatar = zoomCard;
+		var {colId, colMode = 'DEFAULT'} = this.props;
 		return (
-			<div className={classNames({[compStyles.avatar]: !noAvatar}, {[compStyles.ghost]: ghost}, {[compStyles.noAvatar]: noAvatar})}>{colId}</div>
+			<Box sx={AVATAR_SX[colMode]}>{colId}</Box>
 		);
 	}
 }

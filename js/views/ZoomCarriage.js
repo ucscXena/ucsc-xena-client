@@ -6,9 +6,10 @@
  *
  */
 
-'use strict';
 
 import PureComponent from '../PureComponent';
+import {Box} from '@material-ui/core';
+import {xenaColor} from '../xenaColor';
 
 var React = require('react');
 
@@ -35,13 +36,13 @@ class ZoomCarriage extends PureComponent {
 			lowerLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(heightBelowCarriage, 2));
 		return (
 			<div className={compStyles.zoomCarriage}>
-				<div className={compStyles.carriage} style={{height: carriageHeight, top: carriageStart}}/>
-				<div className={classNames(compStyles.carriageLines, compStyles.upper, {[compStyles.transitionRotate]: enableTransition})}
-					 style={{top: carriageStart, transform: this.getRotation(upperAngle), width: upperLine}}/>
-				<div className={classNames(compStyles.carriageLines, compStyles.lower, {[compStyles.transitionRotate]: enableTransition})}
-					 style={{top: carriageEnd, transform: this.getRotation(lowerAngle), width: lowerLine}}/>
+				<Box component='div' className={compStyles.carriage} style={{height: carriageHeight, top: carriageStart}} sx={{borderColor: xenaColor.BLACK_24}}/>
+				<Box component='div' className={classNames(compStyles.carriageLines, compStyles.upper, {[compStyles.transitionRotate]: enableTransition})}
+					 style={{top: carriageStart, transform: this.getRotation(upperAngle), width: upperLine}} sx={{borderColor: xenaColor.BLACK_24}}/>
+				<Box component='div' className={classNames(compStyles.carriageLines, compStyles.lower, {[compStyles.transitionRotate]: enableTransition})}
+					 style={{top: carriageEnd, transform: this.getRotation(lowerAngle), width: lowerLine}} sx={{borderColor: xenaColor.BLACK_24}}/>
 			</div>);
 	}
 };
 
-module.exports = ZoomCarriage;
+export default ZoomCarriage;

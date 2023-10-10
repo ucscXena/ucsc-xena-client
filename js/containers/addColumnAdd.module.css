@@ -5,15 +5,15 @@
  * Rules necessary for wrapper around columns, as well as add column hover functionality on individual columns.
  */
 
-/** Handle visualization or wizard mode - add wrapper around column and add column components. */
-.visualizationOrWizardMode {
+/* Visualization mode - add wrapper around column and add column components. */
+.visualizationMode {
 	display: flex;
 }
 
-/* During wizard mode, add 16px to the right of each column as there is no "add column" enabled during wizard (or edit) 
- * to force gutter */
-.wizardModeMargins {
-	margin-right: 16px;
+/* Wizard mode. */
+.wizardMode {
+	display: flex;
+	flex-direction: column;
 }
 
 /* Scoot column to the left of "add column" component, to the left by 8px */

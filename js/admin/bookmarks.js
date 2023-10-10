@@ -1,16 +1,15 @@
-'use strict';
 import React, {Component} from 'react';
 var ReactDOM = require('react-dom');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var main = window.document.getElementById('main');
-var {allParameters} = require('../util');
-var {sortBy} = require('../underscore_ext');
+var {allParameters} = require('../util').default;
+var {sortBy} = require('../underscore_ext').default;
 
 var compStyles = require('./bookmarks.module.css');
 
 class Weekly extends Component {
 	state = {weeks: null};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		Rx.Observable.ajax({
 			url: '/api/bookmarks/weekly',
 			method: 'GET'
@@ -38,7 +37,7 @@ class Weekly extends Component {
 
 class Week extends Component {
 	state = {list: null};
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var {week} = this.props;
 		Rx.Observable.ajax({
 			url: `/api/bookmarks/weekof?week=${encodeURIComponent(week)}`,

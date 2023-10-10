@@ -1,17 +1,13 @@
-'use strict';
-
-// XXX move Application to views
+import PureComponent from '../PureComponent';
 var React = require('react');
-//var _ = require('../underscore_ext');
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
-var ChartView = require('../ChartView');
-var Column = require('../views/Column');
-var _ = require('../underscore_ext');
+var ChartView = require('../chart/ChartView');
+import Column from '../views/Column';
+var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 // Spreadsheet options
 var addTooltip = require('./addTooltip');
-//var disableSelect = require('./disableSelect');
 var addWizardColumns = require('./addWizardColumns');
 var addVizEditor = require('./addVizEditor');
 var makeSortable = require('./makeSortable');
@@ -19,11 +15,12 @@ var addColumnAdd = require('./addColumnAdd');
 var addLegend = require('./addLegend');
 var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
-var getStepperState = require('./getStepperState');
 var Application = require('../Application');
 //import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
 import wrapLaunchHelper from '../LaunchHelper';
+var migrateState = require('../migrateState');
+import selector from '../appSelector';
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -46,13 +43,18 @@ var Spreadsheet = getSpreadsheet(columnsWrapper);
 var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
-class ApplicationContainer extends React.Component {
+class ApplicationContainer extends PureComponent {
+	state = {
+		pickSamples: false
+	};
+
 	onSearch = (value) => {
 		var {callback} = this.props;
+		this.setState({searchReplace: false});
 		callback(['sample-search', value]);
 	};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'highlightChange');
 		this.change = events.highlightChange
 			.debounceTime(200)
@@ -105,7 +107,7 @@ class ApplicationContainer extends React.Component {
 
 	onImport = (content) => {
 		try {
-			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+			this.props.callback(['import', schemaCheckThrow(migrateState(JSON.parse(content)))]);
 		} catch (err) {
 			this.props.callback(['import-error']);
 		}
@@ -115,13 +117,33 @@ class ApplicationContainer extends React.Component {
 		this.props.callback(['highlightSelect', highlight]);
 	}
 
+	onAllowOverSamples = () => {
+		this.props.callback(['allowOverSamples', true]);
+	};
+
+	onPickSamples = () => {
+		this.setState({pickSamples: !this.state.pickSamples});
+	}
+
+	onPicking = (newTerm, finish) => {
+		var oldSearch = (this.state.oldSearch == null ?
+				this.props.state.spreadsheet.sampleSearch : this.state.oldSearch) || '',
+			sampleSearch = (oldSearch ? `${oldSearch} OR ` : '') + newTerm;
+		this.setState({oldSearch});
+		this.props.callback(['sample-search', sampleSearch]);
+		if (finish) {
+			// There's potentially a race here with callback()
+			_.defer(() => this.setState({oldSearch: null}));
+		}
+	}
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
-		let {state, selector, callback, children} = this.props,
+		let {state, callback, children} = this.props,
+			{pickSamples} = this.state,
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
-			stepperState = getStepperState(computedState.spreadsheet),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,
@@ -133,10 +155,13 @@ class ApplicationContainer extends React.Component {
 					onResetSampleFilter={this.onResetSampleFilter}
 					onWizardMode={this.onWizardMode}
 					onShowWelcome={this.onShowWelcome}
-					stepperState={stepperState}
-					Spreadsheet={SpreadsheetContainer}
+					Spreadsheet={SpreadsheetContainer /* XXX */}
 					onHighlightChange={this.on.highlightChange}
 					onHighlightSelect={this.onHighlightSelect}
+					onAllowOverSamples={this.onAllowOverSamples}
+					pickSamples={pickSamples}
+					onPickSamples={this.onPickSamples}
+					oldSearch={this.state.oldSearch}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onNavigate={this.onNavigate}
@@ -146,12 +171,13 @@ class ApplicationContainer extends React.Component {
 					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
-					stepperState={stepperState}
 					searching={this.highlight}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
 					appState={computedState.spreadsheet}
 					wizard={computedState.wizard}
+					pickSamples={pickSamples}
+					onPicking={this.onPicking}
 					callback={callback}/>
 				{children}
 			</Application>);
@@ -159,6 +185,6 @@ class ApplicationContainer extends React.Component {
 }
 
 // add pop-up notification for old hubs.
-module.exports = wrapLaunchHelper(
+export default wrapLaunchHelper(
 		props => _.getIn(props, ['state', 'localStatus']) === 'old',
 		ApplicationContainer);

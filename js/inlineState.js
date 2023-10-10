@@ -1,6 +1,5 @@
-'use strict';
 
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 
 var addEventListenerObs = Rx.Observable.bindCallback(window.addEventListener);
 

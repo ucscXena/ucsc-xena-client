@@ -1,11 +1,10 @@
-'use strict';
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 var {find} = _;
 var xenaQuery = require('../xenaQuery');
-var heatmapColors = require('../heatmapColors');
+import * as heatmapColors from '../heatmapColors';
 var widgets = require('../columnWidgets');
-var {greyHEX} = require('../color_helper');
+var {categoryMore} = require('../colorScales');
 var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
@@ -25,7 +24,7 @@ var flopIfNegStrand = (strand, req) => {
 };
 
 var colorCodeMap = (codes, colors) =>
-	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
+	colors ? _.map(codes, (c, i) => colors[c] || categoryMore[i % categoryMore.length]) : null;
 
 var getCustomColor = (fields, dataset) =>
 	fields.length === 1 ?
@@ -70,26 +69,26 @@ var reorderFieldsTransform = fn =>
 var showPosition = column =>
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-function dataToHeatmap(column, vizSettings, data) {
+function getUserCodes(column) {
+	var user = _.getIn(column, ['vizSettings', 'codes']);
+	return user && JSON.parse(user);
+}
+
+// overlay category codes with user settings
+function setUserCodes(column, data) {
+	var user = getUserCodes(column);
+	return user ? _.updateIn(data, ['codes'],
+				codes => _.times(codes.length, i => user[i])) :
+		data;
+}
+
+function dataToHeatmap(column, vizSettings, dataIn) {
+	var data = setUserCodes(column, dataIn);
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var parseVizSettingCodes = (str) => {
-		if (! _.isString(str)) {return undefined;}
 
-		let codes = JSON.parse(str),
-			observed = JSON.stringify(_.keys(codes).sort(function sortNumber(a, b) {return a - b;})),
-			expected = JSON.stringify(_.range(_.keys(codes).length).map(x => x.toString()));
-
-		if (observed === expected) {
-			return _.values(codes);
-		}
-		return undefined;
-	};
-
-	var {req, avg} = data,
-		vizSettingCodes = parseVizSettingCodes(_.getIn(column, ['vizSettings', 'codes'])),
-		codes = vizSettingCodes || data.codes,
+	var {req, avg, codes} = data,
 		{dataset} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = req.values,
@@ -134,7 +133,7 @@ function geneProbesToHeatmap(column, vizSettings, data) {
 		probesInView = showPos ?
 			_.filterIndices(req.position,
 				({chromstart, chromend}) => chromXZoom.start <= chromend && chromstart <= chromXZoom.end) :
-			probesInView = _.range(start, endIndex),
+			_.range(start, endIndex),
 		dataInView = _.updateIn(data,
 								['req', 'position'], position => position ? probesInView.map(i => position[i]) : position,
 								['req', 'values'], values => probesInView.map(i => values[i]),
@@ -196,7 +195,7 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
+var cmp = ({fields}, {req: {values, probes} = {}}) =>
 	(s1, s2) => cmpSamples(probes || fields, values, s1, s2); // XXX having probes here is unfortunate.
 
 //
@@ -384,5 +383,6 @@ module.exports = {
 	fetchGene,
 	fetchFeature,
 	getCustomColor,
-	toArrays
+	toArrays,
+	setUserCodes
 };

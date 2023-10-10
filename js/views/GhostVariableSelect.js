@@ -10,27 +10,48 @@
  * width - Width of card.
  */
 
-'use strict';
 
 // Core dependencies, components
+import {Box, Typography} from '@material-ui/core';
 var React = require('react');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+var {WIZARD_CARD_MAX_HEIGHT} = require('./WizardCard');
+import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./GhostVariableSelect.module.css');
+var sxGhostCard = {
+	border: `1px dashed ${xenaColor.GRAY_DARK}`,
+	borderRadius: 6,
+	minHeight: WIZARD_CARD_MAX_HEIGHT, /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
+};
+var sxGhostHeader = {
+	alignItems: 'center',
+	borderBottom: `1px dashed ${xenaColor.GRAY_DARK}`,
+	display: 'flex',
+	gap: 16,
+	padding: 16,
+};
+var sxGhostTitle = {
+	color: xenaColor.BLACK_54,
+	letterSpacing: 'normal !important',
+	margin: 0,
+};
 
 class GhostVariableSelect extends React.Component {
 	render() {
-		var {title, width} = this.props;
+		var {colId, title, width} = this.props;
 		return (
-			<div className={compStyles.GhostVariableSelect} style={{width: width}}>
-				<div className={compStyles.headerContainer}>
-					<CardAvatar/>
-				</div>
-				<div className={compStyles.title}>{title}</div>
-			</div>
+			<Box sx={{...sxGhostCard, width: width}}>
+				<Box sx={sxGhostHeader}>
+					<CardAvatar colId={colId} colMode={'GHOST'}/>
+					<Box
+						component={Typography}
+						sx={sxGhostTitle}
+						variant='subtitle2'>{title}</Box>
+				</Box>
+			</Box>
 		);
 	}
 }

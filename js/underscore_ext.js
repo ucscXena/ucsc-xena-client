@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('underscore');
 var ehmutable = require('ehmutable');
@@ -407,14 +406,19 @@ function listSetsEqual(l1, l2) {
 // E.g. ['a', matchKey.any] will match ['a', 'b'], ['a', 'c'] in
 // {a: {b: 0, c: 1}}
 var any = {};
-var matchKeys = (obj, path, i = 0)  =>
+var matchKeys = (obj, path, i = 0) =>
 	i === path.length ? [path] :
 	path[i] === any ? Object.keys(obj)
-		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flatten() :
+		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flat() :
 	!obj.hasOwnProperty(path[i]) ? [] :
 	matchKeys(obj[path[i]], path, i + 1);
 
 matchKeys.any = any;
+
+var matchPath = (pattern, path) =>
+	pattern.every((k, i) => pattern[i] === path[i] || pattern[i] === any);
+
+matchPath.any = any;
 
 function anyRange(coll, start, end, pred = _.identity, i = start) {
 	return i === end ? false :
@@ -431,6 +435,8 @@ var transpose = coll =>
 
 // mutating 'push' that returns the array
 var push = (arr, v) => (arr.push(v), arr);
+
+var sorted = (arr, ...args) => arr.slice(0).sort(...args);
 
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
@@ -463,6 +469,27 @@ function* repeat(n, iterable) {
 
 function valToStr(v) {
 	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
+}
+
+var mergable = o => _.isObject(o) && !_.isFunction(o);
+
+function deepMerge1(a, b) {
+	_.keys(b).forEach(k => {
+		var ak = _.get(a, k),
+			v = mergable(ak) && mergable(b[k]) ?
+				deepMerge1(ak, b[k]) : b[k];
+		a = _.assoc(a, k, v);
+	});
+	return a;
+}
+
+// immutably deep merge nested objects, retaining identity if value is unchanged.
+// Doesn't handle complex types, e.g. typed arrays, Date, Map, Set.
+function deepMerge(a, ...args) {
+	args.forEach(arg => {
+		a = deepMerge1(a, arg);
+	});
+	return a;
 }
 
 // string slice() will hold a copy of the original string, which
@@ -520,6 +547,7 @@ _.mixin({
 	cmpNumberOrNull,
 	curry,
 	curryN, // useful if the fn as multiple arities.
+	deepMerge,
 	duplicates,
 	filterIndices,
 	findIndexDefault,
@@ -534,6 +562,7 @@ _.mixin({
 	isEqual: fastDeepEqual,
 	listSetsEqual,
 	matchKeys,
+	matchPath,
 	maxWith,
 	maxnull,
 	meannull,
@@ -551,6 +580,7 @@ _.mixin({
 	reverse,
 	scan,
 	splice,
+	sorted,
 	spy,
 	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 	transpose,
@@ -565,4 +595,4 @@ _.mixin({
 	Let: f => f()
 });
 
-module.exports = _;
+export default _;

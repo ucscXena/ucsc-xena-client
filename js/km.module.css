@@ -1,5 +1,23 @@
 /*csslint known-properties: false*/
 /* csslint doesn't know about svg */
+
+/*
+ * main dialog
+ */
+
+.mainDialog {
+	position: absolute !important;
+}
+
+/*
+ * graph
+ */
+
+.graph {
+	/* don't allow graph size to change */
+	flex: 0 0 auto;
+}
+
 .axis path,
 .axis line {
 	fill: none;
@@ -52,100 +70,52 @@ line.outlineHover {
 	stroke-width: 3.0px;
 }
 
-.legend {
-	border-radius: 4px;
+/* XXX must match limit in models/km */
+@for $i from 0 to 9 {
+	.groupHighlight$(i) .group$(i) path.line {
+		stroke-width: 3.0px;
+	}
+
+	.groupHighlight$(i) .group$(i) path.outline {
+		stroke-width: 5.0px;
+	}
+
+	.groupHighlight$(i) .group$(i) line.line {
+		stroke-width: 2.0px;
+	}
+
+	.groupHighlight$(i) .group$(i) line.outline {
+		stroke-width: 3.0px;
+	}
 }
 
-.legend li {
-	vertical-align: middle;
-	cursor: default;
+/*
+ * right panel
+ */
+
+.rightPanel {
+	width: 33%;
 }
 
-.legend li:hover {
-	font-weight: bold;
-}
-
-.graph {
-	float: left;
+.rightPanel h4 {
+	color: black;
 }
 
 .definitions {
-	float: right;
 	font-size: small;
 	margin-top: -10px;
 }
 
-button.mainDialogClose {
-	background-color: #ffffff;
-}
-
-.mainDialogClose:hover {
-	background-color: #d3d3d3;
-}
-
-.mainDialogClose, .warningDialogClose {
-	position: absolute;
-	top: 20px;
-	right: 30px;
-	line-height: 40px;
-	height: 40px;
-	width: 40px;
-	padding: 8px;
+.PValueArea {
+	display: inline-flex;
+	height: 60px;
 	box-sizing: border-box;
+	position: relative;
 }
 
-.mainDialogClose > i, .warningDialogClose > i {
-	color: #b6b6b6;
-}
-
-div.mainDialog {
-	width: 850px;
-	max-height: inherit;
-	padding-top: 10px;
-	margin-top: 30px;
-	margin-left: calc((100% - 850px) / 2);
-}
-
-div.warningDialog {
-	width: 600px;
-	overflow: auto;
-	padding-top: 10px;
-	margin-left: calc((100% - 600px) / 2);
-	margin-top: 200px;
-}
-
-i.buttonIcon {
-	margin-right: 10px;
-	margin-top: 10px;
-	box-sizing: border-box;
-	font-size: 18px;
-	color: #757575;
-}
-
-.buttonText {
-	display: inline-block;
-	margin-top: -10px;
-	color: #757575;
-}
-
-.PDFButton {
-	margin: 0px 0 15px 50px;
-}
-
-.helpButton {
-	margin-left: 20px;
-}
-
-.pWarningIcon {
-	color: #8d0000;
-	float: left;
-	font-size: 18px;
-}
-
-.showPWarningButton {
-	margin-left: 10px;
-	margin-top: 20px;
-	min-width: 0;
+.PValueP {
+	line-height: 60px;
+	height: 60px;
 }
 
 .splits {
@@ -166,92 +136,68 @@ i.buttonIcon {
 	margin-left: 8px;
 }
 
+/*
+ * at-risk table
+ */
+
+/* rows */
+.atRisk > div {
+	/* use flex to position the legend to the right */
+	display: flex;
+}
+
+/* first column: at risk values. */
+.atRisk > div > :nth-child(1) {
+	display: flex;  /* Evenly space cells. */
+	flex-grow: 0;   /* Width matches graph. Don't flex. */
+	flex-shrink: 0;
+}
+
+/* at-risk cells */
+.atRisk > div > :nth-child(1) > span {
+	flex: 1;
+	text-align: center;
+}
+
+/* second column for legend */
+.atRisk > div > :nth-child(2) {
+	font-size: small;
+}
+
+
+/*
+ * legend
+ */
+
+.legendLine {
+	display: inline-block;
+	height: 6px;
+	vertical-align: middle;
+	width: 25px;
+	margin-right: 2px;
+	border: 1px solid;
+}
+
 .listItem, .activeListItem {
 	position: relative;
-	display: block;
-	padding: 10px 15px;
-	margin-bottom: -1px;
-	background-color: #fff;
-	border: 1px solid #ddd;
-}
-
-.listItem:first-child, .activeListItem:first-child {
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
-}
-
-.listItem:last-child, .activeListItem:last-child {
-	margin-bottom: 0;
-	border-bottom-right-radius: 4px;
-	border-bottom-left-radius: 4px;
-}
-
-.listItem:hover, .listItem:focus,
-.activeListItem:hover, .activeListItem:focus {
-	color: #555;
-	text-decoration: none;
-	background-color: #f5f5f5;
-}
-
-.activeListItem {
-	background-color: #E1E1E1;
-	font-weight: bold;
-}
-
-.mainDialog > nav {
 	padding: 0;
+	margin-bottom: 0;
+	margin-left: 25px;
+	text-indent: -27px;
+	border: none;
+	flex-grow: 1;
+	cursor: default;
 }
 
-.PValueArea {
-	height: 60px;
-	box-sizing: border-box;
-	position: relative;
-	display: block;
-}
+/* XXX must match limit in models/km */
+@for $i from 0 to 9 {
+	.groupHighlight$(i) .group$(i) {
+		color: #555;
+		background-color: #E1E1E1;
+		font-weight: bold;
+	}
 
-.PValueP {
-	width: 200px;
-	line-height: 60px;
-	height: 60px;
-	position: absolute;
-	left: 0;
-	top: 0;
-}
-
-.warningContainer {
-	position: absolute;
-	left: 140px;
-	top: -10px;
-}
-
-.survTypeContainer {
-	display: flex;
-	align-items: center;
-}
-
-.survType {
-	width: 90%;
-}
-
-.infoIcon {
-	color: #757575;
-}
-
-.survType input {
-	background-color: #f5f5f5;
-}
-
-div.dialogWrapper {
-	display: block;
-	position: absolute;
-	height: calc(100% - 179px);
-	width: 100%;
-	top: 64px;
-}
-
-div.dialogOverlay {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	top: 0;
+	.groupHighlight$(i) .group$(i) .legendLine {
+		border: 2px solid;
+	}
 }

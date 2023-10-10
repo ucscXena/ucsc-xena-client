@@ -5,7 +5,6 @@
  * Crosshair component.
  */
 
-'use strict';
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
@@ -16,35 +15,58 @@ var {Portal} = require('react-overlays');
 // Styles
 var compStyles = require('./Crosshair.module.css');
 var classNames = require('classnames');
+import pickerCursor from './colorize-24px.svg';
+
+var frozen = (props, state) => !props.interactive || state.frozen;
 
 class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
 
-	componentWillReceiveProps(nextProps) {
-		if (!nextProps.frozen) {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
+		this.sub = this.props.tooltip.subscribe(ev => {
+			var {frozen} = ev;
+			this.setState({frozen});
+
+			if (this.state.frozen && !frozen) { // just unfroze
+				this.setState({mousing: false, x: -1, y: -1});
+			}
+
+		});
+	}
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
+	UNSAFE_componentWillReceiveProps(nextProps) {//eslint-disable-line camelcase
+		if (!frozen(nextProps, this.state)) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
 	}
 
 	onMouseMove = (ev) => {
-		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left;
-		if (!this.props.frozen) {
-			this.setState({mousing: true, x, y: ev.clientY});
+		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left,
+			noaction = this.props.picker && !this.props.canPickSamples(ev);
+		if (!frozen(this.props, this.state)) {
+			this.setState({mousing: true, x, y: ev.clientY, noaction});
 		}
 	};
 
 	onMouseOut = () => {
-		if (!this.props.frozen) {
+		if (!frozen(this.props, this.state)) {
 			this.setState({mousing: false});
 		}
 	};
 
 	render() {
-		let {mousing, x, y} = this.state,
+		let {noaction, mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, geneHeight, height, selection, children} = this.props,
+			{picker, geneHeight, height, selection, children} = this.props,
 			zoomMode = selection ? true : false,
-			cursor = zoomMode ? 'none' : frozen ? 'default' : 'none';
+			cursor =
+				noaction ? 'not-allowed' :
+				picker ? `url(${pickerCursor}) 0 22, none` :
+				zoomMode ? 'none' :
+				frozen(this.props, this.state) ? 'default' :
+				'none';
 		if (selection) {
 			var {crosshair, offset, zone} = selection,
 				xZoomTarget = crosshair.x - 6,

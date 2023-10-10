@@ -17,11 +17,12 @@
  * onHover - called on mouse over and mouse out on component.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');
+import {Box, Typography} from '@material-ui/core';
 var classNames = require('classnames');
+import {xenaColor} from '../xenaColor';
 
 // Styles
 var compStyles = require('./ColumnAdd.module.css');
@@ -53,9 +54,9 @@ class ColumnAdd extends React.Component {
 				onClick={this.onClick}
 				onMouseOut={this.onMouseOut}
 				onMouseOver={this.onMouseOver}>
-				<div className={compStyles.text}>
+				<Box component={Typography} className={compStyles.text} color={xenaColor.BLACK_38} variant='caption'>
 					Click to {last ? 'Add' : 'Insert'} Column
-				</div>
+				</Box>
 			</div>
 		);
 	}

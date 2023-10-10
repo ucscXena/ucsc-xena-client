@@ -1,31 +1,40 @@
-'use strict';
-
 require('./base');
+import {
+	Box,
+	Button,
+	Card,
+	Checkbox,
+	createTheme,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	FormControlLabel,
+	Link,
+	MuiThemeProvider,
+	Typography
+} from '@material-ui/core';
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	contains, get, updateIn, range, Let, pick,
-	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
-var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
+	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext').default;
+var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
 var {parseDsID} = require('./xenaQuery');
-import Link from 'react-toolbox/lib/link';
 var styles = require('./Datapages.module.css');
-var nav = require('./nav');
-import {Checkbox} from 'react-toolbox/lib/checkbox';
-import {Button} from 'react-toolbox/lib/button';
+import nav from './nav';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
-var treehouseImg = require('../images/Treehouse.jpg');
+import treehouseImg from '../images/Treehouse.jpg';
 var {rxEvents} = require('./react-utils');
 var {servers: {localHub}, serverNames} = require('./defaultServers');
-import Dialog from 'react-toolbox/lib/dialog';
 import {defaultHost} from './urlParams';
-var {encodeObject, urlParams} = require('./util');
-import {ThemeProvider} from 'react-css-themr';
-var appTheme = require('./appTheme');
-var classNames = require('classnames');
+var {encodeObject, urlParams} = require('./util').default;
 var {getHubParams} = require('./hubParams');
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
+import {xenaTheme} from './xenaTheme';
+import xss from './xss';
+import spinner from './ajax-loader.gif';
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -33,8 +42,8 @@ var isLocalHub = host => host === localHub;
 
 var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
 
-// Get params from the anchor href. With RT Link, the anchor is parentElement.
-var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
+// Get params from the anchor href.
+var paramFromHref = ev => mapObject(urlParams(ev.target.href), a => a[0]);
 
 //
 // event handler for navigating within datapages. Prevents page load, and
@@ -54,15 +63,14 @@ var getUserServers = servers => keys(servers).filter(k => servers[k].user);
 
 var hubLink = (host, onClick, hubParams) => (
 	<Link
-		className={classNames(styles.link, styles.checkboxLink)}
 		href={'?' + encodeObject({host, ...hubParams})}
-		label={getHubName(host)}
-		onClick={onClick}/>);
+		onClick={onClick}
+		underline='hover'>{getHubName(host)}</Link>);
 
 class DataHubs extends React.Component {
 	onHub = (ev) => { navHandler.call(this, ev); };
 
-	onSelect = (isOn, ev) => {
+	onSelect = (ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
@@ -71,17 +79,15 @@ class DataHubs extends React.Component {
 	render() {
 		var {hubParams, state: {spreadsheet: {servers}}} = this.props;
 		return (
-			<div className={styles.dataHubs}>
+			<div>
 				<h2>Active Data Hubs</h2>
 				<ul>
 					{map(servers,
 						({user}, host) => (
 							<li key={host}>
-								<Checkbox
-									label={hubLink(host, this.onHub, hubParams)}
-									onChange={this.onSelect}
-									checked={user}
-									data-host={host}/>
+								<FormControlLabel
+									control={<Checkbox checked={user || false} inputProps={{'data-host': host}} onChange={this.onSelect}/>}
+									label={hubLink(host, this.onHub, hubParams)}/>
 							</li>))}
 				</ul>
 			</div>);
@@ -98,16 +104,12 @@ var treehouse = cohort =>
 	<img src={treehouseImg} height='40px'/>;
 
 var cohortLink = (cohort, onClick, hubParams) => (
-	<Link
-		className={styles.link}
-		href={'?' + encodeObject({cohort, ...hubParams})}
-		label={cohort}
-		onClick={onClick}/>);
+	<Link href={'?' + encodeObject({cohort, ...hubParams})} onClick={onClick} underline='hover'>{cohort}</Link>);
 
 var collateCohorts = hubCohorts =>
 	flatten(values(hubCohorts)).reduce(
-		(acc, cohort) => updateIn(acc, [cohort.cohort],
-			(v = 0) => cohort.count + v),
+		(acc, cohort) => cohort.cohort ?
+			updateIn(acc, [cohort.cohort], (v = 0) => cohort.count + v) : acc,
 		{});
 
 var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
@@ -119,11 +121,11 @@ var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
 			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)} {action}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li key={name}>
+					<Typography component='li' key={name} variant='subtitle2'>
 						{treehouse(name)}
 						{cohortLink(name, onCohort, hubParams)}
 						{` (${pluralize('dataset', cohorts[name])})`}
-					</li>)}
+					</Typography>)}
 			</ul>
 		</div>);
 };
@@ -137,9 +139,8 @@ var CohortHeader = ({inHubs, host, onImport, badge}) => {
 
 			{isLocalHub(host) &&
 			<div className={styles.headerButtons}>
-				{localHubUp ? <Button label={"Load Data"} onClick={onImport} accent /> :
-					null }
-				<Button label={"Help"} target="_blank" href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent />
+				{localHubUp ? <Button onClick={onImport}>Load Data</Button> : null }
+				<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target="_blank">Help</Button>
 			</div>}
 
 			{isLocalHub(host) ? null : <p>Hub address: {host}</p>}
@@ -167,10 +168,12 @@ class CohortSummaryPage extends React.Component {
 			activeCohorts = pick(cohorts, userServers),
 			combined = collateCohorts(activeCohorts);
 		return (
-			<div className={styles.datapages}>
-				<DataHubs {...this.props}/>
-				<CohortSummary hubParams={hubParams} cohorts={combined} onCohort={this.onCohort}/>
-			</div>);
+			<DatapagesContainer>
+				<Box sx={{display: 'grid', gridTemplateColumns: '1fr auto'}}>
+					<CohortSummary hubParams={hubParams} cohorts={combined} onCohort={this.onCohort}/>
+					<DataHubs {...this.props}/>
+				</Box>
+			</DatapagesContainer>);
 	}
 }
 
@@ -179,47 +182,46 @@ class CohortSummaryPage extends React.Component {
 //
 
 class DeleteButton extends React.Component {
-	state = {active: false};
+	state = {open: false};
 
 	onDelete = () => {
-		this.setState({active: !this.state.active});
+		this.setState({open: !this.state.open});
 	};
 
 	onReally = () => {
 		var {name} = this.props;
-		this.setState({active: false});
+		this.setState({open: false});
 		this.props.callback(['delete-dataset', localHub, name]);
 	};
 
-	actions = () => {
-		return [
-			{label: 'Cancel', onClick: this.onDelete},
-			{label: 'Really Delete', onClick: this.onReally}];
-	};
-
 	render() {
-		var {active} = this.state,
+		var {open} = this.state,
 			{label} = this.props;
 		return (
-			<div className={styles.deleteButton}>
-				<Dialog actions={this.actions()} active={active}
-						onEscKeyDown={this.onDelete} onOverlayClick={this.onDelete}
-						title='Delete dataset'>
-					{label}
+			<>
+				<Dialog maxWidth={false} onClose={this.onDelete} open={open}>
+					<DialogTitle disableTypography><h2>Delete dataset</h2></DialogTitle>
+					<DialogContent>
+						{label}
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.onDelete}>Cancel</Button>
+						<Button onClick={this.onReally}>Really Delete</Button>
+					</DialogActions>
 				</Dialog>
-				<Button onClick={this.onDelete} accent>Delete</Button>
-			</div>);
+				<Button onClick={this.onDelete}>Delete</Button>
+			</>);
 	}
 }
 
 var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
 
-var markdownValue = value => {
+var markdownValue = (value) => {
 	if (value && !value.error) {
 		var converter = new showdown.Converter();
 		return (<div className={styles.header}
-			dangerouslySetInnerHTML={{__html: converter.makeHtml(value)}}/>);
+			dangerouslySetInnerHTML={{__html: xss(converter.makeHtml(value))}}/>);
 	}
 };
 
@@ -232,10 +234,9 @@ var datasetLink = (callback, preferred, onClick, hubParams) => ds => {
 	return (
 		<li key={ds.name}>
 			<Link
-				className={styles.link}
 				href={'?' + encodeObject({dataset: ds.name, host, ...hubParams})}
-				label={ds.label}
-				onClick={onClick}/>
+				onClick={onClick}
+				underline='hover'>{ds.label}</Link>
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
 			{ds.status !== 'loaded' ?
 				<span className={styles.count}> [{ds.status}]</span> : null}
@@ -244,7 +245,7 @@ var datasetLink = (callback, preferred, onClick, hubParams) => ds => {
 				null}
 			<span> {getHubName(host)}</span>
 			{canDelete(ds, host) ?
-				<DeleteButton callback={callback} name={ds.name} label={ds.label || ds.name}/> : null}
+				<Box component='span' ml={3}><DeleteButton callback={callback} name={ds.name} label={ds.label || ds.name}/></Box> : null}
 			<div className={styles.lineClamp}>
 				<span className={styles.description}>{stripHTML(ds.description)}</span>
 			</div>
@@ -278,6 +279,15 @@ class CohortPage extends React.Component {
 		this.props.callback(['navigate', 'heatmap']);
 	};
 
+	clickVizButton = (ev) => {
+		if (ev.target.className === 'cohortButton') {
+			ev.target.dataset.bookmark ?
+			window.open(`${document.location.origin}/?bookmark=${ev.target.dataset.bookmark}`, "_self") :
+			this.onViz();
+		}
+	};
+
+
 	onDataset = (ev) => { navHandler.call(this, ev); };
 
 	render() {
@@ -293,10 +303,10 @@ class CohortPage extends React.Component {
 			preferred = getPreferred(wizard, cohort);
 
 		return (
-			<div className={styles.datapages}>
+			<DatapagesContainer onClick={this.clickVizButton}>
 				{markdownValue(meta)}
 				<div className={styles.sidebar}>
-					<Button onClick={this.onViz} accent>Visualize</Button>
+					<Button onClick={this.onViz}>Visualize</Button>
 				</div>
 				<h2>cohort: {treehouse(cohort)}{cohort}</h2>
 				{dataSubTypes.map(drawGroup(callback, dsGroups, preferred, this.onDataset, hubParams))}
@@ -305,7 +315,7 @@ class CohortPage extends React.Component {
 						<span className={styles.star}>*</span>
 						<span>default dataset in visualization</span>
 					</span>)}
-			</div>);
+			</DatapagesContainer>);
 	}
 }
 
@@ -329,10 +339,7 @@ var dataPair = (key, value, method = identity) => value == null ? [] : [
 
 var toLink = value => <a href={value}>{value}</a>;
 var toCohortLink = (onClick, hubParams) => cohort => (
-	<Link
-		href={'?' + encodeObject({cohort, ...hubParams})}
-		onClick={onClick}
-		label={cohort}/>);
+	<Link href={'?' + encodeObject({cohort, ...hubParams})} onClick={onClick} underline='hover'>{cohort}</Link>);
 var toPMIDLink = value => (
 	<a href={`http://www.ncbi.nlm.nih.gov/pubmed/?term=${value.toString()}`}>
 		{value}
@@ -345,11 +352,11 @@ var toDownloadLink = value => (
 		{'; '}
 		<a href={jsonLink(value)}>Full metadata</a>
 	</span>);
-var toHTML = value => <span dangerouslySetInnerHTML={{__html: value}}/>;
+var toHTML = value => <span dangerouslySetInnerHTML={{__html: xss(value)}}/>;
 
 var headerValue = value => value && <p className={styles.header}>{value}</p>;
 var htmlValue = value => value &&
-	<p className={styles.header} dangerouslySetInnerHTML={{__html: value}}/>;
+	<p className={styles.header} dangerouslySetInnerHTML={{__html: xss(value)}}/>;
 
 // XXX Does not display load warning in pop-up
 // XXX Does not use red/blue coloring for error vs. other load status (e.g. 'loading')
@@ -412,6 +419,23 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 
 var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
+var getProbeCount = (datapages, host, dataset) => {
+	var pc = getIn(datapages, ['datasetProbeCount', host, dataset]);
+	return pc == null ? <img src={spinner}/> : pc.toLocaleString();
+};
+
+var DatapagesContainer = ({children, ...props}) => {
+	return (
+		<div className={styles.datapages} {...props}>
+			<Card elevation={2}>
+				<Box sx={{padding: '20px 40px 40px'}}>
+					{children}
+				</Box>
+			</Card>
+		</div>
+	);
+};
+
 var DatasetPage = wrapLaunchHelper(
 	props => getIn(props, ['state', 'params', 'host']) === localHub,
 	class extends PureComponent {
@@ -423,6 +447,9 @@ var DatasetPage = wrapLaunchHelper(
 					datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 				cohort = getIn(datapages, ['dataset', host, dataset, 'meta', 'cohort'], COHORT_NULL);
 
+			if (getIn(this.props.state, ['spreadsheet', 'servers', host, 'user']) !== true) {
+				this.props.callback(['add-host', host]);
+			}
 			if (cohort !== get(currentCohort, 'name')) {
 				this.props.callback(['cohort', cohort]);
 			}
@@ -435,16 +462,17 @@ var DatasetPage = wrapLaunchHelper(
 		render() {
 			var {callback, state, hubParams, children, badge} = this.props,
 				{params: {host, dataset}, datapages} = state,
-				{meta, probeCount = 0, data, downloadLink, probemapLink} = getIn(datapages, ['dataset', host, dataset], {}),
+				{meta, data, downloadLink, probemapLink} = getIn(datapages, ['dataset', host, dataset], {}),
+				probeCount = getProbeCount(datapages, host, dataset),
 				githubDescripton = getIn(datapages, ['datasetDescription', dataset], null);
 
 			if (!meta) {
 				return (
-					<div className={styles.datapages}>
+					<DatapagesContainer>
 						{children /* LaunchHelper */}
-						<h2>dataset: {dataset}...</h2>
+						<h2>dataset: {dataset}...<img src={spinner}/></h2>
 						<h3>hub: {host}{badge}</h3>
-					</div>);
+					</DatapagesContainer>);
 			}
 			var {name, label = name, description, longTitle,
 				cohort = COHORT_NULL, dataSubType, platform, unit,
@@ -454,10 +482,10 @@ var DatasetPage = wrapLaunchHelper(
 				type = TYPE_NULL, status, loader, count} = meta;
 
 			return (
-				<div className={styles.datapages}>
+				<DatapagesContainer>
 					{children /* LaunchHelper */}
 					<div className={styles.sidebar}>
-						<Button onClick={this.onViz} accent>Visualize</Button>
+						<Button onClick={this.onViz}>Visualize</Button>
 						{canDelete(meta, host) ?
 							<DeleteButton callback={callback} name={name} label={label}/> : null}
 					</div>
@@ -487,19 +515,20 @@ var DatasetPage = wrapLaunchHelper(
 						dataPair('input data format', FORMAT_MAPPING[type])]))}
 					{status === 'loaded' ?
 						<span className={styles.tableControls}>
+							{type === 'genomicMatrix' ? probeCount : null}
 							{type === 'genomicMatrix' ?
-								`${probeCount.toLocaleString()} identifiers X ${count} samples ` : null}
+								` identifiers X ${count} samples ` : null}
 							{type === 'clinicalMatrix' ?
-								`${count} samples X ${probeCount.toLocaleString()} identifiers ` : null}
+								`${count} samples X ${probeCount} identifiers ` : null}
 							<Link
 								href={'?' + encodeObject({host, dataset, allIdentifiers: true, ...hubParams})}
-								onClick={this.onIdentifiers} label='All Identifiers'/>
+								onClick={this.onIdentifiers} underline='hover'>All Identifiers</Link>
 							<Link
 								href={'?' + encodeObject({host, dataset, allSamples: true, ...hubParams})}
-								onClick={this.onSamples} label='All Samples'/>
+								onClick={this.onSamples} underline='hover'>All Samples</Link>
 						</span> : null}
 					{dataMethod(meta)(meta, data)}
-				</div>);
+				</DatapagesContainer>);
 		}
 });
 
@@ -517,6 +546,23 @@ var HubPage = wrapLaunchHelper(
 			this.props.callback(['navigate', 'import']);
 		}
 
+		onViz = (cohort) => {
+			if (!cohort) {return;}
+
+			var {spreadsheet: {cohort: currentCohort}} = this.props.state;
+
+			if (cohort !== get(currentCohort, 'name')) {
+				this.props.callback(['cohort', cohort]);
+			}
+			this.props.callback(['navigate', 'heatmap']);
+		};
+
+		clickVizButton = (ev) => {
+			if (ev.target.className === 'hubButton') {
+				this.onViz(ev.target.dataset.cohort);
+			}
+		};
+
 		render() {
 			var {state, hubParams, badge, children} = this.props,
 				{spreadsheet: {servers}} = state,
@@ -527,8 +573,12 @@ var HubPage = wrapLaunchHelper(
 				inHubs = contains(userServers, host) ?
 					'' : ' (not in my data hubs)';
 
+			if (!contains(userServers, host)) {
+				this.props.callback(['add-host', host]);
+			}
+
 			return (
-				<div className={styles.datapages}>
+				<DatapagesContainer onClick={this.clickVizButton}>
 					{children /* LaunchHelper */}
 					{markdownValue(getIn(state, ['datapages', 'hubMeta', host]))}
 					<CohortHeader inHubs={inHubs} host={host} onImport={this.onImport} badge={badge}/>
@@ -536,7 +586,7 @@ var HubPage = wrapLaunchHelper(
 						hubParams={hubParams}
 						cohorts={coll}
 						onCohort={this.onCohort}/>
-				</div>);
+				</DatapagesContainer>);
 		}
 	});
 
@@ -554,7 +604,7 @@ var binSize = 1000;
 class ListPage extends React.Component {
 	state = {};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'list');
 		var chunks = events.list
 			.startWith(this.props.list)
@@ -575,7 +625,7 @@ class ListPage extends React.Component {
 		this.sub.unsubscribe();
 	}
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		this.on.list(props.list);
 	}
 
@@ -587,7 +637,7 @@ class ListPage extends React.Component {
 				` ${Math.floor(chunks.length / total * 100)}%`;
 
 		return (
-			<div className={styles.datapages}>
+			<DatapagesContainer>
 				<h3>dataset: {dataset}</h3>
 				<h4>{title}{percent}</h4>
 				{chunks ? chunks.map((c, i) => (
@@ -595,7 +645,7 @@ class ListPage extends React.Component {
 						{c}
 					</pre>
 				)) : 'Loading...'}
-			</div>);
+			</DatapagesContainer>);
 	}
 }
 
@@ -605,9 +655,9 @@ class markdownPage extends React.Component {
 			content = getIn(state, ['datapages', 'markdown', state.params.markdown]);
 
 		return (
-			<div className={styles.datapages}>
+			<DatapagesContainer>
 				{markdownValue(content)}
-			</div>);
+			</DatapagesContainer>);
 	}
 }
 
@@ -657,13 +707,26 @@ class Datapages extends React.Component {
 
 class ThemedDatapages extends React.Component {
 	render() {
+		const pageTheme = createTheme(xenaTheme, {
+			overrides: {
+				MuiLink: {
+					root: {
+						color: '#337ab7',
+						'&:hover': {
+							color: '#23527c',
+						}
+					},
+				},
+			},
+		});
 		return (
-		<ThemeProvider theme={appTheme}>
-			<Datapages {...this.props}/>
-		</ThemeProvider>);
+			<MuiThemeProvider theme={pageTheme}>
+				<Datapages {...this.props}/>
+			</MuiThemeProvider>
+		);
 	}
 }
 
 var selector = state => state;
 
-module.exports = props => <ThemedDatapages {...props} selector={selector}/>;
+export default props => <ThemedDatapages {...props} selector={selector}/>;

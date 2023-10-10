@@ -1,118 +1,13 @@
-button.dialogClose {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    line-height: 40px;
-    height: 40px;
-    width: 40px;
-    padding: 8px;
-    box-sizing: border-box;
-    background-color: #ffffff;
-}
-
-.dialogClose:hover {
-    background-color: #d3d3d3;
-}
-
-button.dialogClose > i {
-    color: #b6b6b6;
-}
-
 .dialog {
-    padding-top: 10px;
-    margin-top: 20px;
-    width: 600px;
-    margin-left: calc((100% - 600px) / 2);
-    overflow: auto;
+    top: 64px !important;
 }
 
-.dialogWrapper {
-    display: block;
-    position: absolute;
-    height: calc(100% - 179px);
-    width:100%;
-    top: 64px;
-}
-
-.dialogOverlay {
-    position: absolute;
-    height: 100%;
-    width:100%;
-    top: 0;
-}
-
-.selectLabel {
-    padding-top: 30px;
-    box-sizing: border-box;
-
-}
-
+.selectLabel,
 .buttonGroupLabel {
-    padding-top: 10px;
-    box-sizing: border-box;
-}
-
-.inputLabel {
-    padding-top: 5px;
-    box-sizing: border-box;
-}
-
-.errorLabel {
-    color: #B74746;
-    height: 10px;
-    font-size: 14px;
-}
-
-.dropDown {
-    width: 100%;
-}
-
-.dropDown ul li.selected {
-    color: #52C9C0;
-}
-
-.dropDown ul li.selected:hover {
-    background-color: #fff;
-}
-
-.rangeInput {
-    margin-top: -20px;
-    padding-bottom: 0;
-}
-
-.categoryInput {
-    margin-top: -10px;
-    padding-bottom: 0;
-}
-
-.categoryColor {
-    margin-top: 15px;
-    height: 20px;
-    width: 20px;
+    color: #757575;
+    padding-top: 6px;
 }
 
 .activeModeButton {
-    background-color: #DCF4F2;
-    color: #52C9C0!important;
-}
-
-.inactiveModeButton {
-    background-color: #F7F7F7!important;
-    color: #52C9C0!important;
-}
-
-.activeModeButton:hover,
-.inactiveModeButton:hover {
-    background-color: #DCF4F2!important;
-}
-
-.cancelButton, .cancelButton:hover {
-    background-color: #F7F7F7!important;
-    color: #52C9C0!important;
-}
-
-.confirmButton, .confirmButton:hover {
-    margin-left: 20px;
-    background-color: #DCF4F2!important;
-    color: #52C9C0!important;
+    background-color: #DCF4F2 !important;
 }

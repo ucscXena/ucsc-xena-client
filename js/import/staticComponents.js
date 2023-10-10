@@ -1,7 +1,7 @@
-'use strict';
 import React from 'react';
 import cssClasses from './ImportPage.module.css';
 import loader from './loader.gif';
+import XActionButton from '../views/XActionButton';
 
 const maxColumns = 6,
     numRows = 5,
@@ -72,9 +72,9 @@ class FilePreview extends React.Component {
     renderShowMore(hasEnoughLines) {
         return (
             !hasEnoughLines ? null :
-            <i className={cssClasses.showMore} onClick={this.onShowMore}>
+            <XActionButton onClick={this.onShowMore}>
                 {this.state.showMore ? "Show less..." : "Show more..."}
-            </i>
+            </XActionButton>
         );
     }
 };

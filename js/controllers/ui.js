@@ -1,20 +1,20 @@
-'use strict';
-
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 var {userServers, setCohort, fetchSamples,
 	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 var {remapFields} = require('../models/searchSamples');
+var {initialState} = require('../initialState');
 var {fetchInlineState} = require('../inlineState');
-var {compose, make, mount} = require('./utils');
+import {make, mount, compose} from './utils';
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
-import xenaQuery from '../xenaQuery';
+import {defaultState as chartDefaultState} from '../chart/utils';
+var xenaQuery = require('../xenaQuery');
 
 function fetchBookmark(serverBus, bookmark) {
 	gaEvents('bookmark', 'load');
@@ -54,7 +54,7 @@ function fetchState(serverBus) {
 
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
-		_.assoc(state, 'wizardMode', false, 'showWelcome', false) : state;
+		_.assoc(state, 'wizardMode', false, 'zoom', _.assoc(state.zoom, ['height'], initialState.spreadsheet.zoom.height)) : state;
 }
 
 // Use min app width (1280px) if viewport width is currently smaller than min
@@ -62,7 +62,7 @@ function resetWizard(state) {
 // minimum width of 1280px)
 export var defaultWidth = viewportWidth => {
 	var width = (viewportWidth < 1280 ? 1280 : viewportWidth);
-	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
+	return Math.min(448, Math.floor((width - 48) / 3) - 16); // Allow for 2 x 24px gutter on viewport, plus 16px margin for column (max width 448px).
 };
 
 // XXX This same info appears in Datapages.js, and in various links.
@@ -71,6 +71,8 @@ var getPage = path =>
 	path === '/hub/' ? 'hub' :
 	path === '/datapages/' ? 'datapages' :
 	path === '/import/' ? 'import' :
+	path === '/singlecell/' ? 'singlecell' :
+	path === '/img/' ? 'img' :
 	'heatmap';
 
 var setPage = (state, path, params) =>
@@ -126,7 +128,7 @@ var controls = {
 	'import-error': state => _.assoc(state, 'stateError', 'import'),
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
-	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat)
+	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat),
 };
 
 var spreadsheetControls = {
@@ -136,14 +138,17 @@ var spreadsheetControls = {
 	},
 	cluster: (state, id, value) =>
 		_.assocIn(state, ['columns', id, 'clustering'], value),
-	'cluster-post!': (serverBus, state, newState, id, value) => {
+	'cluster-post!': (serverBus, state, newState, id, value, data) => {
 		if (value != null && _.getIn(newState, ['data', id, 'clustering', 'probes']) == null) {
-			fetchClustering(serverBus, newState, id);
+			fetchClustering(serverBus, newState, id, data);
 		}
 	},
-	sampleFilter: (state, sampleFilter) => _.assoc(state,
-			'cohort', _.assocIn(state.cohort, ['sampleFilter'], !!sampleFilter),
-			'survival', null),
+	searchHistory: (state, search) => _.updateIn(state, ['searchHistory'],
+			// put at front, limit length, and make unique
+			history => _.uniq([search].concat((history || [])).slice(0, 20))),
+	sampleFilter: (state, sampleFilter) => _.assocIn(state,
+			['cohort', 'sampleFilter'], !!sampleFilter,
+			['survival'], null),
 	'sampleFilter-post!': (serverBus, state, newState, sampleFilter) => {
 		if (sampleFilter) {
 			serverBus.next(['samples', newState.cohortSamples.filter(sampleFilter).map(samples => ({samples, over: false, hasPrivateSamples: newState.hasPrivateSamples}))]);
@@ -163,6 +168,8 @@ var spreadsheetControls = {
 				'columns', _.merge(columns, _.object(ids, settingsList)),
 				'columnOrder', newOrder,
 				'sampleSearch', remapFields(columnOrder, newOrder, sampleSearch),
+				'searchHistory', state.searchHistory &&
+					state.searchHistory.map(remapFields(columnOrder, newOrder)),
 				'editing', null, // is editing always off after column add?
 				'data', _.merge(data, _.object(ids, ids.map(_.constant({'status': 'loading'})))));
 		return resetWizard(newState);
@@ -188,7 +195,10 @@ var spreadsheetControls = {
 				'columns', _.dissoc(columns, id),
 				'columnOrder', _.without(columnOrder, id),
 				'data', _.dissoc(data, id));
-		return _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
+		return _.assoc(ns,
+				'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch),
+				'searchHistory', state.searchHistory &&
+					state.searchHistory.map(remapFields(state.columnOrder, ns.columnOrder)));
 	},
 	order: (state, order) => {
 		// Filter out 'editing' columns
@@ -196,7 +206,9 @@ var spreadsheetControls = {
 			editing = _.findIndexDefault(order.slice(1), _.isNumber, state.editing);
 		return _.assoc(state, 'columnOrder', newOrder,
 			'editing', editing,
-			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch));
+			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch),
+			'searchHistory', state.searchHistory &&
+				state.searchHistory.map(remapFields(state.columnOrder, order)));
 	},
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,
@@ -236,19 +248,24 @@ var spreadsheetControls = {
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
 	'km-survivalType': (state, value) => _.assocIn(state, ['km', 'survivalType'], value),
-	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
-	'chart': state => _.assoc(state, 'mode', 'chart'),
-	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
-	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
-	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
+	'heatmap': state => _.assocInAll(state,
+		['mode'], 'heatmap',
+		['chartState', 'setColumn'], null),
+	'chart': (state, id) => chartDefaultState(_.assocIn(state,
+				['mode'], 'chart',
+				['chartState', 'setColumn'], id)),
+	'chart-set-state': (state, chartState) => chartDefaultState(
+			_.assoc(state, 'chartState', chartState)),
+	'sample-search': (state, text, selection) =>
+		_.assoc(state, 'sampleSearch', text, 'sampleSearchSelection', selection),
 	// XXX maybe this should be transient state, instead, since it's not
 	// meaningful after reload?
 	'highlightSelect': (state, highlight) => _.assoc(state, 'highlightSelect', highlight),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	'sortDirection': (state, id, newDir) =>
 		_.assocIn(state, ['columns', id, 'sortDirection'], newDir),
-	'allowOverSamples': (state, aos) => _.assoc(state, 'allowOverSamples', aos),
+	'allowOverSamples': (state, aos) => _.assocIn(state, ['allowOverSamples'], aos,
+		['map', 'data'], null),
 	'allowOverSamples-post!': (serverBus, state, newState, aos) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, aos),
 	showWelcome: (state, show) => _.assoc(state, 'showWelcome', show),

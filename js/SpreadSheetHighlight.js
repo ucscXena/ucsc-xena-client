@@ -1,7 +1,6 @@
-'use strict';
 
 var React = require('react');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var vgcanvas = require('./vgcanvas');
 
 var tickWidth = 5,
@@ -64,7 +63,7 @@ class SpreadSheetHighlight extends React.Component {
 		this.animate.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}

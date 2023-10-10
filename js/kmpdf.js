@@ -6,12 +6,11 @@
 // port of KmPlot to pdf is a compromise.
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
-'use strict';
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {linear, linearTicks} = require('./scale');
 
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
-var bounds = x => [_.min(x), _.max(x)];
+var bounds = x => [0, _.max(x)];
 
 // XXX duplicated in km.css
 var style = {

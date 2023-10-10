@@ -1,4 +1,3 @@
-'use strict';
 
 // Horizontal sortable widget, with Rx and React.
 //
@@ -15,8 +14,8 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Rx = require('../rx');
-var _ = require('../underscore_ext');
+var Rx = require('../rx').default;
+var _ = require('../underscore_ext').default;
 require('./Sortable.css');
 
 var skip = 1; // Don't allow sort of <skip> elements on the left
@@ -29,7 +28,7 @@ function leftWidth(rect, width) {
 }
 
 function hasClass(el, c) {
-    return el.className.split(/ +/).indexOf(c) !== -1;
+    return (el.getAttribute("class") || "").split(/ +/).indexOf(c) !== -1;
 }
 
 function repeat(n, v) {
@@ -63,13 +62,13 @@ var zeros = n => repeat(n, 0);
 var transitionLength = 400;
 
 class Sortable extends PureComponent {
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var mousedownSub = new Rx.Subject();
 		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
 		var mousedrag = mousedown.flatMap(([id, md]) => {
             // find starting positions on mouse down
 
-			var order = _.map(this.props.children, c => c.props['data-actionKey']);
+			var order = _.map(this.props.children, c => c.props['data-actionkey']);
 			var startX = md.clientX;
 			var {widths} = this.props;
 			var positions = _.map(order,
@@ -138,13 +137,13 @@ class Sortable extends PureComponent {
 	}
 
 	initialPositions = () => {
-		return _.object(_.map(this.props.children, c => [c.props['data-actionKey'], 0]));
+		return _.object(_.map(this.props.children, c => [c.props['data-actionkey'], 0]));
 
 	};
 
 	state = {pos: this.initialPositions(), dragging: null};
 
-	componentWillReceiveProps() {
+	UNSAFE_componentWillReceiveProps() {//eslint-disable-line camelcase
 		this.setState({pos: this.initialPositions()});
 	}
 
@@ -158,7 +157,7 @@ class Sortable extends PureComponent {
 			{wizardMode} = this.props.appState;
 
 		var columns = React.Children.map(children, (child, i) => {
-			var actionKey = child.props['data-actionKey'];
+			var actionKey = child.props['data-actionkey'];
 			return React.cloneElement(child, {
 				onMouseDown: wizardMode || i < skip ? undefined : ev => this.sortStart([actionKey, ev]),
 				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),

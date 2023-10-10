@@ -2,10 +2,8 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Global Xena styls that are outside of the React component hierarchy and the RTB theming functionality.
+ * Global Xena styles that are outside of the React component hierarchy.
  */
-
-@value appMinWidth from './variables.css';
 
 /* Adding styles for sticky footer */
 body {
@@ -26,11 +24,11 @@ body {
  * force the 1280px.
  */
 .minWidthWrapper {
-	min-width: appMinWidth;
+	min-width: 1280px;
 }
 
 /**
- * Adding styling to <pre> tags that are pulled from a CMS to be displayed on hub info pages. 
+ * Adding styling to <pre> tags that are pulled from a CMS to be displayed on hub info pages.
  */
 pre {
 	background-color: rgba(0,0,0,0.03);

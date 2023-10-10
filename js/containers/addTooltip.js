@@ -1,22 +1,17 @@
-'use strict';
 
 var Tooltip = require('../views/Tooltip');
 import PureComponent from '../PureComponent';
 var React = require('react');
 var {rxEvents} = require('../react-utils');
 var meta = require('../meta');
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 
 function addTooltip(Component) {
 	return class extends PureComponent {
-	    static displayName = 'SpreadsheetTooltip';
+		static displayName = 'SpreadsheetTooltip';
 
-	    state = {
-	        tooltip: {open: false},
-	    };
-
-	    componentWillMount() {
+		UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 			var events = this.ev = rxEvents(this, 'tooltip', 'click', 'close');
 
 			var toggle = events.click.filter(ev => ev[meta.key])
@@ -26,8 +21,8 @@ function addTooltip(Component) {
 			var tooltip = events.tooltip.merge(toggle).merge(close)
 				// If open + user clicks, toggle freeze of display.
 				.scan(([tt, frozen], ev) =>
-							ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen],
-						[{open: false}, false])
+							ev === 'toggle' ? [tt, !frozen] : [ev, frozen],
+						[{}, false])
 				// Filter frozen events until frozen state changes.
 				.distinctUntilChanged(_.isEqual, ([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
@@ -37,28 +32,22 @@ function addTooltip(Component) {
 			// the 'frozen' functionality. This allows listeners to 'freeze',
 			// e.g. the probe position highlight.
 			this.ev.tooltip = Rx.Subject.create(events.tooltip, tooltip);
-
-			this.sub = tooltip.subscribe(ev => this.setState({tooltip: ev}));
-		}
-
-	    componentWillUnmount() {
-			this.sub.unsubscribe();
+			this.tooltipEv = tooltip; // this is awkward. Need it for children.
 		}
 
 	    render() {
 			var {children, ...props} = this.props,
-				{interactive} = props,
-				open = this.state.tooltip.open && interactive,
+				{appState, interactive} = props,
+				{wizardMode} = appState,
 				onClick = interactive ? this.on.click : null;
 			return (
 				<Component
 					{...props}
 					onClick={onClick}
-					append={<Tooltip show={interactive} onClose={this.on.close} onClick={this.on.click} {...{...this.state.tooltip, open}}/>}>
+					append= {wizardMode ? null : <Tooltip show={interactive} onClose={this.on.close} tooltip={this.tooltipEv}/>}>
 					{React.Children.map(children, el =>
 						React.cloneElement(el, {
-							tooltip: this.ev.tooltip,
-							frozen: this.state.tooltip.frozen
+							tooltip: this.ev.tooltip
 						}))}
 				</Component>);
 		}

@@ -5,7 +5,6 @@
  * Structural component, giving each column a sibling "add column" component.
  */
 
-'use strict';
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
@@ -48,16 +47,16 @@ function addColumnAdd(Component) {
 				lastIndex = children.length - 1,
 				columns = React.Children.map(children, (child, i) => (
 					<div
-						className={classNames(compStyles.visualizationOrWizardMode, hoverClass(i, hover), {[compStyles.wizardModeMargins]: wizardMode})}
-						data-actionKey={child.props.actionKey}>
+						className={classNames(compStyles[wizardMode ? 'wizardMode' : 'visualizationMode'], hoverClass(i, hover))}
+						data-actionkey={child.props.actionKey}>
 
 						{child}
-						<ColumnAdd
+						{!wizardMode && <ColumnAdd
 							show={interactive}
 							actionKey={i}
 							last={i === lastIndex}
 							onHover={this.onHover}
-							onClick={this.onClick}/>
+							onClick={this.onClick}/>}
 					</div>));
 			return (
 				<Component {...otherProps}>

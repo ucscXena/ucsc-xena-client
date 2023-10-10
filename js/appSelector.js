@@ -1,6 +1,5 @@
-'use strict';
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
@@ -100,6 +99,7 @@ var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));
 
 var kmSelector = createSelector(
 		state => state.samples,
+		state => state.cohortSamples,
 		state => _.getIn(state, ['columns', _.getIn(state, ['km', 'id'])]),
 		state => _.getIn(state, ['data', _.getIn(state, ['km', 'id'])]),
 		state => _.getIn(state, ['index', _.getIn(state, ['km', 'id'])]),
@@ -107,8 +107,8 @@ var kmSelector = createSelector(
 		state => _.getIn(state, ['km', 'splits']),
 		state => _.getIn(state, ['km', 'survivalType']),
 		state => state.survival,
-		(samples, column, data, index, cutoff, splits, survivalType, survival) =>
-			column && survival && km.makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples));
+		(samples, cohortSamples, column, data, index, cutoff, splits, survivalType, survival) =>
+			column && survival && km.makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples, cohortSamples));
 
 // Enforce default width in wizardMode
 var ammedWidthSelector = createFmapSelector(
@@ -210,4 +210,4 @@ var survivalSelector = createSelector(
 
 var setSurvival = selector => state => selector(_.assocIn(state, ['spreadsheet', 'hasSurvival'], survivalSelector(state)));
 
-module.exports = setWizardProps(setSurvival(spreadsheetSelector(selector)));
+export default setWizardProps(setSurvival(spreadsheetSelector(selector)));

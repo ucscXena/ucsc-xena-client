@@ -1,15 +1,19 @@
-@value black87 from '../css/variables.css';
+/* Container around highcharts */
+:global(.cohortButton), :global(.hubButton) {
+	padding: 10px;
+	color: 	#4CC0A3;
+	border: 0;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12); /* Based on MD card */
+}
+
+:global(.cohortButton:hover), :global(.hubButton:hover) {
+	color: 	#4CC0A3;
+	background-color: #d5f0ee;
+}
 
 .datapages {
-	color: black87;
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 20px;
-	padding: 40px;
-	padding-top: 20px;
+	margin: 20px auto;
 	width: 80%;
-	background-color: #ffffff;
-	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
 }
 
 .datapages ul {
@@ -24,10 +28,6 @@
 	margin: 16px 0 16px 0;
 }
 
-.deleteButton {
-	display: inline;
-}
-
 .star {
 	font-size: 1.5em;
 	color: red;
@@ -35,27 +35,6 @@
 
 .count {
 	color:#006600;
-}
-
-.link {
-	display: inline;
-}
-
-.link:not(.active) {
-	opacity: 1.0;
-}
-
-.link > abbr {
-	text-transform: none;
-}
-
-.dataHubs {
-	float: right;
-}
-
-.dataHubs .checkboxLink {
-	height: 18px;
-	line-height: 18px;
 }
 
 .sidebar {
@@ -71,6 +50,7 @@
 .description {
 	display: block;
 	font-size: 0.8em;
+	line-height: 1.15;
 }
 
 .lineClamp {
@@ -108,10 +88,6 @@
 	font-size: 0.9em;
 }
 
-.value > [data-react-toolbox='link'] {
-	opacity: 1; /* override RT link opacity */
-}
-
 .dataSnippetTable {
 	border-collapse:collapse;
 	width: 100%;
@@ -120,6 +96,7 @@
 
 .dataSnippetTable tr td {
 	border: 5px solid rgb(225,225,225);
+	line-height: 1.15;
 	text-align: right;
 	word-wrap: break-word;
 	color: #505050;
@@ -136,22 +113,19 @@
 	margin: 10px;
 }
 
-.tableControls > [data-react-toolbox='link'] {
-	opacity: 1;
-	display: inline;
-}
-
 .tableControls *:first-child {
 	margin-left: 0;
 }
 
-.headerButtons {
-	display: inline-block;
-	margin-left: 25px;
+.tableControls img { /* spinner */
+	margin: 0 10px;
+	vertical-align: 'middle';
 }
 
-.headerButtons button {
-	margin-right: 10px;
+.headerButtons {
+	display: inline-flex;
+	gap: 10px;
+	margin-left: 25px;
 }
 
 .inline {

@@ -1,7 +1,6 @@
-'use strict';
 var React = require('react');
-var _ = require('../underscore_ext');
-import Input from 'react-toolbox/lib/input';
+import {TextField} from '@material-ui/core';
+var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
 
 var isValid = _.curry((min, max, value) => {
@@ -24,7 +23,7 @@ class NumberForm extends React.Component {
 	    this.state = {value: initialValue == null ? '' : '' + initialValue, focused: false};
 	}
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var {dflt, min, max} = this.props;
 		var events = rxEvents(this, 'change');
 		this.change = events.change
@@ -47,19 +46,21 @@ class NumberForm extends React.Component {
 	};
 
 	render() {
-		var {min, max, dflt, initialValue, ...other} = this.props,
+		var {min, max} = this.props,
+			other = _.omit(this.props, 'min', 'max', 'dflt', 'initialValue'),
 			{value, focused} = this.state;
 		return (
-			<form className="form-horizontal">
-				<Input
+			<form>
+				<TextField
+					fullWidth
 					{...other}
 					onBlur={this.onBlur}
 					onFocus={this.onFocus}
 					type='text'
 					value={'' + value}
 					label={`Custom survival time cutoff`}
-					placeholder={focused ? `Enter a number between ${min} and ${max}` : undefined}
-					onChange={this.on.change}/>
+					placeholder={focused ? `Enter between ${min} and ${max}` : undefined}
+					onChange={(e) => this.on.change(e.target.value)}/>
 			</form>
 		);
 	}

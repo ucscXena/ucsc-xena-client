@@ -1,12 +1,11 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
-'use strict';
 
-var _ = require('../js/underscore_ext');
+var _ = require('../js/underscore_ext').default;
 var {isObject, isNumber, isArray, getIn, get, every, pluck} =
-	require('../js/underscore_ext');
+	require('../js/underscore_ext').default;
 var fetch = require('../js/fieldFetch');
 require('../js/models/denseMatrix');
-var Rx = require('../js/rx');
+var Rx = require('../js/rx').default;
 
 var assert = require('assert');
 

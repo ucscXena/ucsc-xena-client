@@ -1,4 +1,3 @@
-'use strict';
 
 // Utility script to build minhash for cohort samples on public
 // hubs
@@ -9,9 +8,6 @@ var post = Rx.Observable.bindNodeCallback(request.post);
 var fs = require('fs');
 import {Minhash} from 'minhash';
 var _ = require('underscore');
-var request = require('request');
-var Rx = require('rxjs');
-var post = Rx.Observable.bindNodeCallback(request.post);
 
 var {publicServers, enabledServers} = require('../defaultServers');
 var enabledPublicServers = _.intersection(publicServers, enabledServers);

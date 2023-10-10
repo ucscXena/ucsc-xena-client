@@ -1,10 +1,8 @@
-'use strict';
-
-import Rx from '../rx';
+var Rx = require('../rx').default;
 import { make, mount, compose } from './utils';
-import { servers } from '../defaultServers';
-import { cohortSummary, probemapList, datasetStatus } from '../xenaQuery';
-import { Let, assoc, assocIn, assocInAll, get, getIn, has, isArray, last, object, pluck, updateIn } from "../underscore_ext";
+var {servers} = require('../defaultServers');
+var {cohortSummary, probemapList, datasetStatus} = require('../xenaQuery');
+var {Let, assoc, assocIn, assocInAll, get, getIn, has, isArray, last, object, pluck, updateIn } = require('../underscore_ext').default;
 import Worker from 'worker-loader!./import-worker';
 
 var loaderSocket = Rx.Observable.webSocket("ws://localhost:7222/load-events");

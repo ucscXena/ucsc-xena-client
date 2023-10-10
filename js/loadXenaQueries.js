@@ -1,11 +1,16 @@
 // Load all xena queries
-'use strict';
 
 var glob = require("glob");
-
 var files = glob.sync('./queries/*.xq', {cwd: __dirname});
 
-module.exports = "module.exports = {" +
-	files.map(function(file) {
-		return '"' + file.replace(/.*\//, '').replace(/\.xq$/, '') + '": require("' + file + '")';
-	}).join(',\n') + '};\n';
+var toName = path => path.replace(/.*\//, '').replace(/\.xq$/, '');
+var toImport = path => `import ${toName(path)} from "${path}";\n`;
+
+module.exports = (/*options, loaderContext*/) => ({
+	code: `
+		${files.map(toImport).join('')}
+		export {
+				${files.map(toName).join(',\n')}
+		};
+		`
+});

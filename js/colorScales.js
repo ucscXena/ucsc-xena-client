@@ -1,9 +1,8 @@
-'use strict';
 
 // color scale variants
 
 var _ = require('underscore');
-var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper');
+var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper').default;
 
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
@@ -29,8 +28,10 @@ var categoryMore = [
 //		"#c7c7c7"  // light grey
 	];
 
+var categoryMoreRgb = categoryMore.map(rgb);
+
 var round = Math.round;
-function linearColorScale(domain, range) {
+function linearOpaqueColorScale(domain, range) {
 	function scale(v, i = 0) {
 		if (v < domain[i]) {
 			if (i === 0) {
@@ -50,6 +51,37 @@ function linearColorScale(domain, range) {
 	}
 	return scale;
 }
+
+function linearTransparentColorScale(domain, range) {
+	var proj = _.times(range.length - 1, i =>
+		range[i] !== null ? [range[i], -1, 1] :
+		range[i + 1] !== null ? [range[i + 1], 1, 0] :
+		[[0, 0, 0], 0, 0]);
+
+	function scale(v, i = 0) {
+		if (v < domain[i]) {
+			if (i === 0) {
+				let [color, , b] = proj[0];
+				return [...color, b * 255];
+			}
+			let [color, m, b] = proj[i - 1];
+			let dx = v - domain[i - 1],
+				x = domain[i] - domain[i - 1];
+
+			return [...color, round((m * dx / x + b) * 255)];
+		}
+		if (i === domain.length - 1) {
+			let [color, , b] = proj[i - 1];
+			return [...color, (1 - b) * 255];
+		}
+		return scale(v, i + 1);
+	}
+	return scale;
+}
+
+var linearColorScale = (domain, range) =>
+	(range.indexOf(null) === -1 ? linearOpaqueColorScale :
+		linearTransparentColorScale)(domain, range);
 
 // for now, only support one range
 var log2ColorScale = ([d0, d1], [r0, r1]) => {
@@ -92,40 +124,42 @@ var createScale = (scaleFn, domain, strRange) => {
 	return fn;
 };
 
-var setPrecision = x => parseFloat(x.toPrecision(2));
-
 var scaleFloatSingle = (low, high, min, max) =>
 	createScale(linearColorScale, [min, max], [low, high]);
 
-var scaleFloatThresholdNegative = (low, zero, min, thresh) =>
-	createScale(linearColorScale, _.map([min, thresh], setPrecision), [low, zero]);
-
-var scaleFloatThresholdPositive = (zero, high, thresh, max) =>
-	createScale(linearColorScale, _.map([thresh, max], setPrecision), [zero, high]);
-
 var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
-	createScale(linearColorScale, _.map([min, minThresh, maxThresh, max], setPrecision), [low, zero, zero, high]);
-
-var scaleFloatThresholdLogNegative = (low, zero, min, thresh) =>
-	createScale(log2ColorScale, _.map([min, thresh], setPrecision), [low, zero]);
-
-var scaleFloatThresholdLogPositive = (zero, high, thresh, max) =>
-	createScale(log2ColorScale, _.map([thresh, max], setPrecision), [zero, high]);
+	createScale(linearColorScale, [min, minThresh, maxThresh, max], [low, zero, zero, high]);
 
 var scaleFloatLog = (low, high, min, max) =>
-	createScale(log2ColorScale, _.map([min, max], setPrecision), [low, high]);
+	createScale(log2ColorScale, [min, max], [low, high]);
+
+var mapper = (obj, fn) => _.isArray(obj) ? obj.map(fn) : _.mapObject(obj, fn);
 
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
-var ordinal = (count, scale) => {
-	scale = scale || categoryMore; // handle null
-	return v => scale[v % scale.length];
+var ordinal = (count, custom) => {
+	// XXX why does this not handle nulls, like our other scales?
+	var customRgb = custom && mapper(custom, rgb),
+		fn = v => custom && custom[v] ? custom[v] :
+			categoryMore[v % categoryMore.length];
+
+	fn.rgb = v => customRgb && customRgb[v] ? customRgb[v] :
+		categoryMoreRgb[v % categoryMoreRgb.length];
+
+	return fn;
 };
 
 function scaleFloatDouble(low, zero, high, min, max) {
 	var absmax = Math.max(-min, max);
 
 	return createScale(linearColorScale, [-absmax, 0, absmax], [low, zero, high]);
+}
+
+// Three-color scale with computed midpoint
+function scaleFloatDoubleMid(low, zero, high, min, max) {
+	var mid = (min + max) / 2;
+
+	return createScale(linearColorScale, [min, mid, max], [low, zero, high]);
 }
 
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
@@ -145,7 +179,7 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 		// power is [0, dataMax], representing avg. distance from zero point.
 		lookup: (trend, power) => {
 			if (power == null) {
-				return [128, 128, 128];
+				return rgb(zero);
 			}
 			var h = clip(h0, h1, h0 + trend * (h1 - h0));
 			var s = clip(0, 1, (power - thresh) / (max - origin - thresh));
@@ -182,23 +216,44 @@ function isoluminant(low, high) {
 var noDataScale = () => "gray";
 noDataScale.domain = () => [];
 
-var colorScale = {
+var colorScaleByType = {
 	'no-data': () => noDataScale,
-	'float-pos': (__, ...args) => scaleFloatSingle(...args),
-	'float-neg': (__, ...args) => scaleFloatSingle(...args),
-	'float': (__, ...args) => scaleFloatDouble(...args),
-	'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
-	'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
-	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
-	'float-thresh-log-pos': (__, ...args) => scaleFloatThresholdLogPositive(...args),
-	'float-thresh-log-neg': (__, ...args) => scaleFloatThresholdLogNegative(...args),
-	'float-log': (__, ...args) => scaleFloatLog(...args),
-	'trend-amplitude': (__, ...args) => scaleTrendAmplitude(...args),
-	'ordinal': (__, ...args) => ordinal(...args)
+	'float-pos': scaleFloatSingle,
+	'float-neg': scaleFloatSingle,
+	'float': scaleFloatDouble,
+	'float-mid': scaleFloatDoubleMid,
+	'float-thresh-pos': scaleFloatSingle,
+	'float-thresh-neg': scaleFloatSingle,
+	'float-thresh': scaleFloatThreshold,
+	'float-thresh-log-pos': scaleFloatLog,
+	'float-thresh-log-neg': scaleFloatLog,
+	'float-log': scaleFloatLog,
+	'trend-amplitude': scaleTrendAmplitude,
+	'ordinal': ordinal
 };
 
-module.exports =  {
-	colorScale: ([type, ...args]) => colorScale[type](type, ...args),
-	categoryMore: categoryMore,
-	isoluminant
+// Utility for MapColor controls, that returns the scale data range
+var scaleParams = _.Let((m = {
+	'no-data': 0,
+	'float-pos': 3,
+	'float-neg': 3,
+	'float': 4,
+	'float-mid': 4,
+	'float-thresh-pos': 3,
+	'float-thresh-neg': 3,
+	'float-thresh': 4,
+	'float-thresh-log-pos': 3,
+	'float-thresh-log-neg': 3,
+	'float-log': 3,
+	'trend-amplitude': 4,
+	'ordinal': 1
+}) => a => a.slice(m[a[0]]));
+
+var colorScale = ([type, ...args]) => colorScaleByType[type](...args);
+
+export {
+	colorScale,
+	categoryMore,
+	isoluminant,
+	scaleParams
 };

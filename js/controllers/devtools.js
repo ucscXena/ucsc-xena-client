@@ -2,9 +2,8 @@
 // with xena state.
 //
 
-'use strict';
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var INIT_ACTION = {type: '@@INIT'};
 var identity = state => state;
 var notImplemented = (state, ac) => {

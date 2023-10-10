@@ -1,9 +1,8 @@
-'use strict';
 
 var React = require('react');
 import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
-var {times, mapObject, values} = require('../underscore_ext');
+var {times, mapObject, values} = require('../underscore_ext').default;
 
 var styles = {
 	section: {

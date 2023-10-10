@@ -1,13 +1,19 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
+import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import {Box} from '@material-ui/core';
 var React = require('react');
-import Input from 'react-toolbox/lib/input';
-var _ = require('../underscore_ext');
-require('./GeneSuggest.css'); // XXX rename file
+var _ = require('../underscore_ext').default;
 var lcs = require('../lcs');
-import XAutosuggest from './XAutosuggest';
-var XRadioGroup = require('./XRadioGroup');
+import XAutosuggestInput from './XAutosuggestInput';
+
+// Styles
+var sxAutocomplete = {
+	'& .MuiAutocomplete-clearIndicator': {
+		visibility: 'visible'
+	}
+};
 
 function toLCWords(str) {
 	return str.toLowerCase().split(/[ \t]/);
@@ -142,109 +148,73 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
-var renderInputComponent = ({ref, onChange, ...props}) => (
-	<Input
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
-		label='Primary Disease or Tissue of Origin'
-		{...props} />);
+var renderInputComponent = ({ref, ...props}) => <XAutosuggestInput inputRef={el => ref(el)} {...props} />;
 
 class DiseaseSuggest extends PureComponent {
-	state = {suggestions: [], value: ""};
+	state = {value: null};
 
-	onSuggestionsFetchRequested = ({value}) => {
-		var position = this.input.selectionStart,
-			word = currentWord(value, position),
-			lcValue = word.toLowerCase(),
-			{cohortMeta} = this.props,
-			tags = Object.keys(cohortMeta);
-		this.setState({
-			suggestions: _.filter(tags, t => t.toLowerCase().indexOf(lcValue) === 0)
-		});
-	};
+	setInputRef = ref => {
+		this.inputRef = ref;
+	}
 
-	onSuggestionsClearRequested = () => {
-		this.setState({suggestions: []});
-	};
-
-	onChange = (ev, {newValue, method}) => {
-		// Don't update the value for 'up' and 'down' keys. If we do update
-		// the value, it gives us an in-place view of the suggestion (pasting
-		// the value into the input field), but the drawback is that it moves
-		// the cursor to the end of the line. This messes up multi-word input.
-		// We could try to preserve the cursor position, perhaps by passing a
-		// custom input renderer. But for now, just don't update the value for
-		// these events.
-		if (method !== 'up' && method !== 'down') {
-			this.setState({value: newValue});
+	getMatchedCohorts = (value) => {
+		if (!value) {
+			return [];
 		}
-	};
-
-	onSelect = (ev, {suggestionValue}) => {
-		this.setState({value: suggestionValue});
-	};
-
-	onClear = () => {
-		this.setState({value: ""});
-	};
-
-	onCohort = (value) => {
-		this.props.onSelect(value);
-	};
-
-	shouldRenderSuggestions = () => true;
-
-	getSuggestionValue = (suggestion) => {
-		var position = this.input.selectionStart,
-			value = this.input.value,
-			[i, j] = currentWordPosition(value, position);
-
-		// splice the suggestion into the current word
-		return value.slice(0, i) + suggestion + value.slice(j);
-	};
-
-	setInput = (input) => {
-		this.input = input;
-	};
-
-	render() {
-		var {onChange} = this,
-			{suggestions, value} = this.state,
-			{cohortMeta, cohort} = this.props,
-			results = matchSimplified(cohortMeta, value);
+		var results = matchSimplified(this.props.cohortMeta, value);
 		var buildStudyDebugLabel = function(c, weight, groups) {
 			var groupsText = groups.map(({tag, weight}) => `${tag.join(' ')} ${weight.toPrecision(2)}`);
 			return `${c} [${weight.toPrecision(2)} ${groupsText}]`;
 		};
-		var studyProps = {
-			label: 'Study',
-			value: cohort,
-			onChange: this.onCohort,
-			options: results.map(({cohort: c, weight, groups}) => {
-				return {
-					label: DEBUG ? buildStudyDebugLabel(c, weight, groups) : c,
-					value: c
-				};
-			})
-		};
+		return results.map(({cohort: c, weight, groups}) => {
+			return {
+				label: DEBUG ? buildStudyDebugLabel(c, weight, groups) : c,
+				value: c
+			};
+		}).map(({value}) => value);
+	};
+
+	filterOptions = (options, {inputValue}) => {
+		var position = this.inputRef.selectionStart;
+		var word = currentWord(inputValue, position);
+		return _.filter(options, t => t.toLowerCase().indexOf(word.toLowerCase().trim()) === 0);
+	};
+
+	// Callback fired when the input value changes.
+	onInputChange = (ev, value, reason) => {
+		let newValue = value;
+		if (reason === 'reset') {
+			var currentValue = this.state.value || '';
+			var position = this.inputRef.selectionStart;
+			var [i, j] = currentWordPosition(currentValue, position);
+			newValue = currentValue.slice(0, i) + value + currentValue.slice(j);
+		}
+		this.setState({value: newValue});
+		var matchedCohorts = this.getMatchedCohorts(newValue);
+		this.props.onSelect(matchedCohorts);
+	}
+
+	render() {
+		var {filterOptions, onInputChange} = this,
+			{value} = this.state,
+			{cohortMeta, suggestProps} = this.props,
+			options = Object.keys(cohortMeta);
 		return (
-			<div>
-				<XAutosuggest
-					inputRef={this.setInput}
-					suggestions={suggestions}
-					onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-					onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-					onSuggestionSelected={this.onSelect}
-					getSuggestionValue={this.getSuggestionValue}
-					shouldRenderSuggestions={this.shouldRenderSuggestions}
-					renderSuggestion={v => <span>{v}</span>}
-					renderInputComponent={renderInputComponent}
-					inputProps={{value, onChange}}
-					value={value}
-					onClear={this.onClear}/>
-				{results.length > 0 ? <XRadioGroup {...studyProps} /> : null}
-			</div>);
+			<Box
+				component={Autocomplete}
+				blurOnSelect={false}
+				clearOnBlur={false}
+				closeIcon={<CloseRounded fontSize={'large'}/>}
+				disableClearable={!value}
+				filterOptions={filterOptions}
+				forcePopupIcon={!value}
+				onInputChange={onInputChange}
+				options={options}
+				popupIcon={<SearchRounded fontSize={'large'}/>}
+				renderInput={(props) => renderInputComponent({...suggestProps, ...props, ref: this.setInputRef, inputProps: {...props.inputProps, value: value || ''}})}
+				selectOnFocus={false}
+				sx={sxAutocomplete}/>
+		);
 	}
 }
 

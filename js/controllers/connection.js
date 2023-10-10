@@ -1,9 +1,7 @@
-'use strict';
-
-import Rx from '../rx';
-import {Let, get, getIn, isEqual} from '../underscore_ext';
-import {servers} from '../defaultServers';
-import {testStatus} from '../xenaQuery';
+var Rx = require('../rx').default;
+var {Let, get, getIn, isEqual} = require('../underscore_ext').default;
+var {servers} = require('../defaultServers');
+var {testStatus} = require('../xenaQuery');
 
 var {localHub} = servers;
 var {interval, never, of} = Rx.Observable;
@@ -48,7 +46,7 @@ export default bus => {
 			// Trying to distinguish websocket closed due to shut-down, vs. socket timeout:
 			// retry the connection every second, unless the http port goes down.
 			status === 'up' ?
-				Rx.Observable.webSocket("wss://local.xena.ucsc.edu:7223/load-events")
+				Rx.Observable.webSocket("ws://127.0.0.1:7222/load-events")
 					.retryWhen(errors => errors.delay(oneSecond)) :
 				never())
 		.subscribe(resp => bus.next(['localQueue', resp.queue]));

@@ -1,9 +1,8 @@
-'use strict';
 
 // Utilities for handling errors in async actions.
 
-var Rx = require('../rx');
-var _ = require('../underscore_ext');
+var Rx = require('../rx').default;
+var _ = require('../underscore_ext').default;
 //var {compositeError} = require('../errors');
 
 // Put error object on stream, extending with context.

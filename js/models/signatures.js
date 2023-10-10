@@ -1,8 +1,7 @@
-'use strict';
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var fieldFetch = require('../fieldFetch');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var {datasetProbeSignature, datasetGeneSignature} = require('../xenaQuery');
 
 var immediate = x => Rx.Observable.of(x, Rx.Scheduler.asap);

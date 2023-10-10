@@ -1,4 +1,3 @@
-'use strict';
 
 // Pick color scales based on metadata
 
@@ -37,8 +36,8 @@ function colorRangeType(column) {
 var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
-	var [low, zero, high] = defaultColors[settings.colorClass || colorClass],
-		// XXX Are we hitting this minnull call?
+	var [low, zero, high] = settings.colors || defaultColors[settings.colorClass ||
+			colorClass],
 		min = ( settings.min != null ) ? settings.min : data.avg.min,
 		max = ( settings.max != null ) ? settings.max : data.avg.max,
 		minStart = settings.minstart,
@@ -99,7 +98,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		transformedMax = originalMax;
 	}
 
-	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
+	var	[low, zero, high] = settings.colors ||
+			defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minstart,
 		maxStart = settings.maxstart,
 		spec,
@@ -195,8 +195,8 @@ colorRange.add('coded', colorCoded);
 colorRange.add('floatGenomicData', colorFloatGenomicData);
 colorRange.add('segmented', colorSegmented);
 
-module.exports =  {
-	colorSpec: colorRange,
+export {
+	colorRange as colorSpec,
 	defaultColors,
 	defaultColorClass,
 	defaultNormal2color

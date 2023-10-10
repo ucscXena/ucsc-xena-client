@@ -6,18 +6,14 @@
  *
  */
 
-@value black12 from '../css/variables.css';
-
 /* Sheet controls */
 .sheetControls {
 	align-items: flex-start;
-	background-color: #ffffff;
-	border-bottom: 1px solid black12;
 	box-sizing: border-box;
 	display: flex;
 	justify-content: space-between;
-    min-height: 32px;
-	padding: 0 20px;
+	min-height: 32px;
+	padding: 0 24px;
 }
 
 /* Sheet Status */
@@ -25,6 +21,7 @@
 	display: flex;
 	flex: 1;
 	flex-wrap: wrap;
+	gap: 12px;
 	margin: 4px 0;
 }
 
@@ -45,39 +42,14 @@
 .zoomActions {
 	align-items: center;
 	display: flex;
+	gap: 16px;
 }
 
 /* Sheet Actions */
 .sheetActions {
 	align-items: center;
 	display: flex;
+	gap: 32px;
 	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
 	margin: 4px 0;
-	padding-right: 4px;
-}
-
-/* Text button */
-.action {
-	composes: xenaTextButton from '../css/typography.module.css';
-	color: var(--color-accent);
-	cursor: pointer;
-	margin-left: 32px;
-}
-
-/* Button disabled */
-.action.disabled {
-	color: black12;
-	cursor: default;
-}
-
-/* Sheet action text button */
-.sheetActions .action {
-	margin-left: 32px;
-}
-
-/* Zoom out and clear zoom text button */
-.zoomActions .action {
-	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
-	line-height: 24px;
-	margin: 0 8px;
 }

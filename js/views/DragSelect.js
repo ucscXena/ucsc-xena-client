@@ -1,9 +1,6 @@
-'use strict';
-
 var React = require('react');
-//var ReactDOM = require('react-dom');
-var Rx = require('../rx');
-var _ = require('../underscore_ext');
+var Rx = require('../rx').default;
+var _ = require('../underscore_ext').default;
 
 var styles = {
 	wrapper: {
@@ -11,27 +8,33 @@ var styles = {
 	}
 };
 
-
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
 
-function crosshairXPos(target, ev, width) {
-	var bb = target.getBoundingClientRect();
-	return clip(bb.left, bb.left + width - 1, ev.clientX);
+function crosshairPos(target, ev) {
+	var {width, height, left, top} = target.getBoundingClientRect();
+	return {
+		x: clip(left, left + width - 1, ev.clientX),
+		y: clip(top, top + height - 1, ev.clientY)};
 }
 
-function crosshairYPos(target, ev, height) {
-	var bb = target.getBoundingClientRect();
-	return clip(bb.top, bb.top + height - 1, ev.clientY);
+function targetPos(target, ev) {
+	var {width, height, left, top} = target.getBoundingClientRect();
+	return {
+		x: clip(0, width - 1, ev.clientX - left),
+		y: clip(0, height - 1, ev.clientY - top)};
 }
 
-function targetXPos(target, ev, width) {
-	var bb = target.getBoundingClientRect();
-	return clip(0, width - 1, ev.clientX - bb.left);
-}
+function getSelection(target, ev, start) {
+	var {left, top} = target.getBoundingClientRect(),
+		end = targetPos(target, ev),
+		crosshair = crosshairPos(target, ev);
 
-function targetYPos(target, ev, height) {
-	var bb = target.getBoundingClientRect();
-	return clip(0, height - 1, ev.clientY - bb.top);
+	return {
+		start,
+		end,
+		offset: {x: left, y: top},
+		crosshair
+	};
 }
 
 // Browsers give us coordinates that aren't always within the element. We
@@ -40,30 +43,20 @@ function targetYPos(target, ev, height) {
 //
 // We clip start and end to [0, width - 1].
 class DragSelect extends React.Component {
-	static defaultProps = {enabled: true};
+	// When allowClick is false we discard zero-length drags. If true
+	// we will invoke onSelect with a zero-length selection.
+	static defaultProps = {enabled: () => true, allowClick: false};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var mousedown = new Rx.Subject();
 		var mousedrag = mousedown.flatMap((down) => {
 			var target = down.currentTarget,
-				bb = target.getBoundingClientRect(),
-				startX = targetXPos(target, down, bb.width),
-				startY = targetYPos(target, down, bb.height),
-				selection;
+				start = targetPos(target, down),
+				selection = this.props.allowClick ? getSelection(target, down, start) :
+					undefined;
 
 			return Rx.Observable.fromEvent(window, 'mousemove').map(function (mm) {
-				var {width, height} = bb,
-					endX = targetXPos(target, mm, width),
-					endY = targetYPos(target, mm, height),
-					crosshairX = crosshairXPos(target, mm, width),
-					crosshairY = crosshairYPos(target, mm, height);
-
-				selection = {
-					start: {x: startX, y: startY},
-					end: {x: endX, y: endY},
-					offset: {x: bb.left, y: bb.top},
-					crosshair: {x: crosshairX, y: crosshairY}
-				};
+				selection = getSelection(target, mm, start);
 				return {dragging: true, ...selection};
 			}).takeUntil(Rx.Observable.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => Rx.Observable.of({selection})));
@@ -77,7 +70,7 @@ class DragSelect extends React.Component {
 				this.props.onSelect && this.props.onSelect(ev.selection);
 			}
 		});
-		this.dragStart = ev => this.props.enabled && mousedown.next(ev);
+		this.dragStart = ev => this.props.enabled(ev) && mousedown.next(ev);
 	}
 
 	componentWillUnmount() {
@@ -85,7 +78,7 @@ class DragSelect extends React.Component {
 	}
 
 	render() {
-		var containerProps = _.omit(this.props, 'onSelect', 'enabled');
+		var containerProps = _.omit(this.props, 'onSelect', 'enabled', 'allowClick');
 		return (
 			<div {...containerProps} style={styles.wrapper} onMouseDown={this.dragStart}>
 				{this.props.children}

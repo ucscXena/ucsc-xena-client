@@ -1,26 +1,17 @@
-'use strict';
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 const React = require('react');
+import {Box, Link} from '@material-ui/core';
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
 var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
-var nav = require('../nav');
+import nav from '../nav';
 var styles = require('./TranscriptPage.module.css');
-var StateError = require('../StateError');
+var {StateError} = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
-var spinner = require('../ajax-loader.gif');
-
-/*
-var defaultGene = 'KRAS';
-	defaultStudyA = 'tcga',
-	defaultStudyB = 'gtex',
-	defaultSubtypeA  = 'TCGA Lung Adenocarcinoma',
-	defaultSubtypeB  = 'GTEX Lung',
-	defaultUnit = 'tpm';
-	*/
+import spinner from '../ajax-loader.gif';
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
@@ -48,7 +39,7 @@ class Transcripts extends React.Component {
 	    updateButton: false
 	};
 
-	componentWillReceiveProps(props) {
+	UNSAFE_componentWillReceiveProps(props) {//eslint-disable-line camelcase
 		var newGene = _.getIn(props.state, ['transcripts', 'gene']);
 		if (newGene) {
 			this.setState({input: newGene});
@@ -63,8 +54,8 @@ class Transcripts extends React.Component {
 	}
 
 	onLoadData = () => {
-		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
-		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
+		var subtypeA = this.refs.A.value;
+		var subtypeB = this.refs.B.value;
 		var unit = this.refs.unit.value;
 		var gene = this.state.input;
 
@@ -75,7 +66,7 @@ class Transcripts extends React.Component {
 
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
+		this.props.callback(['loadGene', gene, subtypeA, subtypeB, unit]);
 	};
 
 	onZoom = (name) => {
@@ -107,20 +98,17 @@ class Transcripts extends React.Component {
 	render() {
 		var {state} = this.props,
 			{loadPending, stateError} = state,
-			{status, subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
+			{status, subtypes, subtypeA, subtypeB, unit, zoom = {}} = state.transcripts || {};
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
 		}
 		if (!subtypes) {
 			return <h4>Loading available subtypes...</h4>;
 		}
-		var subtypesTcga = _.sortBy(subtypes.tcga),
-			subtypesGtex = _.sortBy(subtypes.gtex),
-			valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`,
-			valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`,
-			options = _.concat(
-				subtypesTcga.map(name => <option key={`tcga|${name}`} value={`tcga|${name}`}>{name}</option>),
-				subtypesGtex.map(name => <option key={`gtex|${name}`} value={`gtex|${name}`}>{name}</option>)),
+
+		var valueA = subtypeA ? subtypeA : subtypes[0],
+			valueB = subtypeB ? subtypeB : subtypes[subtypes.length - 1],
+			options = subtypes.map(name => <option key={name} value={name}>{name}</option>),
 			unitLabels = {
 				tpm: {
 					dropdown: "TPM",
@@ -151,14 +139,19 @@ class Transcripts extends React.Component {
 
 		// for the density plot
 		var transcriptDensityData = {
-			studyA: _.map(genetranscriptsSorted, t => _.pick(t, 'expA')),
-			studyB: _.map(genetranscriptsSorted, t => _.pick(t, 'expB')),
+			studyA: _.map(genetranscriptsSorted, t => {
+				return {'expA': t.expA.filter(x => !isNaN(x))};
+			}),
+			studyB: _.map(genetranscriptsSorted, t => {
+				return {'expB': t.expB.filter(x => !isNaN(x))};
+			}),
 			nameAndZoom: _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'zoom')),
 		};
 
 		//calculation of max and min same as in DensityPlot.js and passing max, min as parameters to linearTicks
-		var max = Math.max.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
-		var min = Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
+		var allData = _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB")));
+		var max = Math.max(...allData);
+		var min = Math.min(...allData);
 		var densityplotAxisLabel = isFinite(max) && isFinite(min) ? linearTicks(min, max) : [];
 		var range = max - min;
 		var hasPlots = genetranscripts && ! _.isEmpty(genetranscripts);
@@ -168,18 +161,16 @@ class Transcripts extends React.Component {
 
 		return (
 				<div className={styles.main}>
-					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
-					<a className={styles.selectorsLink} style={{fontSize: "0.85em"}}
-						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</a>
-					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
-						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
-							<GeneSuggest assembly='hg38' label="Add Gene (e.g. KRAS)" value={this.state.input}
-								onChange={ value => {this.setState({input: value.trim(), updateButton: true});} }/>
-						</div>
+					<StateError onHide={this.onHideError} error={stateError}/>
+					<Link className={styles.selectorsLink} variant='caption'
+						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</Link>
+					<Box sx={{alignItems: 'center', display: 'grid', gridGap: 16, gridTemplateColumns: '400px auto', justifyContent: 'flex-start', margin: '4px 0 20px', padding: '0 20px'}}>
+						<GeneSuggest assembly='hg38' suggestProps={{label: 'Add Gene (e.g. KRAS)'}} value={this.state.input}
+									 onChange={ value => {this.setState({input: value.trim(), updateButton: true});} }/>
 						{this.state.updateButton ?
 							<button className={styles.horizontalSegmentButton} onClick={this.onLoadData}>Update Gene</button> : null
 						}
-					</div>
+					</Box>
 					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{marginBottom: "10px"}}>
 							<span className={styles.selectors}>Study A</span>
@@ -195,8 +186,7 @@ class Transcripts extends React.Component {
 						</div>
 						<div>
 							<span className={styles.selectors}>Expression Unit</span>
-							<select ref="unit" onChange={this.onLoadData} value={unit}
-								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorBottom}}>
+							<select ref="unit" onChange={this.onLoadData} value={unit}>
 								<option value="tpm">{unitLabels.tpm.dropdown}</option>
 								<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
 							</select>
@@ -205,9 +195,6 @@ class Transcripts extends React.Component {
 
 					{ hasPlots ?
 						<div>
-							<div className={styles["densityplot--label-div-zero"]}>
-								<label className={styles["densityplot--label-zero"]}>no expression</label>
-							</div>
 							<div className={styles["densityplot--label-div--zoom"]} onClick={this.scaleZoom}>
 								<label style={{fontSize: "0.85em", width: plotWidth}}>{unitLabels[unit].axis}</label>
 								<div>
@@ -232,15 +219,15 @@ class Transcripts extends React.Component {
 								data={transcriptNameData}
 								gene={state.transcripts.gene}
 								/>
+							{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+								<label className={styles["densityplot--label-y"]}>density</label> : null
+							}
 							<DensityPlot
 								data={transcriptDensityData}
-								type="density"
-								unit={unit}
 								getNameZoom={this.onZoom}
+								max = {max}
+								min = {min}
 								/>
-								{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
-									<label className={styles["densityplot--label-y"]}>density</label> : null
-								}
 							<ExonsOnly
 								data={transcriptExonData}
 								getNameZoom={this.onZoom}
@@ -259,9 +246,9 @@ class TranscriptsContainer extends React.Component {
 	};
 
 	render() {
-		var {state, selector, ...props} = this.props;
-		return <Transcripts {...{...props, state: selector(state)}} getState={this.getState}/>;
+		var {state, ...props} = this.props;
+		return <Transcripts {...{...props, state}} getState={this.getState}/>;
 	}
 }
 
-module.exports = TranscriptsContainer;
+export default TranscriptsContainer;

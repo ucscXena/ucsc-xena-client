@@ -1,87 +1,47 @@
-'use strict';
-
 import React from 'react';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import PureComponent from '../PureComponent';
-import Input from 'react-toolbox/lib/input';
-import _ from '../underscore_ext';
-import './GeneSuggest.css'; // XXX rename file
-import XAutosuggest from './XAutosuggest';
+var _ = require('../underscore_ext').default;
+import XAutosuggestInput from './XAutosuggestInput';
 
-var renderInputComponent = ({ref, onChange, ...props}) => (
-	<Input
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
-		label='Search for a study'
-		{...props} />);
+var COHORT_UNASSIGNED = '(unassigned)';
+
+var renderInputComponent = ({...props}) => (
+	<XAutosuggestInput {...props} />);
 
 var getSuggestions = (value, cohorts) => {
 	const wordValues = value.toLowerCase().trim().split(/\s+/);
-	return cohorts.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
+	return cohorts
+		.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1))
+		.sort((a, b) => a === COHORT_UNASSIGNED ? 1 : b === COHORT_UNASSIGNED ? -1 : a < b ? -1 : 1);
 };
 
-class CohortSuggest extends PureComponent {
-	state = {suggestions: [], value: this.props.cohort || ""};
+export class CohortSuggest extends PureComponent {
 
-	onSuggestionsFetchRequested = ({value}) => {
-		this.setState({ suggestions: getSuggestions(value, this.props.cohorts) });
+	filterOptions = (options, {inputValue}) => {
+		return getSuggestions(inputValue, options);
 	};
 
-	onSuggestionsClearRequested = () => {
-		this.setState({suggestions: []});
+	onChange = (ev, value) => {
+		this.props.onSelect(value);
 	};
-
-	componentWillReceiveProps(props) {
-		var value = this.state.value || props.cohort || "";
-		this.setState({
-			value,
-			suggestions: value.trim().length > 0 ? getSuggestions(value, props.cohorts) : []
-		});
-	}
-
-	onClear = () => {
-		this.setState({value: ''});
-		_.defer(() => this.props.onSelect(null));
-	};
-
-	onChange = (ev, {newValue}) => {
-		this.setState({value: newValue});
-	};
-
-	onSelect = (ev, {suggestionValue}) => {
-		// When props arrive we need to prefer user input, however that
-		// prevents us setting state (setState here will be overwritten
-		// by setState in componentWillReceiveProps, which will use the
-		// old value of state). A horrible work-around is to defer
-		// the call to onSelect. Similarly, with onClear, above.
-		this.setState({value: ''});
-		_.defer(() => this.props.onSelect(suggestionValue));
-	};
-
-	onBlur = () => {
-		this.setState({value: this.props.cohort || this.state.value});
-	};
-
-	shouldRenderSuggestions = () => true;
 
 	render() {
-		var {onChange, onBlur} = this,
-			{suggestions, value} = this.state;
+		var {filterOptions, onChange} = this;
+		var {cohort, cohorts, suggestProps} = this.props,
+			disabled = cohorts.length === 0;
 		return (
-			<XAutosuggest
-				suggestions={suggestions}
-				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-				onSuggestionSelected={this.onSelect}
-				getSuggestionValue={x => x}
-				shouldRenderSuggestions={this.shouldRenderSuggestions}
-				renderSuggestion={v => <span>{v}</span>}
-				renderInputComponent={renderInputComponent}
-				inputProps={{value, onChange, onBlur}}
-				onClear={this.onClear}
-				value={value} />
+			<Autocomplete
+				closeIcon={<CloseRounded fontSize={'large'}/>}
+				disabled={disabled}
+				filterOptions={filterOptions}
+				forcePopupIcon={!cohort}
+				onChange={onChange}
+				options={cohorts}
+				popupIcon={<SearchRounded fontSize={'large'}/>}
+				renderInput={(props) => renderInputComponent({...suggestProps, ...props})}
+				value={cohort}/>
 		);
 	}
 }
-
-module.exports = CohortSuggest;

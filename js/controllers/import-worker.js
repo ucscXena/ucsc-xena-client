@@ -1,16 +1,13 @@
-'use strict';
-
-import 'babel-polyfill';
-import {servers} from '../defaultServers';
-import Rx from '../rx';
-var {ajax, create, defer, empty, from, fromEvent, of} = Rx.Observable;
+var {servers} = require('../defaultServers');
+var Rx = require('../rx').default;
+var {ajax, create, defer, empty, from, fromEvent, of, zip} = Rx.Observable;
 var EMPTY = empty();
 var {asap} = Rx.Scheduler;
 import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
-import {Let, assocIn, copyStr, getIn, has, iterable} from '../underscore_ext';
+var {Let, assocIn, copyStr, getIn, has, iterable} = require('../underscore_ext').default;
 import backPressure from '../import/backPressure';
 import chunkReader from '../import/chunkReader';
 require('./html5-formdata-polyfill'); // for safari
@@ -272,9 +269,26 @@ var metrics;
 
 var cmds = {
 	loadFile: (probemaps, fileHandle) => {
-		file = fileHandle;
-		return toLines(from(chunkReader(fileHandle, chunkSize), asap).
-				concatMap(readFileObs))
+		var obs;
+		// This is pretty messy. For excel files, we read the entire
+		// file (the API doesn't provide streaming), convert to tsv,
+		// and cache the tsv content in 'file', for upload.
+		// For tsv files, we read in chunks, and cache the file handle in
+		// 'file'.
+		if (fileHandle.name.match(/.*\.xlsx?$/)) {
+			obs = zip(from(import('xlsx')), readFileObs(fileHandle),
+				(XLSX, xlsFile) => {
+					var ws = XLSX.read(xlsFile, {type: 'binary'}),
+						sheet = ws.Sheets[ws.SheetNames[0]],
+						tsv = XLSX.utils.sheet_to_csv(sheet, {FS: '\t'});
+					file = new Blob([tsv]);
+					return file;
+				});
+		} else {
+			file = fileHandle;
+			obs = from(chunkReader(fileHandle, chunkSize), asap);
+		}
+		return toLines(obs.concatMap(readFileObs))
 			.reduce((acc, line, i) => {
 				if (i === 0) {
 					acc.header = line.replace(/[\n\r]+$/, '').split(/\t/);

@@ -1,7 +1,5 @@
-'use strict';
-
-var _ = require('./underscore_ext');
-var colorScales = require('./colorScales');
+var _ = require('./underscore_ext').default;
+import {colorScale} from './colorScales';
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -121,7 +119,7 @@ function trendPowerNullIter(iter, zero) {
 // respectively. This avoids the problem of averaging, which draws nearby
 // amplification and deletion as white, since they average to zero.
 function* segmentRegions(colorSpec, index, count, width, height, zoom, nodes) {
-	var {lookup} = colorScales.colorScale(colorSpec),
+	var {lookup} = colorScale(colorSpec),
 		[,,,, zero] = colorSpec,
 		regions = findRegions(index, height, count),
 		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor
@@ -179,6 +177,8 @@ function drawImgSegmentsPixel(vg, colorSpec, index, count, width, height, zoom, 
 		img = ctx.createImageData(width, height), // XXX cache & reuse?
 		regions = segmentRegions(colorSpec, index, count, width, height, zoom, nodes);
 
+	img.data.fill(255); 	// white background
+
 	for (var r = regions.next(); !r.done; r = regions.next()) {
 		let {pxStart, pxEnd, color, lastRow, i} = r.value, l;
 		for (let r = i; r < lastRow; ++r) {
@@ -190,7 +190,7 @@ function drawImgSegmentsPixel(vg, colorSpec, index, count, width, height, zoom, 
 				img.data[l] = color[0];
 				img.data[l + 1] = color[1];
 				img.data[l + 2] = color[2];
-				img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+				//img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
 			}
 		}
 	}
@@ -207,9 +207,24 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
-		stripes = backgroundStripes(hasValue);
+		stripes = backgroundStripes(hasValue),
+		pixPerRow = height / count;
 
 	drawSegments(vg, color, index, count, width, height, zoom, toDraw);
+	// Without the following line the canvas is cleared when we draw
+	// rectangles, below, on Apple M1/M2 Chrome browsers. I believe this is a
+	// chrome bug relating to the canvas origin-clean flag, that is getting
+	// messed up during putImageData in the drawSegments call. Reloading the
+	// page fixes the rendering, perhaps because during the first draw no
+	// cross-origin responses have arrived. There's no particular reason that
+	// getImageData should fix this, but it does.
+	vg.context().getImageData(0, 0, 1, 1);
+
+	var rects = stripes.map(([offset, len]) => [
+		0, (offset * pixPerRow),
+		width, pixPerRow * len
+	]);
+	vg.drawRectangles(rects, {fillStyle: 'grey'});
 
 	vg.labels(() => {
 		labelNulls(vg, width, height, count, stripes);

@@ -1,7 +1,6 @@
 /*eslint camelcase: 0 */
 
-'use strict';
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 //create a ELEMENT_NODE with a tag, and all following argument as a child to this node
 function elt(tag) {

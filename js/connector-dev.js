@@ -1,7 +1,6 @@
-'use strict';
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
 let {createDevTools} = require('./controllers/devtools');
@@ -70,8 +69,7 @@ module.exports = function({
 	serverCh,
 	uiBus,
 	uiCh,
-	main,
-	selector}) {
+	main}) {
 
 	var dom = {main},
 		updater = ac => uiBus.next(ac),
@@ -82,7 +80,7 @@ module.exports = function({
 	var DevTools = createDevTools(
 		<DockMonitor defaultIsVisible={devtoolsVisible}
 				toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
-			<LogMonitor preserveScrollTop={false} expandStateRoot={false}/>
+			<LogMonitor select={x => x.singlecell} preserveScrollTop={false} expandStateRoot={false}/>
 		</DockMonitor>),
 
 		devReducer = DevTools.instrument(controller, initialState),
@@ -136,13 +134,11 @@ module.exports = function({
 	// XXX double check that this expression is doing what we want: don't draw faster
 	// than rAF.
 
-	// pass the selector into Page, so we catch errors while rendering & can display an error message.
 	devStateObs.debounceTime(0, Rx.Scheduler.animationFrame)
 		.subscribe(devState => {
 			return ReactDOM.render(
 				<div>
-					<Page callback={updater} selector={selector}
-							state={unwrapDevState(devState)} />
+					<Page callback={updater} state={unwrapDevState(devState)} />
 					<DevTools dispatch={devBus.next.bind(devBus)} {...devState} />
 				</div>,
 				dom.main);

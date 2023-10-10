@@ -1,10 +1,9 @@
-'use strict';
 
 var multi = require('./multi');
 var denseMatrix = require('./models/denseMatrix');
 var mutationVector = require('./models/mutationVector');
 var segmented = require('./models/segmented');
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 
 var fetch = multi((settings, samples) => samples.length > 0 ? settings.fetchType : 'empty');
 

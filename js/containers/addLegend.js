@@ -1,9 +1,8 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 var React = require('react');
 var widgets = require('../columnWidgets');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 
 // XXX doing layout here.
 // XXX we could push width down into widgets.legend, but would
@@ -18,14 +17,14 @@ function addLegend(Component) {
 			return (
 				<Component {...props}>
 					{React.Children.map(children, el => {
-						var id = el.props['data-actionKey'],
+						var id = el.props['data-actionkey'],
 							data = columnData[id],
 							column = columns[id];
 						return (
-							<div data-actionKey={id}>
+							<div data-actionkey={id}>
 								{el}
 								{id != null && editing !== id && !_.isNumber(id) ? (
-									<div style={{width: column.width}}>
+									<div style={{width: column.width, marginTop: 24}}>
 										{widgets.legend({column, id, data})}
 									</div>) : null}
 							</div>);

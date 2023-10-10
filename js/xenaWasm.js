@@ -1,8 +1,7 @@
-'use strict';
 var wasm = require('ucsc-xena-wasm');
-var _ = require('./underscore_ext');
-var {rgb: rgbFromHex} = require('./color_helper');
-var {categoryMore} = require('./colorScales');
+var _ = require('./underscore_ext').default;
+var {rgb: rgbFromHex} = require('./color_helper').default;
+import {categoryMore} from './colorScales';
 
 export var Module;
 
@@ -211,11 +210,10 @@ function allocScaleLog(domain, range) {
 	return allocScale(domain, range, _.pluck(mb, 'm'), _.pluck(mb, 'b'));
 }
 
-var setPrecision = x => parseFloat(x.toPrecision(2));
 // Just for testing. You wouldn't want to call this from js in a loop.
 // XXX update to go through getColorScale
 export function getColorLog(domain, range, value) {
-	var scale = allocScaleLog(domain.map(setPrecision), range);
+	var scale = allocScaleLog(domain, range);
 	var r = Module._test_scale_method(Module.enum.type.LOG, scale, value);
 	Module._free(scale);
 
@@ -254,15 +252,13 @@ var logColorScale = (domain, range) => ({
 
 var fixme = () => console.warn("fixme");
 
-var P = l => l.map(setPrecision);
-
-var twoStop = (low, high, min, max) => linearColorScale(P([min, max]), [low, high]);
+var twoStop = (low, high, min, max) => linearColorScale([min, max], [low, high]);
 var threeStop = (low, zero, high, min, max) =>
-	linearColorScale(P([min, 0, max]), [low, zero, high]);
+	linearColorScale([min, 0, max], [low, zero, high]);
 var fourStop = (low, zero, high, min, minThresh, maxThresh, max) =>
-	linearColorScale(P([min, minThresh, maxThresh, max]), [low, zero, zero, high]);
+	linearColorScale([min, minThresh, maxThresh, max], [low, zero, zero, high]);
 
-var toLogColorScale = (low, high, min, max) => logColorScale(P([min, max]), [low, high]);
+var toLogColorScale = (low, high, min, max) => logColorScale([min, max], [low, high]);
 
 var ordinalColorScale = (count, scale) => ({
 	method: Module.enum.type.ORDINAL,

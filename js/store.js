@@ -1,13 +1,7 @@
-'use strict';
 
-var Rx = require('./rx');
-var _ = require('./underscore_ext');
+var Rx = require('./rx').default;
+var _ = require('./underscore_ext').default;
 var {getErrorProps, logError} = require('./errors');
-var {getNotifications} = require('./notifications');
-var {defaultServers, enabledServers} = require('./defaultServers');
-
-var defaultServerState = _.object(defaultServers,
-		defaultServers.map(s => ({user: _.contains(enabledServers, s)})));
 
 module.exports = function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
@@ -44,30 +38,10 @@ module.exports = function () {
 	var uiBus = new Rx.Subject();
 	var uiCh = uiBus;
 
-	var initialState = {
-		version: 2, // XXX duplicated in migrateState.js?
-		spreadsheet: {
-			columnOrder: [],
-			columns: {},
-			mode: 'heatmap',
-			notifications: getNotifications(),
-			servers: defaultServerState,
-			showWelcome: true,
-			wizardMode: true,
-			zoom: {height: 460} // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
-		},
-		wizard: {},
-		import: {
-			wizardPage: 0,
-			wizardHistory: []
-		}
-	};
-
 	return {
 		uiCh,
 		uiBus,
 		serverCh,
-		serverBus,
-		initialState
+		serverBus
 	};
 };

@@ -1,6 +1,5 @@
-'use strict';
-import {allParameters} from './util';
-import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick} from './underscore_ext';
+var {allParameters} = require('./util').default;
+var {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick, find} = require('./underscore_ext').default;
 
 var columnOptPaths = {
 	width: ['width'],
@@ -83,12 +82,14 @@ var columnSchema = list =>
 			has(column, 'fields'));
 
 export function columnsParam() {
-	var {columns} = allParameters();
+	var {columns, filterColumns} = allParameters();
 	if (columns) {
 		try {
-			var list = JSON.parse(columns).map(c => mergeOpts(pickAllowed(c)));
+			var visibleColumns = JSON.parse(columns);
+			var filterOnly = filterColumns ? JSON.parse(filterColumns) : [];
+			var list = visibleColumns.concat(filterOnly).map(c => mergeOpts(pickAllowed(c)));
 			if (columnSchema(list)) {
-				return {columns: list};
+				return {columns: list, visible: visibleColumns.length + 1}; // +1 for sampleID
 			}
 		} catch(e) {
 			console.log(`Failed to parse columns ${columns}`);
@@ -118,9 +119,11 @@ var columnOptions = column =>
 			columnOptSet(key, getIn(column, path))),
 		v => v !== invalid);
 
+var invalidColumn = (column, id) => id === 'samples' || column.fetchType === 'signature';
+
 var encode = x => encodeURIComponent(JSON.stringify(x));
 
 // extract from state
 export var getColumns = state =>
-	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), 'samples'),
+	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), invalidColumn),
 		column => merge(columnOptions(column), columnDatasetFields(column))));

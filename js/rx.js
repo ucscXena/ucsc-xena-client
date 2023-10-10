@@ -1,5 +1,4 @@
-'use strict';
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 var Rx = {
 	Observable: require('rxjs/Observable').Observable,
@@ -124,4 +123,4 @@ function zipArray(obs) {
 Rx.Observable.zipArray = (...obs) =>
 	_.isArray(obs[0]) ? zipArray(obs[0]) : zipArray(obs);
 
-module.exports = Rx;
+export default Rx;

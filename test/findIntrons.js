@@ -1,10 +1,9 @@
 /*global it: false, require: false, module: false, console: false, describe: false */
-'use strict';
 
 var assert = require('assert');
 var jv = require('jsverify');
 var {allExons, exonGroups, intronRegions} = require('../js/findIntrons');
-var _ = require('../js/underscore_ext');
+var _ = require('../js/underscore_ext').default;
 
 var {nearray, tuple, nat, suchthat} = jv;
 

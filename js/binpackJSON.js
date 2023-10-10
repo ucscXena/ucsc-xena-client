@@ -1,5 +1,3 @@
-'use strict';
-
 import _ from './underscore_ext';
 
 // binpack json encodes as json, but puts binary objects verbatum into a

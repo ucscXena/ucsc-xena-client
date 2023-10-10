@@ -1,5 +1,4 @@
 /*global it: false, describe: false, mocha: false */
-'use strict';
 
 var assert = require('assert');
 var {prefixBitLimit} = require('../js/permuteCase');

@@ -1,33 +1,37 @@
-'use strict';
 import PureComponent from '../PureComponent';
 
+import {Icon, IconButton} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
 var getStepperState = require('./getStepperState');
 var uuid = require('../uuid');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 import {computeSettings, typeWidth} from '../models/columns';
 
 // Configuration for first and second variable select cards that are displayed during wizard.
 var variableSelectConfig = {
 	'FIRST_COLUMN': {
+		colId: 'B',
+		colMode: 'WIZARD',
 		helpText: {
-			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Genotypic': 'Add a gene or position, and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 1,
-		title: 'First Variable'
+		title: 'Select Your First Variable',
 	},
 	'SECOND_COLUMN': {
+		colId: 'C',
+		colMode: 'WIZARD',
 		helpText: {
-			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Genotypic': 'Add a gene or position, and select a dataset.',
 			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 2,
-		title: 'Second Variable'
+		title: 'Select Your Second Variable',
 	}
 };
 
@@ -41,7 +45,7 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 		}
 		if (stepperState === 'FIRST_COLUMN') {
 			return [
-				<VariableSelect key='c2' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<VariableSelect key='c2' optionalExit {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
 				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN} />];
 		}
 		if (stepperState === 'SECOND_COLUMN') {
@@ -132,7 +136,7 @@ function addWizardColumns(Component) {
 			this.state = {editing};
 		}
 
-		componentWillMount() {
+		UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 			var {callback} = this.props;
 			this.sub = Rx.Observable.of(true)
 				.concat(Rx.Observable.fromEvent(window, 'resize'))
@@ -145,7 +149,7 @@ function addWizardColumns(Component) {
 			this.sub.unsubscribe();
 		}
 
-		componentWillReceiveProps(newProps) {
+		UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 			var {editing} = newProps;
 			this.setState({editing});
 		}
@@ -155,6 +159,7 @@ function addWizardColumns(Component) {
 		};
 
 		onCohortSelect = (cohort) => {
+			this.props.callback(['showWelcome', false]);
 			this.props.callback(['cohort', cohort, typeWidth.matrix]);
 		};
 
@@ -166,9 +171,14 @@ function addWizardColumns(Component) {
 			this.props.callback(['add-column', posOrId,
 				...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
+
+		onWizardMode = (mode) => {
+			this.props.callback(['wizardMode', mode]);
+		};
+
 		addColumns() {
 			var {children, appState, wizard} = this.props,
-				{cohort, wizardMode, defaultWidth, servers} = appState,
+				{cohort, wizardMode, defaultWidth, servers, zoom} = appState,
 				{cohorts, cohortPreferred, cohortAnalytic, cohortMeta,
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
@@ -189,23 +199,28 @@ function addWizardColumns(Component) {
 					analytic: analytic,
 					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,
+					onWizardMode: this.onWizardMode,
 					width},
 				columns = React.Children.toArray(children),
-				cancelIcon = <i className='material-icons' onClick={this.onCancel}>cancel</i>,
+				colHeight = zoom.height + 205, // Card header (73px), title (61px) and canvas (63px + 8px) etc.
+				cancelIcon = <IconButton edge='end' onClick={this.onCancel}><Icon>cancel</Icon></IconButton>,
 				withEditor = columns.map(el =>
 					editing === el.props.id ?
 						<VariableSelect
 							key={editing}
 							actionKey={editing}
 							pos={editing}
+							text={appState.columns[editing].value}
 							fields={appState.columns[editing].fieldList || appState.columns[editing].fields}
 							dataset={appState.columns[editing].dsID}
 							title='Edit Variable'
 							{...datasetSelectProps}
+							colHeight={colHeight}
 							colId={el.props.label}
+							colMode='DEFAULT'
 							controls={cancelIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
+						editing === i ? [el, <VariableSelect key={i} actionKey={i} colHeight={colHeight} colMode='GHOST' pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
 			return withNewColumns.concat(
 				wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width));

@@ -1,22 +1,21 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 import React from 'react';
 import XAutosuggest from './XAutosuggest';
-import Input from 'react-toolbox/lib/input';
+import XAutosuggestInput from './XAutosuggestInput';
 
 var RETURN = 13;
 var returnPressed = ev => ev.keyCode === RETURN;
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
-	<Input
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
+	<XAutosuggestInput
+		error={error}
+		fullWidth
+		inputProps={{spellCheck: false}}
+		inputRef={el => ref(el)}
+		onChange={onChange}
 		label= {label || 'Enter concept or text'}
-		{...props} >
-		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
-	</Input>
+		{...props} />
 );
 
 class ConceptSuggest extends PureComponent {

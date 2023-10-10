@@ -1,25 +1,42 @@
-'use strict';
 
 require('./base');
+import {
+	Box,
+	Button,
+	Card,
+	Checkbox,
+	Icon,
+	IconButton,
+	Input,
+	Link,
+	List,
+	ListItem,
+	Typography
+} from '@material-ui/core';
 var React = require('react');
-var Rx = require('./rx');
-import {ThemeProvider} from 'react-css-themr';
-import '../css/index.css'; // Root styles file (reset, fonts, globals)
-var appTheme = require('./appTheme');
-var classNames = require('classnames');
-
-import {Button} from 'react-toolbox/lib/button';
-import {Card} from 'react-toolbox/lib/card';
-import {Checkbox} from 'react-toolbox/lib/checkbox';
-var typStyles = require('../css/typography.module.css');
+var Rx = require('./rx').default;
 
 var {testHost} = require('./xenaQuery');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {servers: {localHub}, serverNames} = require('./defaultServers');
-var styles = require('./hubPage.module.css');
 var {parseServer, getHubParams} = require('./hubParams');
-var nav = require('./nav');
-var {encodeObject} = require('./util');
+import nav from './nav';
+import XTypography, {XTypographyVariants} from './views/XTypography';
+import {xenaColor} from './xenaColor';
+var {encodeObject} = require('./util').default;
+
+// Styles
+var styles = require('./hubPage.module.css');
+var sxHubItem = {
+	gap: 16,
+	'&:hover': {
+		backgroundColor: xenaColor.BLACK_3
+	},
+};
+var sxStatusContainer = {
+	borderRadius: 24,
+	minWidth: 100,
+};
 
 var RETURN = 13;
 
@@ -28,8 +45,7 @@ var getName = h => _.get(serverNames, h, h);
 var getStatus = (user, ping) =>
 	user ? (ping === true ? 'connected' : 'selected') : '';
 
-var getStyle = statusStr =>
-	statusStr === 'connected' ? styles.connected : null;
+var isStatusConnected = statusStr => statusStr === 'connected';
 
 var reqStatus = (ping) =>
 	ping == null ? ' (connecting...)' :
@@ -71,7 +87,7 @@ var Hub = class extends React.Component {
 		this.sub.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		var {ping} = this.state,
 			{state, selector} = newProps,
 			servers = selector(state),
@@ -94,14 +110,14 @@ var Hub = class extends React.Component {
 		}
 	};
 
-	onSelect = (isOn, ev) => {
+	onSelect = (ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
 	};
 
 	onAdd = () => {
-		var target = this.refs.newHost,
+		var target = this.newHost,
 			value = target.value.trim();
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
@@ -113,6 +129,8 @@ var Hub = class extends React.Component {
 		var host = ev.currentTarget.getAttribute('data-host');
 		this.props.callback(['remove-host', host]);
 	};
+
+	setAddHubInputRef = ref => this.newHost = ref;
 
 	render() {
 		var {state, selector, badge} = this.props,
@@ -128,34 +146,40 @@ var Hub = class extends React.Component {
 			}));
 		return (
 			<div className={styles.hubPage}>
-				<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
-				<Card>
-					<ul className={styles.hubList}>
+				<XTypography component='h1' variant={XTypographyVariants.MD_HEADLINE}>Data Hubs</XTypography>
+				<Card elevation={2}>
+					<List disablePadding>
 						{_.values(hostList).map(h => (
-						<li key={h.host}>
-							<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
-									  data-host={h.host}/>
-							<div className={styles.statusContainer}>
-								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
-							</div>
-							<div className={styles.hubNameContainer}>
-								<a href={`../datapages/?${encodeObject({host: h.host, ...hubParams})}`}>
+						<Box component={ListItem} divider key={h.host} sx={sxHubItem}>
+							<Checkbox checked={h.selected || false} inputProps={{'data-host': h.host}} onChange={this.onSelect}/>
+							<Box
+								bgcolor={isStatusConnected(h.statusStr) ? 'secondary.main' : xenaColor.BLACK_6}
+								color={isStatusConnected(h.statusStr) ? 'primary.contrastText' : undefined}
+								component='span'
+								sx={sxStatusContainer}>
+								<Typography align='center' className={styles.status} display='block' variant='caption'>{h.statusStr}</Typography>
+							</Box>
+							<Box flex={1}>
+								<Link href={`../datapages/?${encodeObject({
+									host: h.host,
+									addHub: hubParams.addHub,
+									removeHub: hubParams.removeHub.filter( hub => hub !== h.host)})}`} variant='body1'>
 									{h.name}
-								</a>
-								{h.host === localHub ? badge : h.reqStatus}
-							</div>
-							<i className={classNames('material-icons', styles.remove)} data-host={h.host}
-							   onClick={this.onRemove}>close</i>
-						</li>
+								</Link>
+								<Typography display='inline' variant='body1'>{h.host === localHub ? badge : h.reqStatus}</Typography>
+							</Box>
+							<IconButton data-host={h.host} edge='end' onClick={this.onRemove}>
+								<Icon className={styles.remove}>close</Icon>
+							</IconButton>
+						</Box>
 						))}
-						<li>
-							<div className={styles.hostForm}>
-								<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost'
-									   type='text' placeholder='Add Hub'/>
-								<Button onClick={this.onAdd} accent>Add</Button>
-							</div>
-						</li>
-					</ul>
+						<Box component={ListItem} sx={{gap: 16}}>
+							<Box sx={{marginLeft: 150, width: 400}}>
+								<Input fullWidth inputRef={this.setAddHubInputRef} onKeyDown={this.onKeyDown} placeholder='Add Hub' type='text'/>
+							</Box>
+							<Button onClick={this.onAdd}>Add</Button>
+						</Box>
+					</List>
 				</Card>
 			</div>);
 	}
@@ -163,13 +187,12 @@ var Hub = class extends React.Component {
 
 var selector = state => state.spreadsheet.servers;
 
-class ThemedHub extends React.Component {
+class HubPage extends React.Component {
 	render() {
 		return (
-		<ThemeProvider theme={appTheme}>
 			<Hub {...this.props} selector={selector}/>
-		</ThemeProvider>);
+		);
 	}
 }
 
-module.exports = ThemedHub;
+export default HubPage;

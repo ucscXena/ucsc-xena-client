@@ -5,13 +5,9 @@
  * Rules necessary for styling welcome bar.
  */
 
-@value appMinWidth from '../../css/variables.css';
-
-.Welcome {
-	background-color: var(--color-primary);
-	color: white;
-	display: flex;
-	position: relative;
+.welcome {
+	display: grid;
+	position: relative; /* Positions close icon. */
 }
 
 .welcomeIcon {
@@ -19,70 +15,81 @@
 }
 
 .welcomeText {
-	margin: 14px 0;
-	min-height: 178px;
-	padding-left: 24px;
-	padding-right: 24px;
-	position: relative;
+	color: #ffffff;
+	overflow: hidden; /* Facilitates the example buttons to "bleed" beyond the welcome text bounds. */
+	padding: 24px 40px 20px;
 }
 
-.welcomeText a {
-	color: white;
-	text-decoration: underline;
+.welcomeText h1 {
+	margin: 16px 0 8px;
 }
 
-.bulletWrapper {
-	bottom: 0;
-	position: absolute;
+.welcomeText h2 {
+	line-height: 20px;
+	margin: 8px 0;
 }
 
-.bullets {
-	display: inline-block;
-	cursor: default;
+.welcomeExamples {
+	display: flex;
+	gap: 8px;
+	margin-top: 24px;
 }
 
-.bullet {
-	display: inline;
-	margin-right: 8px;
-	color: gray;
-	font-size: 150%;
+.welcomeExample {
+	align-items: center;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 4px;
+	color: #ffffff;
+	display: flex;
+	gap: 8px;
+	height: 56px;
+	max-width: 264px;
+	min-width: 264px;
+	padding: 8px 12px;
+	width: 100%;
 }
 
-.bulletActive {
-	composes: bullet;
-	color: white;
+.welcomeExample.hidden {
+	display: none;
 }
 
-.closeIcon {
-	cursor: pointer;
+.welcomeExampleText {
+	/* autoprefixer: off */
+	-moz-box-orient: vertical;
+	-webkit-box-orient: vertical;
+	/* autoprefixer: on */
+	display: -webkit-box;
+	font-size: 14px;
+	-webkit-line-clamp: 2;
+	line-height: 20px;
+	overflow: hidden;
+}
+
+.welcomeExampleIcon {
 	font-size: 24px;
-	height: 24px;
+	margin-right: -4px;
+	opacity: 0.38;
+	transform: rotate(-90deg);
+}
+
+button.closeIcon {
 	position: absolute;
-	right: 8px;
-	top: 16px;
+	right: 10px;
+	top: 10px;
 }
 
 /**
  * Large +
  */
-@media screen and (min-width: appMinWidth) {
-
-	.Welcome {
-		height: 220px;
-	}
-
-	.welcomeText {
-		margin-left: 32px;
-		width: 58.33333333%; /* lg 7 */
+@media screen and (min-width: 1440px) {
+	.welcome {
+		grid-template-columns: 476px 1fr;
 	}
 
 	.welcomeIcon {
 		display: block;
-		flex-basis: 33.33332%; /* lg 4 */
 		overflow: hidden;
-		padding-left: 0;
 		position: relative;
-		max-width: 475px; /* Snap at max width of image */
 	}
 
 	.imgXena {
@@ -90,27 +97,6 @@
 		left: 50%;
 		position: absolute;
 		transform: translateX(-50%);
-	}
-
-	.bulletWrapper {
-		left: 50%;
-		transform: translateX(-50%);
-	}
-
-		.closeIcon {
-		right: 24px;
-		top: 24px;
-	}
-}
-
-/*
- * Custom media query to snap welcome icon to left-hand side, required for larger devices.
- */
-@media screen and (min-width: 1425px) {
-
-	/* Snap welcome icon to left-hand side */
-	.imgXena {
-		left: 0;
-		transform: translateX(0%);
+		width: auto;
 	}
 }

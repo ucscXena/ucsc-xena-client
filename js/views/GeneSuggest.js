@@ -1,25 +1,29 @@
-'use strict';
-
 import PureComponent from '../PureComponent';
-
 var React = require('react');
-import XAutosuggest from './XAutosuggest';
-import Input from 'react-toolbox/lib/input';
-import {Observable, Scheduler} from '../rx';
-
+import {Box} from '@material-ui/core';
+import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import XAutocompleteFormControl from './XAutocompleteFormControl';
+import XAutosuggestInput from './XAutosuggestInput';
+var {Observable, Scheduler} = require('../rx').default;
 var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
-require('./GeneSuggest.css'); // react-autosuggest, global styles
-var styles = require('./GeneSuggest.module.css'); // react-toolbox, module styles
 var limit = 8;
+
+// Styles
+var sxAutocomplete = {
+	'& .MuiAutocomplete-clearIndicator': {
+		visibility: 'visible'
+	}
+};
 
 // Return the start and end indices of the word in 'value'
 // under the cursor position.
 function currentWordPosition(value, position) {
 	var li = value.slice(0, position).lastIndexOf(' '),
 		i = li === -1 ? 0 : li + 1,
-		lj = value.slice(position).indexOf(' '),
+		lj = value.slice(position).search(/(,?\s+)/),
 		j = lj === -1 ? value.length : position + lj;
 	return [i, j];
 }
@@ -30,17 +34,11 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
-var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
-	<Input
-		theme={styles}
-		error={_.isString(error) ? error : null}
-		spellCheck={false}
-		innerRef={el => ref(el && el.inputNode)}
-		onChange={(value, ev) => onChange(ev)}
-		label={label || 'Add Gene or Position'}
-		{...props} >
-		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
-	</Input>
+var renderInputComponent = ({ref, error, ...props}) => (
+	<XAutosuggestInput
+		error={Boolean(error)}
+		inputRef={el => ref(el)}
+		{...props} />
 );
 
 var empty = Observable.of([], Scheduler.asap);
@@ -59,9 +57,13 @@ var fetchSuggestions = (assembly, dataset, value) =>
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
 class GeneSuggest extends PureComponent {
-	state = {suggestions: []};
+	state = {open: false, suggestions: []};
 
-	componentWillMount() {
+	setInputRef = ref => {
+		this.inputRef = ref;
+	};
+
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.debounceTime(200)
@@ -73,87 +75,92 @@ class GeneSuggest extends PureComponent {
 		this.change.unsubscribe();
 	}
 
-	onSuggestionsFetchRequested = ({value}) => {
-		var position = this.input.selectionStart,
-			word = currentWord(value, position);
-
-		this.on.change(word);
+	// Returns the word at the cursor position of the input value.
+	getSuggestion = (inputValue) => {
+		var position = this.inputRef?.selectionStart || 0;
+		return currentWord(inputValue, position);
 	};
 
-	shouldRenderSuggestions = () => {
-		return true;
+	// Returns input value updated by new word.
+	updateSuggestion = (suggestion) => {
+		var position = this.inputRef.selectionStart,
+			value = this.inputRef.value,
+			[i, j] = currentWordPosition(value, position);
+		return value.slice(0, i) + suggestion + value.slice(j);
 	};
 
-	onSuggestionsClearRequested = () => {
-		this.on.change(undefined);
-	};
-
-	onChange = (ev, {newValue, method}) => {
-		// Don't update the value for 'up' and 'down' keys. If we do update
-		// the value, it gives us an in-place view of the suggestion (pasting
-		// the value into the input field), but the drawback is that it moves
-		// the cursor to the end of the line. This messes up multi-word input.
-		// We could try to preserve the cursor position, perhaps by passing a
-		// custom input renderer. But for now, just don't update the value for
-		// these events.
-		if (method !== 'up' && method !== 'down') {
-			this.props.onChange(newValue);
-		}
-	};
-
-	getSuggestionValue = (suggestion) => {
-		var position = this.input.selectionStart,
-			value = this.input.value,
-			[i, j] = currentWordPosition(value, position),
-			withSuggestion = value.slice(0, i) + suggestion + value.slice(j),
-			space = withSuggestion[withSuggestion.length - 1] === ' ' ? '' : ' ';
-
-		// splice the suggestion into the current word
-		return withSuggestion + space;
-	};
-
-	setInput = (input) => {
-		var {inputRef} = this.props;
-		this.input = input;
-		if (inputRef) {
-			inputRef(this.input);
-		}
-	};
-
-	setAutosuggest = v => {
-		this.autosuggest = v;
+	// Setting pending to false facilitates setting the focus on
+	// the WizardCard component 'Done' button - should all card selected values be valid.
+	onBlur = () => {
+		this.setState({open: false});
+		this.props.onPending(false);
 	}
 
-	onKeyDown = ev => {
-		// We'd like <return> to select a suggestion when suggestions are shown,
-		// but invoke "Done" when suggestions are not shown. react-autosuggest
-		// won't tell us when it's open. So, we have to inspect the child state
-		// to infer when it's open.
-		if (this.props.onKeyDown &&
-			(!_.getIn(this, ['autosuggest', 'state', 'isFocused']) ||
-				_.getIn(this, ['autosuggest', 'state', 'isCollapsed']))) {
+	// Setting pending to true will prevent setting the focus on the
+	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
+	onFocus = () => {
+		this.setState({open: true});
+		this.props.onPending(true);
+	};
 
-			this.props.onKeyDown(ev);
+	// Callback fired when the input value changes.
+	onInputChange = (ev, value, reason) => {
+		var currentSuggestion = this.getSuggestion(value) || '';
+		let newGeneSuggestion = value;
+		if (reason === 'reset') {
+			newGeneSuggestion = this.updateSuggestion(value) || '';
 		}
-	}
+		this.on.change(currentSuggestion);
+		this.props.onChange(newGeneSuggestion);
+	};
+
+	// Callback fired when input text is selected.
+	// Updates state with the current word matching the cursor position of the input value.
+	// Setting pending to true will prevent setting the focus on the
+	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.
+	onSelect = (ev) => {
+		if (ev.nativeEvent.type === 'mouseup') {
+			var currentSuggestion = this.getSuggestion(this.props.value);
+			this.on.change(currentSuggestion);
+		}
+	};
 
 	render() {
-		var {onChange, onKeyDown} = this,
-			{value = '', label, error} = this.props,
-			{suggestions} = this.state;
+		var {onBlur, onFocus, onInputChange, onSelect} = this,
+			{suggestProps, value = ''} = this.props,
+			{open, suggestions} = this.state,
+			{formLabel, ...autosuggestInputProps} = suggestProps;
 
 		return (
-			<XAutosuggest
-				inputRef={this.setInput}
-				autosuggestRef={this.setAutosuggest}
-				suggestions={suggestions}
-				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-				getSuggestionValue={this.getSuggestionValue}
-				shouldRenderSuggestions={this.shouldRenderSuggestions}
-				renderSuggestion={v => <span>{v}</span>}
-				renderInputComponent={renderInputComponent}
-				inputProps={{value, label, error, onKeyDown, onChange}}/>);
+			<XAutocompleteFormControl
+				formLabel={formLabel}
+				helperText={_.isString(suggestProps.error) ? suggestProps.error : undefined}>
+				<Box
+					component={Autocomplete}
+					autoComplete={false}
+					blurOnSelect={false}
+					closeIcon={<CloseRounded fontSize={'large'}/>}
+					disableClearable={!value}
+					filterOptions={() => suggestions} // Required with freeSolo i.e. user input is not bound to provided options.
+					forcePopupIcon={!value}
+					freeSolo
+					onClose={() => this.on.change(undefined)} // Resets suggestions after selection.
+					onInputChange={onInputChange}
+					open={open && suggestions.length > 0}
+					options={suggestions}
+					popupIcon={<SearchRounded fontSize={'large'}/>}
+					renderInput={(props) => renderInputComponent({
+						...autosuggestInputProps,
+						...props,
+						onBlur: onBlur,
+						onFocus: onFocus,
+						onSelect: onSelect,
+						ref: this.setInputRef,
+						inputProps: {...props.inputProps, value}
+					})}
+					sx={sxAutocomplete}/>
+			</XAutocompleteFormControl>
+		);
 	}
 }
 

@@ -1,6 +1,5 @@
-'use strict';
 
-import {range, times} from './underscore_ext';
+var {range, times} = require('./underscore_ext').default;
 
 /*
  * Store lower triangle as a flat array.

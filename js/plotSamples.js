@@ -1,26 +1,19 @@
-'use strict';
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 var widgets = require('./columnWidgets');
-var util = require('./util');
+var util = require('./util').default;
 import PureComponent from './PureComponent';
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {rxEvents} = require('./react-utils');
 var {drawSamples} = require('./drawSamples');
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
 //
@@ -58,7 +51,7 @@ var SamplesColumn = hotOrNot(//
 
 class extends PureComponent {
 	static displayName = 'Samples';
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -67,10 +60,9 @@ class extends PureComponent {
 				return events.mousemove
 					.takeUntil(events.mouseout)
 					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true
+						data: this.tooltip(ev)
 					})) // look up current data
-					.concat(Rx.Observable.of({open: false}));
+					.concat(Rx.Observable.of({}));
 			}).subscribe(this.props.tooltip);
 	}
 

@@ -1,6 +1,5 @@
-'use strict';
 
-var {flatmap, apply, map, first, zip, times, isArray, constant, mapObject, groupBy} = require('./underscore_ext');
+var {flatmap, apply, map, first, zip, times, isArray, constant, mapObject, groupBy} = require('./underscore_ext').default;
 
 function expandArrays(v, k) {
 	if (isArray(v)) {
@@ -23,7 +22,7 @@ var searchParams = search =>
 			arr => arr.map(([, val]) => val)) :
 		{};
 
-module.exports = {
+export default {
 	encodeObject,
 	getParameterByName: function (name) {
 		// TODO duplicates galaxy.js, so extract into common file

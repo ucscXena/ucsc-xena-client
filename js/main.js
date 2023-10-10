@@ -1,28 +1,26 @@
-'use strict';
 import './base';
-import _ from './underscore_ext';
+var _ = require('./underscore_ext').default;
 import './plotDenseMatrix';
 import './plotMutationVector';
 import './plotSegmented';
 import './plotSamples';
-import './refGeneExons';
 import './ChromPosition';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';
-//var Application = require('./containers/ApplicationContainer');
 
 import uiController from './controllers/ui';
 import serverController from './controllers/server';
 import hubController from './controllers/hub';
 import wizardController from './controllers/wizard';
+import singlecellController from './controllers/singlecell';
 import transcriptController from './controllers/transcripts';
 import importController from './controllers/import';
 //import tiesController from './controllers/ties';
 import PageContainer from './containers/PageContainer';
-import selector from './appSelector';
 import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
+var {initialState} = require('./initialState');
 
 const connector = require('./connector');
 const createStore = require('./store');
@@ -41,27 +39,31 @@ const xenaWasm = require('./xenaWasm');
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		let newModule = require('./controllers/ui');
+		let newModule = require('./controllers/ui').default;
 		_.extend(uiController, newModule);
 	});
 	module.hot.accept('./controllers/server', () => {
-		let newModule = require('./controllers/server');
+		let newModule = require('./controllers/server').default;
 		_.extend(serverController, newModule);
 	});
 	module.hot.accept('./controllers/hub', () => {
-		let newModule = require('./controllers/hub');
+		let newModule = require('./controllers/hub').default;
 		_.extend(hubController, newModule);
 	});
 	module.hot.accept('./controllers/wizard', () => {
-		let newModule = require('./controllers/wizard');
+		let newModule = require('./controllers/wizard').default;
 		_.extend(wizardController, newModule);
 	});
+	module.hot.accept('./controllers/singlecell', () => {
+		let newModule = require('./controllers/singlecell').default;
+		_.extend(singlecellController, newModule);
+	});
 	module.hot.accept('./controllers/transcripts', () => {
-		let newModule = require('./controllers/transcripts');
+		let newModule = require('./controllers/transcripts').default;
 		_.extend(transcriptController, newModule);
 	});
 	module.hot.accept('./controllers/import', () => {
-		let newModule = require('./controllers/import');
+		let newModule = require('./controllers/import').default;
 		_.extend(importController, newModule);
 	});
 //	module.hot.accept('./controllers/ties', () => {
@@ -78,9 +80,8 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // controllers run in the opposite order as listed in compose().
-const controller = compose(connectionController(store.uiBus), hubController, serverController, wizardController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
 
 xenaWasm.loaded.then(() => {
-	// XXX disable persist during singlecell dev, due to data size
-	connector({...store, controller, main, selector, Page: PageContainer, persist: false, history: false});
+	connector({...store, initialState, controller, main, Page: PageContainer, persist: true, history: false});
 });

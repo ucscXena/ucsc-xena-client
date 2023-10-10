@@ -1,6 +1,4 @@
-'use strict';
-
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 //http://www.javascripter.net/faq/hextorgb.htm
 var cutHex = function (h) {return (h.charAt(0) === "#") ? h.substring(1, 7) : h;};
@@ -33,7 +31,6 @@ function RGBToHex(r, g, b) {
 var colorStr = c => 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 
 var greyHEX = "#808080";
-var lightgreyHEX = "#dcdcdc";
 
 function standardizeColor(str) {
 	var ctx = document.createElement('canvas').getContext('2d');
@@ -119,12 +116,11 @@ function RGBtoHSV(r, g, b) {
 	};
 }
 
-module.exports = {
+export default {
     hexToRGB,
     RGBToHex,
     colorStr,
     greyHEX,
-    lightgreyHEX,
     contrastColor,
     rgb,
     HSVtoRGB,

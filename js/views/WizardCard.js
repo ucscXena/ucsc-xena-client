@@ -6,9 +6,11 @@
  *
  * State
  * -----
+ * colHeight - Min height of column.
  * colId - ID of column (eg 'A', 'B'). Only applicable on edit of column.
+ * colMode - Column mode (eg 'DEFAULT', 'WIZARD').
  * controls - Icons and/or menu displayed at right of card title.
- * helpText - Text displayed under title/subtitle and above children.
+ * subheader - Text displayed under title (helper text).
  * title - Text displayed as title.
  * valid - True if wizard card is complete and done button is enabled.
  * width - Width of card.
@@ -18,25 +20,106 @@
  * onDone - Called when DONE button is clicked.
  */
 
-'use strict';
 
 // Core dependencies, components
+import {
+	Box,
+	Button,
+	Card,
+	CardActions,
+	CardContent,
+	CardHeader,
+	CircularProgress,
+	Typography
+} from '@material-ui/core';
 var React = require('react');
-import {Button} from 'react-toolbox/lib/button';
-import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
-
-var spinner = require('../ajax-loader.gif');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
+import XColumnDivider from './XColumnDivider';
+
+// Template variables
+var WIZARD_BUTTON_TEXT = {
+	A: 'To First Variable',
+	B: 'To Second Variable',
+	C: 'Done'
+};
+var WIZARD_CARD_MAX_HEIGHT = 728;
 
 // Styles
-var compStyles = require('./WizardCard.module.css');
-var cardStyles = require('./RTCardTheme.module.css');
-var classname = require('classnames');
+var sxCircularProgress = {
+	display: 'flex',
+	left: -24,
+	position: 'absolute',
+	top: 5,
+};
+var sxWizardCard = {
+	borderRadius: 6,
+	boxShadow: '0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);',
+	display: 'flex',
+	flexDirection: 'column',
+};
+var sxWizardCardActions = {
+	'&&': {
+		padding: 16,
+	},
+};
+var sxWizardCardButton = {
+	'&&': {
+		borderRadius: 4,
+		fontSize: 15,
+		letterSpacing: '0.46px',
+		lineHeight: '26px',
+		minHeight: 48,
+		minWidth: 90,
+	}
+};
+var sxWizardCardButtonLabel = {
+	position: 'relative', // Positions circular progress
+};
+var sxWizardCardContent = {
+	alignContent: 'flex-start',
+	display: 'grid',
+	flex: 1,
+	gridGap: 24,
+	px: 4,
+	py: 6,
+};
+var sxWizardCardHeader = {
+	'&&': {
+		gap: 16,
+		padding: 16,
+	},
+	'& .MuiCardHeader-title': {
+		fontSize: 16,
+		letterSpacing: 'normal',
+	},
+	'& .MuiCardHeader-subheader': {
+		fontWeight: 400,
+		letterSpacing: 'normal',
+		lineHeight: '20px',
+	}
+};
 
 class WizardCard extends React.Component {
+
+	constructor(props) {
+		super(props);
+		this.doneButtonRef = React.createRef();
+	}
+
+	componentDidUpdate() {
+		if (!this.props.pending && this.props.valid && this.doneButtonRef) {
+			this.doneButtonRef.current.focus();
+		}
+	}
+
 	onDone = () => {
+		this.props.onDone();
+	};
+
+	onDoneExitWizard = () => {
+		this.props.onWizardMode(false);
 		this.props.onDone();
 	};
 
@@ -48,34 +131,48 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colId, controls, contentSpecificHelp,
-			title, subtitle, valid, loading, loadingCohort, width} = this.props;
+		var {children, colHeight, colId, colMode, controls, optionalExit,
+				subheader, title, subtitle, valid, loading, loadingCohort, width} = this.props,
+			minHeight = colHeight || WIZARD_CARD_MAX_HEIGHT;
 		return (
-				<Card style={{width: width}} className={compStyles.WizardCard}>
-					<div className={compStyles.headerContainer}>
-						<CardAvatar colId={colId}/>
-						<div className={compStyles.controls}>
-							{controls}
-						</div>
-					</div>
-					<div className={compStyles.titleContainer}>
-						<CardTitle className={classname(compStyles.title, subtitle ? cardStyles.warning : '')} title={title} subtitle={subtitle}/>
-					</div>
-					<div className={compStyles.content}>
-						{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
-						{loadingCohort ? <CardText>Loading datasets...</CardText> : null}
+			<>
+				<Box component={Card} sx={{...sxWizardCard, minHeight, width}}>
+					<Box
+						component={CardHeader}
+						action={controls}
+						avatar={<CardAvatar colId={colId} colMode={colMode}/>}
+						subheader={subheader}
+						subheaderTypographyProps={{noWrap: true}}
+						sx={sxWizardCardHeader}
+						title={title}
+						titleTypographyProps={{component: 'h6', noWrap: true}}/>
+					<XColumnDivider/>
+					<Box component={CardContent} sx={sxWizardCardContent}>
+						{/* TODO(cc) 'error' message refactored temporarily */}
+						{subtitle && <Box component={Typography} color='error.main' sx={{mb: loadingCohort ? '8px !important' : 0}}>{subtitle}</Box>}
+						{loadingCohort && <p>Loading datasets...</p>}
 						{children}
-					</div>
-					<CardActions className={compStyles.actions}>
-						{loading ? <img src={spinner}/> : null}
-						{valid ? <i className='material-icons'>done</i> : null}
-						<span onClick={this.onDoneInvalid}>
-						<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
-					</span>
-					</CardActions>
-				</Card>
+					</Box>
+					<XColumnDivider/>
+					<Box id={'wizardActions'} component={CardActions} sx={sxWizardCardActions}>
+						<Box onClick={this.onDoneInvalid} flex={1}>
+							<Box component={Button} ref={this.doneButtonRef} color='secondary' disabled={!valid} disableElevation fullWidth
+								 onClick={this.onDone} sx={sxWizardCardButton} variant='contained'>
+									<Box sx={sxWizardCardButtonLabel}>
+										{loading && <Box sx={sxCircularProgress}><CircularProgress color='inherit' size={16} thickness={4}/></Box>}
+										{(WIZARD_BUTTON_TEXT[colId] || 'Done')}
+									</Box>
+							</Box>
+						</Box>
+						{optionalExit && <Box component={Button} disabled={!valid} onClick={this.onDoneExitWizard} sx={sxWizardCardButton} variant='outlined'>Skip</Box>}
+					</Box>
+				</Box>
+			</>
 		);
 	}
 }
 
-module.exports = WizardCard;
+module.exports = {
+	WizardCard,
+	WIZARD_CARD_MAX_HEIGHT
+};

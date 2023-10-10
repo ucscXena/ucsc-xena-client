@@ -5,93 +5,90 @@
  * Styles for tooltip that is displayed on column hover (or alt-click on column to freeze tooltip).
  */
 
-@value black6 from '../../css/variables.css';
-@value black12 from '../../css/variables.css';
-@value black38 from '../../css/variables.css';
-
 .Tooltip {
-	background-color: #ffffff;
-	border-radius: 2px;
-	box-shadow: 0 19px 60px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* Based on <Dialog>. */
-	display: none; /* Hidden by default */
-	min-width: 272px;
-	overflow: hidden;
-	position: fixed;
-	right: 24px;
-	text-align: left;
-	top: 24px;
-	white-space: nowrap;
-	z-index: 999;
-}
-
-.Tooltip.open {
-	display: block; /* Show on hover of column */
-}
-
-.overlay {
-	background-color: black12;
-	bottom: 0;
+	align-items: center;
+	display: flex;
+	height: 32px;
+	justify-content: space-between;
 	left: 0;
-	position: fixed;
+	padding: 0 24px;
+	position: absolute;
 	right: 0;
 	top: 0;
-	z-index: 998;
+	width: 100%;
 }
 
-/* Sample display text */
-.title {
-	align-items: center;
-	composes: mdTitle from '../../css/typography.module.css';
-	display: flex;
-	justify-content: space-between;
+/* Fade on horizontal scroll - RHS */
+.Tooltip.frozen::after {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff, #ffffff);
+	content: '';
+	height: 100%;
+	position: absolute;
+	right: 48px; /* Positions before close icon */
+	top: 0;
+	width: 16px;
 }
 
-/* Close icon */
-.title i {
-	cursor: pointer;
-	line-height: 0; /* Prevent icon from jiggling title on show/hide when freezing/unfreezing */
+/* Tooltip - frozen */
+.Tooltip.frozen {
+	z-index: 1200;
 }
 
 /* Rows */
 .content {
-	composes: mdBody1 from '../../css/typography.module.css';
-	list-style: none;
-	margin: 8px;
-}
-
-.content li {
-	padding: 8px 0;
-}
-
-.content li:not(:first-child) {
-	border-top: 1px solid black6;
-}
-
-.content a {
-	color: var(--color-accent);
-	transition: color 0.35s;
-}
-
-.content a:hover {
-	color: var(--color-primary-contrast);
-	text-decoration: none;
-}
-
-/* Zoom hint text and help link */
-.actions {
 	align-items: center;
-	border-top: 1px solid black6;
 	display: flex;
-	justify-content: space-between;
-	padding: 8px;
-	margin-top: 24px;
+	list-style: none;
+	overflow-x: auto; /* Horizontal scroll - hide webkit scrollbar unless actively scrolling. */
+	-ms-overflow-style: -ms-autohiding-scrollbar; /* Hide scrollbar in IE unless actively scrolling. */
+	white-space: nowrap;
+	width: 100%;
 }
 
-.zoomHint {
-	composes: mdCaption from '../../css/typography.module.css';
+.content::-webkit-scrollbar {
+	display: none;
 }
 
-.actions a {
-	color: black38;
-	line-height: 0;
+/* All <li>, excluding .title */
+.content li:not(.title) {
+	align-items: center;
+	display: flex;
+}
+
+/* Last <li> */
+.content li:last-of-type {
+	padding-right: 16px;
+}
+
+/* Sample display text */
+.title {
+	align-items: flex-start;
+	display: flex;
+	flex-direction: column;
+}
+
+.title span {
+	min-width: 124px;
+}
+
+/* Dot */
+.content li:not(:first-child):before {
+	background-color: rgba(0, 0, 0, 0.12);
+	border-radius: 4px;
+	content: '';
+	display: inline-flex;
+	flex: none;
+	height: 4px;
+	margin: 0 8px;
+	width: 4px;
+}
+
+/* Secondary spans within <li>, excluding .title */
+.content li:not(.title) span:not(:first-of-type) {
+	margin-left: 8px;
+}
+
+.moreGene {
+	align-self: center;
+	font-size: 10px;
 }

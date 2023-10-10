@@ -1,30 +1,31 @@
-'use strict';
-
 import PureComponent from '../PureComponent';
-
 var React = require('react');
-var _ = require('../underscore_ext');
-var XCheckboxGroup = require('./XCheckboxGroup');
+import {Box} from '@material-ui/core';
+var _ = require('../underscore_ext').default;
+import XAutocompleteSuggest from './XAutocompleteSuggest';
 var XRadioGroup = require('./XRadioGroup');
-var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
-var PhenotypeSuggest = require('./PhenotypeSuggest');
+var {WizardCard} = require('./WizardCard');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
-var {ignoredType} = require('../models/dataType');
+var {ignoredType, isPhenotype} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
-import {Observable, Scheduler} from '../rx';
+var {Observable, Scheduler} = require('../rx').default;
 import {getOpts} from '../columnsParam';
+var {servers} = require('../defaultServers');
 
+// Styles
+var sxSuggestForm = {
+	display: 'flex',
+	flexDirection: 'column',
+	gridGap: 16,
+	minWidth: 0
+};
 
-const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
+const LOCAL_DOMAIN = servers.localHub;
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
-const ignoredClinical = (type, subtype) =>
-	type === 'clinicalMatrix' && (!subtype || subtype.match(/^phenotype/i));  // match ../controllers/wizard.js definition of phenotype data
-
-var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) &&
-	!ignoredClinical(type, dataSubType);
+var notIgnored = ds => !_.contains(ignoredType, ds.type) && !isPhenotype(ds);
 
 var category = ({dsID, dataSubType}) =>
 	dsID.includes(LOCAL_DOMAIN) ? LOCAL_DOMAIN_LABEL : (dataSubType ? dataSubType : 'others');
@@ -51,17 +52,6 @@ var preferredList = preferred => ([
 		options: preferred.map(({dsID, label}) => ({value: dsID, label}))
 	}
 ]);
-
-var RETURN = 13;
-var returnPressed = cb => cb ? ev => ev.keyCode === RETURN && cb() : undefined;
-
-function selectedOptions(selected, options) {
-	var smap = new Set(selected);
-	return options.map(group =>
-		_.updateIn(group, ['options'],
-			options => options.map(opt => smap.has(opt.value) ?
-				_.assoc(opt, 'checked', true) : opt)));
-}
 
 var assemblyColors = {
 	hg18: '#527DA4',
@@ -95,28 +85,39 @@ var firstAssembly = (datasets, selected) =>
 	selected.length === 0 ? defaultAssembly :
 	_.findValue(selected, getAssembly(datasets));
 
+var formActions = (onAdvancedClick, advanced) => [{
+	onToggle: onAdvancedClick,
+	selected: !advanced,
+	value: 'basic'
+}, {
+	onToggle: onAdvancedClick,
+	selected: advanced,
+	value: 'advanced'
+}];
+
+
 var GenotypicForm = props => (
-	<div>
+	<Box sx={sxSuggestForm}>
 		<GeneSuggest
 			dataset={props.selected.length === 1 &&
-				props.datasets[props.selected[0]].type === 'genomicMatrix' ?
+				_.indexOf(['genomicMatrix', 'clinicalMatrix'], props.datasets[props.selected[0]].type) !== -1 ?
 				props.selected[0] : undefined}
 			assembly={firstAssembly(props.datasets, props.selected)}
-			error={props.error}
 			value={props.value}
-			onKeyDown={returnPressed(props.onReturn)}
 			onChange={props.onFieldChange}
+			onPending={props.onPending}
+			suggestProps={{error: props.error, ...props.suggestProps}}
 			type='text'/>
-		<XCheckboxGroup
-			label='Assay Type'
-			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
-			onAdditionalAction={props.onAdvancedClick}
-			onChange={props.onChange}
+		<XAutocompleteSuggest
+			actions={!_.isEmpty(props.preferred) ? formActions(props.onAdvancedClick, props.advanced) : null}
 			hideBadge={props.hideAssembly}
-			options={selectedOptions(props.selected,
-				setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) :
-					preferredList(props.preferred)))}/>
-	</div>);
+			onChange={props.onChange}
+			onPending={props.onPending}
+			options={setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) : preferredList(props.preferred))}
+			selectedValues={props.selected}
+			suggestProps={{formLabel: 'Dataset', placeholder: 'Select Dataset'}}/>
+	</Box>
+);
 
 var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
 
@@ -125,34 +126,28 @@ var allFeatureLabels = features => features.map((f, i) => ({value: i.toString(),
 var PhenotypicForm = props => {
 	var options = (props.advanced ? allFeatureLabels : basicFeatureLabels)(props.features, _.union(props.basicFeatures, props.selected));
 	return (
-		<div>
-			<XCheckboxGroup
-				label='Phenotype'
-				additionalAction={!_.isEmpty(props.basicFeatures) && (props.advanced ? 'Show Basic' : 'Show All')}
-				onAdditionalAction={props.onAdvancedClick}
+		<Box sx={sxSuggestForm}>
+			<XAutocompleteSuggest
+				actions={!_.isEmpty(props.basicFeatures) ? formActions(props.onAdvancedClick, props.advanced) : null}
 				onChange={props.onChange}
-				options={selectedOptions(props.selected, [{options}])}/>
-			{props.advanced ?
-				null :
-				(<PhenotypeSuggest
-					error={props.error}
-					value={props.value}
-					features={props.features}
-					onSuggestionSelected={(ev, {suggestion}) => props.onAddFeature(suggestion)}
-					onKeyDown={returnPressed(props.onAddFeature)}
-					onChange={props.onFieldChange} type='text'/>)}
-		</div>);
+				onPending={props.onPending}
+				options={[{options}]}
+				selectedValues={props.selected}
+				suggestProps={{error: Boolean(props.error), ...props.suggestProps}}/>
+		</Box>);
 };
 
 var AnalyticForm = props => {
 	var options = props.analytic.map(({label}, i) => ({value: i.toString(), label: label}));
 	return (
-		<div>
-			<XCheckboxGroup
-				label='Variable'
+		<Box sx={sxSuggestForm}>
+			<XAutocompleteSuggest
 				onChange={props.onChange}
-				options={selectedOptions(props.selected, [{options}])}/>
-		</div>);
+				onPending={props.onPending}
+				options={[{options}]}
+				selectedValues={props.selected}
+				suggestProps={{...props.suggestProps}}/>
+		</Box>);
 };
 
 var getModeFields = {
@@ -161,11 +156,27 @@ var getModeFields = {
 	Analytic: AnalyticForm
 };
 
+var getModeSuggestProps = {
+	Genotypic: {
+		formLabel: 'Add Gene or Position',
+		placeholder: 'Select Gene or Position'
+	},
+	Phenotypic: {
+		formLabel: 'Phenotype',
+		placeholder: 'Select Phenotype'
+	},
+	Analytic: {
+		formLabel: 'Variable',
+		placeholder: 'Select Variable'
+	},
+};
+
 var applyInitialState = {
-	Genotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Genotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Genotypic',
 			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
-			value = fields.join(' '),
+			// old bookmarks may not have a 'text' property
+			value = text || fields.join(' '),
 			selected = [dataset];
 
 		return _.assocIn(defaults,
@@ -174,7 +185,7 @@ var applyInitialState = {
 			['value', mode], value,
 			['selected', mode, !isPreferred], selected);
 	},
-	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Phenotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Phenotypic',
 			i = _.findIndex(features, _.matcher({dsID: dataset, name: fields[0]})).toString(),
 			selected = [i];
@@ -184,9 +195,10 @@ var applyInitialState = {
 			_.assocIn(defaults,
 				['mode'], mode,
 				['basicFeatures'], defaults.basicFeatures,
-				['selected', mode, false], selected);
+				['selected', mode, false], selected,
+				['selected', mode, true], selected);
 	},
-	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
+	'undefined': (text, fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
 };
 
@@ -231,10 +243,12 @@ function intersectFields(matches) {
 	return _.map(matches, m => _.updateIn(m, ['fields'], fields => intersection.map(i => fields[i])));
 }
 
+var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
+
 var genomicMatches = (datasets, text) => matchesIn => {
 	var matches = intersectFields(matchesIn),
 		{hasCoord} = parsePos(text) || {},
-		assemblies = _.uniq(_.map(matches, getAssembly(datasets)).filter(x => x)),
+		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
 		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
 		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
 		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
@@ -273,7 +287,7 @@ var matchFields = {
 class VariableSelect extends PureComponent {
 	constructor(props) {
 		super(props);
-		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+		var {text, fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
 		var defaults = {
 			mode,
 			advanced: {
@@ -282,6 +296,7 @@ class VariableSelect extends PureComponent {
 				Analytic: false
 			},
 			basicFeatures: featureIndexes(features, basicFeatures),
+			pending: false,
 			selected: {
 				Genotypic: {
 					true: [], // advanced
@@ -306,10 +321,10 @@ class VariableSelect extends PureComponent {
 		};
 
 		this.state = fields && dataset ?
-			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
+			applyInitialState[datasetMode(datasets, dataset)](text, fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
-	componentWillReceiveProps({features, basicFeatures}) {
+	UNSAFE_componentWillReceiveProps({features, basicFeatures}) {//eslint-disable-line camelcase
 		this.setState({
 			basicFeatures: featureIndexes(features, basicFeatures),
 		});
@@ -321,7 +336,7 @@ class VariableSelect extends PureComponent {
 	// withLatestFrom() operators do not subscribe to their upstream sources,
 	// and miss the startWith() of those. The workaround here is to use replay
 	// subjects. This is all much too complex.
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mode', 'advanced', 'field', 'select');
 		var mode = events.mode.startWith(this.state.mode).publishReplay(1).refCount(),
 			advanced = events.advanced
@@ -330,9 +345,8 @@ class VariableSelect extends PureComponent {
 				.startWith(this.state.advanced).publishReplay(1).refCount(),
 			selected = events.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
-				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
-						_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
-					this.state.selected)
+				.scan((selected, [{selectValue}, mode, advanced]) =>
+						_.assocIn(selected, [mode, advanced], selectValue), this.state.selected)
 				.startWith(this.state.selected).publishReplay(1).refCount(),
 			value = events.field
 				.withLatestFrom(mode, (field, mode) => ([field, mode]))
@@ -362,8 +376,8 @@ class VariableSelect extends PureComponent {
 		this.validSub.unsubscribe();
 	}
 
-	onChange = (selectValue, isOn) => {
-		this.on.select({selectValue, isOn});
+	onChange = (selectValue) => {
+		this.on.select({selectValue});
 	};
 
 	onDone = () => {
@@ -386,35 +400,34 @@ class VariableSelect extends PureComponent {
 		}
 	};
 
-	onAddFeature = (featureIn) => {
-		var {features} = this.props,
-			{basicFeatures, value, mode} = this.state,
-			i = (featureIn ? features.indexOf(featureIn) : _.findIndex(features, _.matcher({label: value[mode]}))).toString();
-		if (i !== "-1") {
-			this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
-			this.on.select({selectValue: i, isOn: true});
-		}
-		this.on.field("");
+	onPending = (pending) => {
+		this.setState({pending});
 	};
 
 	render() {
 		var {mode, matches, hasCoord, advanced, valid, warnings,
-				loading, error, unavailable, basicFeatures} = this.state,
+				loading, error, unavailable, basicFeatures, pending} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colId, controls, datasets, features, preferred, analytic, title,
-				helpText, width} = this.props,
+			{colHeight, colId, colMode, controls, datasets, features, helpText, preferred, analytic,
+				onWizardMode, optionalExit, title, width} = this.props,
 			formError = getWarningText(matches, datasets, selected, warnings, value).join(' ')
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
-			contentSpecificHelp = _.getIn(helpText, [mode]),
+			subheader = _.getIn(helpText, [mode]),
+			suggestProps = getModeSuggestProps[mode],
 			ModeForm = getModeFields[mode],
 			wizardProps = {
+				colHeight,
 				colId,
+				colMode,
 				controls,
+				onWizardMode,
+				optionalExit,
+				subheader,
 				subtitle,
+				pending,
 				title,
-				contentSpecificHelp,
 				onDone: this.onDone,
 				onDoneInvalid: this.onDoneInvalid,
 				valid,
@@ -438,8 +451,8 @@ class VariableSelect extends PureComponent {
 				<ModeForm
 					error={formError}
 					onChange={this.onChange}
-					onReturn={valid ? this.onDone : undefined}
 					onFieldChange={this.on.field}
+					onPending={this.onPending}
 					hideAssembly={!hasCoord}
 					datasets={datasets}
 					selected={selected}
@@ -448,9 +461,9 @@ class VariableSelect extends PureComponent {
 					preferred={preferred}
 					analytic={analytic}
 					basicFeatures={basicFeatures}
-					onAddFeature={this.onAddFeature}
 					onAdvancedClick={this.on.advanced}
-					advanced={advanced[mode]}/>
+					advanced={advanced[mode]}
+					suggestProps={suggestProps}/>
 			</WizardCard>);
 	}
 }
@@ -464,7 +477,7 @@ class VariableSelect extends PureComponent {
 class LoadingNotice extends React.Component {
 	state={wait: true};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.timeout = setTimeout(() => this.setState({wait: false}), 3000);
 	}
 
@@ -476,12 +489,14 @@ class LoadingNotice extends React.Component {
 		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
 		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
-			let {colId, controls, title, width} = this.props,
+			let {colId, colMode, controls, optionalExit, title, width} = this.props,
 				wizardProps = {
 					colId,
+					colMode,
 					controls,
 					loading: true,
 					loadingCohort: true,
+					optionalExit,
 					title,
 					width
 				};

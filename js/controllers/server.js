@@ -1,11 +1,12 @@
-'use strict';
-
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 import {computeSettings, matchDatasetFields} from '../models/columns';
+var {searchSamples} = require('../models/searchSamples');
 var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
-var {compose, make, mount} = require('./utils');
-import * as Rx from '../rx';
+var {getNotifications} = require('../notifications');
+import {make, mount, compose} from './utils';
+var Rx = require('../rx').default;
 var uuid = require('../uuid');
+var widgets = require('../columnWidgets');
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
@@ -43,11 +44,12 @@ var featuresByID = state => {
 
 var setHeatmapParams = state =>
 	state.params.heatmap ? _.updateIn(state, ['spreadsheet'],
-		spreadsheet => _.assocIn(spreadsheet, ...state.params.heatmap.flatten()))
+		spreadsheet => _.assocIn(spreadsheet, ...state.params.heatmap.flat()))
 		: state;
 
 var linkedColumns = (state, [fieldResp, ids]) => {
 	var columnParams = state.params.columns,
+		maybeResetLoadPending = _.getIn(state, ['params', 'filter']) ? _.identity : resetLoadPending,
 		byID = datasetsByID(state),
 		features = featuresByID(state),
 		columns = _.mmap(columnParams, fieldResp,
@@ -57,7 +59,7 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 
 	return _.reduce(columns,
 			 (acc, spec, i) => _.assocIn(acc, ['spreadsheet', 'columns', ids[i]], spec),
-			 _.updateIn(resetLoadPending(setHeatmapParams(state)),
+			 _.updateIn(maybeResetLoadPending(setHeatmapParams(state)),
 					['spreadsheet'], s => _.dissoc(s, 'fieldMatches'),
 					['spreadsheet', 'columnOrder'], o => o.concat(ids),
 					['spreadsheet', 'wizardMode'], () => false));
@@ -114,10 +116,35 @@ var setLinkedCohortError = state =>
 	_.assoc(resetLoadPending(state), 'stateError',
 		`We are unable to find the cohort for dataset ${state.params.columns[0].name} on host ${state.params.columns[0].host}. Please check the spelling, and your network connectivity.`);
 
+var dropFilter = state => _.updateIn(state, ['params'], p => _.omit(p, 'filter', 'filterColumns', 'visible'));
+
+var dropHidden = (state, visible) => _.updateIn(state, ['spreadsheet'], spreadsheet => {
+	var {columns, columnOrder, data} = spreadsheet,
+		newOrder = columnOrder.slice(0, visible);
+	return _.assoc(spreadsheet,
+		'columns', _.pick(columns, newOrder),
+		'data', _.pick(data, newOrder),
+		'columnOrder', newOrder);
+});
+
+var mergeWidgetData = (state, id, data) =>
+	columnOpen(state, id) ?
+		_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
+		: state;
+
 var controls = {
 	// XXX was clearWizardCohort just cleaning up bad bookmarks? Do we need to handle that case?
 	// How do we handle cohortSamples reloading generally, and with respect to restoring state?
-	bookmark: (state, bookmark) => resetLoadPending(_.merge(state, bookmark)),
+	bookmark: (state, bookmark) =>
+		resetLoadPending(
+				_.merge(state,
+					// discard bookmark notifications setting. If we create
+					// an empty spreadsheet object we get errors later, e.g.
+					// on a transcript view bookmark. So, test first.
+					bookmark.spreadsheet ?
+						_.assocIn(bookmark, ['spreadsheet', 'notifications'],
+							getNotifications()) :
+						bookmark)),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
 	// Here we need to load cohort data if servers or cohort has changed,
 	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
@@ -194,18 +221,45 @@ var controls = {
 		if (cohort) {
 			fetchCohortData(serverBus, newState.spreadsheet);
 		}
+	},
+	'widget-data': state => {
+		var filter = _.getIn(state, ['params', 'filter']);
+		if (filter && _.every(state.spreadsheet.data, d => d.status === 'loaded')) {
+			var visible = _.getIn(state, ['params', 'visible']);
+			return resetLoadPending(dropFilter(dropHidden(state, visible)));
+		}
+		return state;
+	},
+	'widget-data-post!': (serverBus, state, newState, id, widgetData) => {
+		var filter = _.getIn(state, ['params', 'filter']);
+		// This is weird. We re-compute the merged widget data, in case we
+		// discarded it as 'hidden', above.
+		var merged = mergeWidgetData(state.spreadsheet, id, widgetData);
+		if (filter && _.every(merged.data, d => d.status === 'loaded')) {
+			var {columns, columnOrder, data, cohortSamples} = merged;
+			var matches = searchSamples(filter, columns, columnOrder, data, cohortSamples);
+			// XXX no support for cross. Always take the first.
+			var nextSamples = matches.matches[0].map(i => cohortSamples[i]);
+			serverBus.next(['sampleFilter', Rx.Observable.of(nextSamples, Rx.Scheduler.async)]);
+		}
 	}
 };
 
 var spreadsheetControls = {
 	// XXX Here we drop the update if the column is no longer open.
-	'widget-data': (state, id, data) =>
-		columnOpen(state, id) ?
-			_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
-			: state,
+	'widget-data': mergeWidgetData,
 	'widget-data-post!': (serverBus, state, newState, id) => {
 		if (_.getIn(newState, ['columns', id, 'clustering']) != null) {
-			fetchClustering(serverBus, newState, id);
+			// XXX Note that this duplicates the avgSelector in appSelector.js.
+			// Also, there's a second path to fetchClustering in ui.js that
+			// pulls data from the ui, so it already has the average.
+			// We need to call it here because appSelector will not have run
+			// when we reach this code. Since we only reach this on first
+			// column load, it's not a large performance concern.
+			var data = _.getIn(newState, ['data', id]),
+				avg = widgets.avg(state.columns[id], data);
+
+			fetchClustering(serverBus, newState, id, _.merge(data, avg));
 		}
 	},
 	'cluster-result': (state, id, order) =>
@@ -214,11 +268,8 @@ var spreadsheetControls = {
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
-	// XXX Here we should be updating application state. Instead we invoke a callback, because
-	// chart.js can't handle passed-in state updates.
-	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
 };
 
-module.exports = compose(
+export default compose(
 		make(controls),
 		mount(make(spreadsheetControls), ['spreadsheet']));

@@ -1,10 +1,9 @@
-'use strict';
 
 // Find contiguous intron regions across a set of transcripts, i.e.
 // regions without any exons. These are not, strictly speaking, 'introns',
 // but intronic regions in every transcript.
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 // Create a group with one exon
 var initGroup = exon => ({
@@ -50,7 +49,7 @@ function exonGroups(exons) {
 }
 
 function intronRegions(groups) {
-	return groups.slice(1).map(({start, end}, i) => ([groups[i].end, start]));
+	return groups.slice(1).map(({start}, i) => ([groups[i].end, start]));
 }
 
 

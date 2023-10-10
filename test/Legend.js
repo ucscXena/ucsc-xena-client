@@ -1,5 +1,4 @@
 /*global describe: false, it: false */
-'use strict';
 import {renderIntoDocument} from 'react-dom/test-utils';
 var React = require('react');
 var Legend = require('../js/views/Legend');

@@ -1,8 +1,7 @@
-'use strict';
-
 import PureComponent from '../PureComponent';
+var util = require('../util').default;
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -10,78 +9,51 @@ var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
 var columnZoom = require('../columnZoom');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
-var spinner = require('../ajax-loader.gif');
+import spinner from '../ajax-loader.gif';
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
-var konami = require('../konami');
 var Crosshair = require('./Crosshair');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
-import Tooltip from 'react-toolbox/lib/tooltip';
+import {Box, Divider, Icon, IconButton, Menu, MenuItem, Tooltip} from '@material-ui/core';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 import RefGeneAnnotation from '../refGeneExons';
+import {GeneLabelAnnotation, geneLableFont} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
-var crosshair = require('./cursor.png');
+import crosshair from './cursor.png';
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
+var config = require('../config');
+import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
+import {setUserCodes} from '../models/denseMatrix';
+import {isChrom, getGeneMode} from '../models/columns';
+import {hidden} from '../nav';
+import {xenaColor} from '../xenaColor';
 
-var ESCAPE = 27;
-
-class IconMenu extends React.Component {
-	onKeyDown = ev => {
-		if (ev.keyCode === ESCAPE) {
-			this.ref.handleMenuHide();
-		}
-	}
-	cleanup() {
-		// We get an onHide() call from setting state in Menu, *and*
-		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
-		// check if 'curtain' still exists before tear down.
-		if (this.curtain) {
-			document.body.removeChild(this.curtain);
-			document.removeEventListener('keydown', this.onKeyDown);
-			delete this.curtain;
-		}
-	}
-	componentWillUnmount() {
-		this.cleanup();
-	}
-	onHide = () => {
-		var {onHide} = this.props;
-		this.cleanup();
-		onHide && onHide();
-	}
-	onShow = () => {
-		var {onShow} = this.props;
-		this.curtain = document.createElement('div');
-		this.curtain.style = "position:absolute;top:0;left:0;width:100%;height:100%";
-		document.body.appendChild(this.curtain);
-		document.addEventListener('keydown', this.onKeyDown, false);
-		onShow && onShow();
-	}
-	onRef = ref => {
-		this.ref = ref;
-	}
-	render() {
-		var {onShow, onHide, ...others} = this.props;
-		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
-	}
+// We're getting events with coords < 0. Not sure if this
+// is a side-effect of the react event system. This will
+// restrict values to the given range.
+function bounded(min, max, x) {
+	return x < min ? min : (x > max ? max : x);
 }
 
-const TooltipMenuItem = Tooltip(MenuItem);
+function uniqueNotNull(data) {
+  return _.uniq(data).filter( f => f !== null);
+}
 
-const tooltipConfig = (message) => {
-	return {
-		tooltipDelay: 750,
-		tooltip: message,
-		tooltipPosition: "horizontal",
-		style: { pointerEvents: 'all' }
-	};
-};
+// menu item that shows tooltip when disabled.
+var TooltipMenuItem = React.forwardRef(({disabled, tooltip, ...menuProps}, ref) => (
+	disabled && tooltip ?
+		<Tooltip enterDelay={750} placement='right' ref={ref} title={tooltip}>
+			{/* span is required for wrapping Tooltip around a disabled MenuItem; see https://v4.mui.com/components/tooltips/#disabled-elements */}
+			<span><MenuItem disabled={disabled} {...menuProps}/></span>
+		</Tooltip> : <MenuItem disabled={disabled} {...menuProps}/>
+));
+
+var MenuDivider = React.forwardRef(({}, ref) => <Box ref={ref} my={3}><Divider/></Box>);
 
 // XXX move this?
 function download([fields, rows]) {
@@ -107,7 +79,7 @@ function downloadJSON(downloadData) {
 	document.body.removeChild(a);
 }
 
-var annotationHeight = 47,
+export var annotationHeight = 47,
 	positionHeight = 17,
 	scaleHeight = 12;
 
@@ -124,9 +96,7 @@ var styles = {
 		backgroundColor: 'rgba(255, 255, 255, 0.6)'
 	},
 	error: {
-		textAlign: 'center',
 		pointerEvents: 'all',
-		cursor: 'pointer'
 	}
 };
 
@@ -190,9 +160,9 @@ function sortVisibleLabel(column, pos) {
 function segmentedVizOptions(onVizOptions) {
 	return onVizOptions ? [
 		<MenuDivider/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='line' caption='Line'/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='pixel' caption='Pixel'/>,
-		<MenuItem onSelect={onVizOptions} data-renderer='power' caption='Power'/>,
+		<MenuItem onClick={onVizOptions} data-renderer='line'>Line</MenuItem>,
+		<MenuItem onClick={onVizOptions} data-renderer='pixel'>Pixel</MenuItem>,
+		<MenuItem onClick={onVizOptions} data-renderer='power'>Power</MenuItem>,
 		<MenuDivider/>] : [];
 }
 
@@ -206,11 +176,11 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		specialDownloadItemName = 'Download segments';
 
 	return addIdsToArr([
-		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>]),
+		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons}>{intronsItemName}</MenuItem>]),
 		...(segmentedVizOptions(onVizOptions)),
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>,
-		<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
+		<MenuItem disabled={noData} onClick={onSortVisible}>{sortVisibleItemName}</MenuItem>,
+		<MenuItem disabled={noData} onClick={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
 	]);
 }
 
@@ -226,19 +196,20 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
+		mupitTooltip = pos ? 'Only available for gene view' :
+			noMuPit ? 'Only available for SNPs on hg19 and hg38' :
+			null,
 		mupitMenuItem = null;
 
 	if (data && !(_.isEmpty(data.refGene))) {
-		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
-		                    : ( noMuPit ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for SNPs on hg19 and hg38")} caption={mupitItemName}/>
-								: <MenuItem onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>);
+		mupitMenuItem = (<TooltipMenuItem onClick={(e) => onMuPit(assembly, e)} disabled={noMuPit} tooltip={mupitTooltip}>{mupitItemName}</TooltipMenuItem>);
 	}
 
 	return addIdsToArr([
 		mupitMenuItem,
-		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
+		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons}>{intronsItemName}</MenuItem>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
+		<MenuItem disabled={noData} onClick={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
 
@@ -264,10 +235,6 @@ function tumorMapCompatible(column) {
 	return true;
 }
 
-var isChrom = column =>
-	parsePos(_.get(column.fieldList || column.fields, 0),
-			_.getIn(column, ['assembly']));
-
 // Maybe put in a selector.
 var supportsGeneAverage = column =>
 	!isChrom(column) && !isSig(column) && _.contains(['geneProbes', 'genes'], column.fieldType) &&
@@ -278,24 +245,34 @@ var supportsGeneAverage = column =>
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
-	var {column} = props,
+var supportsDEA = (column, data) =>
+	column.codes &&
+	_.reject(_.uniq(_.getIn(data, ['req', 'values', 0])),
+		x => x == null).length > 1;
+
+function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff, onBlitzGSEA}) {
+	var {column, isPublic, preferredExpression, data} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
-		order = clustering == null ? 'clusters' :
-			fieldType === 'geneProbes' ? 'position' : 'list';
+		order = clustering == null ? 'Cluster' : 'Uncluster';
 
 	return addIdsToArr([
 		supportsClustering(column) ?
-			<MenuItem onClick={onCluster} caption={`Order by ${order}`} /> :
+			<MenuItem onClick={onCluster} disabled={config.singlecell}>{order}</MenuItem> :
+			null,
+		preferredExpression && supportsDEA(column, data) ?
+			<TooltipMenuItem onClick={onDiff} disabled={!isPublic} tooltip='Private data not allowed'>Differential expression</TooltipMenuItem> :
+			null,
+		preferredExpression && supportsDEA(column, data) ?
+			<TooltipMenuItem onClick={onBlitzGSEA} disabled={!isPublic} tooltip='Private data not allowed'>GSEA</TooltipMenuItem> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
-				<MenuItem onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
-				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
+				<MenuItem onClick={(e) => onMode(e, 'geneProbes')}>Detailed view</MenuItem> :
+				<MenuItem onClick={(e) => onMode(e, 'genes')}>Gene average</MenuItem>) :
 				null,
 		supportTumorMap ?
-			<MenuItem onClick={(e) => onTumorMap(thisTumorMap, e)} caption={`Tumor Map`}/> :
+			<MenuItem onClick={(e) => onTumorMap(thisTumorMap, e)}>Tumor Map</MenuItem> :
 			null
 	]);
 }
@@ -318,11 +295,11 @@ function getStatusView(status, onReload) {
 	if (status === 'error') {
 		return (
 			<div style={styles.status}>
-				<i onClick={onReload}
-				   style={styles.error}
-				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={'material-icons'}>warning</i>
+				<IconButton onClick={onReload}
+							style={styles.error}
+							title='Error loading data. Click to reload.'
+							aria-hidden='true'><Icon>warning</Icon>
+				</IconButton>
 			</div>);
 	}
 	return null;
@@ -342,12 +319,7 @@ function getPosition(maxXZoom, pStart, pEnd) {
 			end <= maxXZoom.end) ? {start, end} : null;
 }
 
-var specialDownloadMenu = false;
 //var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
-
-if (process.env.NODE_ENV !== 'production') {
-	specialDownloadMenu = true;
-}
 
 // For geneProbes we will average across probes to compute KM. For
 // other types, we can't support multiple fields.
@@ -360,6 +332,13 @@ function disableKM(column, hasSurvival) {
 		return [true, 'Unsupported for multiple genes/ids'];
 	}
 	return [false, ''];
+}
+
+function disableChart(column) {
+	if (_.contains(['mutation', 'SV'], column.fieldType)) {
+		return true;
+	}
+	return false;
 }
 
 function getCodingVariants(index, exons) {
@@ -383,11 +362,16 @@ var geneHeight = () => {
 	return annotationHeight + scaleHeight + 4;
 };
 
-var showPosition = column =>
+export var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
+var showGeneLabel = column =>
+	_.contains(['genes', 'probes', 'clinical'], column.fieldType) ||
+	(column.fieldType === 'geneProbes' &&
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon');
+
+	// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
 // annotation or sample zoom), offset x, offset y, samples height
 // Select mapped to: direction, data start and data end
 var zoomTranslateSelection = (props, selection, zone) => {
@@ -412,10 +396,14 @@ var zoomTranslateSelection = (props, selection, zone) => {
 	};
 };
 
-class Column extends PureComponent {
+export default class Column extends PureComponent {
 	state = {
 		dragZoom: {},
-		specialDownloadMenu: specialDownloadMenu
+		menuEl: null,
+		subColumnIndex: {},
+		showGeneSetWizard: false,
+		geneSetUrl: undefined,
+
 	};
 
 	//	addAnnotationHelp(target) {
@@ -429,58 +417,143 @@ class Column extends PureComponent {
 	//				{target}
 	//			</OverlayTrigger>);
 	//	},
-	enableHiddenFeatures = () => {
-		specialDownloadMenu = true;
-		this.setState({specialDownloadMenu: true});
-	};
 
 	toggleInteractive = (interactive) => {
 		this.props.onInteractive('zoom', interactive);
 	};
 
-	componentWillMount() {
-		var asciiA = 65;
-		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
-	}
+	initSubColumnIndex = () => {
+		var {column} = this.props;
+		if (_.contains(['probes', 'genes'], column.fieldType) ||
+				_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType'])
+					=== 'regulon') {
+			var aveSize = geneLableFont * (column.fields.reduce((total, x) =>
+					total + (x ? x.length : 0), 0) / column.fields.length);
 
-	componentWillUnmount() {
-		this.ksub.unsubscribe();
+			this.setState({subColumnIndex: {aveSize}});
+		}
+	};
+
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
+		// XXX move initial state to constructor
+		this.initSubColumnIndex();
+		var genesetView = hidden.create('genesetView', 'Geneset View', {
+			onChange: val => this.setState({genesetView: val}),
+			default: false
+		});
+		this.setState({genesetView});
 	}
 
 	onResizeStop = (size) => {
 		this.props.onResize(this.props.id, size);
 	};
 
+	onColumnMenuClose = () => {
+		this.setState({menuEl: null});
+	}
+
+	onColumnMenuOpen = (event) => {
+		this.setState({ menuEl: event.currentTarget });
+	}
+
 	onRemove = () => {
+		this.onColumnMenuClose();
 		this.props.onRemove(this.props.id);
 	};
 
 	onDownload = () => {
+		this.onColumnMenuClose();
 		var {column, data, samples, index, sampleFormat} = this.props;
 		gaEvents('spreadsheet', 'download', 'column');
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
 	};
 
 	onViz = () => {
+		this.onColumnMenuClose();
 		this.props.onViz(this.props.id);
 	};
 
 	onEdit = () => {
+		this.onColumnMenuClose();
 		this.props.onEdit(this.props.id);
 	};
 
 	onKm = () => {
+		this.onColumnMenuClose();
 		gaEvents('spreadsheet', 'km');
 		this.props.onKm(this.props.id);
 	};
 
+	onChart = () => {
+		this.onColumnMenuClose();
+		gaEvents('spreadsheet', 'columnChart-open');
+		this.props.onChart(this.props.id);
+	};
+
+
+
+	canDoGeneSetComparison = () => {
+		let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props,
+			{genesetView} = this.state;
+		if(
+			!genesetView ||
+			fieldType !== 'clinical' ||
+			valueType !== 'coded' ||
+			!codes || codes.length < 2  ||
+			AVAILABLE_GENESET_COHORTS.indexOf(name) < 0
+		) {
+			return false ;
+		}
+		return uniqueNotNull(heatmap[0]).length === 2;
+	};
+
+	hideGeneSetWizard = () => {
+		this.setState({
+			showGeneSetWizard: false,
+		});
+	};
+
+
+  /**
+   * We build out the URL.
+   * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
+   */
+  showGeneSetComparison = () => {
+    this.onColumnMenuClose();
+    const {column: {heatmap, codes}, cohort: {name} } = this.props;
+    const heatmapData = heatmap[0].filter( f => f !== null);
+    const heatmapCodes = uniqueNotNull(heatmapData);
+    const heatmapLookup = _.invert(heatmapCodes);
+    const sampleData = _.map(this.props.samples, this.props.sampleFormat);
+    let subCohortData = [[], []];
+    const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
+    for (const d in heatmapData) {
+        subCohortData[heatmapLookup[heatmapData[d]]].push(sampleData[d]);
+    }
+
+	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[heatmapCodes[0]]}`;
+	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
+
+    // const ROOT_URL = 'https://xenademo.berkeleybop.io/xena/#';
+    // const ROOT_URL = 'http://localhost:3000/#';
+   const finalUrl = `${GENESETS_VIEWER_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
+
+	this.setState({
+	  geneSetUrl: `${finalUrl}`,
+	  showGeneSetWizard: true,
+	  onHide: this.hideGeneSetWizard,
+	});
+  };
+
 	onSortDirection = () => {
+		this.onColumnMenuClose();
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
 		this.props.onSortDirection(this.props.id, newDir);
 	};
 
 	onMode = (ev, newMode) => {
+		this.onColumnMenuClose();
 		this.props.onMode(this.props.id, newMode);
 	};
 
@@ -493,21 +566,52 @@ class Column extends PureComponent {
 	};
 
 	onShowIntrons = () => {
+		this.onColumnMenuClose();
 		this.props.onShowIntrons(this.props.id);
 	};
 
 	onCluster = () => {
+		this.onColumnMenuClose();
 		this.props.onCluster(this.props.id,
-			this.props.column.clustering ? undefined : 'probes');
+			this.props.column.clustering ? undefined : 'probes', this.props.data);
 	};
 
-	onDragZoom = (selection, zone) => {
+	canPickSamples = ev => {
+		var {samples, zoom} = this.props,
+			coord = util.eventOffset(ev),
+			sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index));
+
+		return this.props.canPickSamples(this.props.id, sampleIndex);
+	}
+
+	dragEnabled = ev => {
+		return !this.props.wizardMode &&
+			!(this.props.pickSamples && !this.canPickSamples(ev));
+	}
+
+	onPickSamplesDrag = selection => {
+		this.toggleInteractive(false);
+		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
+		var flop = selection.start.y > selection.end.y;
+		this.setState({dragZoom: {selection: translatedSelection, picking: true}});
+		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop);
+	}
+
+	onPickSamplesDragSelect  = selection => {
+		this.toggleInteractive(true);
+		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
+		var flop = selection.start.y > selection.end.y;
+		this.setState({dragZoom: {}});
+		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop, true);
+	}
+
+	onDragZoom(selection, zone) {
 		this.toggleInteractive(false);
 		var translatedSelection = zoomTranslateSelection(this.props, selection, zone);
 		this.setState({dragZoom: {selection: translatedSelection}});
 	};
 
-	onDragZoomSelect = (selection, zone) => {
+	onDragZoomSelect(selection, zone) {
 		this.toggleInteractive(true);
 		var {id, onXZoom, onYZoom, zoom} = this.props,
 			translatedSelection = zoomTranslateSelection(this.props, selection, zone),
@@ -517,7 +621,13 @@ class Column extends PureComponent {
 		h ? onXZoom(id, {start: zoomTo.start, end: zoomTo.end}) : onYZoom(_.merge(zoom, zoomTo));
 	};
 
+	onDragZoomSelectS = selection => this.onDragZoomSelect(selection, 's');
+	onDragZoomSelectA = selection => this.onDragZoomSelect(selection, 'a');
+	onDragZoomS = selection => this.onDragZoom(selection, 's');
+	onDragZoomA = selection => this.onDragZoom(selection, 'a');
+
 	onSortVisible = () => {
+		this.onColumnMenuClose();
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
 				column.valueType === 'segmented' ? true : false);
@@ -525,6 +635,7 @@ class Column extends PureComponent {
 	};
 
 	onSpecialDownload = () => {
+		this.onColumnMenuClose();
 		var {column, data, samples, index, sampleFormat} = this.props,
 			{type, downloadData} = widgets.specialDownload({column, data, samples, index: index, sampleFormat});
 		if (type === "txt") {
@@ -555,6 +666,7 @@ class Column extends PureComponent {
 	};
 
 	onMuPit = (assembly) => {
+		this.onColumnMenuClose();
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
 		// k fixed at 1000
@@ -589,18 +701,89 @@ class Column extends PureComponent {
 		window.open(url + `${uriList}`);
 	};
 
+	onDiff = () => {
+		this.onColumnMenuClose();
+		gaEvents('spreadsheet', 'DEA');
+		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
+				column} = this.props,
+			data = setUserCodes(column, dataIn),
+			samples = _.times(indicies.length, sampleFormat),
+			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
+			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
+			filteredCodes = data.codes.filter((code, i) => uniqValues.includes(i)),
+			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
+			//notebook = 'http://localhost:4000';
+			notebook = 'http://analysis.xenahubs.net';
+
+		var w = window.open(notebook);
+
+		var count = 0, d = 50;
+		var i = setInterval(function() {
+			w.postMessage(payload, '*');
+			count++;
+			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
+				clearInterval(i);
+				i = null;
+			}
+
+		}, d);
+		window.addEventListener("message", () => {
+			//	  if (event.origin !== "http://localhost:5000")
+			//		return;
+			if (i != null) {
+				clearInterval(i);
+				i = null;
+			}
+		}, false);
+	}
+
+	onBlitzGSEA = () => {
+		this.onColumnMenuClose();
+		gaEvents('spreadsheet', 'BlitzGSEA');
+		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
+				column} = this.props,
+			data = setUserCodes(column, dataIn),
+			samples = _.times(indicies.length, sampleFormat),
+			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
+			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
+			filteredCodes = data.codes.filter((code, i) => uniqValues.includes(i)),
+			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
+			notebook = 'http://blitzGSEA.xenahubs.net';
+
+		var w = window.open(notebook);
+
+		var count = 0, d = 50;
+		var i = setInterval(function() {
+			w.postMessage(payload, '*');
+			count++;
+			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
+				clearInterval(i);
+				i = null;
+			}
+
+		}, d);
+		window.addEventListener("message", () => {
+			//	  if (event.origin !== "http://localhost:5000")
+			//		return;
+			if (i != null) {
+				clearInterval(i);
+				i = null;
+			}
+		}, false);
+	}
+
 	onTumorMap = (tumorMap) => {
+		this.onColumnMenuClose();
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		var data = _.getIn(this.props, ['data']),
-			valueType = _.getIn(this.props, ['column', 'valueType']),
+		var {data, column} = this.props,
+			{valueType} = column,
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
 		var ds = JSON.parse(this.props.column.dsID),
 			hub = ds.host,
 			dataset = ds.name,
 			feature = this.props.column.fields[0], // gene or probe
-			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor', feature]); // object, key value pair
-
+			customColors = _.getIn(column, ['colors', 0, 2]);
 
 		url = url + "&hub=" + hub + "/data/";
 		url = url + "&dataset=" + dataset;
@@ -609,10 +792,9 @@ class Column extends PureComponent {
 		if (valueType === "coded") {
 			var codes = _.getIn(data, ['codes']),
 				cat, colorhex;
-
 			_.map(codes, (code, i) => {
 				cat = code;
-				colorhex = _.isEmpty(customColor) ? categoryMore[i % categoryMore.length] : customColor[code];
+				colorhex = customColors ? customColors[i] : categoryMore[i % categoryMore.length];
 				colorhex = colorhex.slice(1, colorhex.length);
 				url = url + "&cat=" + encodeURIComponent(cat);
 				url = url + "&color=" + colorhex;
@@ -627,11 +809,11 @@ class Column extends PureComponent {
 	};
 
 	getControlWidth = () => {
-		return 90;
-//		return 136;
+		return 102;
 	};
 
 	onAbout = (ev, host, dataset) => {
+		this.onColumnMenuClose();
 		ev.preventDefault();
 		this.props.onAbout(host, dataset);
 	};
@@ -640,20 +822,27 @@ class Column extends PureComponent {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
-				interactive, append, cohort, tumorMap} = this.props,
-			{specialDownloadMenu, dragZoom} = this.state,
+				pickSamples, interactive, append, cohort, tumorMap} = this.props,
+			{dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
+			zoomMethod = pickSamples ? {
+					onDrag: this.onPickSamplesDrag,
+					onSelect: this.onPickSamplesDragSelect
+				} : {
+					onDrag: this.onDragZoomS,
+					onSelect: this.onDragZoomSelectS
+				},
 			{width, dataset, columnLabel, fieldLabel, user} = column,
-			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			{onDiff, onBlitzGSEA, onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
-			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap, onShowIntrons, onSortVisible,
-				onCluster, onSpecialDownload, specialDownloadMenu, isSig}),
-			geneZoomable = columnZoom.supportsGeneZoom(column),
-			geneZoomed = columnZoom.geneZoomed(column),
-			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
+			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap,
+				onShowIntrons, onSortVisible, onCluster, onSpecialDownload,
+				onDiff, onBlitzGSEA, isSig}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
-			status = _.get(data, 'status'),
-			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
+			chartDisabled = disableChart(column),
+			canDoGeneSetComparison = this.canDoGeneSetComparison(),
+      status = _.get(data, 'status'),
+			refreshIcon = (<Box component={IconButton} edge='end' onClick={onReset} sx={{color: xenaColor.GRAY_DARKEST, pointerEvents: "auto"}}><Icon>close</Icon></Box>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
@@ -666,19 +855,22 @@ class Column extends PureComponent {
 					layout={column.layout}
 					height={annotationHeight}
 					positionHeight={column.position ? positionHeight : 0}
-					width={width}
-					mode={isChrom(column) ?
-						"coordinate" :
-						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+					width={width}/>
 				: null,
 			scale = showPosition(column) ?
 				<ChromPosition
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {isChrom(column) ?
-						"coordinate" :
-						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+					mode = {getGeneMode(column)}/>
+				: null,
+			geneLabel = showGeneLabel(column) ?
+				<GeneLabelAnnotation
+					tooltip={tooltip}
+					width={width}
+					height={annotationHeight + scaleHeight}
+					list = {column.fields}
+					subColumnIndex = {subColumnIndex}/>
 				: null;
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
@@ -689,9 +881,13 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
+          { this.state.geneSetUrl &&
+          <GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
+          }
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
-								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
+								 positionHeight={column.position ? positionHeight : 0} {...dragZoom}>
 						<ColCard colId={label}
+								 interactive={status !== 'loading' && interactive}
 								sortable={!first}
 								title={<DefaultTextInput
 									disabled={!interactive}
@@ -702,35 +898,38 @@ class Column extends PureComponent {
 									onChange={this.onFieldLabel}
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
-								 geneZoomPct={geneZoomPct}
-								 geneZoomed={geneZoomable && geneZoomed}
-								controls={!interactive ? (first ? refreshIcon : null) :
-									<div>
-										{first ? null : (
-											<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+								geneZoomText={columnZoom.zoomText(column)}
+								controls={!interactive ? (first && wizardMode ? refreshIcon : null) :
+										first ? null : (
+											<>
+											<IconButton edge='end' onClick={this.onColumnMenuOpen}><Icon>more_vert</Icon></IconButton>
+											<Menu
+												anchorEl={this.state.menuEl}
+												anchorOrigin={{horizontal: 'left', vertical: 'top'}}
+												getContentAnchorEl={null}
+												open={Boolean(this.state.menuEl)}
+												onClose={this.onColumnMenuClose}>
 												{menu}
 												{menu && <MenuDivider />}
-												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-												caption='Kaplan Meier Plot'/>
-												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-												<MenuItem onClick={this.onDownload} caption='Download'/>
+												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
+												<MenuItem onClick={this.onChart} disabled={chartDisabled}>Chart & Statistics</MenuItem>
+												{canDoGeneSetComparison && <MenuItem onClick={this.showGeneSetComparison}>Differential Geneset View</MenuItem>}
+												<MenuItem onClick={this.onSortDirection}>Reverse sort</MenuItem>
+												<MenuItem onClick={this.onDownload}>Download</MenuItem>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
-												<MenuItem onClick={this.onViz} caption='Display'/>
-												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-												<MenuItem onClick={this.onRemove} caption='Remove'/>
-												</IconMenu>)}
-									</div>
-								}
+												<MenuItem onClick={this.onViz}>Display</MenuItem>
+												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit}>Edit</MenuItem>
+												<MenuItem onClick={this.onRemove}>Remove</MenuItem>
+											</Menu></>)}
 								 wizardMode={wizardMode}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-									<DragSelect enabled={!wizardMode}
-											onDrag={(s) => this.onDragZoom(s, 'a')} onSelect={(s) => this.onDragZoomSelect(s, 'a')}>
+									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
 										<div>
 											{scale}
 											<div style={{height: 2}}/>
 											{annotation}
-										</div> : null}
+										</div> : geneLabel}
 								</DragSelect>
 							</div>
 							<ResizeOverlay
@@ -746,13 +945,12 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}}>
-									<Crosshair frozen={!interactive || this.props.frozen} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
-										<DragSelect enabled={!wizardMode}
-													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
+									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} interactive={interactive} geneHeight={geneHeight()} height={zoom.height} selection={selection} tooltip={tooltip}>
+										<DragSelect enabled={this.dragEnabled} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}
-										<ZoomHelpTag column={column} selection={selection}/>
+										<ZoomHelpTag column={column} {...dragZoom}/>
 									</Crosshair>
 								</div>
 							</ResizeOverlay>
@@ -763,5 +961,3 @@ class Column extends PureComponent {
 		);
 	}
 }
-
-module.exports = Column;

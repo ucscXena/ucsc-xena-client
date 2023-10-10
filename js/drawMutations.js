@@ -1,8 +1,7 @@
-'use strict';
 
-var _ = require('./underscore_ext');
-var {contrastColor, lightgreyHEX} = require('./color_helper');
-var {impact} = require('./models/mutationVector');
+var _ = require('./underscore_ext').default;
+var {contrastColor, greyHEX} = require('./color_helper').default;
+var {impact, getSNVEffect} = require('./models/mutationVector');
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
@@ -57,42 +56,48 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var {height, count} = zoom,
 		vHeight = minVariantHeight(height / count),
+		split = splitRows(count, height),
+		toY = split ? toYPxSubRow : toYPx,
 		minWidth = 2; // double that is the minimum width we draw
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);
-	varByImp = _.sortBy(varByImp, list => impact[list[0].data.effect]); // draw variants from low to high impact
+	varByImp = _.sortBy(varByImp, list => impact[getSNVEffect(impact, list[0].data.effect)]); // draw variants from low to high impact
 
-	varByImp.forEach(vars => {
-		var points = vars.map(v => {
+	if (!split) {
+		varByImp.forEach(vars => {
+			var points = vars.map(v => {
 				var {y} = toYPx(zoom, v),
 					padding = _.max([minWidth - Math.abs(v.xEnd - v.xStart), 0]);
 				return [v.xStart - padding, y, v.xEnd + padding, y];
 			});
+			vg.drawPoly(points,
+				{strokeStyle: vars[0].color, lineWidth: vHeight});
+		});
+	} else {
+		smallVariants.forEach(v => {
+			var {svHeight, y} = toY(zoom, v),
+				h = minVariantHeight(svHeight),
+				padding = _.max([minWidth - Math.abs(v.xEnd - v.xStart), 0]);
 
-		vg.drawPoly(points,
-			{strokeStyle: vars[0].color, lineWidth: vHeight});
+			vg.drawPoly([[v.xStart - padding, y, v.xEnd + padding, y]],
+				{strokeStyle: v.color, lineWidth: h});
 
-		// small variants label
-		if (height / count > labelFont) {
-			let h = height / count,
+			// small variants label
+			var {xStart, xEnd, data} = v,
+				label = data.aminoAcid || data.alt,
+				textWidth = vg.textWidth(labelFont, label),
 				minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
-			vars.forEach(function(v) {
-				var {xStart, xEnd, data} = v,
-					{y} = toYPx(zoom, v),
-					label = data.aminoAcid || data.alt,
-					textWidth = vg.textWidth(labelFont, label);
-
-				if ((xEnd - xStart) >= minTxtWidth / 5 * label.length) {
-					vg.textCenteredPushRight( xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
-							h, contrastColor(vars[0].color), labelFont, label);
-				} else {
-					vg.textCenteredPushRight( xStart, y - h / 2, textWidth, h, lightgreyHEX, labelFont, label);
-				}
-			});
-		}
-	});
+			if ((xEnd - xStart) >= minTxtWidth / 5 * label.length) {
+				vg.textCenteredPushRight(xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
+					h, contrastColor(v.color), labelFont, label);
+			} else {
+				vg.textCenteredPushRight(xEnd + labelMargin, y - h / 2, textWidth,
+					h, greyHEX, labelFont, label);
+			}
+		});
+	}
 }
 
 function drawSVNodes(vg, width, zoom, svVariants) {
@@ -130,7 +135,6 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 		vg.drawPoly(points,
 			{strokeStyle: 'black', lineWidth: h});
 	});
-
 
 	//feet variants show text label when there is only one variant for this sample, otherwise, text might overlap
 	if (height / count > labelFont) {

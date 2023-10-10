@@ -1,6 +1,5 @@
-'use strict';
 var {drawSamples} = require('./drawSamples');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var widgets = require('./columnWidgets');
 
 function pdf(id, column, vg, state, i) {

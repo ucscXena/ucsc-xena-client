@@ -5,13 +5,11 @@
  * Custom CSS styling of MD cards, displayed after wizard setup is complete and each card contains a visualization.
  */
 
-@value black6 from '../../css/variables.css';
-@value black12 from '../../css/variables.css';
-@value black38 from '../../css/variables.css';
-
-/* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as 
+/* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as
    well as the add column hover functionality. */
 :global(.Column) {
+	border-radius: 6px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.14), 0 2px 1px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.2);
 	cursor: default;
 	overflow: visible;
 	margin-left: 0;
@@ -24,71 +22,14 @@
 	opacity: 1;
 }
 
+/* Disable column interaction */
+.disableInteraction {
+	pointer-events: none;
+}
+
 /* Container around column label (A, B, C etc) and controls */
 .headerContainer {
-	align-items: center;
-	border-bottom: 1px solid black12;
-	display: flex;
-	line-height: 0;
-	justify-content: space-between;
-	padding: 8px 16px;
-}
-
-/* Wrapper around controls that are passed in as a prop */
-.controls > div {
-	align-items: center;
-	display: flex;
-}
-
-/* Icons */
-.controls i {
-	cursor: pointer;
-}
-
-.controls {
-	position: relative;
-}
-
-/* Using a covering div to hide controls, instead of opacity,
- * because opacity is inherited by a nested menu, which makes the menu wink in
- * and out as the mouse moves. By using a cover, we do not affect the opacity
- * of the menu.
- */
-.cover, .headerContainer:hover .cover.showOnHover {
-	opacity: 0;
-	visibility: hidden;
-}
-
-.cover.showOnHover {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	opacity: 1;
-	visibility: visible;
-	background-color: #ffffff;
-	pointer-events: none;
-	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
-}
-
-/* Wrapper around title/subtitle and controls. */
-.titleContainer {
-	border-bottom: 1px solid black12;
-	display: flex;
-	height: 61px; /* Includes border */
-	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
-	padding: 8px 16px;
-	position: relative; /* Positions zoomControl */
-}
-
-.title {
-	flex: 1;
-	padding: 0 !important; /* Using important here to override cardTitle.small from theme. */
-}
-
-.title > div {
-	width: 100%; /* Force RTB title to be full width */
+	padding: 16px;
 }
 
 /* Zoom control */
@@ -96,38 +37,23 @@
 	align-items: center;
 	bottom: 0;
 	display: flex;
-	color: var(--color-primary-contrast);
 	cursor: pointer;
-	font-size: 8px;
-	left: 16px;
-	line-height: normal;
+	font-size: 10px; /* Close icon inherits font size. */
+	line-height: 10px;
 	position: absolute;
-	right: 16px;
 	text-transform: uppercase;
+	width: calc(100% - 32px); /* The position absolute of the zoom control requires width specification for content to ellipsis when required. */
 }
 
-.zoomControl span {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-/* Clear zoom */
-.zoomControl i {
-	flex-shrink: 0;
-	font-size: 10px;
-	opacity: 0.54;
-	margin-left: 4px;
+/* Zoom card header container */
+/* Zoom card title container */
+.zoomCard .headerContainer,
+.zoomCard .titleContainer {
+	padding: 8px 0;
+	margin-bottom: 1px; /* Compensates for lack of divider between containers. */
 }
 
 /* Zoom card header container */
 .zoomCard .headerContainer {
-	border-bottom: 1px solid transparent;
-	padding: 8px 0;
-}
-
-/* Zoom card title container */
-.zoomCard .titleContainer {
-	border-bottom: 1px solid transparent;
-	padding: 8px 0;
+	height: 72px;
 }

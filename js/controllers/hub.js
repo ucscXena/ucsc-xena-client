@@ -1,15 +1,14 @@
-'use strict';
 var {Let, assocIn, dissoc, get, identity,
-	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
-var {make, mount, compose} = require('./utils');
+	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
+import {make, mount, compose} from './utils';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
-var {servers: {localHub}} = require('../defaultServers');
+var {servers: {localHub}, serverS3url} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import query from './query';
@@ -53,13 +52,17 @@ var head = url => ajax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
 // Check for dataset download link. If not there, try the link with '.gz'
 // suffix. If not there, return undefined.
 var checkDownload = (host, dataset) => {
-	var link = `${host}/download/${dataset}`,
+	var link = `${host}/download/${encodeURIComponent(dataset)}`,
 		gzlink = `${link}.gz`,
+		s3link = `${serverS3url[host]}/${encodeURIComponent(dataset)}`,
+		s3gzlink = `${s3link}.gz`,
 		dl = head(link),
 		gzdl = head(gzlink),
+		s3dl = head(s3link),
+		s3gzdl = head (s3gzlink),
 		nodl = of(undefined);
 
-	return dl.catch(() => gzdl).catch(() => nodl);
+	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl).catch(() => nodl);
 };
 
 var noSnippets = () => of(undefined);
@@ -120,16 +123,24 @@ var datasetMetaAndLinks = (host, dataset) => {
 	var metaQ = datasetMetadata(host, dataset).map(m => m[0]).share(),
 		downloadQ = checkDownload(host, dataset),
 		dataQ = metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
-		probeCountQ = metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset)),
 		probemapQ = metaQ.mergeMap(meta =>
 			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
 
-	return zip(metaQ, dataQ, probeCountQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
-			({meta, data, probeCount, downloadLink, probemapLink}));
+	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, downloadLink, probemapLink) =>
+			({meta, data, downloadLink, probemapLink}));
+};
+
+// XXX This re-fetches the dataset metadata. We split this out
+// because the probe query can be slow. It would be better to fetch
+// the metadata once, but currently the controller/query.js mechanisms
+// don't implement dependent queries.
+var datasetProbeCount = (host, dataset) => {
+	var metaQ = datasetMetadata(host, dataset).map(m => m[0]);
+	return metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset));
 };
 
 var spreadsheetControls = {
-	'init': (state, pathname = '/', params) => setHubs(state, params),
+	'init': (state, pathname, params) => setHubs(state, params),
 	'add-host': (state, host) =>
 		assocIn(state, ['servers', host], {user: true}),
 	'remove-host': (state, host) =>
@@ -157,6 +168,7 @@ var sectionDataMethods = {
 	identifiers: ({params: {host, dataset}}) => [['identifiers', host, dataset]],
 	dataset: ({params: {host, dataset}}) => [
 		['dataset', host, dataset],
+		['datasetProbeCount', host, dataset],
 		['datasetDescription', dataset]],
 	markdown: ({params: {markdown}}) => [['markdown', markdown]],
 	cohort: ({params: {cohort}, spreadsheet}) => [
@@ -181,7 +193,8 @@ var fetchMethods = {
 	samples: (host, dataset) => datasetSamples(host, dataset, null),
 	identifiers: datasetField,
 	dataset: datasetMetaAndLinks,
-	datasetDescription: datasetDescription,
+	datasetDescription,
+	datasetProbeCount,
 	markdown: getMarkDown,
 	cohort: cohortMeta,
 	// XXX Note that this will cache lists from hubs that the user has
@@ -215,28 +228,23 @@ var {controller: fetchController, invalidatePath} =
 // ['dataset', localHub, *]
 // ['cohortDatasets', *, localHub]
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (state) {
-		var datapages = get(state, 'datapages', {});
-		invalidatePath(datapages, ['cohorts', localHub]);
-		invalidatePath(datapages, ['hubMeta', localHub]);
-		invalidatePath(datapages, ['samples', localHub, any]);
-		invalidatePath(datapages, ['identifiers', localHub, any]);
-		invalidatePath(datapages, ['dataset', localHub, any]);
-		invalidatePath(datapages, ['cohortDatasets', any, localHub]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['cohorts', localHub]);
+		invalidatePath(serverBus, ['hubMeta', localHub]);
+		invalidatePath(serverBus, ['samples', localHub, any]);
+		invalidatePath(serverBus, ['identifiers', localHub, any]);
+		invalidatePath(serverBus, ['dataset', localHub, any]);
+		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
 	});
 
-function hubChangePost(serverBus, state, newState) {
-	invalidateLocalHub(newState);
-}
-
 var controls = {
-	'localStatus-post!': hubChangePost,
-	'localQueue-post!': hubChangePost,
+	'localStatus-post!': invalidateLocalHub,
+	'localQueue-post!': invalidateLocalHub,
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
 };
 
-module.exports = compose(
+export default compose(
 		fetchController,
 		mount(make(spreadsheetControls), ['spreadsheet']),
 		make(controls));

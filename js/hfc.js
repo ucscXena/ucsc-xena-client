@@ -1,7 +1,5 @@
-'use strict';
-
 var wasm = require('ucsc-xena-wasm');
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 import {allocArray, allocStrings, getArrayPtrField} from './xenaWasm';
 
 function hfcSet(Module, data) {
@@ -126,6 +124,10 @@ function hfcProxy(Module, hasPrivateSamples) {
 			if (prop === 'filterIndices') {
 				return filterIndices;
 			}
+			if (typeof prop === 'symbol') {
+				return undefined;
+			}
+
 			var i = parseInt(prop, 10);
 			if (isNaN(i)) {
 				return obj[prop];

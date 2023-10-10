@@ -1,6 +1,5 @@
-'use strict';
 var {drawMutations, drawSV} = require('./drawMutations');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var widgets = require('./columnWidgets');
 
 var pdf = _.curry((draw, id, column, vg, state, i) => {

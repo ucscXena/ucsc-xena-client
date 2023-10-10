@@ -1,7 +1,6 @@
-'use strict';
 var React = require('react');
-var colorScales = require('../colorScales');
-var {contrastColor} = require('../color_helper');
+import {colorScale} from '../colorScales';
+var {contrastColor} = require('../color_helper').default;
 import '../../css/transcript_css/nameColumn.css';
 var styles = require('./NameColumn.module.css');
 
@@ -9,7 +8,7 @@ class NameColumn extends React.PureComponent {
 	render() {
 		let data = this.props.data || {},
 			gene = this.props.gene;
-		let colors = colorScales.colorScale(['ordinal', data.length]);
+		let colors = colorScale(['ordinal', data.length]);
 		let items = data.map((d, index) => {
 			let rowClass = d.zoom ? "nameColumn--item--zoom" : "nameColumn--item";
 			return (

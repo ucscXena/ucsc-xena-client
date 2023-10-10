@@ -1,14 +1,33 @@
-'use strict';
-import {allParameters} from './util';
-import {flatmap, get, getIn, identity, isBoolean, isObject, Let, mapObject, pick} from './underscore_ext';
+var {allParameters} = require('./util').default;
+var {flatmap, get, getIn, groupBy, identity, isArray, isBoolean, isObject, isString, Let, mapObject, pick} = require('./underscore_ext').default;
+
+import {parse} from './models/searchParser';
 
 // This is pretty much cut & paste from columnsParam, so might be
 // more complex than necessary.
 
 var heatmapOptPaths = {
 	showWelcome: ['showWelcome'],
+	search: ['sampleSearch'],
+	searchSampleList: ['sampleSearch'],
+	filter: ['sampleFilter'],
 	mode: ['mode']
 };
+
+function searchIsValid(s) {
+	try {
+		parse(s);
+	} catch(e) {
+		return false;
+	}
+	return true;
+}
+
+var isStringArray = a =>
+	isArray(a) && a.every(s => isString(s));
+
+var arrayToSearch = a =>
+	a.map(s => `A:="${s}"`).join(' OR ');
 
 var invalid = {}; // use reference equality to tag invalid values.
 var heatmapOptCleaner = {
@@ -16,6 +35,9 @@ var heatmapOptCleaner = {
 		s === 'heatmap' ? s :
 		s === 'chart' ? s :
 		invalid,
+	search: s => searchIsValid(s) ? s : invalid,
+	searchSampleList: s => isStringArray(s) ? arrayToSearch(s) : invalid,
+	filter: s => searchIsValid(s) ? s : invalid,
 	showWelcome: v => isBoolean(v) ? v : invalid,
 };
 var heatmapOptClean = (opt, v) => (heatmapOptCleaner[opt] || identity)(v);
@@ -23,6 +45,9 @@ var heatmapOpts = Object.keys(heatmapOptPaths);
 
 var heatmapOptSetter = {
 	mode: s => s ? s : invalid,
+	search: s => searchIsValid(s) ? s : invalid,
+	searchSampleList: () => invalid, // don't try to save a sample highlight
+	filter: () => invalid, // don't try to save a sample filter
 	showWelcome: v => v == null ? invalid : v
 };
 var heatmapOptSet = (opt, v) => (heatmapOptSetter[opt] || identity)(v);
@@ -41,7 +66,8 @@ export function heatmapParam() {
 		try {
 			var opts = cleanOpts(JSON.parse(heatmap[0]));
 			if (heatmapSchema(opts)) {
-				return {heatmap: opts};
+				var {true: [[, filter]] = [[]], false: other} = groupBy(opts, ([[k]]) => k === 'sampleFilter');
+				return {heatmap: other, filter};
 			}
 			console.log(`Invalid heatmap parameter ${opts}`);
 		} catch(e) {

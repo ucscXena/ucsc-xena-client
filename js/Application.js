@@ -1,33 +1,16 @@
-'use strict';
-import React, { Component } from 'react';
+import React from 'react';
+import PureComponent from './PureComponent';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
 import SheetControls from './SheetControls';
-import StateError from'./StateError';
-import _  from './underscore_ext';
-import { Stepper } from './views/Stepper';
+import {StateError} from'./StateError';
+var _ = require('./underscore_ext').default;
 import Welcome from './containers/WelcomeContainer';
-import '../css/index.css'; // Root styles file (reset, fonts, globals)
-import { ThemeProvider } from 'react-css-themr';
-import appTheme from './appTheme';
+import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
 var gaEvents = require('./gaEvents');
-//var Perf = require('react/lib/ReactDefaultPerf');
-
-const stepperSteps = [
-	{ label: 'Select a Study to Explore' },
-	{ label: 'Select Your First Variable' },
-	{ label: 'Select Your Second Variable' }
-];
-const stepperStateIndex = {
-	'COHORT': 0,
-	'FIRST_COLUMN': 1,
-	'SECOND_COLUMN': 2
-};
-
-// should really be in a config file.
-const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
+//var Perf = require('react-dom/lib/ReactPerf');
 
 function clearZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
@@ -42,7 +25,7 @@ function zoomOut(samples, zoom) {
 	return _.merge(zoom, {count: nCount, index: nIndex});
 }
 
-class Application extends Component {
+class Application extends PureComponent {
 //	onPerf = () => {
 //		if (this.perf) {
 //			this.perf = false;
@@ -69,6 +52,7 @@ class Application extends Component {
 	}
 	onClearZoom = () => {
 		const {state: {samples, zoom}} = this.props;
+		gaEvents('spreadsheet', 'zoom', 'clear');
 		this.props.callback(['zoom', clearZoom(samples.length, zoom)]);
 	};
 	onHideError = () => {
@@ -101,7 +85,7 @@ class Application extends Component {
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
 //	};
 	render() {
-		let {state, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
+		let {state, stateError, children, loadPending, ...otherProps} = this.props,
 			{callback} = otherProps,
 			{editing, wizardMode, showWelcome, zoom} = state;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
@@ -113,13 +97,13 @@ class Application extends Component {
 		return (
 			<div>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
-					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
-						null}
-					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
-						<AppControls {...otherProps} appState={state} help={searchHelp}
-									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
-						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
-										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}
+					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> : null}
+					{wizardMode ? null :
+						<div>
+							<AppControls {...otherProps} appState={state} zoom={zoom} onShowWelcome={this.onShowWelcome}/>
+							<SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
+										   statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/>
+						</div>}
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>
@@ -127,7 +111,7 @@ class Application extends Component {
 						</Row>
 					*/}
 						<Row>
-							<Col xs4={4}>
+							<Col xs4={4} style={{position: 'relative'}}>
 						{children}
 							</Col>
 						</Row>
@@ -137,18 +121,11 @@ class Application extends Component {
 							survivalKeys={_.keys(state.survival)}
 							km={state.km}
 							cohort={state.cohort.name} /> : null}
-					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
+					<StateError onHide={this.onHideError} error={stateError}/>
 				</div>
 			</div>
 		);
 	}
 }
 
-const ThemedApplication = (props) => {
-	return (
-		<ThemeProvider theme={appTheme}>
-			<Application {...props}/>
-		</ThemeProvider>);
-};
-
-module.exports = ThemedApplication;
+module.exports = Application;

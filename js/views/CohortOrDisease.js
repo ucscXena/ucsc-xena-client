@@ -1,49 +1,61 @@
-'use strict';
 var React = require('react');
-var CohortSuggest = require('./CohortSuggest');
+import {Box} from '@material-ui/core';
+import {CohortSuggest} from './CohortSuggest';
 var DiseaseSuggest = require('./DiseaseSuggest2');
 var XRadioGroup = require('./XRadioGroup');
-var WizardCard = require('./WizardCard');
+var {WizardCard} = require('./WizardCard');
 
 class CohortOrDisease extends React.Component {
-	state = {mode: 'cohort', cohort: null};
+	state = {mode: 'cohort', cohort: null, matchedCohorts: []};
 
 	onChange = (value) => {
-		this.setState({mode: value, cohort: null});
+		this.setState({mode: value, cohort: null, matchedCohorts: []});
 	};
 
 	onDone = () => {
 		this.props.onSelect(this.state.cohort);
 	};
 
-	onSelect = (cohort) => {
+	onSelectCohort = (cohort) => {
 		this.setState({cohort});
 	};
 
+	onSelectDiseaseOrTissue = (matchedCohorts) => {
+		this.setState({cohort: null, matchedCohorts});
+	};
+
 	render() {
-		var {mode, cohort} = this.state,
+		var {mode, cohort, matchedCohorts} = this.state,
 			{cohorts = [], cohortMeta, width} = this.props;
+		var cohortSuggestProps = {
+			formLabel: 'Study',
+			placeholder: 'Select Study',
+		};
+		var diseaseSuggestProps = {
+			formLabel: 'Primary Disease or Tissue of Origin',
+			placeholder: 'Select Disease or Tissue',
+		};
 		var studyDiscoveryProps = {
 			label: 'Study Discovery',
 			value: mode,
 			onChange: this.onChange,
-			options: [{label: 'Help me select a study', value: 'disease'}, {label: 'I know the study I want to use', value: 'cohort'}]
+			options: [{label: 'I know the study I want to use', value: 'cohort'}, {label: 'Help me select a study', value: 'disease'}]
 		};
 		var wizardProps = {
-			title: 'Study',
-			helpText: 'If you would like help determining the data set to use, Xena can suggest data sets if you provide a primary disease or tissue of origin.',
+			colId: 'A',
+			colMode: 'WIZARD',
 			onDone: this.onDone,
+			title: 'Select a Study to Explore',
 			valid: !!cohort,
 			width
 		};
 		return (
 			<WizardCard {...wizardProps}>
 				<XRadioGroup {...studyDiscoveryProps} />
-				{mode === 'cohort' ?
-					<CohortSuggest onSelect={this.onSelect} cohorts={cohorts}
-								   cohort={cohort}/> :
-					<DiseaseSuggest onSelect={this.onSelect} cohorts={cohorts}
-									cohort={cohort} cohortMeta={cohortMeta}/>}
+				<Box sx={{display: 'flex', flexDirection: 'column', gridGap: 16}}>
+					{mode === 'disease' && <DiseaseSuggest cohortMeta={cohortMeta} onSelect={this.onSelectDiseaseOrTissue} suggestProps={diseaseSuggestProps}/>}
+					<CohortSuggest cohort={cohort} cohorts={mode === 'disease' ? matchedCohorts : cohorts} onSelect={this.onSelectCohort} suggestProps={cohortSuggestProps}/>
+				</Box>
 			</WizardCard>);
 	}
 }

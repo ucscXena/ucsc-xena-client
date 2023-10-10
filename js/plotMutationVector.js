@@ -1,35 +1,24 @@
-'use strict';
-
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');
 var Legend = require('./views/Legend');
 var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
-var util = require('./util');
+var util = require('./util').default;
 var CanvasDrawing = require('./CanvasDrawing');
 var mv = require('./models/mutationVector');
 var {drawSV, drawMutations, radius, toYPx, toYPxSubRow, minVariantHeight, splitRows} = require('./drawMutations');
 var {chromPositionFromScreen} = require('./exonLayout');
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-	module.hot.accept('./models/mutationVector', () => {
-		mv = require('./models/mutationVector');
-	});
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
-function drawLegend({column}) {
+function drawMutationLegend({column}) {
 	if (!column.legend) {
 		return null;
 	}
@@ -46,6 +35,24 @@ function drawLegend({column}) {
 	);
 }
 
+function drawSVLegend({column}) {
+	if (!column.legend) {
+		return null;
+	}
+	var {colors, labels, titles} = column.legend,
+		labelheader = "Variant Impact";
+
+	return (
+		<Legend
+			colors={colors}
+			labels={labels}
+			titles={titles}
+			addBreakend={1}
+			addNullNotation={1}
+			labelheader={labelheader}/>
+	);
+}
+
 function closestNodeSNV(nodes, zoom, x, y) {
 	var cutoffX = radius,
 		{index, height, count} = zoom,
@@ -55,7 +62,7 @@ function closestNodeSNV(nodes, zoom, x, y) {
 			Math.abs(y - toYPx(zoom, n).y) < cutoffY &&
 			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
-	var closest = _.max(nearBy, n => mv.impact[n.data.effect] || 0),
+	var closest = _.max(nearBy, n => mv.impact[mv.getSNVEffect(mv.impact, n.data.effect)] || 0),
 		//multiple records of the same location same sample
 		allClosest = _.filter(nearBy, n => (n.data.start === closest.data.start) &&
 			(n.data.end === closest.data.end) &&
@@ -188,7 +195,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 			effect = ['value', fmtIf(data.effect, x => `${x}, `, `unannotated`) + //eslint-disable-line comma-spacing
 						fmtIf(data.gene, x => `${x}`)  +
 						fmtIf(data.aminoAcid, x => ` (${x})`) +
-						fmtIf(data.altGene, x => ` connect to ${x} `)
+						fmtIf(data.altGene, x => `--${x} `)
 						];
 		return dropNulls([
 				[effect],
@@ -246,7 +253,7 @@ function tooltip(id, fieldType, fields, layout, nodes, samples, sampleFormat, zo
 }
 
 var MutationColumn = hotOrNot(class extends PureComponent {
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -256,10 +263,9 @@ var MutationColumn = hotOrNot(class extends PureComponent {
 				return events.mousemove
 					.takeUntil(events.mouseout)
 					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true
+						data: this.tooltip(ev)
 					})) // look up current data
-					.concat(Rx.Observable.of({open: false}));
+					.concat(Rx.Observable.of({}));
 			}).subscribe(this.props.tooltip);
 	}
 
@@ -301,5 +307,5 @@ widgets.column.add('mutation',
 widgets.column.add('SV',
 		props => <MutationColumn draw={drawSV} {...props} />);
 
-widgets.legend.add('mutation', drawLegend);
-widgets.legend.add('SV', drawLegend);
+widgets.legend.add('mutation', drawMutationLegend);
+widgets.legend.add('SV', drawSVLegend);

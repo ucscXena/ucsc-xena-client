@@ -1,8 +1,7 @@
 /*global define: false */
-'use strict';
-var Rx = require('./rx');
-var {encodeObject} = require('./util');
-var {isArray, merge} = require('./underscore_ext');
+var Rx = require('./rx').default;
+var {encodeObject} = require('./util').default;
+var {isArray, merge} = require('./underscore_ext').default;
 
 function update(host, files, flags) {
 	files = isArray(files) ? files : [files];

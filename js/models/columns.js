@@ -1,13 +1,11 @@
-'use strict';
-
 import multi from '../multi';
-import * as xenaQuery from '../xenaQuery';
-import {Observable, Scheduler} from '../rx';
-import * as _ from '../underscore_ext';
+var xenaQuery = require('../xenaQuery');
+var {Observable, Scheduler} = require('../rx').default;
+var _ = require('../underscore_ext').default;
 import parsePos from '../parsePos';
 import parseInput from '../parseInput';
 import parseGeneSignature from '../parseGeneSignature';
-import {signatureField} from '../models/fieldSpec';
+var {signatureField} = require('../models/fieldSpec');
 import {defaultColorClass} from '../heatmapColors';
 
 // XXX duplicated in VariableSelect.
@@ -35,7 +33,7 @@ export var guessFields = (text, assembly) => {
 
 export var matchDatasetFields = multi((datasets, dsID) => {
 	var meta = datasets[dsID];
-	// Do field matching against probemap if we have one & aren't doing a signature.
+	// Do field matching against probemap if we have one
 	return meta.type === 'genomicMatrix' && meta.probemap ? 'genomicMatrix-probemap' : meta.type;
 });
 
@@ -63,7 +61,7 @@ matchDatasetFields.dflt = (datasets, dsID, input) => {
 
 var geneProbeMatch = (host, dsID, probemap, guess) =>
 	Observable.zip(
-		xenaQuery.sparseDataMatchGenes(host, probemap, guess.fields),
+		xenaQuery.matchGenesWithProbes(dsID, guess.fields),
 		xenaQuery.matchFields(dsID, guess.fields),
 		(genes, probes) => _.filter(probes).length > _.filter(genes).length ?
 			{...guess, type: 'probes', fields: probes} :
@@ -167,16 +165,19 @@ function getFieldType(dataset, fields, matches, pos) {
 }
 
 function sigFields(fields, {genes, weights}) {
+	var matches = new Set(fields.map(s => s.toLowerCase()));
 	return {
-		missing: genes.filter((p, i) => !fields[i]),
-		genes: fields.filter(p => p),
-		weights: weights.filter((p, i) => fields[i])
+		missing: genes.filter(g => !matches.has(g.toLowerCase())),
+		genes: fields,
+		weights: weights.filter((p, i) => matches.has(genes[i].toLowerCase()))
 	};
 }
 
-// use default vizSettings if we have min and max.
-var getDefaultVizSettings = meta => _.has(meta, 'min') && _.has(meta, 'max') ?
-	{vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
+// use vizSettings set in .json metadata
+var getDefaultVizSettings = meta =>
+	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} :
+	_.has(meta, 'origin') && _.has(meta, 'thresh') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'origin', 'max', 'thresh')} :
+	{};
 
 var xenaField = (datasets, features, settings) => ({
 	...settings,
@@ -206,7 +207,7 @@ function columnSettings(datasets, features, dsID, matches) {
 			dataset.type === 'clinicalMatrix' ? _.getIn(features, [dsID, fields[0], 'longtitle']) || fields[0] :
 			normalizedFields.join(', '),
 		defaults = {
-			...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
+			...(['geneProbes', 'segmented', 'SV'].indexOf(fieldType) !== -1 ? {showIntrons: true} : {}),
 			colorClass: defaultColorClass,
 			columnLabel,
 			dataset,
@@ -216,6 +217,7 @@ function columnSettings(datasets, features, dsID, matches) {
 			fieldLabel,
 			fieldType,
 			user: {columnLabel, fieldLabel},
+			value,
 			width: typeWidth[typeClass(dataset)],
 		};
 
@@ -232,6 +234,15 @@ export var computeSettings = _.curry((datasets, features, opts, dataset, matches
 	// XXX need a way to validate settings that depend on column type, i.e.
 	// fieldType geneProbes only works for matrix with probemap.
 	// Or, a possible refactor of the schema to make this simpler?
-	return _.assocIn(settings, ...(opts || []).flatten());
+  return _.assocIn(settings, ...(opts || []).flat());
 
 });
+
+export var isChrom = column =>
+	parsePos(_.get(column.fieldList || column.fields, 0),
+			_.getIn(column, ['assembly']));
+
+export var getGeneMode = column =>
+	isChrom(column) ?  "coordinate" :
+	_.getIn(column, ['showIntrons']) === true ? "geneIntron" :
+	"geneExon";

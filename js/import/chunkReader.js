@@ -1,4 +1,3 @@
-'use strict';
 
 // iterable that returns slices of a file (or blob, I suppose), for working on
 // large data in chunks.

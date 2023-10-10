@@ -1,8 +1,7 @@
 // React component to manages redrawing a canvas element.
 
-'use strict';
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var vgmixed = require('./vgmixed');
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -12,7 +11,7 @@ var compStyles = require('./CanvasDrawing.module.css');
 var classNames = require('classnames');
 
 class CanvasDrawing extends React.Component {
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}

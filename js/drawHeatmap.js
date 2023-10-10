@@ -1,9 +1,8 @@
-'use strict';
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var partition = require('./partition');
-var colorScales = require('./colorScales');
-var colorHelper = require('./color_helper');
+import {colorScale} from './colorScales';
+var colorHelper = require('./color_helper').default;
 var xenaWasm = require('./xenaWasm');
 
 var labelFont = 12;
@@ -125,13 +124,13 @@ function drawLayoutByPixel(vg, opts) {
 
 	layout.forEach(function (el, i) {
 		var rowData = data[i],
-			colorScale = xenaWasm.getColorScale(colors[i]);
+			xWcolorScale = xenaWasm.getColorScale(colors[i]);
 
 		xenaWasm.Module.HEAPF32.set(rowData, dataP / 4);
 
 		xenaWasm.Module._draw_subcolumn(
-			colorScale.method,
-			colorScale.scale,
+			xWcolorScale.method,
+			xWcolorScale.scale,
 			dataP,
 			sampP,
 			first,
@@ -142,7 +141,7 @@ function drawLayoutByPixel(vg, opts) {
 			el.start,
 			el.size);
 
-		xenaWasm.Module._free(colorScale.scale);// Maybe avoid this alloc
+		xenaWasm.Module._free(xWcolorScale.scale);// Maybe avoid this alloc
 	});
 	// XXX views are stale after a wasm call, so create them as needed.
 	var img = new Uint8ClampedArray(xenaWasm.Module.HEAPU8.buffer, imgP, width * height * 4);
@@ -162,7 +161,7 @@ function drawLayoutByPixel(vg, opts) {
 				// labels.
 				subcol = data[i],
 				rowData = Float32Array.from(samples.slice(first, last)).map(j => subcol[j]),
-				colorScale = colorScales.colorScale(colors[i]),
+				colorScaleFn = colorScale(colors[i]),
 				labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
 				h = height / count,
 				// XXX watch this performance
@@ -173,7 +172,7 @@ function drawLayoutByPixel(vg, opts) {
 
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
 					labels.forEach(([l, i, ih]) => /* label, index, count */
-						_.Let((labelColor = colorScale(rowData[i])) =>
+						_.Let((labelColor = colorScaleFn(rowData[i])) =>
 							vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
 								h * ih, (codedColor && labelColor) ? colorHelper.contrastColor(labelColor) : 'black',
 								labelFont, l))));

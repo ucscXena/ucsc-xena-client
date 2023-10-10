@@ -1,9 +1,8 @@
-'use strict';
 
 var React = require('react');
 var ReactDOM = require('react-dom');
 var vgcanvas = require('./vgcanvas');
-var {addCommas} = require('./util');
+var {addCommas} = require('./util').default;
 
 var labelHeight = 12;
 var font = 10;
@@ -109,7 +108,7 @@ class ChromPosition extends React.Component {
 		this.draw(width, scaleHeight, layout, mode);
 	}
 
-	/*componentWillReceiveProps() {
+	/*UNSAFE_componentWillReceiveProps() {//eslint-disable-line camelcase
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.draw(width, scaleHeight, layout, mode);
 	},*/

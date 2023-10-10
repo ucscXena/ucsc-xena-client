@@ -1,4 +1,3 @@
-'use strict';
 
 // Styles shared by the spreadsheet viz & pdf output.
 

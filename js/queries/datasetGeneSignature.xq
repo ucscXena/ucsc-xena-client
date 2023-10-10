@@ -13,7 +13,7 @@
                                scores (fetch [{:table dataset
                                                :samples samples
                                                :columns probe-names}])]
-                           (if (car probe-names) (avg scores) [[]])))]
+                           (if (car probe-names) (car (avg scores)) [])))]
 
      ; putting in an object avoids a liberator encoding error
-     {:scores (apply + (map (fn [w v] (* v w)) weights (car (map scores-for-gene genes))))}))
+     {:scores (apply + (map (fn [w v] (* v w)) weights (map scores-for-gene genes)))}))

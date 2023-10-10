@@ -1,4 +1,3 @@
-'use strict';
 var jStat = require('jStat').jStat;
 
 function valCounts(arr) {

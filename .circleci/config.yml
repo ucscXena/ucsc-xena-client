@@ -27,13 +27,13 @@ jobs:
     # To see the list of pre-built images that CircleCI provides for most common languages see
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
-    - image: circleci/python:2.7.15-node-browsers
+    - image: circleci/python:3.7.9-node-browsers
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # The following `checkout` command checks out your code to your working directory. In 1.0 we did this implicitly. In 2.0 you can choose where in the course of a job your code should be checked out.
-    - run: sudo apt-get update
-    - run: sudo apt-get install libssl1.0-dev
+    - run: sudo apt update
+    - run: sudo apt-get install libssl-dev
     - checkout
     # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
     # In many cases you can simplify this from what is generated here.
@@ -78,7 +78,13 @@ jobs:
     #   This would typically be a build job when using workflows, possibly combined with build
     # This is based on your 1.0 configuration file or project settings
     - run: npm run lint -- -f junit -o $CIRCLE_TEST_REPORTS/lint-results.xml
+<<<<<<< HEAD
     - run: npm run test:headless -- --file $CIRCLE_TEST_REPORTS/test-results.xml
+||||||| 2c346762
+    - run: npm run test:headless -- -f $CIRCLE_TEST_REPORTS/test-results.xml
+=======
+    - run: npm run test:headless
+>>>>>>> master
     # Deployment
     # Your existing circle.yml file contains deployment steps.
     # The config translation tool does not support translating deployment steps
@@ -97,7 +103,7 @@ jobs:
   deploy-dev:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:2.7.15-node-browsers
+    - image: circleci/python:3.7.9-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -111,7 +117,7 @@ jobs:
   deploy-cc:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:2.7.15-node-browsers
+    - image: circleci/python:3.7.9-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -121,11 +127,11 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run: HOST=ec2-18-208-128-81.compute-1.amazonaws.com ./deploy
+    - run: HOST=ec2-3-95-182-133.compute-1.amazonaws.com ./deploy
   deploy-beta:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:2.7.15-node-browsers
+    - image: circleci/python:3.7.9-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -155,7 +161,7 @@ workflows:
               - build
             filters:
               branches:
-                only: cc-staging
+                only: mui-dev
         - deploy-beta:
             requires:
               - build

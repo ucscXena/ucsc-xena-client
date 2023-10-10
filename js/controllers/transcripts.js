@@ -1,13 +1,11 @@
-'use strict';
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 
-// Hard-coded expression dataset
-var expressionHost = 'https://toil.xenahubs.net';
-var subtypeDataset = 'TCGA_GTEX_category.txt';
-var subtypeField = 'TCGA_GTEX_main_category';
+// the expression dataset and phenodataset must be on the same host
+var expressionHost = 'https://kidsfirst.xenahubs.net';
+//var expressionHost = 'https://toil.xenahubs.net';
 
 /*
 //basic gencode annotataion
@@ -24,22 +22,26 @@ var transcriptDataset = {
 };
 
 var expressionDataset = {
-	tpm: "TcgaTargetGtex_rsem_isoform_tpm",
-	isoformPercentage: "TcgaTargetGtex_rsem_isopct"
+	tpm: "TCGA_target_GTEX_KF/rsem.isoforms_TPM.txt",
+	isoformPercentage: "TCGA_target_GTEX_KF/rsem.isoforms_IsoPct.txt"
+//	tpm: "TcgaTargetGtex_rsem_isoform_tpm",
+//	isoformPercentage: "TcgaTargetGtex_rsem_isopct"
 };
 
-var identity = x => x;
+var subtypeDataset = 'transcript_view/transcript_main_category.txt';
+var subtypeField = 'transcript_view_category';
+//var subtypeDataset = 'TCGA_GTEX_category.txt';
+//var subtypeField = 'TCGA_GTEX_main_category';
 
-var prefix = 4; // "TCGA", "GTEX"
+var identity = x => x;
 
 // The transcriptExpression query is a bit wonky, because we're pulling the subtypes from TCGA_GTEX_main_category,
 // but in transcriptExpression we filter on _sample_type. This assumes the two are kept in sync. It would be
 // better to use the same field in both places, but first we need to confirm that it will work.
-var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB, unit}) =>
+var fetchExpression = (transcripts, {subtypeA, subtypeB, unit}) =>
 	xenaQuery.transcriptExpression(expressionHost,
 			// adding 1 for the space after the prefix
-			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1),
-			expressionDataset[unit])
+			_.pluck(transcripts, 'name'), subtypeA, subtypeB, expressionDataset[unit], subtypeDataset, subtypeField)
 		.map(([expsA, expsB]) => _.mmap(expsA, expsB, transcripts,
 					(expA, expB, transcript) => _.assoc(transcript, 'expA', expA, 'expB', expB)));
 
@@ -56,12 +58,7 @@ function fetchTranscripts(serverBus, params) {
 }
 
 function filterSubtypes(subtypes) {
-	var study = _.groupBy(subtypes[subtypeField], subtype => subtype.slice(0, prefix));
-
-	return {
-		tcga: study.TCGA,
-		gtex: study.GTEX
-	};
+	return subtypes[subtypeField].sort();
 }
 
 function fetchSubtypes(serverBus) {
@@ -70,23 +67,32 @@ function fetchSubtypes(serverBus) {
 						.map(filterSubtypes)]);
 }
 
+function initalFetch(serverBus, state) {
+		var {gene, subtypeA, status} = state.transcripts || {};
+		fetchSubtypes(serverBus);
+		if ((status === 'loading' || status === 'error') && gene && subtypeA) {
+			fetchTranscripts(serverBus, state.transcripts);
+		}
+}
+
 var controls = {
 	'init-post!': (serverBus, state, newState) => {
-		var {gene, studyA, status} = newState.transcripts || {};
-		fetchSubtypes(serverBus);
-		if ((status === 'loading' || status === 'error') && gene && studyA) {
-			fetchTranscripts(serverBus, newState.transcripts);
+		if (newState.page === 'transcripts') {
+			initalFetch(serverBus, newState);
 		}
 	},
-	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
+	'navigate-post!': (serverBus, state, newState, page) => {
+		if (page === 'transcripts' && !_.getIn(newState, ['transcripts', 'subtypes'])) {
+			initalFetch(serverBus, state);
+		}
+	},
+	loadGene: (state, gene, subtypeA, subtypeB, unit) => {
 		var zoom = (state.transcripts && gene === state.transcripts.gene) ? state.transcripts.zoom : {};
 		return _.updateIn(state, ['transcripts'], s =>
 			_.merge(s, {
 					status: gene ? 'loading' : undefined,
 					gene,
-					studyA,
 					subtypeA,
-					studyB,
 					subtypeB,
 					unit,
 					zoom}));
@@ -109,7 +115,7 @@ var controls = {
 	transcriptZoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
-module.exports = {
+export default {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
 	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
 };

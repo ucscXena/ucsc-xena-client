@@ -5,8 +5,6 @@
  * Custom CSS styling of zoom overlay.
  */
 
-@value black24 from '../../css/variables.css';
-
 .ZoomOverlay {
 	display: flex;
 }

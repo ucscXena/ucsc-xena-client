@@ -1,10 +1,9 @@
-'use strict';
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 var widgets = require('./columnWidgets');
-var colorScales = require('./colorScales');
-var util = require('./util');
+import {colorScale} from './colorScales';
+var util = require('./util').default;
 var Legend = require('./views/Legend');
 var BandLegend = require('./views/BandLegend');
 import PureComponent from './PureComponent';
@@ -13,20 +12,14 @@ var CanvasDrawing = require('./CanvasDrawing');
 var {rxEvents} = require('./react-utils');
 var {drawHeatmap} = require('./drawHeatmap');
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
-var colorFns = vs => _.map(vs, colorScales.colorScale);
+var colorFns = vs => _.map(vs, colorScale);
 
 //
 // Tooltip
@@ -62,18 +55,33 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
+function sigTooltip(genes, missing, val) {
+	let visibleCount = 2,
+		moreCount = genes.length - visibleCount,
+		visible = genes.slice(0, visibleCount),
+		moreLabel = moreCount > 0 ? ` + ${moreCount} more` : '',
+		missingLabel = _.get(missing, 'length') ? `(missing terms: ${missing.join(' ')}) ` : '';
+	return [['sig',
+			 // label on hover
+			 `signature ${missingLabel}(= ${visible.join(' + ')}${moreLabel})`,
+			 // label on freeze
+			 `signature ${missingLabel}(= ${genes.join(' + ')})`,
+			 val]];
+}
+
 function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
-	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, {genes, missing}, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
 		pos = _.get(position, fieldIndex),
-		field = fields[fieldIndex];
+		field = fields[fieldIndex],
+		sig = !!genes;
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleID]),
 		code = _.get(codes, val),
-		label = fieldFormat(field);
+		label = sig ? 'signature' : fieldFormat(field);
 
 	val = code ? code : prec(val);
 	let mean = avg && prec(avg.mean[fieldIndex]),
@@ -84,9 +92,9 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		id,
 		fieldIndex,
 		rows: [
-			[['labelValue', label, val]],
+			sig ? sigTooltip(genes, missing, val) : [['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', `${mean} (${median})`]]] : [])]
+			...(!codes && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
 }
 
@@ -123,7 +131,7 @@ function renderFloatLegend(props) {
 		return null;
 	}
 
-	var scale = colorScales.colorScale(colorSpec),
+	var scale = colorScale(colorSpec),
 		values = scale.domain(),
 		footnotes = units && units[0] ? [<span title={units[0]}>{addWordBreaks(units[0])}</span>] : null,
 		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
@@ -142,7 +150,7 @@ function renderFloatLegend(props) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], codes, colors = []} = props;
+	var {data: [data] = [], codes, colors = [], inline, max, onClick} = props;
 	var legendProps;
 	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
@@ -156,22 +164,26 @@ function renderCodedLegend(props) {
 		return <span />;
 	}
 
-	return <Legend {...legendProps} />;
+	return <Legend {...legendProps} onClick={onClick} max={max} inline={inline}/>;
 }
 
 var HeatmapLegend = hotOrNot(class extends PureComponent {
 	static displayName = 'HeatmapLegend';
 	render() {
-		var {column} = this.props,
-			{units, heatmap, colors, valueType, vizSettings, defaultNormalization, codes} = column,
+		var {column, onClick, inline, max} = this.props,
+			{units, heatmap, colors, valueType, vizSettings, defaultNormalization,
+				codes} = column,
 			props = {
-				units,
-				colors,
-				vizSettings,
-				defaultNormalization,
-				data: heatmap,
+				onClick,
 				coded: valueType === 'coded',
-				codes: codes,
+				codes,
+				colors,
+				data: heatmap,
+				defaultNormalization,
+				inline,
+				units,
+				vizSettings,
+				max
 			};
 
 		return (props.coded ? renderCodedLegend :
@@ -191,7 +203,7 @@ var HeatmapColumn = hotOrNot(//
 
 class extends PureComponent {
 	static displayName = 'DenseMatrix';
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -200,10 +212,9 @@ class extends PureComponent {
 				return events.mousemove
 					.takeUntil(events.mouseout)
 					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true
+						data: this.tooltip(ev)
 					})) // look up current data
-					.concat(Rx.Observable.of({open: false}));
+					.concat(Rx.Observable.of({}));
 			}).subscribe(this.props.tooltip);
 	}
 
@@ -216,11 +227,12 @@ class extends PureComponent {
 			{codes, avg} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			{assembly, fields, heatmap, width, dataset} = column,
+			{assembly, fields, heatmap, width, dataset, missing, signature} = column,
+			[, , genes] = signature || [],
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
-			codes, position, width, zoom, samples, ev);
+			codes, position, width, zoom, samples, {genes, missing}, ev);
 	};
 
 	// To reduce this set of properties, we could

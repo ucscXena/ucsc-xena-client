@@ -1,6 +1,4 @@
-'use strict';
-
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var xenaWasm = require('./xenaWasm');
 
 /*eslint-disable no-unused-vars */

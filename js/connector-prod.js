@@ -1,7 +1,6 @@
-'use strict';
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
 var LZ = require('./lz-string');
@@ -10,19 +9,7 @@ import urlParams from './urlParams';
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
-
-function controlRunner(serverBus, controller) {
-	return function (state, ac) {
-		try {
-			var nextState = controller.action(state, ac);
-			controller.postAction(serverBus, state, nextState, ac);
-			return nextState;
-		} catch (e) {
-			console.log('Error', e);
-			return state;
-		}
-	};
-}
+var controlRunner = require('./controlRunner').default;
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I
 // suspect.
@@ -77,8 +64,7 @@ module.exports = function({
 	serverCh,
 	uiBus,
 	uiCh,
-	main,
-	selector}) {
+	main}) {
 
 	var dom = {main},
 		updater = ac => uiBus.next(ac),
@@ -96,7 +82,7 @@ module.exports = function({
 	let stateObs = Rx.Observable.merge(serverCh, uiCh, historyObs).scan(runner, initialState).share();
 
 	stateObs.debounceTime(0, Rx.Scheduler.animationFrame)
-		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
+		.subscribe(state => ReactDOM.render(<Page callback={updater} state={state} />, dom.main));
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.

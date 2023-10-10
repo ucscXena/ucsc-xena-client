@@ -1,4 +1,3 @@
-'use strict';
 
 /*
  * Text input element with a default value which will
@@ -17,7 +16,7 @@ var compStyles = require('./DefaultTextInput.module.css');
 class DefaultTextInput extends PureComponent {
 	state = {value: this.props.value.user, focused: false};
 
-	componentWillMount() {
+	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 		.do(() => this.setState({value: this.refs.input.value}))
@@ -29,7 +28,7 @@ class DefaultTextInput extends PureComponent {
 		this.change.unsubscribe();
 	}
 
-	componentWillReceiveProps(newProps) {
+	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
 		this.setState({value: newProps.value.user});
 	}
 

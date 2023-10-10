@@ -1,9 +1,8 @@
-'use strict';
 
 var {Component} = require('react');
-var {isEqual} = require('./underscore_ext');
+var {isEqual} = require('./underscore_ext').default;
 
-var logDiff, logTime, diff; //eslint-disable-line no-unused-vars
+var logDiff, logTime; //eslint-disable-line no-unused-vars
 
 if (process.env.NODE_ENV !== 'production') {
 	var diff = (a, b) => {

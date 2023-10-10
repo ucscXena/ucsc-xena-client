@@ -1,16 +1,14 @@
-'use strict';
 
 // Helper methods needed by multiple controllers.
 
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var xenaQuery = require('../xenaQuery');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
-var defaultServers = require('../defaultServers');
-var {publicServers} = defaultServers;
+var {servers: allServers, publicServers} = require('../defaultServers');
 var gaEvents = require('../gaEvents');
 import {hfc} from '../hfc';
 // pick up signature fetch
@@ -33,8 +31,10 @@ const sendMessage = msg => {
         return workerObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data.msg);
 };
 
-function fetchClustering(serverBus, state, id) {
-	var data = _.getIn(state, ['data', id]);
+// data is passed here due to a problem with evaluation order.
+// We need data.avg, which is computed in the selector. So, we
+// have to pass it in from a view, rather than take it from app state.
+function fetchClustering(serverBus, state, id, data) {
 	// maybe prune the data that we send?
 	serverBus.next([['cluster-result', id], sendMessage(['cluster', data])]);
 }
@@ -62,7 +62,7 @@ function logSampleSources(cohortResps) {//eslint-disable-line no-unused-vars
 	var havingSamples = cohortResps.filter(([v]) => v.length > 0)
 			.map(([,, server]) => server),
 		types = new Set(havingSamples.map(s =>
-					s === defaultServers.servers.localHub ? 'localhost' :
+					s === allServers.localHub ? 'localhost' :
 					// counting all ucsc-hosted hubs as public
 					s.indexOf('.xenahubs.net') !== -1 ? 'public' :
 					'private'));
@@ -125,13 +125,17 @@ function resetZoom(state) {
 var setCohortRelatedFields = (state, cohort) =>
 	_.assoc(state,
 		'cohort', cohort,
+		'sampleSearch', '',
 		'hasPrivateSamples', false,
+		'allowOverSamples', false,
 		'cohortSamples', [],
 		'columns', {},
 		'columnOrder', [],
 		'data', {},
 		'survival', null,
-		'km', _.assoc(state.km, ['id'], null));
+		'map', undefined,
+		'km', _.assoc(state.km, ['id'], null),
+		'zoom', _.assoc(state.zoom, ['height'], 584));
 
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after
@@ -161,11 +165,7 @@ var setWizardAndMode = state =>
 			['mode'], 'heatmap');
 
 var setCohort = _.curry((cohort, width, state) =>
-		addSampleColumn(
-			setWizardAndMode(
-				resetZoom(
-					setCohortRelatedFields(state, cohort))),
-			width));
+		addSampleColumn(setWizardAndMode(setCohortRelatedFields(state, cohort)), width));
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
@@ -208,7 +208,7 @@ function survivalFields(cohortFeatures) {
 		fields = {};
 
 	if (hasSurvFields(vars)) {
-		fields[`patient`] = codedFieldSpec(vars.patient);
+		fields.patient = codedFieldSpec(vars.patient);
 
 		_.values(kmModel.survivalOptions).forEach(function(option) {
 			if (vars[option.ev] && vars[option.tte]) {
@@ -225,9 +225,15 @@ function survivalFields(cohortFeatures) {
 	return fields;
 }
 
+function addFieldUnit(datasetHubs, field) {
+	var {dsID, fields: [name]} = field,
+		meta = _.concat(..._.values(datasetHubs)).find(m => m.dsID === dsID);
+	return _.assoc(field, 'unit', _.getIn(meta, ['units', name]));
+}
+
 // If field set has changed, re-fetch.
 function fetchSurvival(serverBus, state) {
-	let {wizard: {cohortFeatures},
+	let {wizard: {cohortFeatures, cohortDatasets},
 			spreadsheet: {cohort, survival, cohortSamples}} = state,
 		fields = survivalFields(cohortFeatures[cohort.name]),
 		survFields = _.keys(fields),
@@ -235,12 +241,13 @@ function fetchSurvival(serverBus, state) {
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
 		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
 		collate = data => mapToObj(survFields,
-				(k, i) => ({field: fields[k], data: data[i]}));
+				(k, i) => ({
+					field: addFieldUnit(cohortDatasets[cohort.name], fields[k]),
+					data: data[i]}));
 
 	refetch && serverBus.next([
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
-
 
 module.exports = {
 	fetchCohortData,
@@ -250,6 +257,7 @@ module.exports = {
 	fetchSamples,
 	fetchSurvival,
 	resetZoom,
+	samplesQuery,
 	setCohort,
 	userServers,
 	datasetQuery

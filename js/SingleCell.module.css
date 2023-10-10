@@ -1,0 +1,59 @@
+/*.table .selected {
+	background-color: #5555EE;
+}*/
+
+.integration {
+	margin: 20px;
+}
+
+.integration > button {
+	margin-left: 70%;
+	margin-top: 20px;
+}
+
+.vizPage {
+	margin: 20px;
+}
+
+.vizBody {
+	display: flex;
+}
+
+.panel > * {
+	margin-top: 30px;
+}
+
+.vizBody > :nth-child(1) {
+	flex-grow: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 400px;
+}
+
+.vizBody > :nth-child(2) {
+	width: 300px;
+}
+
+.sidebar > * {
+	margin-top: 10px;
+}
+
+.maptabs {
+	margin-bottom: 40px;
+}
+
+.tabs button {
+	min-width: unset;
+}
+
+.tooltip {
+	font-size: 70%;
+	line-height: 100%;
+	height: 2.0em;
+}
+
+.legendTitle {
+	font-weight: 600;
+	font-size: 70%;
+}

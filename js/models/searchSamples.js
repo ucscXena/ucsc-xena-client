@@ -1,7 +1,6 @@
-'use strict';
-
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {parse} = require('./searchParser');
+import {setUserCodes} from './denseMatrix';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
 var includes = (target, str) => {
@@ -169,12 +168,11 @@ function evalFieldExp(ctx, expression, column, data) {
 	}, expression);
 }
 
-// XXX should rename ne to not, since we've implemented it that way.
-// Unary ! or NOT can be implemented using the same operation.
 function evalexp(ctx, expression) {
 	return m({
 		value: search => searchAll(ctx, searchMethod, search),
 		'quoted-value': search => searchAll(ctx, searchExactMethod, search),
+		// 'ne' is also 'not'
 		ne: exp => invert(evalexp(ctx, exp), ctx.sampleCount),
 		// XXX intersection and union in underscore are n^2
 		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(ctx, e))),
@@ -186,7 +184,7 @@ function evalexp(ctx, expression) {
 
 function treeToString(tree) {
 	return m({
-		cross: (...exprs) => _.map(exprs, treeToString).join(' ; '),
+		cross: exprs => _.map(exprs, treeToString).join(' ; '),
 		value: value => value,
 		'quoted-value': value => `"${value}"`,
 		and: (...factors) => _.map(factors, treeToString).join(' '),
@@ -201,34 +199,40 @@ function treeToString(tree) {
 	}, tree);
 }
 
-function evalcross(ctx, expr) {
-	// do this in the parser
-	var exprs = expr[0] === 'cross' ?
-		expr.slice(1) : [expr];
+function evalsearch(ctx, search) {
+	var prefix = search.length - search.trimStart().length;
+	var expr = parse(search.trim());
+	var [/*cross*/, exprs, offsets] = expr;
 	return {
 		exprs: exprs.map(treeToString),
-		matches: exprs.map(exp => evalexp(ctx, exp))
+		matches: exprs.map(exp => evalexp(ctx, exp)),
+		offsets: offsets.map(o => o + prefix)
 	};
 }
 
+const A = 'A'.charCodeAt(0);
+var toFieldId = i => String.fromCharCode(i + A);
+
 function createFieldIds(len) {
-	const A = 'A'.charCodeAt(0);
-	return _.times(len, i => String.fromCharCode(i + A));
+	return _.times(len, toFieldId);
 }
 
 function createFieldMap(columnOrder) {
 	return _.object(createFieldIds(columnOrder.length), columnOrder);
 }
 
-function searchSamples(search, columns, columnOrder, data, cohortSamples) {
+var setUserCodesAll = (columns, data) =>
+	_.mapObject(data, (d, id) => setUserCodes(columns[id], d));
+
+function searchSamples(search, columns, columnOrder, dataIn, cohortSamples) {
 	if (!_.get(search, 'length')) {
 		return {exprs: null, matches: null};
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		sampleCount = _.get(cohortSamples, 'length');
+		sampleCount = _.get(cohortSamples, 'length'),
+		data = setUserCodesAll(columns, dataIn);
 	try {
-		var exp = parse(search.trim());
-		return evalcross({columns, data, fieldMap, cohortSamples, sampleCount}, exp);
+		return evalsearch({columns, data, fieldMap, cohortSamples, sampleCount}, search);
 	} catch(e) {
 		console.log('parsing error', e);
 		return {exprs: [], matches: [[]]};
@@ -237,7 +241,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 
 function remapTreeFields(tree, mapping) {
 	return m({
-		cross: (...exprs) => ['cross', ..._.map(exprs, t => remapTreeFields(t, mapping))],
+		cross: exprs => ['cross', _.map(exprs, t => remapTreeFields(t, mapping))],
 		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
 		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
 		group: exp => ['group', remapTreeFields(exp, mapping)],
@@ -251,16 +255,254 @@ function remapTreeFields(tree, mapping) {
 // newOrder: [uuid1, uuid0, ...]
 // exp: "A:foo B:bar"
 // out: "A:bar B:foo"
-function remapFields(oldOrder, order, exp) {
+var remapFields = _.curry((oldOrder, order, exp) => {
 	if (!_.get(exp, 'length')) {
+		return null;
+	}
+	try {
+		var tree = parse(exp.trim());
+	} catch {
 		return null;
 	}
 	var fieldIds = createFieldIds(order.length),
 		oldFieldMap = _.invert(createFieldMap(oldOrder)),
 		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
-		mapping = _.object(newOrder, fieldIds),
-		tree = parse(exp.trim());
+		mapping = _.object(newOrder, fieldIds);
 	return treeToString(remapTreeFields(tree, mapping));
+});
+
+function extendUp({index, count}, pred) {
+	var start = index, i;
+	for (i = index + 1; i < index + count; ++i) {
+		if (pred(start, i)) {
+			break;
+		}
+	}
+	return {
+		start,
+		end: i
+	};
+}
+
+function extendDown({index, count}, pred) {
+	var end = index + count, i;
+	for (i = end - 2; i >= index; --i) {
+		if (pred(end - 1, i)) {
+			break;
+		}
+	}
+	return {
+		start: i + 1,
+		end,
+	};
+}
+
+function equalMatrix(data, index, samples, s0, s1) {
+	var values = _.getIn(data, ['req', 'values']);
+	return values.length > 1 ? false :
+		values[0][samples[s0]] === values[0][samples[s1]];
+}
+
+function equalFalse() {
+	return false;
+}
+
+var mutationRegion = list =>
+	list == null ? 'null' :
+	list.length === 0 ? 'none' :
+	'mutation';
+
+// Allow drag in null and no-mutation areas, but not in
+// mutations, because the mutations fix the subsort, and
+// the resulting expression wouldn't make much sense.
+function equalMutation(data, index, samples, s0, s1) {
+	var r0 = mutationRegion(index.bySample[samples[s0]]),
+		r1 = mutationRegion(index.bySample[samples[s1]]);
+
+	return r0 === r1 && r0 !== 'mutation';
+}
+
+function equalSegmented(data, index, samples, s0, s1) {
+	var values = _.getIn(data, ['avg', 'values']);
+	return values[0][samples[s0]] === values[0][samples[s1]];
+}
+
+
+// These methods are used to clip the pick region, by enforcing
+// that values in columns on the left are "equal". Otherwise we
+// get weird combinatorical expressions when dragging across different
+// values on the left.
+var equalMethod = {
+	coded: equalMatrix,
+	float: equalMatrix,
+	mutation: equalMutation,
+	segmented: equalSegmented,
+	samples: equalFalse
+};
+
+var codeOrNull = (codes, val) => val == null ? 'null' : `"${codes[val]}"`;
+
+function matchEqualCoded(data, index, samples, id, s) {
+	var {req: {values: [field]}, codes} = data;
+	return `${id}:${codeOrNull(codes, field[samples[s]])}`;
+}
+
+function matchEqualFloat(data, index, samples, id, s) {
+	if (_.every(data.req.values, field => field[samples[s]] == null)) {
+		return `${id}:=null`;
+	}
+	if (data.req.values.length !== 1) {
+		return '';
+	}
+	var {req: {values: [field]}} = data;
+	return `${id}:=${field[samples[s]]}`;
+}
+
+function matchEqualSegmented(data, index, samples, id, s) {
+	var {avg: {values: [field]}} = data;
+	return `${id}:=${field[samples[s]]}`;
+}
+
+var mutationMatches = {
+	null: id => `${id}:=null`,
+	none: id => `${id}:!=chr ${id}:!=null`,
+	mutation: id => `${id}:=chr`
+};
+
+function matchEqualMutation(data, index, samples, id, s) {
+	return mutationMatches[mutationRegion(index.bySample[samples[s]])](id);
+}
+
+var matchEqualMethod = {
+	coded: matchEqualCoded,
+	float: matchEqualFloat,
+	mutation: matchEqualMutation,
+	segmented: matchEqualSegmented,
+	samples: matchEqualCoded
+};
+
+function matchRangeCoded(data, index, samples, id, start, end, first) {
+	var {req: {values: [field]}, codes} = data,
+		matches = _.uniq(_.range(start, end).map(i => field[samples[i]]))
+			.map(v => codeOrNull(codes, v)),
+		terms = matches.map(c => `${id}:${c}`).join(' OR ');
+
+	return first || matches.length === 1 ? terms : `(${terms})`;
+}
+
+function matchRangeFloat(data, index, samples, id, start, end) {
+	// XXX review meaning of null on multivalued columns
+	if (_.every(data.req.values, field => field[samples[start]] == null)) {
+		return `${id}:=null`;
+	}
+	if (data.req.values.length !== 1) {
+		return '';
+	}
+	var {req: {values: [field]}} = data,
+		matches = [start, end - 1].map(i => field[samples[i]]),
+		max = _.max(matches),
+		min = _.min(matches);
+	return `${id}:>=${min} ${id}:<=${max}`;
+}
+
+function matchRangeMutation(data, index, samples, id, start, end, first) {
+	var regions = {};
+	_.range(start, end).forEach(s => {
+		regions[mutationRegion(index.bySample[samples[s]])] = true;
+	});
+	var terms = Object.keys(regions).map(r => mutationMatches[r](id)).join(' OR ');
+
+	return first || terms.length === 1 ? terms : `(${terms})`;
+}
+
+function matchRangeSegmented(data, index, samples, id, start, end) {
+	if (_.every(data.avg.values, field => field[samples[start]] == null)) {
+		return `${id}:=null`;
+	}
+	var {avg: {values: [field]}} = data,
+		matches = [start, end - 1].map(i => field[samples[i]]),
+		max = _.max(matches),
+		min = _.min(matches);
+	return `${id}:>=${min} ${id}:<=${max}`;
+}
+
+var matchRangeMethod = {
+	coded: matchRangeCoded,
+	float: matchRangeFloat,
+	mutation: matchRangeMutation,
+	segmented: matchRangeSegmented,
+	samples: matchRangeCoded
+};
+
+var nullMismatchMethod = {
+	float: (data, s0, s1) =>
+		// XXX review meaning of null on multivalued columns
+		(data.req.values[0][s0] == null) !== (data.req.values[0][s1] == null),
+	coded: () => false,
+	mutation: () => false,
+	segmented: (data, s0, s1) =>
+		(data.avg.values[0][s0] == null) !== (data.avg.values[0][s1] == null)
+};
+
+function pickSamplesFilter(flop, dataIn, indexIn, samples, columnsIn, id, range) {
+	// This weirdness is special handling for drag on sampleID. Normally
+	// we don't consider sampleID for the filter range, so we slice(1) the
+	// columns and data to skip it. If the user specifically drags on the
+	// sampleIDs then we leave it in, but it's the only column. We use
+	// the original column count, columnsIn.length, for setting the field id.
+	var [columns, data, index] =
+		columnsIn.length === 1 ? [columnsIn, dataIn, indexIn] :
+		[columnsIn.slice(1), dataIn.slice(1), indexIn.slice(1)];
+	var leftCols = _.initial(columns),
+		thisCol = _.last(columns);
+	var neq = (mark, i) =>
+			nullMismatchMethod[thisCol.valueType](_.last(data), samples[mark], samples[i]) ||
+			!_.every(leftCols,
+					(column, j) => equalMethod[column.valueType](data[j], index[j], samples, mark, i));
+
+	// XXX Note that these methods will behave badly on null data in singlecell branch, due to
+	// NaN !== NaN.
+	var {start, end} = (flop ? extendDown : extendUp)(range, neq);
+
+	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], index[i], samples,
+				toFieldId(i + 1), start)).join(' ') + (leftCols.length ? ' ' : '') +
+			matchRangeMethod[thisCol.valueType](_.last(data), _.last(index), samples,
+					toFieldId(columnsIn.length - 1), start, end, leftCols.length === 0);
+}
+
+
+var subsortableMethod = {
+	coded: (column, data) => data.req,
+	float: (column, data, index, samples, si) => data.req &&
+		data.req.values.length === 1  && data.req.values[0][samples[si]] == null,
+	segmented: (column, data, index, samples, si) => data.avg &&
+		data.avg.values.length === 1  && data.avg.values[0][samples[si]] == null,
+	mutation: (column, data, index, samples, si) => data.req &&
+		_.isEmpty(index.bySample[samples[si]])
+};
+
+var subsortable = (column, ...args) => subsortableMethod[column.valueType](column, ...args);
+
+var sortableMethod = {
+	coded: (column, data) => data.req,
+	float: (column, data) => data.req && data.req.values.length === 1,
+	segmented: (column, data) => data.avg,
+	mutation: (column, data, index, samples, si) => data.req &&
+		_.isEmpty(index.bySample[samples[si]])
+};
+var sortable = (column, ...args) => sortableMethod[column.valueType](column, ...args);
+
+function canPickSamples(columns, data, index, samples, columnOrder, id, si) {
+	if (id === columnOrder[0]) { // sampleIDs
+		return true;
+	}
+
+	var canSubsort = _.every(_.range(1, columnOrder.indexOf(id)), c => {
+		var id = columnOrder[c];
+		return subsortable(columns[id], data[id], index[id], samples, si);
+	});
+
+	return canSubsort && sortable(columns[id], data[id], index[id], samples, si);
 }
 
 function membershipSum(samples, lists, bits) {
@@ -303,5 +545,8 @@ module.exports = {
 	columnData,
 	treeToString,
 	remapFields,
-	parse
+	pickSamplesFilter,
+	canPickSamples,
+	parse,
+	invert
 };

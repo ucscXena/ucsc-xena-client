@@ -1,4 +1,3 @@
-'use strict';
 
 var demo = require('../docs/schema');
 var {toHTML, css} = require('schema-shorthand').html;

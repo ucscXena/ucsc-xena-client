@@ -1,4 +1,3 @@
-'use strict';
 
 const DATA_TYPE = {
 	PHENOTYPE: 'phenotype',

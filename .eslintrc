@@ -7,10 +7,10 @@
 	"plugins": [
 		"react"
 	],
-	"ecmaFeatures": {
-		"jsx": true
-	},
-	"parser": "babel-eslint",
+	"extends": [
+		"plugin:react/recommended"
+	],
+	"parser": "@babel/eslint-parser",
 	"rules": {
 		"arrow-spacing": 2,
 		"camelcase": 2,
@@ -50,6 +50,11 @@
 		"react/react-in-jsx-scope": 1,
 		"react/self-closing-comp": 1,
 		"react/wrap-multilines": 1,
-		semi: [2, "always"]
+		"react/prop-types": 0,
+		"react/no-danger": 0,
+		// would like to enable this, but it emits errors on functions
+		// returning jsx, which is madness.
+		"react/display-name": 0,
+		"semi": [2, "always"]
 	}
 }

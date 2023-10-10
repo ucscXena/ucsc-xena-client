@@ -1,11 +1,8 @@
-'use strict';
-
-import {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} from '../underscore_ext';
-import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';
+var {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} = require('../underscore_ext').default;
+var xenaQuery = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
-import {ignoredType} from '../models/dataType';
-import xenaQuery from '../xenaQuery';
-import Rx from '../rx';
+import {ignoredType, isPhenotype} from '../models/dataType';
+var Rx = require('../rx').default;
 var {userServers} = require('./common');
 import {make, compose} from './utils';
 import query from './query';
@@ -44,11 +41,6 @@ var fetchCohortAnalytic = () =>
 var fetchTumorMap = () =>
 	xenaQuery.fetchTumorMap.map(res => res).catch(() => {});
 
-var phenoPat = /^phenotype/i;  // match ../viwes/VariableSelect.js definition of phenotype data
-var isPhenotype = ds => ds.type === 'clinicalMatrix' &&
-		(!ds.dataSubType || ds.dataSubType.match(phenoPat));
-
-
 // {wizard: {cohortDatasets: {[cohort]: {[server]: [dataset, ...]}}}}
 var allPhenoDatasets = (state, cohort, servers) =>
 	flatmap(
@@ -80,10 +72,10 @@ var fetchMethods = {
 	// OTOH it will fetch any recently enabled hubs. So, the view should
 	// iterate over the userServer list, not this cache.
 	cohortDatasets: (cohort, server) =>
-		datasetList(server, [cohort]).catch(() => of([])),
-	cohortFeatures: (cohort, server, dataset) => allFieldMetadata(server, dataset)
+		xenaQuery.datasetList(server, [cohort]).catch(() => of([])),
+	cohortFeatures: (cohort, server, dataset) => xenaQuery.allFieldMetadata(server, dataset)
 		.catch(() => of([])),
-	serverCohorts: server => allCohorts(server, ignoredType)
+	serverCohorts: server => xenaQuery.allCohorts(server, ignoredType)
 		.catch(() => of([])),
 	cohortMeta: () => fetchCohortMeta(),
 	cohortPreferred: () => fetchCohortPreferred(),
@@ -114,28 +106,27 @@ var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, wizardData, cachePolicy, 'wizard');
 
 var invalidateCohorts = Let(({any} = matchKeys) =>
-	function ({wizard}) {
-		invalidatePath(wizard, ['cohortMeta']);
-		invalidatePath(wizard, ['cohortPreferred']);
-		invalidatePath(wizard, ['cohortPhenotype']);
-		invalidatePath(wizard, ['cohortAnalytic']);
-		invalidatePath(wizard, ['serverCohorts', any]);
-		invalidatePath(wizard, ['cohortDatasets', any, any]);
-		invalidatePath(wizard, ['cohortFeatures', any, any, any]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['cohortMeta']);
+		invalidatePath(serverBus, ['cohortPreferred']);
+		invalidatePath(serverBus, ['cohortPhenotype']);
+		invalidatePath(serverBus, ['cohortAnalytic']);
+		invalidatePath(serverBus, ['serverCohorts', any]);
+		invalidatePath(serverBus, ['cohortDatasets', any, any]);
+		invalidatePath(serverBus, ['cohortFeatures', any, any, any]);
 	});
 
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (_, __, {wizard}) {
-		invalidatePath(wizard, ['serverCohorts', localHub]);
-		invalidatePath(wizard, ['cohortDatasets', any, localHub]);
-		invalidatePath(wizard, ['cohortFeatures', any, localHub, any]);
+	function (serverBus) {
+		invalidatePath(serverBus, ['serverCohorts', localHub]);
+		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
+		invalidatePath(serverBus, ['cohortFeatures', any, localHub, any]);
 	});
 
 var controls = {
 	'localStatus-post!': invalidateLocalHub,
 	'localQueue-post!': invalidateLocalHub,
-	'refresh-cohorts-post!': (serverBus, state, newState) =>
-		invalidateCohorts(newState),
+	'refresh-cohorts-post!': invalidateCohorts
 };
 
 export default compose(fetchController, make(controls));

@@ -5,7 +5,6 @@
  * Overlay displayed on mousedown and drag over gene or samples zoom.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');
@@ -16,8 +15,9 @@ var compStyles = require('./ZoomOverlay.module.css');
 
 class ZoomOverlay extends React.Component {
 	render() {
-		var {geneHeight, height, positionHeight, selection, children} = this.props;
-		if (selection) {
+		var {picking, geneHeight, height, positionHeight, selection, children} = this.props,
+			active = selection && !picking;
+		if (active) {
 			var {direction, offset, overlay} = selection,
 				annotationZoom = direction === 'h',
 				noSamples = overlay.send === null && overlay.sstart === null,
@@ -43,7 +43,7 @@ class ZoomOverlay extends React.Component {
 		return (
 			<div className={compStyles.ZoomOverlay}>
 				{children}
-				{selection ? <svg
+				{active ? <svg
 					className={classNames(compStyles.overlay, {[compStyles.overlayV]: !annotationZoom}, {[compStyles.overlayH]: annotationZoom})}
 					style={{height: annotationZoom ? posY5Annotation : '100%'}}>
 					<polygon points={polygonPoints}/>

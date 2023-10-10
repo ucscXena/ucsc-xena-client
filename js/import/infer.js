@@ -1,6 +1,5 @@
-'use strict';
 
-var {getIn} = require('../underscore_ext');
+var {getIn} = require('../underscore_ext').default;
 var recommend = require('../stats/recommend');
 
 var getMatches = list => {

@@ -1,11 +1,10 @@
-'use strict';
 var React = require('react');
-import {MenuItem} from 'react-toolbox/lib/menu';
+import {MenuItem} from '@material-ui/core';
 var {parseDsID} = require('../xenaQuery');
 
 var getAbout = (onClick, dsID, root, text) => {
     var [host, dataset] = parseDsID(dsID);
-	return <MenuItem key='about' onClick={ev => onClick(ev, host, dataset)} caption={text}/>;
+	return <MenuItem key='about' onClick={ev => onClick(ev, host, dataset)}>{text}</MenuItem>;
 };
 
 

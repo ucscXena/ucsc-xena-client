@@ -1,0 +1,12 @@
+.select {
+	display: inline-block;
+	/* room for checkbox (18) and margin (5) */
+	width: calc(100% - 18px - 5px);
+	margin-left: 5px;
+	vertical-align: middle;
+}
+
+.select input {
+	font-size: 80%;
+	line-height: 80%;
+}

@@ -1,0 +1,40 @@
+.selected {
+	background-color: #5555EE;
+}
+
+.table {
+	width: 70%;
+	margin-left: 10%;
+}
+
+.table thead {
+	background-color: #F0F0F0;
+}
+
+.table p {
+	margin: 0px;
+}
+
+.table td {
+	padding: 4px;
+}
+
+.number {
+	text-align: right;
+}
+
+.table tr > :nth-child(4) {
+	padding-left: 12px;
+}
+
+.table td {
+	border: 0;
+}
+
+.table .study td {
+	border-top: 1px solid rgba(224, 224, 224, 1);
+}
+
+.table .sub :first-child {
+	padding-left: 20px;
+}
