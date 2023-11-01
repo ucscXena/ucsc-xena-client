@@ -294,9 +294,9 @@ function xenaCall(queryFn, ...params) {
 }
 
 function xenaCallBPJ(queryFn, ...params) {
-	var bins = params.map(p => p.proxied).filter(p => p),
+	var bins = params.map(p => p && p.proxied).filter(p => p),
 		i = 0,
-		ps = params.map(p => _.Let((b = p.proxied) =>
+		ps = params.map(p => _.Let((b = p && p.proxied) =>
 						b ? {$type: "ref", value: {"$bin": i++}} : p)),
 		edn = xenaCall(queryFn, ...ps);
 
