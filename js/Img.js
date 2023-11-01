@@ -8,7 +8,7 @@ import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
 var slider = el(Slider);
-var {assoc, findIndex, Let, pluck, range, sorted, transpose, uniq} = require('./underscore_ext').default;
+var {assoc, findIndex, Let, pluck, range, sorted, uniq} = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 var {ajax} = Rx.Observable;
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -122,21 +122,23 @@ var filterFn = (colorColumn, hideColors) =>
 	colorColumn ?
 		Let((hidden = new Set(hideColors || [])) =>
 			(coords, {index}) => Let((v = colorColumn[index]) =>
-				v == null || hidden.has(v) ? 0 : 1))
+				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, color, radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
+const dataLayer = (data, {offset, image_scalef: scale}, adj, color,
+		radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
 	id: `scatter-plot`,
-	data,
+	data: data[0],
 	stroked: true,
 	getLineWidth: 50,
 	filled: false,
-	getPosition: d => d.coordinates,
+	getPosition: (d0, {index}) => [(scale * d0 + offset[0]) / adj,
+					(scale * data[1][index] + offset[1]) / adj],
 	lineWidthMinPixels: 2,
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
 	getLineColor: color,
-	updateTriggers: {getLineColor: triggers},
+	updateTriggers: {getLineColor: triggers, getFilterValue: triggers},
 	pickable: true,
 	onHover,
 	getFilterValue,
@@ -189,25 +191,21 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 		this.setState({inView: assoc(inView, i, newC)});
 	}
 	render() {
-		if (!this.state.stats) {
+		if (!this.state.stats || !this.props.data.columns) {
 			return null;
 		}
 
 		var {colorColumn, hideColors, image, colors, columns, radius} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors),
-			{offset, image_scalef: scale} = image,
+			{image_scalef: scale} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
 			// overlay lines up.
-			adj = (1 << this.state.levels - 1),
-			data = transpose(columns).map(c =>
-				({coordinates: [(scale * c[0] + offset[0]) / adj,
-					(scale * c[1] + offset[1]) / adj]}));
-
+			adj = (1 << this.state.levels - 1);
 		radius = radius * scale / adj;
 
-		var mergeLayer = dataLayer(data, colorScale, radius,
+		var mergeLayer = dataLayer(columns, image, adj, colorScale, radius,
 			[colorColumn, colors, hideColors], this.onHover, filter);
 		var views = new OrthographicView({far: -1, near: 1}),
 			{stats, inView, size: [iwidth, iheight]} = this.state,

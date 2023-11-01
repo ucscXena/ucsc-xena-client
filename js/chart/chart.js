@@ -44,7 +44,7 @@ var typography = el(Typography);
 
 // group field0 by code0, where field1 has value
 function groupIndexWithValueByCode(field0, codes0, field1) {
-	var indicies = _.range(field0.length).filter(i => field1[i] != null);
+	var indicies = _.range(field0.length).filter(i => !isNaN(field1[i]));
 	var groups = _.groupBy(indicies, i => codes0[field0[i]]);
 	delete groups[undefined];
 	return groups;
@@ -62,12 +62,12 @@ function groupIndexByCode(field, codes) {
 
 function groupIndex(field) {
 	var groups = _.groupBy(_.range(field.length), i => field[i]);
-	delete groups.null;
+	delete groups.NaN;
 	return groups;
 }
 
 var groupValues = (field, groups) =>
-	groups.map(indices => indices.map(i => field[i]).filter(x => x != null));
+	groups.map(indices => indices.map(i => field[i]).filter(x => !isNaN(x)));
 
 // utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
 // spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
@@ -89,7 +89,7 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 	[...Array(yfields.length).keys()].forEach(i => {
 		var ylabel = yfields[i],
 			yVector = ydata[i],
-			[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;})),
+			[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return !isNaN(x[0]) && !isNaN(x[1]);})),
 			rho = jStat.corrcoeff(xlist, ylist), // r Pearson's Rho correlation coefficient
 			spearmanRho = jStat.spearmancoeff(xlist, ylist), // (spearman's) rank correlation coefficient, rho
 			pValueRho = pValueFromCoefficient(rho, ylist.length), // P value from pearson's rho value and length of ylist
@@ -606,7 +606,7 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 
 function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions) {
 	chartOptions = highchartsHelper.densityChart({chartOptions, yaxis: field, Y});
-	var nndata = _.filter(data, x => x !== null),
+	var nndata = _.filter(data, x => !isNaN(x)),
 		min = _.min(nndata),
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
@@ -807,7 +807,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 			for (i = 0; i < xdata[0].length; i++) {
 				x = xdata[0][i];
 				y = ydata[k][i];
-				if (null != x && null != y) {
+				if (!isNaN(x) && !isNaN(y)) {
 					series.push({
 						name: sampleLabels[i],
 						x: x,
@@ -844,7 +844,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 			stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
 			colorMin = _.minnull(scatterColorData);
 			bin = stdDev * 0.1;
-			colorScale = v => v == null ? 'gray' : scatterColorScale(v);
+			colorScale = v => isNaN(v) ? 'gray' : scatterColorScale(v);
 		}
 
 		chartOptions = _.deepMerge(chartOptions, {
@@ -862,7 +862,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 				colorCode = 0;
 			}
 
-			if (null != x && null != y && null != colorCode) {
+			if (!isNaN(x) && !isNaN(y) && null != colorCode) {
 				if (useCodedSeries) { // use multi-seriese
 					if (!multiSeries[colorCode]) {
 						multiSeries[colorCode] = {
@@ -1007,8 +1007,8 @@ function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 }
 
 var expMethods = {
-	exp2: data => _.map(data, d => _.map(d, x => x != null ? Math.pow(2, x) : null)),
-	log2: data => _.map(data, d => _.map(d, x => x != null ? Math.log2(x + 1) : null)),
+	exp2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.pow(2, x))),
+	log2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.log2(x + 1))),
 	none: _.identity
 };
 
@@ -1019,7 +1019,7 @@ function getStdev(fields, data, norm) {
 	var stdev = (norm !== 'subset_stdev') ?
 		new Array(fields.length).fill(1) :
 		fields.map((field, i) => {
-			var subcol = data[i].filter(x => x != null),
+			var subcol = data[i].filter(x => !isNaN(x)),
 				ave = highchartsHelper.average(subcol);
 			return highchartsHelper.standardDeviation(subcol, ave);
 		});
@@ -1071,16 +1071,17 @@ function callDrawChart(xenaState, params) {
 
 	if (yNormalization) {
 		// mean normalize
+		// XXX why are we transforming the data instead of the view?
 		ydata = ydata.map(data => {
 			var mean = _.meannull(data);
-			return data.map(x => x === null ? x : x - mean);
+			return data.map(x => isNaN(x) ? x : x - mean);
 		});
 	}
 
 	if (!ycodemap) {
 		let STDEV = getStdev(yfields, ydata, yNormalization);
 		// z-score
-		ydata = ydata.map((data, i) => _.map(data, d => d === null ? null : d / STDEV[yfields[i]]));
+		ydata = ydata.map((data, i) => _.map(data, d => isNaN(d) ? d : d / STDEV[yfields[i]]));
 	}
 
 	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp);

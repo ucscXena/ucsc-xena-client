@@ -80,7 +80,7 @@ module.exports = function({
 	var DevTools = createDevTools(
 		<DockMonitor defaultIsVisible={devtoolsVisible}
 				toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
-			<LogMonitor select={x => x.singlecell} preserveScrollTop={false} expandStateRoot={false}/>
+			<LogMonitor select={x => x} preserveScrollTop={false} expandStateRoot={false}/>
 		</DockMonitor>),
 
 		devReducer = DevTools.instrument(controller, initialState),

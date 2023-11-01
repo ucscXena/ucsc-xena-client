@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, getIn, identity, Let, merge, maxnull, minnull, object, pairs, pluck, pick, updateIn} = require('../underscore_ext').default;
+var {assoc, assocIn, getIn, identity, Let, mapObject, merge, maxnull, minnull, object, pairs, pluck, pick, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of} = Rx.Observable;
@@ -52,7 +52,7 @@ var setFloatScale = scale =>
 
 var colorScale = (data, field) =>
 	setFloatScale(colorSpec(field, {colors: ['#0000ff', null, '#ff0000']}, data.codes,
-			{values: data.req.values[0], mean: data.avg.mean[0]}));
+			{avg: mapObject(data.avg, v => v[0])}));
 
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),

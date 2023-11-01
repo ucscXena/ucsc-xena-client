@@ -11,7 +11,6 @@ import {DataFilterExtension} from '@deck.gl/extensions';
 
 import AxesLayer from './axes-layer';
 
-var {transpose} = require('../underscore_ext').default;
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath} from '../models/map';
 import Img from '../Img';
@@ -30,7 +29,7 @@ var filterFn = (colorColumn, hideColors) =>
 	colorColumn ?
 		_.Let((hidden = new Set(hideColors || [])) =>
 			(coords, {index}) => _.Let((v = colorColumn[index]) =>
-				v == null || hidden.has(v) ? 0 : 1))
+				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
 const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFilterValue) => new PointCloudLayer({
@@ -38,14 +37,18 @@ const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFil
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	parameters: {depthTest},
 	sizeUnits: 'common',
-	data: data,
+	// Our data is transposed vs. what deck expects, so we just pass the first
+	// coord & use accessors to return the other coords.
+	data: data[0],
 	material: false,
-	getPosition: d => d,
+	getPosition: data.length === 2 ?
+		(d0, {index}) => [d0, data[1][index]] :
+		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
 	getColor: color,
 	// XXX not sure if updateTriggers is necessary. The accessor functions
 	// that depend on these should already compare not-equal.
-	updateTriggers: {getColor: triggers},
+	updateTriggers: {getColor: triggers, getFilterValue: triggers},
 	getNormal: [1, 1, 1],
 	pickable: true,
 	onHover,
@@ -87,7 +90,7 @@ class MapDrawing extends PureComponent {
 		var {colorColumn, colors, hideColors} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors);
-		var data = transpose(this.props.data.columns);
+		var data = this.props.data.columns;
 		var {radius} = this.props.data;
 		var scale = x => x;
 		// XXX fix range & ticks
