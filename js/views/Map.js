@@ -33,7 +33,8 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFilterValue) => new PointCloudLayer({
+const dataLayer = (data, modelMatrix, color, radius, depthTest, triggers, onHover,
+		getFilterValue) => new PointCloudLayer({
 	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	parameters: {depthTest},
@@ -41,7 +42,10 @@ const patchLayerMap = (data, color, radius, depthTest, triggers, onHover, getFil
 	// Our data is transposed vs. what deck expects, so we just pass the first
 	// coord & use accessors to return the other coords.
 	data: data[0],
+	modelMatrix,
 	material: false,
+	// XXX optimize this, either passing in the typed array, or using
+	// deckgl's transient return buffer. See deckgl optimization docs.
 	getPosition: data.length === 2 ?
 		(d0, {index}) => [d0, data[1][index]] :
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
@@ -66,6 +70,18 @@ var cvtColorScale = (colorColumn, colors) =>
 
 var isOrdinal = colors => colors && colors[0] === 'ordinal';
 
+
+var cubeWidth = 20; // fit data to cube of this dimension
+
+
+// scale and offset
+var getM = (s, [x, y, z = 0]) => [
+	s, 0, 0, 0,
+	0, s, 0, 0,
+	0, 0, s, 0,
+	x, y, z, 1
+];
+
 class MapDrawing extends PureComponent {
 	onHover = ev => {
 		var i = ev.index;
@@ -79,57 +95,50 @@ class MapDrawing extends PureComponent {
 		if (!this.props.container) {
 			return null;
 		}
-		var border = 2;
-		var bcr = this.props.container.getBoundingClientRect();
-		var width = Math.round(bcr.width - border);
-		var height = Math.round(bcr.height - border);
 		var twoD = props.data.columns.length === 2;
 		var mins = props.data.columns.map(_.minnull),
 			maxs = props.data.columns.map(_.maxnull),
-			centroids =  maxs.map((max, i) => (max + mins[i]) / 2);
+			centroids = maxs.map((max, i) => (max + mins[i]) / 2);
 
 		var {colorColumn, colors, hideColors} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors);
 		var data = this.props.data.columns;
 		var {radius} = this.props.data;
-		var scale = x => x;
-		// XXX fix range & ticks
-		scale.range = () => [0, 20];
-		scale.ticks = () => [0, 10, 20];
+		var scale = cubeWidth / Math.max(...maxs.map((max, i) => max - mins[i]));
+		var offset = centroids.map(c => cubeWidth / 2 - scale * c);
+		var modelMatrix = getM(scale, offset);
+		// XXX write a better AxesLayer
+		var axesScale = x => x;
+		axesScale.range = () => [0, cubeWidth];
+		axesScale.ticks = () => [0, cubeWidth / 2, cubeWidth];
 		var axesLayer = () => new AxesLayer({
-			xScale: scale,
-			yScale: scale,
-			zScale: scale,
+			xScale: axesScale,
+			yScale: axesScale,
+			zScale: axesScale,
 			padding: 0
 		});
 		var views, viewState;
 		if (twoD) {
 			// z is zero, so set far and near around it.
 			views = new OrthographicView({far: -1, near: 1});
-			// zoom 0 is 1 unit to one pixel. To fit width, scale would be
-			// width / dataMax - dataMin. Scale is 2^zoom, so zoom is
-			// log2(scale).
-			let zoom = 0.95 * Math.min(Math.log2(width / (maxs[0] - mins[0])),
-				Math.log2(height / (maxs[1] - mins[1])));
 			viewState = {
-				zoom,
-				minZoom: 0.5 * zoom,
-				maxZoom: 4 * zoom,
-				target: [(maxs[0] + mins[0]) / 2, (maxs[1] + mins[1]) / 2, 0]};
+				zoom: 4,
+				minZoom: 2,
+				maxZoom: 8,
+				target: _.Let((c = cubeWidth / 2) => [c, c, 0])
+			};
 		} else {
 			views = new OrbitView();
-			let zoom = Math.min(Math.log2(width / (maxs[0] - mins[0])),
-				Math.log2(height / (maxs[2] - mins[2])));
 			viewState = {
-				zoom: 0.95 * zoom,
-				minZoom: 0.5 * zoom,
-				maxZoom: 4 * zoom,
-				target: centroids
+				zoom: 4,
+				minZoom: 2,
+				maxZoom: 8,
+				target: _.Let((c = cubeWidth / 2) => [c, c, c])
 			};
 		}
-		var mergeLayer = patchLayerMap(data, colorScale, radius, isOrdinal(colors),
-			[colorColumn, colors, hideColors], this.onHover, filter);
+		var mergeLayer = dataLayer(data, modelMatrix, colorScale, radius * scale,
+			isOrdinal(colors), [colorColumn, colors, hideColors], this.onHover, filter);
 		return deckGL({
 			layers: [...(twoD ? [] : [axesLayer()]), mergeLayer],
 			views,
@@ -139,8 +148,8 @@ class MapDrawing extends PureComponent {
 			initialViewState: {
 				pitch: 0,
 				bearing: 0,
-				rotationX: 0,
-				rotationOrbit: 0,
+				rotationX: 45,
+				rotationOrbit: 45,
 				...viewState
 			},
 			style: {backgroundColor: '#FFFFFF'}
