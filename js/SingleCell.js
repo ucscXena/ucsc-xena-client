@@ -127,10 +127,11 @@ function mapSelect(availableMaps, layout, selected, onChange) {
 var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
 	layout ? mapSelect(availableMaps, layout, selected, onChange) : div();
 
-var vizPanel = ({props: {state, onTooltip}}, {dataset, layout} = state) =>
-	dataset ? map({state, onTooltip}) :
-	layout ? h2(`Select a ${layouts[layout]} layout`) :
-	h2('Select a layout type');
+var vizPanel = ({props: {state, ...handlers}}) =>
+	Let(({dataset, layout} = state) =>
+		dataset ? map({state, ...handlers}) :
+		layout ? h2(`Select a ${layouts[layout]} layout`) :
+		h2('Select a layout type'));
 
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 
@@ -219,13 +220,14 @@ var tooltipView = tooltip =>
 	div({className: styles.tooltip},
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt] : ['']));
 
-var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers}, tooltip, props: {state}}) =>
+var viz = ({handlers: {onReset, onTooltip, onCode, onChannel,
+		onVisible, onOpacity, ...handlers}, tooltip, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
 		div({className: styles.vizBody},
-			vizPanel({props: {state, onTooltip}}),
+			vizPanel({props: {state, onTooltip, onChannel, onVisible, onOpacity}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
 				legendTitle(state),
@@ -315,6 +317,15 @@ class SingleCellPage extends PureComponent {
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
 	};
+	onVisible = (i, checked) => {
+		this.callback(['channel-visible', i, checked]);
+	}
+	onChannel = (i, channel) => {
+		this.callback(['channel', i, channel]);
+	}
+	onOpacity = (i, op) => {
+		this.callback(['channel-opacity', i, op]);
+	}
 
 	componentDidMount() {
 		const {getState, onImport, state: {isPublic}} = this.props,

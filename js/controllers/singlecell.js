@@ -3,16 +3,21 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, getIn, identity, Let, mapObject, merge, maxnull, minnull, object, pairs, pluck, pick, updateIn} = require('../underscore_ext').default;
+var {assoc, assocIn, findIndex, getIn, identity, Let, mapObject, merge, maxnull,
+	minnull, object, pairs, pluck, pick, range, uniq,
+	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
-var {of} = Rx.Observable;
-import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset}
-	from '../models/map';
+var {of, ajax} = Rx.Observable;
+import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset,
+	hasImage} from '../models/map';
 import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
+
+// Number of image layers in display
+var layers = 6;
 
 var fieldType = {
 	donor: () => ['clinical', 'coded'],
@@ -68,6 +73,20 @@ var colorParams = colorBy => color =>
 			'scale', scale,
 			'scaleBounds', scaleBounds(data, scale)));
 
+var imageMetadata = m => {
+	var stats = m.channels.map((l, i) => ({i, ...l})),
+		opacity = stats.map(({lower, upper}) => [lower / 256, upper / 256]),
+		channels = pluck(stats, 'name'),
+		// inView is channels in the webgl model.
+		// visible is which channels are enabled.
+		// Pick inView from defaults, or initial channels.
+		inView = uniq((m.defaults || []).map(c => channels.indexOf(c))
+				.concat(range(stats.length))).slice(0, layers),
+		visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
+		{size, tileSize, levels, background} = m;
+	return {stats, opacity, inView, levels, size, tileSize, background, visible};
+};
+
 var fetchMethods = {
 	defaultStudy: () => fetchDefaultStudy,
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
@@ -81,7 +100,11 @@ var fetchMethods = {
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	colorBy: (_, field, samples) =>
-		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field))
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field)),
+	image: path => ajax({
+			url: `${path}/metadata.json`,
+			responseType: 'text', method: 'GET', crossDomain: true
+		}).map(r => imageMetadata(JSON.parse(r.response)))
 };
 
 var cachePolicy = {
@@ -90,6 +113,8 @@ var cachePolicy = {
 	colorBy: identity, // always updates in-place
 	data: (state, dsID) =>
 		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
+	image: (state, img) =>
+		updateIn(state, ['singlecell', 'image'], cache => pick(cache, img)),
 	// ['cohortDatasets', cohort, server]
 	// ['cohortFeatures', cohort, server, dsName]
 	// ['donorFields', cohort, server]
@@ -132,8 +157,7 @@ var singlecellData = state =>
 						.map(ds => ['cohortFeatures', cohort, server, ds.name])])
 				.flat())
 			.flat()),
-// If moving Img state to app state, fetch image metadata here.
-//		Let((img = hasImage(state.singlecell)) => img && [['image', imagePath(img)]]),
+		Let((img = hasImage(state.singlecell)) => img && [['image', img.path]]),
 		hasDataset(state.singlecell) &&
 			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
 		hasDataset(state.singlecell) && getSamples(state.singlecell) &&
@@ -172,6 +196,16 @@ var controls = actionPrefix({
 		(r0 = state.radius, {step} = dotRange(rb)) =>
 			(r - r0) * (r - rb) > 0 && Math.abs(r - rb) < step * 10 ? state :
 			assocIn(state, ['radius'], r)),
+	channel: (state, i, channel) =>
+		Let(({path} = hasImage(state),
+				newC = findIndex(state.image[path].stats, s => s.name === channel)) =>
+			assocIn(state, ['image', path, 'inView', i], newC)),
+	'channel-visible': (state, i, checked) =>
+		Let(({path} = hasImage(state)) =>
+			assocIn(state, ['image', path, 'visible', i], checked)),
+	'channel-opacity': (state, i, opacity) =>
+		Let(({path} = hasImage(state)) =>
+			assocIn(state, ['image', path, 'opacity', i], opacity))
 });
 
 export default compose(fetchController, mount(make(controls), ['singlecell']));

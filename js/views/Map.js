@@ -12,7 +12,8 @@ import {DataFilterExtension} from '@deck.gl/extensions';
 import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
-import {colorError, colorLoading, dataError, dataLoading, getData, getRadius, imagePath} from '../models/map';
+import {colorError, colorLoading, dataError, dataLoading, getData,
+	getRadius, hasImage} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -204,10 +205,10 @@ export class Map extends PureComponent {
 		}
 	}
 	render() {
-		var {onTooltip} = this.props;
+		var handlers = _.pick(this.props, (v, k) => k.startsWith('on'));
 
 		var mapState = this.props.state,
-			{dsID, ...params} = _.get(mapState, 'dataset', []),
+			params = _.get(mapState, 'dataset', []),
 			mapData = getData(mapState),
 			colorColumn = _.getIn(mapState, ['colorBy', 'data', 'req', 'values', 0]),
 			colors = _.getIn(mapState, ['colorBy', 'data', 'scale']),
@@ -218,15 +219,15 @@ export class Map extends PureComponent {
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
 			radius = getRadius(mapState),
-			// don't create an image parameter while doing this
-			image = imagePath(dsID, _.getIn(params, ['image', 0])),
+			image = hasImage(mapState),
+			imageState = image && _.getIn(mapState, ['image', image.path]),
 			data = {columns, colorColumn, radius, colors,
-				labels, view, image, hideColors},
+				labels, view, image, imageState, hideColors},
 			drawing = image ? imgDrawing : mapDrawing;
 
 		return div({className: styles.content},
 				div({className: styles.graphWrapper, ref: this.onRef},
 					getStatusView(loading, error, this.onReload),
-					drawing({onTooltip, data, container: this.state.container})));
+					drawing({...handlers, data, container: this.state.container})));
 	}
 }

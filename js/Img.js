@@ -8,9 +8,7 @@ import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
 var slider = el(Slider);
-var {assoc, findIndex, Let, pluck, range, sorted, uniq} = require('./underscore_ext').default;
-var Rx = require('./rx').default;
-var {ajax} = Rx.Observable;
+var {Let, pluck, sorted} = require('./underscore_ext').default;
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from './views/XAutosuggestInput';
 var xAutosuggestInput = el(XAutosuggestInput);
@@ -31,7 +29,6 @@ var layerColors = [
 	[1.0, 1.0, 0.0],
 ];
 var colorsCss = layerColors.map(c => RGBToHex(...c.map(v => v * 255)));
-var layers = 6;
 
 var fromGray = i =>
 	`color.a = min(1., max(color.r - lower, 0.) / (upper - lower));
@@ -152,63 +149,39 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 		width: 800,
 		height: 600
 	}
-	onOpacity = i => (ev, op) => {
-		var {opacity} = this.state;
-		this.setState({opacity: [...opacity.slice(0, i), op, ...opacity.slice(i + 1)]});
-	}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
-	componentDidMount() {
-		var {image} = this.props.data;
-		var metadata = {
-			url: `${image.path}/metadata.json`,
-			responseType: 'text', method: 'GET', crossDomain: true};
-
-		ajax(metadata).map(r => JSON.parse(r.response)).subscribe(m => {
-			var stats = m.channels.map((l, i) => ({i, ...l})),
-				opacity = stats.map(({lower, upper}) => [lower / 256, upper / 256]),
-				channels = pluck(stats, 'name'),
-				// inView is channels in the webgl model.
-				// visible is which channels are enabled.
-				// Pick inView from defaults, or initial channels.
-				inView = uniq((m.defaults || []).map(c => channels.indexOf(c))
-						.concat(range(stats.length))).slice(0, layers),
-				visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
-				{size, tileSize, levels, background} = m;
-			this.setState({stats, opacity, inView, levels, size,
-				tileSize, background, visible});
-		});
+	onOpacity = i => (ev, op) => {
+		this.props.onOpacity(i, op);
 	}
 	onVisible = i => (ev, checked) => {
-		var visible = assoc(this.state.visible, i, checked);
-		this.setState({visible});
+		this.props.onVisible(i, checked);
 	}
 	onChannel = i => (ev, channel) => {
-		var {stats, inView} = this.state,
-			newC = findIndex(stats, s => s.name === channel);
-		this.setState({inView: assoc(inView, i, newC)});
+		this.props.onChannel(i, channel);
 	}
 	render() {
-		if (!this.state.stats || !this.props.data.columns) {
+		if (!this.props.data.columns) {
 			return null;
 		}
 
-		var {colorColumn, hideColors, image, colors, columns, radius} = this.props.data,
+		var {colorColumn, hideColors, image, imageState, colors, columns,
+				radius} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors),
 			{image_scalef: scale} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
 			// overlay lines up.
-			adj = (1 << this.state.levels - 1);
+			adj = (1 << imageState.levels - 1);
 		radius = radius * scale / adj;
 
 		var mergeLayer = dataLayer(columns, image, adj, colorScale, radius,
 			[colorColumn, colors, hideColors], this.onHover, filter);
 		var views = new OrthographicView({far: -1, near: 1}),
-			{stats, inView, size: [iwidth, iheight]} = this.state,
+			{stats, inView, size: [iwidth, iheight]} = imageState,
 			{width, height} = this.props,
 			{onVisible} = this,
 			viewState = {
@@ -226,24 +199,24 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 						alpha: false
 					},
 					layers: [
-						...(this.state.background ? [tileLayer({
+						...(imageState.background ? [tileLayer({
 							name: 'i', path: image.path,
 							// XXX rename opacity
 							index: null, opacity: 255,
-							levels: this.state.levels,
-							size: this.state.size,
-							tileSize: this.state.tileSize,
+							levels: imageState.levels,
+							size: imageState.size,
+							tileSize: imageState.tileSize,
 							visible: true
 						})] : []),
 						...inView.map((c, i) =>
 							tileLayer({
 								name: `c${c}`, path: image.path,
 								// XXX rename opacity
-								index: i, opacity: this.state.opacity[c],
-								levels: this.state.levels,
-								size: this.state.size,
-								tileSize: this.state.tileSize,
-								visible: this.state.visible[i]})),
+								index: i, opacity: imageState.opacity[c],
+								levels: imageState.levels,
+								size: imageState.size,
+								tileSize: imageState.tileSize,
+								visible: imageState.visible[i]})),
 						...(colors ? [mergeLayer] : [])
 
 					],
@@ -264,10 +237,10 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			div({style: {width: 200, margin: 20, float: 'right'}},
 			...inView.map((c, i) =>
 				span(
-					checkbox({checked: this.state.visible[i], style: {color: colorsCss[i % layerColors.length]}, onChange: onVisible(i)}),
+					checkbox({checked: imageState.visible[i], style: {color: colorsCss[i % layerColors.length]}, onChange: onVisible(i)}),
 					channelSelect({channels: sorted(pluck(stats, 'name')),
 						value: stats[c].name, onChange: this.onChannel(i)}),
-					slider({...colorRange(stats[c]), step: 0.01,
-						value: this.state.opacity[c], onChange: this.onOpacity(c)})))));
+					slider({...colorRange(stats[c]), step: 0.001,
+						value: imageState.opacity[c], onChange: this.onOpacity(c)})))));
 	}
 }

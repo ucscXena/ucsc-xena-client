@@ -106,22 +106,18 @@ export var cohortFields = (cohorts, cohortDatasets, cohortFeatures) =>
 
 export var hasDataset = state => getIn(state, ['dataset', 'dsID']);
 
-export var isDir = path => path && Let((segments = path.split(/\//)) =>
-		segments[segments.length - 1].indexOf('.') === -1);
-
-// Check if there's a jpeg pyramid image.
-export var hasImage = state =>
-	Let((path = getIn(state, ['dataset', 'image', 0])) => path && isDir(path.path));
-
-export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
-
 var relativeOrAbsolute = (host, path) => path.startsWith('http') ? path :
 	host + '/download' + path;
 
-export function imagePath(dsID, image) {
-	var {host} = JSON.parse(dsID);
-	return image && assoc(image, 'path', relativeOrAbsolute(host, image.path));
-}
+var imagePath = (dsID, path) =>
+	Let(({host} = JSON.parse(dsID)) => relativeOrAbsolute(host, path));
+
+// Check if there's an image.
+export var hasImage = state =>
+	Let((img = getIn(state, ['dataset', 'image', 0])) =>
+		img && assoc(img, 'path', imagePath(state.dataset.dsID, img.path)));
+
+export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
 var hasField = field => (state, cohort = datasetCohort(state)) =>
 	findValue(pairs(getIn(state, ['donorFields', cohort])),
