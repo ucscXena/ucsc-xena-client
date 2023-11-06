@@ -122,15 +122,15 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, {offset, image_scalef: scale}, adj, color,
+const dataLayer = (data, modelMatrix, color,
 		radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
 	id: `scatter-plot`,
 	data: data[0],
+	modelMatrix,
 	stroked: true,
 	getLineWidth: 50,
 	filled: false,
-	getPosition: (d0, {index}) => [(scale * d0 + offset[0]) / adj,
-					(scale * data[1][index] + offset[1]) / adj],
+	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 2,
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
@@ -143,7 +143,15 @@ const dataLayer = (data, {offset, image_scalef: scale}, adj, color,
 	extensions: [new DataFilterExtension({filterSize: 1})]
 });
 
-export default class Img extends PureComponent {//eslint-disable-line no-unused-vars
+// scale and offset
+var getM = (s, [x, y, z = 0]) => [
+	s, 0, 0, 0,
+	0, s, 0, 0,
+	0, 0, s, 0,
+	x, y, z, 1
+];
+
+export default class Img extends PureComponent {
 	state = {}
 	static defaultProps = {
 		width: 800,
@@ -171,14 +179,17 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 				radius} = this.props.data,
 			colorScale = cvtColorScale(colorColumn, colors),
 			filter = filterFn(colorColumn, hideColors),
-			{image_scalef: scale} = image,
+			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
 			// overlay lines up.
 			adj = (1 << imageState.levels - 1);
+
+		var modelMatrix = getM(scale / adj, offset.map(c => c / adj));
+
 		radius = radius * scale / adj;
 
-		var mergeLayer = dataLayer(columns, image, adj, colorScale, radius,
+		var mergeLayer = dataLayer(columns, modelMatrix, colorScale, radius,
 			[colorColumn, colors, hideColors], this.onHover, filter);
 		var views = new OrthographicView({far: -1, near: 1}),
 			{stats, inView, size: [iwidth, iheight]} = imageState,
@@ -186,8 +197,8 @@ export default class Img extends PureComponent {//eslint-disable-line no-unused-
 			{onVisible} = this,
 			viewState = {
 				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
-				minZoom: -2,
-				maxZoom: 10,
+				minZoom: 1,
+				maxZoom: 8,
 				target: [iwidth / 2, iheight / 2]
 			};
 
