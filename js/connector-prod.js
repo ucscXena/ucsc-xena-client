@@ -87,6 +87,7 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		stateObs.sample(Rx.Observable.fromEvent(window, 'beforeunload'))
+			.map(state => runner(state, ['page-unload']))
 			.subscribe(state => sessionStorage.xena = stringify(state));
 	}
 

@@ -208,4 +208,17 @@ var controls = actionPrefix({
 			assocIn(state, ['image', path, 'opacity', i], opacity))
 });
 
-export default compose(fetchController, mount(make(controls), ['singlecell']));
+// global actions
+var pageControls = {
+	// This drops our large data, so we can preserve the page state w/o
+	// overflowing browser limits. It also avoids needing to handle
+	// serialization of binary objects for sessionStorage.
+	// Maybe we should drop other fetched data as well, so a reload will
+	// get the latest.
+	'page-unload': state =>
+		assocIn(state, ['colorBy', 'data'], undefined, ['data'], undefined,
+			['samples'], undefined)
+};
+
+export default compose(make(pageControls), fetchController,
+	mount(make(merge(pageControls, controls)), ['singlecell']));
