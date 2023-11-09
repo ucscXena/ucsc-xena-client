@@ -113,11 +113,15 @@ var mapValue = (list, selected) =>
 	findIndexDefault(list, m => isEqual(m, selected), '');
 
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
-	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
+	Object.keys(g).sort().map(k => [listSubheader({className: styles.subheader}, k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
 	var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i));
 	return xSelect({
+		size: 'small',
+		MenuProps: {
+			className: styles.menuItem,
+		},
 		id: 'map-select',
 		label: `Select a ${layouts[layout]} layout`,
 		value: mapValue(availableMaps[layout], selected),

@@ -57,3 +57,13 @@
 	font-weight: 600;
 	font-size: 70%;
 }
+
+.menuItem li {
+	min-height: 10px;
+	line-height: 24px;
+}
+
+.subheader {
+	font-weight: 600;
+	color: #000000;
+}
