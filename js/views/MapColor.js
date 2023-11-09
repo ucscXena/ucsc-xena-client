@@ -88,7 +88,7 @@ var modeOptions = {
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
 				id: 'celltype',
-				label: 'Select a cell type / cluster',
+				label: 'Select a cell types/clusters',
 				value: cellTypeValue(state), onChange
 			}, ...cellTypeOpts(state))),
 	other: ({state, onOther: onChange, scale, onScale}) =>
@@ -103,13 +103,13 @@ var modeOptions = {
 		Let((prob = probValue(state)) =>
 			fragment(xSelect({
 						id: 'prob',
-						label: 'Select a transferred cell type / cluster',
+						label: 'Select cell type/cluster scoring method',
 						value: prob,
 						onChange: onProb
 					}, ...probOpts(state)),
 				xSelect({
 						id: 'prob-cell',
-						label: 'Select cell type',
+						label: 'Select a cell type/cluster score',
 						value: probCellValue(state),
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
@@ -125,12 +125,12 @@ var modeOptions = {
 };
 
 var modeLabel = {
-	datasource: 'By dataset',
-	donor: 'By donor',
-	type: 'By cell type/cluster',
-	prob: 'By cell type/cluster probability',
-	gene: 'By gene',
-	other: 'By other phenotype'
+	datasource: 'Dataset',
+	donor: 'Donor',
+	type: 'Cell types/clusters',
+	prob: 'Cell type/cluster scores',
+	gene: 'Gene',
+	other: 'More options'
 };
 var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
 
@@ -200,7 +200,7 @@ class MapColor extends PureComponent {
 			state = assocIn(appState, ['colorBy', 'field'], colorBy);
 		return fragment(xSelect({
 					id: 'color-mode',
-					label: 'Select how to color cells',
+					label: 'Select how to color cells by',
 					value: modeValue(state),
 					onChange: onColorBy
 				}, ...availModes(state).map(modeOpt)),

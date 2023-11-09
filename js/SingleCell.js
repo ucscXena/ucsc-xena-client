@@ -81,7 +81,7 @@ var integrationsList = state =>
 var integration = ({handlers: {onHighlight, onIntegration}, highlight,
 		props: {state}}) =>
 	div({className: styles.integration},
-		h2('Select an integration:'),
+		h2('Select a study:'),
 		integrations({list: integrationsList(state), onHighlight, highlight}),
 		button({onClick: onIntegration, disabled: highlight == null}, 'Next'));
 
@@ -102,7 +102,7 @@ var integrationLabel = state =>
 
 
 var layoutSelect = ({onLayout, props: {state}}) =>
-	xRadioGroup({label: 'Select a layout type', value: state.layout || '',
+	xRadioGroup({label: 'Select layout type', value: state.layout || '',
 		onChange: onLayout,
 		options:
 		availableCategories(available(state)).map(l => ({label: layouts[l], value: l}))});
