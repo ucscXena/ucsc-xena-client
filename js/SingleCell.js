@@ -190,12 +190,13 @@ var legend = (state, onCode) => {
 		heatmap = [getIn(state, ['data', 'req', 'values', 0])],
 		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
+		unit = getIn(state, ['field', 'unit']),
 		colors = [hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
 			: scale];
 
 	return heatmap[0] ?
 		widgets.legend({inline: true, max: Infinity, onClick: onCode,
-			column: {fieldType, valueType, heatmap, colors, codes}}) :
+			column: {fieldType, valueType, heatmap, colors, codes, units: [unit]}}) :
 		null;
 };
 

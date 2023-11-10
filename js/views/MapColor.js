@@ -157,8 +157,8 @@ class MapColor extends PureComponent {
 	}
 	onGene = ({host, name, field}) => {
 		var {state} = this.props,
-			{colnormalization} = getIn(state, ['datasetMetadata', host, name]),
-			newState = {mode: 'gene', host, name, field, colnormalization};
+			{colnormalization, unit} = getIn(state, ['datasetMetadata', host, name]),
+			newState = {mode: 'gene', host, name, field, colnormalization, unit};
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
