@@ -23,6 +23,7 @@ import widgets from './columnWidgets';
 import {scaleParams} from './colorScales';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
+import {MuiThemeProvider, createTheme} from '@material-ui/core';
 var map = el(Map);
 var button = el(Button);
 var xRadioGroup = el(XRadioGroup);
@@ -34,6 +35,7 @@ var tabs = el(Tabs);
 var integrations = el(Integrations);
 var listSubheader = el(ListSubheader);
 var slider = el(Slider);
+var muiThemeProvider = el(MuiThemeProvider);
 
 var firstMatch = (el, selector) =>
 	el.matches(selector) ? el :
@@ -113,15 +115,11 @@ var mapValue = (list, selected) =>
 	findIndexDefault(list, m => isEqual(m, selected), '');
 
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
-	Object.keys(g).sort().map(k => [listSubheader({className: styles.subheader}, k), ...g[k].map(getOpt)]).flat());
+	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
 	var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i));
 	return xSelect({
-		size: 'small',
-		MenuProps: {
-			className: styles.menuItem,
-		},
 		id: 'map-select',
 		label: `Select a ${layouts[layout]} layout`,
 		value: mapValue(availableMaps[layout], selected),
@@ -375,6 +373,27 @@ var selector = state => assoc(
 	'map', mapSelector(state)
 );
 
+// MuiThemeProvider does a shallow merge into the outer theme, which is not
+// useful. So, we explicitly merge it here by passing a function which will
+// receive the outer theme.
+var theme = outer => createTheme(outer, {
+	overrides: {
+		MuiList: {
+			root: {
+				'& li': {
+					minHeight: '10px',
+					lineHeight: '24px'
+				}
+			}
+		},
+		MuiListSubheader: {
+			root: {
+				fontWeight: 600,
+				color: '#000000'
+			}
+		}
+	}
+});
 
 export default ({state: {singlecell: state}, ...rest}) =>
-	singleCellPage({state: selector(state), ...rest});
+	muiThemeProvider({theme}, singleCellPage({state: selector(state), ...rest}));
