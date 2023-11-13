@@ -198,6 +198,7 @@ var controls = actionPrefix({
 		'colorBy', colorBy, 'colorBy2', {}, 'radius', null),
 	reset: state => assoc(state, 'layout', null, 'dataset', null, 'data', {},
 		'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null),
+	advanced: state => updateIn(state, ['advanced'],  a => !a),
 	colorBy: (state, key, colorBy) =>
 		assocIn(state, [key, 'field'], colorBy,
 			[key, 'hidden'], null),

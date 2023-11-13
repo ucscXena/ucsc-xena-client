@@ -11,8 +11,9 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {br, div, el, h2, h3, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Button, Divider, Icon, IconButton, ListSubheader, MenuItem,
-	Slider, Tab, Tabs} from '@material-ui/core';
+import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
+	IconButton, ListSubheader, MenuItem, Slider, Tab, Tabs} from '@material-ui/core';
+import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, maps, otherValue, probValue, setRadius} from './models/map';
@@ -26,7 +27,10 @@ import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
 var map = el(Map);
 var button = el(Button);
-var divider = el(Divider);
+var accordion = el(Accordion);
+var accordionDetails = el(AccordionDetails);
+var accordionSummary = el(AccordionSummary);
+var expandMore = el(ExpandMore);
 var xRadioGroup = el(XRadioGroup);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
@@ -161,7 +165,8 @@ class MapTabs extends PureComponent {
 	}
 	render() {
 		var {onChange, state: {value}, props: {handlers:
-				{onLayout, onDataset, onRadius, onColorByHandlers}, state}} = this;
+				{onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
+			state}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -178,10 +183,12 @@ class MapTabs extends PureComponent {
 				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
 					scale: scaleValue(state), handlers: onColorByHandlers[0]}),
-				divider({variant: 'middle', style: {height: '4px'}}),
-				Let((state2 = colorBy2State(state)) =>
-					mapColor({key: datasetCohort(state2) + '2', state: state2,
-						scale: scaleValue(state2), handlers: onColorByHandlers[1]}))),
+				accordion({expanded: state.advanced, onChange: onAdvanced},
+					accordionSummary({expandIcon: expandMore()}, 'Advanced'),
+					accordionDetails({className: styles.advanced},
+						Let((state2 = colorBy2State(state)) =>
+							mapColor({key: datasetCohort(state2) + '2', state: state2,
+								scale: scaleValue(state2), handlers: onColorByHandlers[1]}))))),
 			tabPanel({value, index: 2}));
 	}
 }
@@ -278,6 +285,9 @@ class SingleCellPage extends PureComponent {
 	callback = ([action, ...params]) => {
 		// set scope for actions, to prevent aliasing with other controllers.
 		this.props.callback(['singlecell-' + action, ...params]);
+	}
+	onAdvanced = () => {
+		this.callback(['advanced']);
 	}
 	onTooltip = i => {
 		if (i === null) {
