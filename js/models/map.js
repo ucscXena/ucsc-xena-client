@@ -236,3 +236,12 @@ export var defaultColor = (state, cohort) =>
 			first(state.labelTransfer[cohort]), {host, name} = JSON.parse(dsID)) =>
 				({mode: 'type', host, name, field})) ||
 	{};
+
+export var layerColors = [
+	[0.0, 0.0, 1.0],
+	[0.0, 1.0, 0.0],
+	[1.0, 0.0, 0.0],
+	[0.0, 1.0, 1.0],
+	[1.0, 0.0, 1.0],
+	[1.0, 1.0, 0.0],
+];

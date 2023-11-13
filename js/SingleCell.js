@@ -16,7 +16,9 @@ import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
 import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, maps, otherValue, probValue, setRadius} from './models/map';
+import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
+	dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, hasImage,
+	maps, otherValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
 import mapColor from './views/MapColor';
@@ -25,6 +27,7 @@ import {scaleParams} from './colorScales';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
+import ImgControls from './views/ImgControls';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -41,6 +44,7 @@ var integrations = el(Integrations);
 var listSubheader = el(ListSubheader);
 var slider = el(Slider);
 var muiThemeProvider = el(MuiThemeProvider);
+var imgControls = el(ImgControls);
 
 var firstMatch = (el, selector) =>
 	el.matches(selector) ? el :
@@ -164,14 +168,15 @@ class MapTabs extends PureComponent {
 		this.setState({value});
 	}
 	render() {
-		var {onChange, state: {value}, props: {handlers:
-				{onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
+		var {onChange, state: {value}, props: {handlers: {
+			onOpacity, onVisible, onChannel,
+			onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
 			state}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
 				tab({label: 'Color by', disabled: !hasDataset(state)}),
-				tab({label: 'Layers', disabled: true}),
+				tab({label: 'Layers', disabled: !hasImage(state)}),
 				tab({label: 'Cells in View', disabled: true})
 			),
 			tabPanel({value, index: 0},
@@ -189,7 +194,8 @@ class MapTabs extends PureComponent {
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								scale: scaleValue(state2), handlers: onColorByHandlers[1]}))))),
-			tabPanel({value, index: 2}));
+			tabPanel({value, index: 2},
+				imgControls({state, onOpacity, onVisible, onChannel})));
 	}
 }
 
@@ -239,14 +245,14 @@ var tooltipView = tooltip =>
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt0, br(), tooltip.valTxt1] :
 			['']));
 
-var viz = ({handlers: {onReset, onTooltip, onCode, onChannel,
-		onVisible, onOpacity, ...handlers}, tooltip, props: {state}}) =>
+var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers},
+		tooltip, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
 		div({className: styles.vizBody},
-			vizPanel({props: {state, onTooltip, onChannel, onVisible, onOpacity}}),
+			vizPanel({props: {state, onTooltip}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
 				legendTitle(state),

@@ -1,34 +1,15 @@
 import PureComponent from './PureComponent';
-import {div, el, span} from './chart/react-hyper';
+import {el} from './chart/react-hyper';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
 import {BitmapLayer, ScatterplotLayer, OrthographicView} from 'deck.gl';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
-import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
-var slider = el(Slider);
-var {getIn, identity, Let, pluck, sorted} = require('./underscore_ext').default;
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import XAutosuggestInput from './views/XAutosuggestInput';
-var xAutosuggestInput = el(XAutosuggestInput);
-var autocomplete = el(Autocomplete);
-import styles from './Img.module.css';
-
-var {RGBToHex} = require('./color_helper').default;
+import {layerColors} from './models/map';
+var {getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
-var checkbox = el(Checkbox);
-
-var layerColors = [
-	[0.0, 0.0, 1.0],
-	[0.0, 1.0, 0.0],
-	[1.0, 0.0, 0.0],
-	[0.0, 1.0, 1.0],
-	[1.0, 0.0, 1.0],
-	[1.0, 1.0, 0.0],
-];
-var colorsCss = layerColors.map(c => RGBToHex(...c.map(v => v * 255)));
 
 var fromGray = i =>
 	`color.a = min(1., max(color.r - lower, 0.) / (upper - lower));
@@ -57,16 +38,6 @@ class XenaBitmapLayer extends BitmapLayer {
 		}
 	}
 }
-
-var channelSelect = ({channels, value, onChange}) =>
-	autocomplete({
-		onChange,
-		disableClearable: true,
-		options: channels,
-		renderInput: props => xAutosuggestInput(props),
-		className: styles.select,
-		value
-	});
 
 var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) =>
 	new TileLayer({
@@ -102,12 +73,6 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 		}
 	});
 
-
-// Adds 20% of range over and under the min/max of the dataset.
-// The color scales will clamp the result to [0, 1].
-var colorRange = ({min, max}) =>
-	Let((over = (max - min) * 0.2) =>
-		({min: (min - over) / 256, max: (max + over) / 256}));
 
 var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?
@@ -170,15 +135,6 @@ export default class Img extends PureComponent {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
-	onOpacity = i => (ev, op) => {
-		this.props.onOpacity(i, op);
-	}
-	onVisible = i => (ev, checked) => {
-		this.props.onVisible(i, checked);
-	}
-	onChannel = i => (ev, channel) => {
-		this.props.onChannel(i, channel);
-	}
 	render() {
 		if (!this.props.data.columns) {
 			return null;
@@ -207,9 +163,8 @@ export default class Img extends PureComponent {
 
 
 		var views = new OrthographicView({far: -1, near: 1}),
-			{stats, inView, size: [iwidth, iheight]} = imageState,
+			{inView, size: [iwidth, iheight]} = imageState,
 			{width, height} = props,
-			{onVisible} = this,
 			viewState = {
 				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
 				minZoom: 0,
@@ -217,55 +172,43 @@ export default class Img extends PureComponent {
 				target: [iwidth / 2, iheight / 2]
 			};
 
-		return div({style: {display: 'flex', flexDirection: 'row-reverse'}},
-			div({style: {position: 'relative', width, height,
-					border: '3px solid black'}},
-				deckGL({
-					glOptions: {
-						alpha: false
-					},
-					layers: id([
-						imageState.background && tileLayer({
-							name: 'i', path: image.path,
+		return deckGL({
+				glOptions: {
+					alpha: false
+				},
+				layers: id([
+					imageState.background && tileLayer({
+						name: 'i', path: image.path,
+						// XXX rename opacity
+						index: null, opacity: 255,
+						levels: imageState.levels,
+						size: imageState.size,
+						tileSize: imageState.tileSize,
+						visible: true
+					}),
+					...inView.map((c, i) =>
+						tileLayer({
+							name: `c${c}`, path: image.path,
 							// XXX rename opacity
-							index: null, opacity: 255,
+							index: i, opacity: imageState.opacity[c],
 							levels: imageState.levels,
 							size: imageState.size,
 							tileSize: imageState.tileSize,
-							visible: true
-						}),
-						...inView.map((c, i) =>
-							tileLayer({
-								name: `c${c}`, path: image.path,
-								// XXX rename opacity
-								index: i, opacity: imageState.opacity[c],
-								levels: imageState.levels,
-								size: imageState.size,
-								tileSize: imageState.tileSize,
-								visible: imageState.visible[i]})),
-						layer0, layer1
-					]),
-					views,
-					controller: true,
-					coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-					getCursor: () => 'inherit',
-					initialViewState: {
-						pitch: 0,
-						bearing: 0,
-						rotationX: 0,
-						rotationOrbit: 0,
-						...viewState
-					},
-					style: {backgroundColor: '#000000'}
-				})),
-
-			div({style: {width: 200, margin: 20, float: 'right'}},
-			...inView.map((c, i) =>
-				span(
-					checkbox({checked: imageState.visible[i], style: {color: colorsCss[i % layerColors.length]}, onChange: onVisible(i)}),
-					channelSelect({channels: sorted(pluck(stats, 'name')),
-						value: stats[c].name, onChange: this.onChannel(i)}),
-					slider({...colorRange(stats[c]), step: 0.001,
-						value: imageState.opacity[c], onChange: this.onOpacity(c)})))));
+							visible: imageState.visible[i]})),
+					layer0, layer1
+				]),
+				views,
+				controller: true,
+				coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+				getCursor: () => 'inherit',
+				initialViewState: {
+					pitch: 0,
+					bearing: 0,
+					rotationX: 0,
+					rotationOrbit: 0,
+					...viewState
+				},
+				style: {backgroundColor: '#000000'}
+			});
 	}
 }
