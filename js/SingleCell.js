@@ -11,7 +11,7 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {br, div, el, h2, h3, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Button, Icon, IconButton, ListSubheader, MenuItem,
+import {Button, Divider, Icon, IconButton, ListSubheader, MenuItem,
 	Slider, Tab, Tabs} from '@material-ui/core';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
@@ -26,6 +26,7 @@ import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
 var map = el(Map);
 var button = el(Button);
+var divider = el(Divider);
 var xRadioGroup = el(XRadioGroup);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
@@ -150,6 +151,9 @@ var dotSize = (state, onChange) =>
 		label('Dot size'),
 		slider({...dotRange(state.radiusBase), marks: [{value: state.radiusBase}], value: getRadius(state), onChange}));
 
+var colorBy2State = state => assoc(state,
+	'colorBy', get(state, 'colorBy2'));
+
 class MapTabs extends PureComponent {
 	state = {value: 0}
 	onChange = (ev, value) => {
@@ -157,7 +161,7 @@ class MapTabs extends PureComponent {
 	}
 	render() {
 		var {onChange, state: {value}, props: {handlers:
-				{onLayout, onDataset, onRadius, ...handlers}, state}} = this;
+				{onLayout, onDataset, onRadius, onColorByHandlers}, state}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -173,7 +177,11 @@ class MapTabs extends PureComponent {
 			tabPanel({value, index: 1},
 				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
-					scale: scaleValue(state), handlers})),
+					scale: scaleValue(state), handlers: onColorByHandlers[0]}),
+				divider({variant: 'middle', style: {height: '4px'}}),
+				Let((state2 = colorBy2State(state)) =>
+					mapColor({key: datasetCohort(state2) + '2', state: state2,
+						scale: scaleValue(state2), handlers: onColorByHandlers[1]}))),
 			tabPanel({value, index: 2}));
 	}
 }
@@ -192,7 +200,7 @@ var legend = (state, onCode) => {
 		colors = [hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
 			: scale];
 
-	return heatmap[0] ?
+	return getIn(state, ['field', 'mode']) && heatmap[0] ?
 		widgets.legend({inline: true, max: Infinity, onClick: onCode,
 			column: {fieldType, valueType, heatmap, colors, codes, units: [unit]}}) :
 		null;
@@ -221,7 +229,8 @@ var datasetLabel = state =>
 
 var tooltipView = tooltip =>
 	div({className: styles.tooltip},
-		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt] : ['']));
+		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt0, br(), tooltip.valTxt1] :
+			['']));
 
 var viz = ({handlers: {onReset, onTooltip, onCode, onChannel,
 		onVisible, onOpacity, ...handlers}, tooltip, props: {state}}) =>
@@ -235,6 +244,9 @@ var viz = ({handlers: {onReset, onTooltip, onCode, onChannel,
 				mapTabs({state, handlers}),
 				legendTitle(state),
 				legend(state.colorBy, onCode),
+				...Let((state2 = colorBy2State(state)) => [
+					legendTitle(state2),
+					legend(state2.colorBy, onCode)]),
 				tooltipView(tooltip))));
 
 var page = state =>
@@ -242,10 +254,25 @@ var page = state =>
 	get(state, 'enter') ? integration :
 	welcome;
 
+var getColorTxt = (state, i) =>
+	Let((
+		colorVals = getIn(state, ['data', 'req', 'values', 0]),
+		hasColor = colorVals && getIn(state, ['field', 'mode']),
+		value = hasColor && get(colorVals, i)) =>
+	 hasColor ? getIn(state, ['data', 'codes', value],
+		String(value)) : '');
+
 class SingleCellPage extends PureComponent {
 	state = {highlight: undefined, tooltip: null};
 	constructor() {
 		super();
+		this.onColorByHandlers =
+			['colorBy', 'colorBy2'].map(key => ({
+				onColorBy: colorBy => this.colorByKey(key, colorBy),
+				onScale: (ev, params) => this.scaleKey(key, params),
+				onCode: ev => this.codeKey(key, ev)
+			}));
+
 		this.handlers = pick(this, (v, k) => k.startsWith('on'));
 	}
 	callback = ([action, ...params]) => {
@@ -259,13 +286,10 @@ class SingleCellPage extends PureComponent {
 		}
 		var {state} = this.props,
 			sampleID = getSamples(state)[i],
-			colorVals = getIn(state, ['colorBy', 'data', 'req', 'values', 0]),
-			hasColor = colorVals && getIn(state, ['colorBy', 'field', 'mode']),
-			value = hasColor && get(colorVals, i),
-			valTxt = hasColor ? getIn(state, ['colorBy', 'data', 'codes', value],
-				String(value)) : '';
+			valTxt0 = getColorTxt(get(state, 'colorBy'), i),
+			valTxt1 = getColorTxt(get(state, 'colorBy2'), i);
 
-		this.setState({tooltip: {sampleID, valTxt}});
+		this.setState({tooltip: {sampleID, valTxt0, valTxt1}});
 	}
 	onEnter = () => {
 		this.callback(['enter']);
@@ -296,22 +320,22 @@ class SingleCellPage extends PureComponent {
 	onReset = () => {
 		this.callback(['reset']);
 	}
-	onColorBy = colorBy => {
-		this.callback(['colorBy', colorBy]);
+	colorByKey(key, colorBy) {
+		this.callback(['colorBy', key, colorBy]);
 	}
-	onScale = (ev, params) => {
-		var scale = getIn(this.props.state, ['colorBy', 'data', 'scale']),
+	scaleKey(key, params) {
+		var scale = getIn(this.props.state, [key, 'data', 'scale']),
 			newScale = scale.slice(0, scale.length - params.length).concat(params);
-		this.callback(['colorScale', newScale]);
+		this.callback(['colorScale', key, newScale]);
 	}
-	onCode = ev => {
+	codeKey(key, ev) {
 		var iStr = getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
 
 		if (iStr != null) {
 			var i = parseInt(iStr, 10),
-				hidden = getIn(this.props.state, ['colorBy', 'hidden']) || [],
+				hidden = getIn(this.props.state, [key, 'hidden']) || [],
 				next = (contains(hidden, i) ? without : conj)(hidden, i);
-			this.callback(['hidden', next]);
+			this.callback(['hidden', key, next]);
 		}
 	}
 	onRadius = (ev, r) => {

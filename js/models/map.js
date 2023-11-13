@@ -137,10 +137,12 @@ export var hasOther = (state, cohort = datasetCohort(state)) =>
 	state.other[cohort].length;
 
 export var hasGene = (state, cohort = datasetCohort(state)) =>
-	get(
-		findValue(getIn(state, ['defaultStudy', 'studyList']),
-			study => find(study.cohortList, c => c.cohort === cohort)),
-		'preferredDataset');
+	Let((datasets =
+		get(
+			findValue(getIn(state, ['defaultStudy', 'studyList']),
+				study => find(study.cohortList, c => c.cohort === cohort)),
+			'preferredDataset')) =>
+	get(datasets, 'length') && datasets);
 
 export var dotRange = Let((ratio = 4) =>
 	radius => ({min: radius / ratio, max: radius * ratio,
@@ -183,15 +185,21 @@ export var dataError = state =>
 		!getIn(state, ['_outOfDate', 'data', dsID, dims]) &&
 		getIn(state, ['data', dsID, dims, 'status']) === 'error');
 
+var colorLoadingField = (state, field) =>
+	getIn(state, [field, 'field', 'mode']) &&
+	(!getIn(state, [field, 'data']) ||
+		getIn(state, ['_outOfDate', field, 'data']));
+
 export var colorLoading = state =>
-	getIn(state, ['colorBy', 'field', 'mode']) &&
-	(!getIn(state, ['colorBy', 'data']) ||
-		getIn(state, ['_outOfDate', 'colorBy', 'data']));
+	colorLoadingField(state, 'colorBy') || colorLoadingField(state, 'colorBy2');
+
+export var colorErrorField = (state, field) =>
+	getIn(state, [field, 'field', 'mode']) &&
+	!getIn(state, ['_outOfDate', field, 'data']) &&
+	getIn(state, [field, 'data', 'status']) === 'error';
 
 export var colorError = state =>
-	getIn(state, ['colorBy', 'field', 'mode']) &&
-	!getIn(state, ['_outOfDate', 'colorBy', 'data']) &&
-	getIn(state, ['colorBy', 'data', 'status']) === 'error';
+	colorErrorField(state, 'colorBy') || colorErrorField(state, 'colorBy2');
 
 export var getDataSubType = (state, host, name) =>
 	getIn(state.datasetMetadata, [host, name, 'dataSubType']);

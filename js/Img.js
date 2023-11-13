@@ -8,7 +8,7 @@ import {TileLayer} from '@deck.gl/geo-layers';
 import {Slider, Checkbox} from '@material-ui/core';
 import * as colorScales from './colorScales';
 var slider = el(Slider);
-var {Let, pluck, sorted} = require('./underscore_ext').default;
+var {getIn, identity, Let, pluck, sorted} = require('./underscore_ext').default;
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from './views/XAutosuggestInput';
 var xAutosuggestInput = el(XAutosuggestInput);
@@ -122,9 +122,16 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, modelMatrix, color,
-		radius, triggers, onHover, getFilterValue) => new ScatterplotLayer({
-	id: `scatter-plot`,
+const dataLayer = (id, data, modelMatrix, colorBy, radius, onHover) =>
+	Let((
+		colorColumn = getIn(colorBy, ['field', 'mode']) &&
+			getIn(colorBy, ['data', 'req', 'values', 0]),
+		colors = getIn(colorBy, ['data', 'scale']),
+		hideColors = getIn(colorBy, ['hidden']),
+		getLineColor = cvtColorScale(colorColumn, colors),
+		getFilterValue = filterFn(colorColumn, hideColors)) => new ScatterplotLayer({
+
+	id: `scatter-plot${id}`,
 	data: data[0],
 	modelMatrix,
 	stroked: true,
@@ -134,14 +141,14 @@ const dataLayer = (data, modelMatrix, color,
 	lineWidthMinPixels: 0,
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
-	getLineColor: color,
-	updateTriggers: {getLineColor: triggers, getFilterValue: triggers},
+	getLineColor,
+	updateTriggers: {getLineColor: [colorColumn, colors], getFilterValue: [hideColors]},
 	pickable: true,
 	onHover,
 	getFilterValue,
 	filterRange: [1, 1],
 	extensions: [new DataFilterExtension({filterSize: 1})]
-});
+}));
 
 // scale and offset
 var getM = (s, [x, y, z = 0]) => [
@@ -150,6 +157,8 @@ var getM = (s, [x, y, z = 0]) => [
 	0, 0, s, 0,
 	x, y, z, 1
 ];
+
+var id = arr => arr.filter(identity);
 
 export default class Img extends PureComponent {
 	state = {}
@@ -175,10 +184,8 @@ export default class Img extends PureComponent {
 			return null;
 		}
 
-		var {colorColumn, hideColors, image, imageState, colors, columns,
-				radius} = this.props.data,
-			colorScale = cvtColorScale(colorColumn, colors),
-			filter = filterFn(colorColumn, hideColors),
+		var {props} = this,
+			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
@@ -189,15 +196,23 @@ export default class Img extends PureComponent {
 
 		radius = radius * scale / adj;
 
-		var mergeLayer = dataLayer(columns, modelMatrix, colorScale, radius,
-			[colorColumn, colors, hideColors], this.onHover, filter);
+		var hasColor0 = getIn(props.data, ['color0', 'field', 'mode']),
+			hasColor1 = getIn(props.data, ['color1', 'field', 'mode']),
+			layer0 = hasColor0 &&
+				dataLayer('0', data, modelMatrix, props.data.color0,
+					radius, this.onHover),
+			layer1 = hasColor1 &&
+				dataLayer('1', data, modelMatrix, props.data.color1,
+					radius, this.onHover);
+
+
 		var views = new OrthographicView({far: -1, near: 1}),
 			{stats, inView, size: [iwidth, iheight]} = imageState,
-			{width, height} = this.props,
+			{width, height} = props,
 			{onVisible} = this,
 			viewState = {
 				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
-				minZoom: 1,
+				minZoom: 0,
 				maxZoom: 8,
 				target: [iwidth / 2, iheight / 2]
 			};
@@ -209,8 +224,8 @@ export default class Img extends PureComponent {
 					glOptions: {
 						alpha: false
 					},
-					layers: [
-						...(imageState.background ? [tileLayer({
+					layers: id([
+						imageState.background && tileLayer({
 							name: 'i', path: image.path,
 							// XXX rename opacity
 							index: null, opacity: 255,
@@ -218,7 +233,7 @@ export default class Img extends PureComponent {
 							size: imageState.size,
 							tileSize: imageState.tileSize,
 							visible: true
-						})] : []),
+						}),
 						...inView.map((c, i) =>
 							tileLayer({
 								name: `c${c}`, path: image.path,
@@ -228,9 +243,8 @@ export default class Img extends PureComponent {
 								size: imageState.size,
 								tileSize: imageState.tileSize,
 								visible: imageState.visible[i]})),
-						...(colors ? [mergeLayer] : [])
-
-					],
+						layer0, layer1
+					]),
 					views,
 					controller: true,
 					coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,

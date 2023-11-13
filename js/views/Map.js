@@ -33,11 +33,26 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, modelMatrix, color, radius, depthTest, triggers, onHover,
-		getFilterValue) => new PointCloudLayer({
-	id: 'scatter',
+var cvtColorScale = (colorColumn, colors) =>
+	colorColumn ?
+		_.Let((scale = colorScales.colorScale(colors)) =>
+			(coords, {index}) => scale.rgb(colorColumn[index]))
+	: () => [0, 255, 0];
+
+var isOrdinal = colors => colors && colors[0] === 'ordinal';
+
+const dataLayer = (id, data, modelMatrix, colorBy, radius, onHover) =>
+	_.Let((
+		colorColumn = _.getIn(colorBy, ['field', 'mode']) &&
+			_.getIn(colorBy, ['data', 'req', 'values', 0]),
+		colors = _.getIn(colorBy, ['data', 'scale']),
+		hideColors = _.getIn(colorBy, ['hidden']),
+		getColor = cvtColorScale(colorColumn, colors),
+		getFilterValue = filterFn(colorColumn, hideColors)) => new PointCloudLayer({
+
+	id: 'scatter' + id,
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-	parameters: {depthTest},
+	parameters: {depthTest: isOrdinal(colors)},
 	sizeUnits: 'common',
 	// Our data is transposed vs. what deck expects, so we just pass the first
 	// coord & use accessors to return the other coords.
@@ -50,29 +65,20 @@ const dataLayer = (data, modelMatrix, color, radius, depthTest, triggers, onHove
 		(d0, {index}) => [d0, data[1][index]] :
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
-	getColor: color,
+	getColor,
 	// XXX not sure if updateTriggers is necessary. The accessor functions
 	// that depend on these should already compare not-equal.
-	updateTriggers: {getColor: triggers, getFilterValue: triggers},
+	updateTriggers: {getColor: [colorColumn, colors], getFilterValue: [hideColors]},
 	getNormal: [1, 1, 1],
 	pickable: true,
 	onHover,
 	getFilterValue,
 	filterRange: [1, 1],
 	extensions: [new DataFilterExtension({filterSize: 1})]
-});
-
-var cvtColorScale = (colorColumn, colors) =>
-	colorColumn ?
-		_.Let((scale = colorScales.colorScale(colors)) =>
-			(coords, {index}) => scale.rgb(colorColumn[index]))
-	: () => [0, 255, 0];
-
-var isOrdinal = colors => colors && colors[0] === 'ordinal';
+}));
 
 
 var cubeWidth = 20; // fit data to cube of this dimension
-
 
 // scale and offset
 var getM = (s, [x, y, z = 0]) => [
@@ -81,6 +87,8 @@ var getM = (s, [x, y, z = 0]) => [
 	0, 0, s, 0,
 	x, y, z, 1
 ];
+
+var id = arr => arr.filter(_.identity);
 
 class MapDrawing extends PureComponent {
 	onHover = ev => {
@@ -100,9 +108,6 @@ class MapDrawing extends PureComponent {
 			maxs = props.data.columns.map(_.maxnull),
 			centroids = maxs.map((max, i) => (max + mins[i]) / 2);
 
-		var {colorColumn, colors, hideColors} = this.props.data,
-			colorScale = cvtColorScale(colorColumn, colors),
-			filter = filterFn(colorColumn, hideColors);
 		var data = this.props.data.columns;
 		var {radius} = this.props.data;
 		var scale = cubeWidth / Math.max(...maxs.map((max, i) => max - mins[i]));
@@ -137,10 +142,18 @@ class MapDrawing extends PureComponent {
 				target: _.Let((c = cubeWidth / 2) => [c, c, c])
 			};
 		}
-		var mergeLayer = dataLayer(data, modelMatrix, colorScale, radius * scale,
-			isOrdinal(colors), [colorColumn, colors, hideColors], this.onHover, filter);
+
+		var hasColor0 = _.getIn(props.data, ['color0', 'field', 'mode']),
+			hasColor1 = _.getIn(props.data, ['color1', 'field', 'mode']),
+			layer0 = (hasColor0 || !hasColor1) &&
+				dataLayer('0', data, modelMatrix, _.get(props.data, 'color0'),
+					radius * scale, this.onHover),
+			layer1 = hasColor1 &&
+				dataLayer('1', data, modelMatrix, props.data.color1,
+					radius * scale, this.onHover);
+
 		return deckGL({
-			layers: [...(twoD ? [] : [axesLayer()]), mergeLayer],
+			layers: id([!twoD && axesLayer(), layer0, layer1]),
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -219,9 +232,8 @@ export class Map extends PureComponent {
 		var mapState = this.props.state,
 			params = _.get(mapState, 'dataset', []),
 			mapData = getData(mapState),
-			colorColumn = _.getIn(mapState, ['colorBy', 'data', 'req', 'values', 0]),
-			colors = _.getIn(mapState, ['colorBy', 'data', 'scale']),
-			hideColors = _.getIn(mapState, ['colorBy', 'hidden']),
+			color0 = _.get(mapState, 'colorBy'),
+			color1 = _.get(mapState, 'colorBy2'),
 			loading = dataLoading(mapState) || colorLoading(mapState),
 			error = dataError(mapState) || colorError(mapState),
 			columns = _.getIn(mapData, ['req', 'values']),
@@ -230,8 +242,8 @@ export class Map extends PureComponent {
 			radius = getRadius(mapState),
 			image = hasImage(mapState),
 			imageState = image && _.getIn(mapState, ['image', image.path]),
-			data = {columns, colorColumn, radius, colors,
-				labels, view, image, imageState, hideColors},
+			data = {columns, radius, color0, color1,
+				labels, view, image, imageState},
 			drawing = image ? imgDrawing : mapDrawing;
 
 		return div({className: styles.content},

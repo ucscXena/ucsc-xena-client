@@ -55,8 +55,13 @@ var setFloatScale = scale =>
 		type === 'float' ? ['float-mid', ...args] :
 		scale);
 
-var colorScale = (data, field) =>
-	setFloatScale(colorSpec(field, {colors: ['#0000ff', null, '#ff0000']}, data.codes,
+// XXX These color scales don't make sense. Using them for now to differentiate
+// two different floating point fields. For this case we need to instead build
+// monochromatic scales.
+var btr = ['#0000ff', null, '#ff0000'];
+var rtb = ['#ff0000', null, '#0000ff'];
+var colorScale = (data, field, range) =>
+	setFloatScale(colorSpec(field, {colors: range}, data.codes,
 			{avg: mapObject(data.avg, v => v[0])}));
 
 var scaleBounds = (data, scale) =>
@@ -66,9 +71,9 @@ var scaleBounds = (data, scale) =>
 			over = 0.1 * (max - min)) =>
 		({min: min - over, max: max + over}));
 
-var colorParams = colorBy => color =>
+var colorParams = (colorBy, range) => color =>
 	Let((field = fieldSpecMode(colorBy), data = setAvg(color, field),
-			scale = colorScale(data, field)) =>
+			scale = colorScale(data, field, range)) =>
 		assoc(data,
 			'scale', scale,
 			'scaleBounds', scaleBounds(data, scale)));
@@ -100,7 +105,9 @@ var fetchMethods = {
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	colorBy: (_, field, samples) =>
-		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field)),
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, btr)),
+	colorBy2: (_, field, samples) =>
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, rtb)),
 	image: path => ajax({
 			url: `${path}/metadata.json`,
 			responseType: 'text', method: 'GET', crossDomain: true
@@ -111,6 +118,7 @@ var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
 	colorBy: identity, // always updates in-place
+	colorBy2: identity, // always updates in-place
 	data: (state, dsID) =>
 		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
 	image: (state, img) =>
@@ -137,6 +145,7 @@ var allDatasets = state =>
 var concat = (...arr) => arr.filter(identity).flat();
 
 var hasColorBy = state => getIn(state.singlecell, ['colorBy', 'field', 'field']);
+var hasColorBy2 = state => getIn(state.singlecell, ['colorBy2', 'field', 'field']);
 
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
@@ -166,6 +175,9 @@ var singlecellData = state =>
 					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
 		hasColorBy(state) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
+		hasColorBy2(state) && getSamples(state.singlecell) ?
+			[['colorBy2', 'data', ['singlecell', 'colorBy2', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
 // Don't yet need invalidatePath
@@ -180,15 +192,17 @@ var actionPrefix = actions =>
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', {}),
-	layout: (state, layout) => assoc(state, 'layout', layout, 'colorBy', {}),
+	layout: (state, layout) => assoc(state, 'layout', layout,
+		'colorBy', {}, 'colorBy2', {}),
 	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
-		'colorBy', colorBy, 'radius', null),
+		'colorBy', colorBy, 'colorBy2', {}, 'radius', null),
 	reset: state => assoc(state, 'layout', null, 'dataset', null, 'data', {},
-		'integration', null, 'colorBy', {}, 'radius', null),
-	colorBy: (state, colorBy) => assocIn(state, ['colorBy', 'field'], colorBy,
-		['colorBy', 'hidden'], null),
-	colorScale: (state, scale) => assocIn(state, ['colorBy', 'data', 'scale'], scale),
-	hidden: (state, codes) => assocIn(state, ['colorBy', 'hidden'], codes),
+		'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null),
+	colorBy: (state, key, colorBy) =>
+		assocIn(state, [key, 'field'], colorBy,
+			[key, 'hidden'], null),
+	colorScale: (state, key, scale) => assocIn(state, [key, 'data', 'scale'], scale),
+	hidden: (state, key, codes) => assocIn(state, [key, 'hidden'], codes),
 	// Make the default radius "sticky". Unfortunately, also makes nearby
 	// points sticky if the drag operation starts there. Need to move this
 	// to the view so we can track mousedown.

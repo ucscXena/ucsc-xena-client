@@ -130,6 +130,7 @@ var modeLabel = {
 	type: 'Cell types/clusters',
 	prob: 'Cell type/cluster scores',
 	gene: 'Gene',
+	'': 'None',
 	other: 'More options'
 };
 var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
@@ -151,7 +152,7 @@ class MapColor extends PureComponent {
 			[],
 			newState = {mode, host, name, field};
 		this.setState({colorBy: newState});
-		if (field) {
+		if (field || !mode) {
 			this.props.handlers.onColorBy(newState);
 		}
 	}
@@ -203,7 +204,7 @@ class MapColor extends PureComponent {
 					label: 'Select how to color cells by',
 					value: modeValue(state),
 					onChange: onColorBy
-				}, ...availModes(state).map(modeOpt)),
+				}, modeOpt(''), ...availModes(state).map(modeOpt)),
 			modeOptions[modeValue(state)]({state, scale, onScale, ...handlers}));
 	}
 }
