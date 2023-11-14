@@ -48,7 +48,7 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 		tileSize,
 		// extent appears to be in the dimensions of the lowest-resolution image.
 		extent: [0, 0, size[0], size[1]],
-		opacity: 1.0, // XXX no effect? It's mixed in before FILTER_COLOR???
+		opacity: 1.0,
 		zoomOffset: 1,
 		refinementStrategy: 'no-overlap',
 		visible,
@@ -67,6 +67,7 @@ var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) 
 					bounds: [left, bottom, right, top]
 				}) : new BitmapLayer(props, {
 					data: null,
+					opacity,
 					image: props.data,
 					bounds: [left, bottom, right, top]
 				});
@@ -180,11 +181,11 @@ export default class Img extends PureComponent {
 					imageState.background && tileLayer({
 						name: 'i', path: image.path,
 						// XXX rename opacity
-						index: null, opacity: 255,
+						index: null, opacity: imageState.backgroundOpacity,
 						levels: imageState.levels,
 						size: imageState.size,
 						tileSize: imageState.tileSize,
-						visible: true
+						visible: imageState.backgroundVisible
 					}),
 					...inView.map((c, i) =>
 						tileLayer({

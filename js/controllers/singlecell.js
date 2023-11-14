@@ -78,6 +78,8 @@ var colorParams = (colorBy, range) => color =>
 			'scale', scale,
 			'scaleBounds', scaleBounds(data, scale)));
 
+var defaultBackground = background =>
+	background ? {backgroundOpacity: 1, backgroundVisible: true} : {};
 var imageMetadata = m => {
 	var stats = m.channels.map((l, i) => ({i, ...l})),
 		opacity = stats.map(({lower, upper}) => [lower / 256, upper / 256]),
@@ -89,7 +91,8 @@ var imageMetadata = m => {
 				.concat(range(stats.length))).slice(0, layers),
 		visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
 		{size, tileSize, levels, background} = m;
-	return {stats, opacity, inView, levels, size, tileSize, background, visible};
+	return {stats, opacity, inView, levels, size, tileSize, background, visible,
+		...defaultBackground(background)};
 };
 
 var fetchMethods = {
@@ -220,7 +223,13 @@ var controls = actionPrefix({
 			assocIn(state, ['image', path, 'visible', i], checked)),
 	'channel-opacity': (state, i, opacity) =>
 		Let(({path} = hasImage(state)) =>
-			assocIn(state, ['image', path, 'opacity', i], opacity))
+			assocIn(state, ['image', path, 'opacity', i], opacity)),
+	'background-visible': (state, checked) =>
+		Let(({path} = hasImage(state)) =>
+			assocIn(state, ['image', path, 'backgroundVisible'], checked)),
+	'background-opacity': (state, opacity) =>
+		Let(({path} = hasImage(state)) =>
+			assocIn(state, ['image', path, 'backgroundOpacity'], opacity))
 });
 
 // global actions
@@ -235,5 +244,5 @@ var pageControls = {
 			['samples'], undefined)
 };
 
-export default compose(make(pageControls), fetchController,
+export default compose(fetchController,
 	mount(make(merge(pageControls, controls)), ['singlecell']));

@@ -169,7 +169,7 @@ class MapTabs extends PureComponent {
 	}
 	render() {
 		var {onChange, state: {value}, props: {handlers: {
-			onOpacity, onVisible, onChannel,
+			onOpacity, onVisible, onChannel, onBackgroundOpacity, onBackgroundVisible,
 			onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
 			state}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
@@ -195,7 +195,8 @@ class MapTabs extends PureComponent {
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								scale: scaleValue(state2), handlers: onColorByHandlers[1]}))))),
 			tabPanel({value, index: 2},
-				imgControls({state, onOpacity, onVisible, onChannel})));
+				imgControls({state, onOpacity, onVisible, onChannel,
+					onBackgroundOpacity, onBackgroundVisible})));
 	}
 }
 
@@ -368,6 +369,12 @@ class SingleCellPage extends PureComponent {
 	}
 	onOpacity = (i, op) => {
 		this.callback(['channel-opacity', i, op]);
+	}
+	onBackgroundOpacity = op => {
+		this.callback(['background-opacity', op]);
+	}
+	onBackgroundVisible = visible => {
+		this.callback(['background-visible', visible]);
 	}
 
 	componentDidMount() {
