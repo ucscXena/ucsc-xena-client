@@ -66,9 +66,8 @@ const dataLayer = (id, data, modelMatrix, colorBy, radius, onHover) =>
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
 	getColor,
-	// XXX not sure if updateTriggers is necessary. The accessor functions
-	// that depend on these should already compare not-equal.
-	updateTriggers: {getColor: [colorColumn, colors], getFilterValue: [hideColors]},
+	updateTriggers: {getColor: [colorColumn, colors],
+		getFilterValue: [colorColumn, hideColors]},
 	getNormal: [1, 1, 1],
 	pickable: true,
 	onHover,
