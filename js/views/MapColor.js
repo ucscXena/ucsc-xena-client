@@ -145,12 +145,14 @@ class MapColor extends PureComponent {
 	}
 	onColorBy = ev => {
 		var {state} = this.props,
+			{colorBy: {field: colorBy}} = state,
 			mode = ev.target.value,
 			[[host, name] = [], field] =
 				mode === 'donor' ? [hasDonor(state), '_DONOR'] :
 				mode === 'datasource' ? [hasDatasource(state), '_DATASOURCE'] :
-			[],
-			newState = {mode, host, name, field};
+			    [],
+			// Re-populate form if user selects the active mode
+			newState = mode === colorBy.mode ? colorBy : {mode, host, name, field};
 		this.setState({colorBy: newState});
 		if (field || !mode) {
 			this.props.handlers.onColorBy(newState);

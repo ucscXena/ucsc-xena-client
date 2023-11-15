@@ -13,7 +13,7 @@ import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData,
-	getRadius, hasImage} from '../models/map';
+	getRadius, hasColor, hasImage} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -142,8 +142,8 @@ class MapDrawing extends PureComponent {
 			};
 		}
 
-		var hasColor0 = _.getIn(props.data, ['color0', 'field', 'mode']),
-			hasColor1 = _.getIn(props.data, ['color1', 'field', 'mode']),
+		var hasColor0 = hasColor(props.data.color0),
+			hasColor1 = hasColor(props.data.color1),
 			layer0 = (hasColor0 || !hasColor1) &&
 				dataLayer('0', data, modelMatrix, _.get(props.data, 'color0'),
 					radius * scale, this.onHover),

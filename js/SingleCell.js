@@ -17,7 +17,7 @@ import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
-	dotRange, getData, getDataSubType, getRadius, getSamples, hasDataset, hasImage,
+	dotRange, getData, getDataSubType, getRadius, getSamples, hasImage,
 	maps, otherValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
@@ -112,8 +112,8 @@ var integrationLabel = state =>
 	getIn(state, ['defaultStudy', 'studyList']).find(c => c.study === state.integration).label;
 
 
-var layoutSelect = ({onLayout, props: {state}}) =>
-	xRadioGroup({label: 'Select layout type', value: state.layout || '',
+var layoutSelect = ({onLayout, layout, state}) =>
+	xRadioGroup({label: 'Select layout type', value: layout || '',
 		onChange: onLayout,
 		options:
 		availableCategories(available(state)).map(l => ({label: layouts[l], value: l}))});
@@ -162,6 +162,9 @@ var dotSize = (state, onChange) =>
 var colorBy2State = state => assoc(state,
 	'colorBy', get(state, 'colorBy2'));
 
+var validDataset = (state, layout) =>
+	getIn(state, ['dataset', 'type']) === layout;
+
 class MapTabs extends PureComponent {
 	state = {value: 0}
 	onChange = (ev, value) => {
@@ -171,24 +174,25 @@ class MapTabs extends PureComponent {
 		var {onChange, state: {value}, props: {handlers: {
 			onOpacity, onVisible, onChannel, onBackgroundOpacity, onBackgroundVisible,
 			onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
-			state}} = this;
+			state, layout}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
-				tab({label: 'Color by', disabled: !hasDataset(state)}),
-				tab({label: 'Layers', disabled: !hasImage(state)}),
+				tab({label: 'Color by', disabled: !validDataset(state, layout)}),
+				tab({label: 'Layers', disabled: !validDataset(state, layout) ||
+					!hasImage(state)}),
 				tab({label: 'Cells in View', disabled: true})
 			),
 			tabPanel({value, index: 0},
-				layoutSelect({onLayout, props: {state}}),
-				mapSelectIfLayout(available(state), state.layout,
+				layoutSelect({onLayout, layout, state}),
+				mapSelectIfLayout(available(state), layout,
 					state.dataset, onDataset),
 				dotSize(state, onRadius)),
 			tabPanel({value, index: 1},
 				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
 					scale: scaleValue(state), handlers: onColorByHandlers[0]}),
-				accordion({expanded: state.advanced, onChange: onAdvanced},
+				accordion({expanded: !!state.advanced, onChange: onAdvanced},
 					accordionSummary({expandIcon: expandMore()}, 'Advanced'),
 					accordionDetails({className: styles.advanced},
 						Let((state2 = colorBy2State(state)) =>
@@ -247,7 +251,7 @@ var tooltipView = tooltip =>
 			['']));
 
 var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers},
-		tooltip, props: {state}}) =>
+		tooltip, layout, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -255,7 +259,7 @@ var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers},
 		div({className: styles.vizBody},
 			vizPanel({props: {state, onTooltip}}),
 			div({className: styles.sidebar},
-				mapTabs({state, handlers}),
+				mapTabs({state, handlers, layout}),
 				legendTitle(state),
 				legend(state.colorBy, onCode),
 				...Let((state2 = colorBy2State(state)) => [
@@ -277,9 +281,11 @@ var getColorTxt = (state, i) =>
 		String(value)) : '');
 
 class SingleCellPage extends PureComponent {
-	state = {highlight: undefined, tooltip: null};
-	constructor() {
+	constructor(props) {
 		super();
+		this.state = {highlight: undefined, tooltip: null,
+			layout: getIn(props.state, ['dataset', 'type'])};
+
 		this.onColorByHandlers =
 			['colorBy', 'colorBy2'].map(key => ({
 				onColorBy: colorBy => this.colorByKey(key, colorBy),
@@ -321,20 +327,21 @@ class SingleCellPage extends PureComponent {
 			this.props.state.defaultStudy.studyList[row].study]);
 	}
 	onLayout = layout => {
-		this.callback(['layout', layout]);
+		this.setState({layout});
 	}
 	onDataset = ev => {
-		var {state} = this.props,
-			{layout} = state,
+		var {props: {state}, state: {layout}} = this,
 			i = parseInt(ev.target.value, 10),
 			dataset = available(state)[layout][i],
-			colorBy = dataset.image ? {} :
-				dataset.cohort === datasetCohort(state) ? state.colorBy.field :
-				defaultColor(state, dataset.cohort);
+			colorBy =
+				dataset.cohort === datasetCohort(state) ? state.colorBy :
+				dataset.image ? {} :
+				{field: defaultColor(state, dataset.cohort)};
 
-		this.callback(['dataset', dataset, {field: colorBy}]);
+		this.callback(['dataset', dataset, colorBy]);
 	}
 	onReset = () => {
+		this.setState({layout: null});
 		this.callback(['reset']);
 	}
 	colorByKey(key, colorBy) {

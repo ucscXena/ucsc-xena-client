@@ -6,7 +6,7 @@ import {BitmapLayer, ScatterplotLayer, OrthographicView} from 'deck.gl';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
-import {layerColors} from './models/map';
+import {hasColor, layerColors} from './models/map';
 var {getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
@@ -138,10 +138,9 @@ export default class Img extends PureComponent {
 		this.props.onTooltip(i < 0 ? null : i);
 	}
 	render() {
-		if (!this.props.data.columns) {
+		if (!this.props.data.columns || !this.props.data.imageState) {
 			return null;
 		}
-
 		var {props} = this,
 			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
@@ -154,8 +153,8 @@ export default class Img extends PureComponent {
 
 		radius = radius * scale / adj;
 
-		var hasColor0 = getIn(props.data, ['color0', 'field', 'mode']),
-			hasColor1 = getIn(props.data, ['color1', 'field', 'mode']),
+		var hasColor0 = hasColor(props.data.color0),
+			hasColor1 = hasColor(props.data.color1),
 			layer0 = hasColor0 &&
 				dataLayer('0', data, modelMatrix, props.data.color0,
 					radius, this.onHover),

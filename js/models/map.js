@@ -201,6 +201,9 @@ export var colorErrorField = (state, field) =>
 export var colorError = state =>
 	colorErrorField(state, 'colorBy') || colorErrorField(state, 'colorBy2');
 
+export var hasColor = colorBy =>
+	getIn(colorBy, ['field', 'mode']) && getIn(colorBy, ['data', 'req', 'values', 0]);
+
 export var getDataSubType = (state, host, name) =>
 	getIn(state.datasetMetadata, [host, name, 'dataSubType']);
 

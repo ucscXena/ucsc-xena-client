@@ -194,17 +194,18 @@ var actionPrefix = actions =>
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
-	integration: (state, cohort) => assoc(state, 'integration', cohort, 'data', {}),
-	layout: (state, layout) => assoc(state, 'layout', layout,
-		'colorBy', {}, 'colorBy2', {}),
+	integration: (state, cohort) => assoc(state, 'integration', cohort),
+	// We reset colorBy to {} because of the query selectors on colorBy.data
+	// that will throw if we delete the object.
 	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
 		'colorBy', colorBy, 'colorBy2', {}, 'radius', null),
-	reset: state => assoc(state, 'layout', null, 'dataset', null, 'data', {},
+	reset: state => assoc(state, 'dataset', null, 'data', {},
 		'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null),
 	advanced: state => updateIn(state, ['advanced'],  a => !a),
 	colorBy: (state, key, colorBy) =>
-		assocIn(state, [key, 'field'], colorBy,
-			[key, 'hidden'], null),
+		Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
+			assocIn(next, [key, 'field'], colorBy,
+				[key, 'hidden'], null)),
 	colorScale: (state, key, scale) => assocIn(state, [key, 'data', 'scale'], scale),
 	hidden: (state, key, codes) => assocIn(state, [key, 'hidden'], codes),
 	// Make the default radius "sticky". Unfortunately, also makes nearby
