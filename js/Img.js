@@ -164,12 +164,12 @@ export default class Img extends PureComponent {
 
 
 		var views = new OrthographicView({far: -1, near: 1}),
-			{inView, size: [iwidth, iheight]} = imageState,
+			{inView, levels, size: [iwidth, iheight]} = imageState,
 			{width, height} = props,
 			viewState = {
 				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
 				minZoom: 0,
-				maxZoom: 8,
+				maxZoom: levels + 1,
 				target: [iwidth / 2, iheight / 2]
 			};
 
