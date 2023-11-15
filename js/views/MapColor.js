@@ -152,7 +152,8 @@ class MapColor extends PureComponent {
 				mode === 'datasource' ? [hasDatasource(state), '_DATASOURCE'] :
 			    [],
 			// Re-populate form if user selects the active mode
-			newState = mode === colorBy.mode ? colorBy : {mode, host, name, field};
+			newState = mode === get(colorBy, 'mode') ? colorBy :
+				{mode, host, name, field};
 		this.setState({colorBy: newState});
 		if (field || !mode) {
 			this.props.handlers.onColorBy(newState);
