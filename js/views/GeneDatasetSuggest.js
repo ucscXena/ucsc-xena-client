@@ -32,7 +32,8 @@ var filterOptions = (options, {inputValue}) =>
 		field.toLowerCase().startsWith(inputValue.trim().toLowerCase()));
 
 export class GeneDatasetSuggest extends PureComponent {
-	state = {suggestions: []};
+	state = {suggestions: [], inputValue:
+		this.props.value ? getOptionLabel(this.props.value) : ''};
 
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'change');
@@ -50,28 +51,43 @@ export class GeneDatasetSuggest extends PureComponent {
 	onChange = (ev, value) => {
 		if (value) {
 			this.props.onSelect(value);
+			this.setState({inputValue: getOptionLabel(value)});
 		}
 	};
 
-	onInputChange = (ev, value/*, reason*/) => {
-		this.on.change(value);
+	onInputChange = (ev, inputValue/*, reason*/) => {
+		this.setState({inputValue});
+		this.on.change(inputValue);
+	}
+
+	onReset = () => {
+		var {value} = this.props;
+		if (value) {
+			this.setState({inputValue: getOptionLabel(value)});
+		}
 	}
 
 	render() {
-		var {onChange} = this,
+		var {onChange, onReset} = this,
 			{value, suggestProps} = this.props,
-			{suggestions} = this.state;
+			{suggestions, inputValue} = this.state;
+
 		return autocomplete({
 			closeIcon: closeRounded({fontSize: 'large'}),
 			forcePopupIcon: !value,
 			onChange,
+			onClose: onReset,
 			getOptionLabel,
 			getOptionSelected: isEqual,
 			filterOptions,
 			onInputChange: this.onInputChange,
 			options: suggestions,
 			popupIcon: searchRounded({fontSize: 'large'}),
-			renderInput: props => xAutosuggestInput({...suggestProps, ...props}),
+			renderInput: props => xAutosuggestInput({onBlur: onReset,
+				...suggestProps, ...props}),
+			freeSolo: true,
+			clearOnBlur: false,
+			inputValue,
 			value
 		});
 	}
