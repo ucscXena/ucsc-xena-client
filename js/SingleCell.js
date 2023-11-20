@@ -261,10 +261,10 @@ var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers},
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				legendTitle(state),
-				legend(state.colorBy, onCode),
+				legend(state.colorBy, handlers.onColorByHandlers[0].onCode),
 				...Let((state2 = colorBy2State(state)) => [
 					legendTitle(state2),
-					legend(state2.colorBy, onCode)]),
+					legend(state2.colorBy, handlers.onColorByHandlers[1].onCode)]),
 				tooltipView(tooltip))));
 
 var page = state =>
