@@ -83,8 +83,19 @@ var linearColorScale = (domain, range) =>
 	(range.indexOf(null) === -1 ? linearOpaqueColorScale :
 		linearTransparentColorScale)(domain, range);
 
+var log2TransparentColorScale = ([d0, d1], [, r1]) => {
+	var m = 1. / (Math.log2(d1) - Math.log2(d0)),
+		b = 1. - m * Math.log2(d1);
+	return v => {
+		var a = v < d0 ? 0 :
+			v > d1 ? 1 :
+			m * Math.log(v) + b;
+		return [...r1, round(a * 255)];
+	};
+};
+
 // for now, only support one range
-var log2ColorScale = ([d0, d1], [r0, r1]) => {
+var log2OpaqueColorScale = ([d0, d1], [r0, r1]) => {
 	var mb = _.mmap(r0, r1, (c0, c1) => {
 		var ld0 = Math.log2(d0),
 			ld1 = Math.log2(d1),
@@ -104,6 +115,10 @@ var log2ColorScale = ([d0, d1], [r0, r1]) => {
 		        round(mb[2].m * Math.log2(v) + mb[2].b)];
 	};
 };
+
+var log2ColorScale = (domain, [r0, r1]) =>
+	(r0 == null ? log2TransparentColorScale : log2OpaqueColorScale)
+		(domain, [r0, r1]);
 
 // This behaves like a d3 scale, in that it provides range() and domain().
 // It additionally provides rgb(), which projects to an rgb triple, instead

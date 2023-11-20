@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, getIn, identity, Let, mapObject, merge, maxnull,
+var {assoc, assocIn, findIndex, getIn, identity, Let, merge, maxnull,
 	minnull, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
@@ -11,7 +11,6 @@ var Rx = require('../rx').default;
 var {of, ajax} = Rx.Observable;
 import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset,
 	hasImage} from '../models/map';
-import {colorSpec} from '../heatmapColors';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
@@ -28,41 +27,46 @@ var fieldType = {
 	other: type => ['clinical', type]
 };
 
-var fieldSpec = (dsID, fields, fieldType, valueType) => ({
+var fieldSpec = (dsID, fields, fieldType, valueType, other) => ({
 	fetchType: 'xena',
 	colorClass: 'default',
 	dsID,
 	valueType,
 	fieldType,
-	fields
+	fields,
+	...other
 });
 
 var toDsID = (host, name) => JSON.stringify({host, name});
 
-var fieldSpecMode = ({mode, host, name, field, type}) =>
-	fieldSpec(toDsID(host, name), [field], ...fieldType[mode](type));
+var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
+	fieldSpec(toDsID(host, name), [field], ...fieldType[mode](type),
+		// XXX drop this?
+		{defaultNormalization: colnormalization});
 
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
 
-var setAvg = (data, field) => merge(data, widgets.avg(field, data));
+var {log2, pow} = Math;
+var getLogScale = (color, {min: [min], max: [max]}) =>
+	Let((nMin = log2(min + 1), nMax = log2(max + 1),
+			zone = (nMax - nMin) / 4, absmax = Math.max(-nMin, nMax)) =>
+		nMin === 0 && nMax === 0 ?
+			['float-log', null, color, 0, 0] :
+		nMin < 0 && nMax > 0 ?
+			['float-log', null, color, pow(2, -absmax / 2) - 1, pow(2, absmax / 2) - 1] :
+		nMin >= 0 && nMax >= 0 ?
+			['float-log', null, color, pow(2, nMin + zone) - 1, pow(2, (nMax - zone / 2)) - 1] :
+		['float-log', null, color, pow(2, nMin + zone / 2) - 1, pow(2, nMax - zone) - 1]);
 
+var getScale = (color, normalization, {codes, avg}) =>
+	codes ? ['ordinal', codes.length] :
+	normalization === 'log2(x)' ? getLogScale(color, avg) :
+	Let((zone = (avg.max[0] - avg.min[0]) / 4) =>
+		['float-pos', null, color, avg.mean[0] - zone, avg.mean[0] + zone]);
 
-// XXX override 'float' scale with 'float-mid', because we don't
-// want symmetric positive/negative ranges.
-var setFloatScale = scale =>
-	Let(([type, ...args] = scale) =>
-		type === 'float' ? ['float-mid', ...args] :
-		scale);
-
-// XXX These color scales don't make sense. Using them for now to differentiate
-// two different floating point fields. For this case we need to instead build
-// monochromatic scales.
-var btr = ['#0000ff', null, '#ff0000'];
-var rtb = ['#ff0000', null, '#0000ff'];
-var colorScale = (data, field, range) =>
-	setFloatScale(colorSpec(field, {colors: range}, data.codes,
-			{avg: mapObject(data.avg, v => v[0])}));
+var red = '#ff0000';
+var blue = '#0000ff';
 
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),
@@ -71,9 +75,11 @@ var scaleBounds = (data, scale) =>
 			over = 0.1 * (max - min)) =>
 		({min: min - over, max: max + over}));
 
-var colorParams = (colorBy, range) => color =>
-	Let((field = fieldSpecMode(colorBy), data = setAvg(color, field),
-			scale = colorScale(data, field, range)) =>
+var setAvg = (data, field) => merge(data, widgets.avg(field, data));
+
+var colorParams = (field, color) => colorData =>
+	Let((data = setAvg(colorData, fieldSpecMode(field)),
+			scale = getScale(color, field.colnormalization, data)) =>
 		assoc(data,
 			'scale', scale,
 			'scaleBounds', scaleBounds(data, scale)));
@@ -108,9 +114,9 @@ var fetchMethods = {
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	colorBy: (_, field, samples) =>
-		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, btr)),
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, red)),
 	colorBy2: (_, field, samples) =>
-		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, rtb)),
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, blue)),
 	image: path => ajax({
 			url: `${path}/metadata.json`,
 			responseType: 'text', method: 'GET', crossDomain: true

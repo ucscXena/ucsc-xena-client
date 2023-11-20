@@ -1,11 +1,12 @@
-import {/*Button, */Icon, IconButton} from '@material-ui/core';
+import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {div, el, img} from '../chart/react-hyper.js';
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
-import {PointCloudLayer, OrbitView, OrthographicView} from 'deck.gl';
+import {OrbitView, OrthographicView} from 'deck.gl';
+import {pointCloudLayer} from '../PointCloudLayer';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
 
@@ -13,7 +14,7 @@ import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData,
-	getRadius, hasColor, hasImage} from '../models/map';
+	getRadius, hasImage} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -41,36 +42,50 @@ var cvtColorScale = (colorColumn, colors) =>
 
 var isOrdinal = colors => colors && colors[0] === 'ordinal';
 
-const dataLayer = (id, data, modelMatrix, colorBy, radius, onHover) =>
+const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	_.Let((
 		colorColumn = _.getIn(colorBy, ['field', 'mode']) &&
 			_.getIn(colorBy, ['data', 'req', 'values', 0]),
+		colorColumn2 = _.getIn(colorBy2, ['field', 'mode']) &&
+			_.getIn(colorBy2, ['data', 'req', 'values', 0]),
 		colors = _.getIn(colorBy, ['data', 'scale']),
+		colors2 = _.getIn(colorBy2, ['data', 'scale']),
 		hideColors = _.getIn(colorBy, ['hidden']),
 		getColor = cvtColorScale(colorColumn, colors),
-		getFilterValue = filterFn(colorColumn, hideColors)) => new PointCloudLayer({
+		getFilterValue = filterFn(colorColumn, hideColors)) => pointCloudLayer({
 
-	id: 'scatter' + id,
+	id: 'scatter',
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	parameters: {depthTest: isOrdinal(colors)},
 	sizeUnits: 'common',
-	// Our data is transposed vs. what deck expects, so we just pass the first
-	// coord & use accessors to return the other coords.
-	data: data[0],
 	modelMatrix,
 	material: false,
+	getNormal: [1, 1, 1],
+	pickable: true,
+	onHover,
 	// XXX optimize this, either passing in the typed array, or using
 	// deckgl's transient return buffer. See deckgl optimization docs.
 	getPosition: data.length === 2 ?
 		(d0, {index}) => [d0, data[1][index]] :
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
-	getColor,
+	// Our data is transposed vs. what deck expects, so we just pass the first
+	// coord & use accessors to return the other coords.
+	data: data[0],
+
+	// XXX just pass the array, instead of using an accessor here?
+	getValues0: !colorColumn || isOrdinal(colors) ? null : (coords, {index}) => colorColumn[index],
+	getValues1: colorColumn2 ? (coords, {index}) => colorColumn2[index] : null,
+	...(isOrdinal(colors) ? {getColor} : {}),
+	lower0: _.get(colors, 3),
+	upper0: _.get(colors, 4),
+	log0: _.get(colors, 0) === 'float-log',
+	lower1: _.get(colors2, 3),
+	upper1: _.get(colors2, 4),
 	updateTriggers: {getColor: [colorColumn, colors],
+		getValues0: [colorColumn],
+		getValues1: [colorColumn2],
 		getFilterValue: [colorColumn, hideColors]},
-	getNormal: [1, 1, 1],
-	pickable: true,
-	onHover,
 	getFilterValue,
 	filterRange: [1, 1],
 	extensions: [new DataFilterExtension({filterSize: 1})]
@@ -142,17 +157,11 @@ class MapDrawing extends PureComponent {
 			};
 		}
 
-		var hasColor0 = hasColor(props.data.color0),
-			hasColor1 = hasColor(props.data.color1),
-			layer0 = (hasColor0 || !hasColor1) &&
-				dataLayer('0', data, modelMatrix, _.get(props.data, 'color0'),
-					radius * scale, this.onHover),
-			layer1 = hasColor1 &&
-				dataLayer('1', data, modelMatrix, props.data.color1,
-					radius * scale, this.onHover);
+		var layer0 = dataLayer(data, modelMatrix, _.get(props.data, 'color0'),
+					_.get(props.data, 'color1'), radius * scale, this.onHover);
 
 		return deckGL({
-			layers: id([!twoD && axesLayer(), layer0, layer1]),
+			layers: id([!twoD && axesLayer(), layer0]),
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
