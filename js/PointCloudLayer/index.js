@@ -42,6 +42,35 @@ const defaultProps = {
   material: false
 };
 
+var scales = {
+	name: 'xena_scales',
+	dependencies: [],
+	vs: `
+		float linear_scale(float upper, float lower, float value) {
+			if (value < lower) {return 0.;} else
+			if (value > upper) {return 1.;}
+			else {return (value - lower) / (upper - lower);}
+		}
+		float log_scale(float upper, float lower, float value) {
+			float m = 1. / (log2(upper + 1.) - log2(lower + 1.));
+			float b = 1. - m * log2(upper + 1.);
+			if (value < lower) {
+				return 0.;
+			} else if (value > upper) {
+				return 1.;
+			} else {
+				return m * log2(value + 1.) + b;
+			}
+		}
+		float color_scale(bool log, float upper, float lower, float value) {
+			if (log) {
+				return log_scale(upper, lower, value);
+			} else {
+				return linear_scale(upper, lower, value);
+			}
+		}`
+};
+
 var value0Attr =
 	{values0: { size: 1, type: GL.FLOAT, accessor: 'getValues0' }};
 
@@ -56,6 +85,7 @@ var value1Attr =
 
 var value1Decl = `
 	attribute float values1;
+	uniform bool log1;
 	uniform float lower1;
 	uniform float upper1;`;
 
@@ -75,21 +105,7 @@ var floatProps = {
 	decl: value0Decl,
 	// XXX add opacity, from deckgl shader standards?
 	color: `
-		if (log0) {
-			float m = 1. / (log2(upper0 + 1.) - log2(lower0 + 1.));
-			float b = 1. - m * log2(upper0 + 1.);
-			if (values0 < lower0) {
-				color.a = 0.;
-			} else if (values0 > upper0) {
-				color.a = 1.;
-			} else {
-				color.a = m * log2(values0 + 1.) + b;
-			}
-		} else {
-			if (values0 < lower0) {color.a = 0.;} else
-			if (values0 > upper0) {color.a = 1.;}
-			else {color.a = (values0 - lower0) / (upper0 - lower0);}
-		}
+		color.a = color_scale(log0, upper0, lower0, values0);
 		color.r = 1.;
 		color.g = 0.;
 		color.b = 0.;`,
@@ -111,19 +127,15 @@ var floatFloatProps = {
 	// XXX add opacity, from deckgl shader standards?
 	color: `
 		float r;
-		if (values0 < lower0) {r = 0.;} else
-		if (values0 > upper0) {r = 1.;}
-		else {r = (values0 - lower0) / (upper0 - lower0);}
+		r = color_scale(log0, upper0, lower0, values0);
 		float b;
-		if (values1 < lower1) {b = 0.;} else
-		if (values1 > upper1) {b = 1.;}
-		else {b = (values1 - lower1) / (upper1 - lower1);}
+		b = color_scale(log1, upper1, lower1, values1);
 		color.r = r;
 		color.g = 0.;
 		color.b = b;
 		color.a = max(r, b);`,
 	attributes: {...value0Attr, ...value1Attr},
-	uniforms: ['lower0', 'upper0', 'lower1', 'upper1'],
+	uniforms: ['lower0', 'upper0', 'log0', 'lower1', 'upper1', 'log1'],
 };
 
 var floatOrdinalProps = {
@@ -132,12 +144,9 @@ var floatOrdinalProps = {
 	// XXX add opacity, from deckgl shader standards?
 	color: `
 		color = instanceColors;
-		if (values1 < lower1) {color.a = 0.;} else
-		if (values1 > upper1) {color.a = 1.;}
-		else {color.a = (values1 - lower1) / (upper1 - lower1);}
-	`,
+		color.a = color_scale(log1, upper1, lower1, values1);`,
 	attributes: {...value1Attr, ...ordinalAttr},
-	uniforms: ['lower1', 'upper1'],
+	uniforms: ['lower1', 'upper1', 'log1'],
 };
 
 /** Render a point cloud with 3D positions, normals and colors. */
@@ -148,7 +157,7 @@ class XenaPointCloudLayer extends Layer {
 	getShaders() {
 		var {decl, color} = this.props;
 		return {
-			...super.getShaders({vs, fs, modules: [project32, picking]}),
+			...super.getShaders({vs, fs, modules: [scales, project32, picking]}),
 			inject: {
 				'vs:#decl': decl,
 				'vs:DECKGL_FILTER_COLOR': color

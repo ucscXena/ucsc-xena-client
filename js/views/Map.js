@@ -82,6 +82,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	log0: _.get(colors, 0) === 'float-log',
 	lower1: _.get(colors2, 3),
 	upper1: _.get(colors2, 4),
+	log1: _.get(colors2, 0) === 'float-log',
 	updateTriggers: {getColor: [colorColumn, colors],
 		getValues0: [colorColumn],
 		getValues1: [colorColumn2],
