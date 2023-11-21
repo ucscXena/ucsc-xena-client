@@ -85,7 +85,7 @@ var dropFields = (features, [dsID, fields]) =>
 var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
 var cohortOther = (cohort, state, features) =>
 	Let((labelTransfer = getIn(state, ['labelTransfer', cohort])
-			.map(f => [f.dsID, [f.field, f.prob]]),
+			.map(f => [f.dsID, [f.field/*, f.prob*/]]),
 		labelTransferProb = getIn(state, ['labelTransferProb', cohort])
 			.map(f => [f.dsID, f.category]),
 		cellType = getIn(state, ['cellType', cohort]).map(f => [f.dsID, [f.field]]),
@@ -161,7 +161,7 @@ export var getData = state =>
 // the data points as a whole, using the bounds of the data, then compute a
 // dot radius based on fill percentage of a 2d view.
 var pickRadius = (mins, maxs, len, pct = 0.3) =>
-	Let((R = Math.pow(nvolume(mins, maxs),  1 / mins.length)) =>
+	Let((R = Math.pow(nvolume(mins, maxs), 1 / mins.length)) =>
 		 pct * R / Math.sqrt(len));
 
 export var setRadius = (sd, datasetData) =>
