@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, getIn, identity, Let, merge, maxnull,
+var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, maxnull,
 	minnull, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
@@ -47,17 +47,19 @@ var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
 
-var {log2, pow} = Math;
+var log2p1 = v => Math.log2(v + 1),
+	pow2m1 = v => Math.pow(2, v) - 1;
+
 var getLogScale = (color, {min: [min], max: [max]}) =>
-	Let((nMin = log2(min + 1), nMax = log2(max + 1),
+	Let((nMin = log2p1(min), nMax = log2p1(max),
 			zone = (nMax - nMin) / 4, absmax = Math.max(-nMin, nMax)) =>
 		nMin === 0 && nMax === 0 ?
 			['float-log', null, color, 0, 0] :
 		nMin < 0 && nMax > 0 ?
-			['float-log', null, color, pow(2, -absmax / 2) - 1, pow(2, absmax / 2) - 1] :
+			['float-log', null, color, pow2m1(-absmax / 2), pow2m1(absmax / 2)] :
 		nMin >= 0 && nMax >= 0 ?
-			['float-log', null, color, pow(2, nMin + zone) - 1, pow(2, (nMax - zone / 2)) - 1] :
-		['float-log', null, color, pow(2, nMin + zone / 2) - 1, pow(2, nMax - zone) - 1]);
+			['float-log', null, color, pow2m1(nMin + zone), pow2m1(nMax - zone / 2)] :
+		['float-log', null, color, pow2m1(nMin + zone / 2), pow2m1(nMax - zone)]);
 
 var getScale = (color, normalization, {codes, avg}) =>
 	codes ? ['ordinal', codes.length] :
@@ -68,12 +70,19 @@ var getScale = (color, normalization, {codes, avg}) =>
 var red = '#ff0000';
 var blue = '#0000ff';
 
+var applyLog = (fn, x, y) => fn(log2p1(x), log2p1(y)).map(pow2m1);
+var applyLinear = (fn, x, y) => fn(x, y);
+var extendScale = (min, max) =>
+	Let((over = 0.1 * (max - min)) => [min - over, max + over]);
+
+
+var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),
-			min = Math.min(...params, minnull(d)),
-			max = Math.max(...params, maxnull(d)),
-			over = 0.1 * (max - min)) =>
-		({min: min - over, max: max + over}));
+			minIn = Math.min(...params, minnull(d)),
+			maxIn = Math.max(...params, maxnull(d)),
+			[min, max] = (isLog(scale) ?
+				applyLog : applyLinear)(extendScale, minIn, maxIn)) => ({min, max}));
 
 var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 

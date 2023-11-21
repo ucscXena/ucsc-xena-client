@@ -84,12 +84,12 @@ var linearColorScale = (domain, range) =>
 		linearTransparentColorScale)(domain, range);
 
 var log2TransparentColorScale = ([d0, d1], [, r1]) => {
-	var m = 1. / (Math.log2(d1) - Math.log2(d0)),
-		b = 1. - m * Math.log2(d1);
+	var m = 1. / (Math.log2(d1 + 1) - Math.log2(d0 + 1)),
+		b = 1. - m * Math.log2(d1 + 1);
 	return v => {
 		var a = v < d0 ? 0 :
 			v > d1 ? 1 :
-			m * Math.log(v) + b;
+			m * Math.log(v + 1) + b;
 		return [...r1, round(a * 255)];
 	};
 };

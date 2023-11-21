@@ -23,7 +23,6 @@ import Integrations from './views/Integrations';
 var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
 import mapColor from './views/MapColor';
 import widgets from './columnWidgets';
-import {scaleParams} from './colorScales';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
@@ -149,10 +148,6 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
-var colorScale = state => getIn(state, ['colorBy', 'data', 'scale']);
-var scaleValue = state => Let((scale = colorScale(state)) =>
-	scale && scaleParams(scale));
-
 var dotSize = (state, onChange) =>
 	!state.dataset || !state.radiusBase ? null :
 	div(
@@ -191,13 +186,13 @@ class MapTabs extends PureComponent {
 			tabPanel({value, index: 1},
 				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
-					scale: scaleValue(state), handlers: onColorByHandlers[0]}),
+					handlers: onColorByHandlers[0]}),
 				accordion({expanded: !!state.advanced, onChange: onAdvanced},
 					accordionSummary({expandIcon: expandMore()}, 'Advanced'),
 					accordionDetails({className: styles.advanced},
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
-								scale: scaleValue(state2), handlers: onColorByHandlers[1]}))))),
+								handlers: onColorByHandlers[1]}))))),
 			tabPanel({value, index: 2},
 				imgControls({state, onOpacity, onVisible, onChannel,
 					onBackgroundOpacity, onBackgroundVisible})));

@@ -1,9 +1,13 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, get, getIn, identity, Let, pick} = require('../underscore_ext').default;
+var {assoc, assocIn, get, getIn, identity, Let, mapObject, pick}
+	= require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el} from '../chart/react-hyper';
-import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset, hasDatasource, hasDonor, hasGene, hasOther, hasTransferProb, otherValue, probValue} from '../models/map';
+import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
+	hasDatasource, hasDonor, hasGene, hasOther, hasTransferProb, otherValue,
+	probValue} from '../models/map';
+import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
 
@@ -67,16 +71,38 @@ var setDataSubType = (state, datasets) =>
 var colorData = state => getIn(state, ['colorBy', 'data', 'req', 'values', 0]);
 var getSteps = ({min, max}) => (max - min) / 200;
 
-var labelFormat = v => v.toPrecision(2);
-var sliderOpts = (state, scale, onScale) => ({
-	value: scale,
-	onChange: onScale,
-	// Our scales can go beyond the min/max of the data if the mean is biased
-	// toward one bound.
-	...state.colorBy.data.scaleBounds,
+var log2p1 = v => Math.log2(v + 1),
+	pow2m1 = v => Math.pow(2, v) - 1;
+
+var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
+
+var colorScale = state => getIn(state, ['colorBy', 'data', 'scale']);
+var scaleValue = state => Let((scale = colorScale(state)) =>
+	scale && scaleParams(scale));
+
+var sliderLinearOpts = state => ({
+	value: scaleValue(state),
 	step: getSteps(state.colorBy.data.scaleBounds),
+	...state.colorBy.data.scaleBounds
+});
+
+var sliderLogOpts = state =>
+	Let((bounds = mapObject(state.colorBy.data.scaleBounds, log2p1)) => ({
+		value: scaleValue(state).map(log2p1),
+		step: getSteps(bounds),
+		...bounds,
+		scale: pow2m1
+	}));
+
+var sliderScaleOpts = state =>
+	(isLog(colorScale(state)) ? sliderLogOpts : sliderLinearOpts)(state);
+
+var labelFormat = v => v.toPrecision(2);
+var sliderOpts = (state, onScale) => ({
+	onChange: onScale,
 	valueLabelDisplay: 'auto',
-	valueLabelFormat: labelFormat
+	valueLabelFormat: labelFormat,
+	...sliderScaleOpts(state)
 });
 
 var isFloat = state => get(otherValue(state), 'type') === 'float';
@@ -91,15 +117,15 @@ var modeOptions = {
 				label: 'Select a cell types/clusters',
 				value: cellTypeValue(state), onChange
 			}, ...cellTypeOpts(state))),
-	other: ({state, onOther: onChange, scale, onScale}) =>
+	other: ({state, onOther: onChange, onScale}) =>
 		fragment(xSelect({
 				id: 'other',
 				label: 'Select a phenotype',
 				value: otherValue(state), onChange
 			}, ...otherOpts(state)),
 			isFloat(state) && colorData(state) ?
-				slider(sliderOpts(state, scale, onScale)) : null),
-	prob: ({state, scale, onProb, onProbCell, onScale}) =>
+				slider(sliderOpts(state, onScale)) : null),
+	prob: ({state, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
 			fragment(xSelect({
 						id: 'prob',
@@ -113,14 +139,14 @@ var modeOptions = {
 						value: probCellValue(state),
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
-				colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
+				colorData(state) ? slider(sliderOpts(state, onScale)) :
 					null)),
-	gene: ({state, onGene, scale, onScale}) =>
+	gene: ({state, onGene, onScale}) =>
 		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:
 				setDataSubType(state, hasGene(state, datasetCohort(state))),
 				onSelect: onGene, value: geneValue(state)}),
-			colorData(state) ? slider(sliderOpts(state, scale, onScale)) :
+			colorData(state) ? slider(sliderOpts(state, onScale)) :
 				null)
 };
 
@@ -197,9 +223,13 @@ class MapColor extends PureComponent {
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
 	}
+	onScale = (ev, params) => {
+		this.props.handlers.onScale(ev, isLog(colorScale(this.props.state)) ?
+			params.map(pow2m1) : params);
+	}
 	render() {
-		var {state: {colorBy}, handlers: {onColorBy, ...handlers}} = this,
-			{scale, handlers: {onScale}, state: appState} = this.props,
+		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,
+			{state: appState} = this.props,
 			// overlay local state, for local control of the form
 			state = assocIn(appState, ['colorBy', 'field'], colorBy);
 		return fragment(xSelect({
@@ -208,7 +238,7 @@ class MapColor extends PureComponent {
 					value: modeValue(state),
 					onChange: onColorBy
 				}, modeOpt(''), ...availModes(state).map(modeOpt)),
-			modeOptions[modeValue(state)]({state, scale, onScale, ...handlers}));
+			modeOptions[modeValue(state)]({state, onScale, ...handlers}));
 	}
 }
 
