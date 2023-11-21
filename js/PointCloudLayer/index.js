@@ -76,14 +76,14 @@ var floatProps = {
 	// XXX add opacity, from deckgl shader standards?
 	color: `
 		if (log0) {
-			float m = 1. / (log2(upper0) - log2(lower0));
-			float b = 1. - m * log2(upper0);
+			float m = 1. / (log2(upper0 + 1.) - log2(lower0 + 1.));
+			float b = 1. - m * log2(upper0 + 1.);
 			if (values0 < lower0) {
 				color.a = 0.;
 			} else if (values0 > upper0) {
 				color.a = 1.;
 			} else {
-				color.a = m * log2(values0) + b;
+				color.a = m * log2(values0 + 1.) + b;
 			}
 		} else {
 			if (values0 < lower0) {color.a = 0.;} else
