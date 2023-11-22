@@ -2,12 +2,13 @@ import PureComponent from './PureComponent';
 import {el} from './chart/react-hyper';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
-import {BitmapLayer, ScatterplotLayer, OrthographicView} from 'deck.gl';
+import {BitmapLayer, /*ScatterplotLayer, */OrthographicView} from 'deck.gl';
+import {scatterplotLayer} from './ScatterplotLayer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
-import {hasColor, layerColors} from './models/map';
-var {getIn, identity, Let} = require('./underscore_ext').default;
+import {isOrdinal, layerColors} from './models/map';
+var {get, getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
 
@@ -88,30 +89,47 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (id, data, modelMatrix, colorBy, radius, onHover) =>
+const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
+		colorColumn2 = getIn(colorBy2, ['field', 'mode']) &&
+			getIn(colorBy2, ['data', 'req', 'values', 0]),
 		colors = getIn(colorBy, ['data', 'scale']),
+		colors2 = getIn(colorBy2, ['data', 'scale']),
 		hideColors = getIn(colorBy, ['hidden']),
-		getLineColor = cvtColorScale(colorColumn, colors),
-		getFilterValue = filterFn(colorColumn, hideColors)) => new ScatterplotLayer({
+		getColor = cvtColorScale(colorColumn, colors),
+		getFilterValue = filterFn(colorColumn, hideColors)) => scatterplotLayer({
 
-	id: `scatter-plot${id}`,
+	id: `scatter-plot`,
 	data: data[0],
 	modelMatrix,
 	stroked: true,
 	getLineWidth: 50,
+	pickable: true,
+	onHover,
+	// XXX see if we can switch to 'filled' when zoomed out & avoid
+	// the over-large dot. We want radius to shrink to zero (or 1). Currently it
+	// won't.
 	filled: false,
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 0,
 	lineWidthMaxPixels: 3,
 	getRadius: radius,
-	getLineColor,
+	// XXX just pass the array, instead of using an accessor here?
+	getValues0: !colorColumn || isOrdinal(colors) ? null : (coords, {index}) => colorColumn[index],
+	getValues1: colorColumn2 ? (coords, {index}) => colorColumn2[index] : null,
+	...(isOrdinal(colors) ? {getColor} : {}),
+	lower0: get(colors, 3),
+	upper0: get(colors, 4),
+	log0: get(colors, 0) === 'float-log',
+	lower1: get(colors2, 3),
+	upper1: get(colors2, 4),
+	log1: get(colors2, 0) === 'float-log',
 	updateTriggers: {getLineColor: [colorColumn, colors],
+		getValues0: [colorColumn],
+		getValues1: [colorColumn2],
 		getFilterValue: [colorColumn, hideColors]},
-	pickable: true,
-	onHover,
 	getFilterValue,
 	filterRange: [1, 1],
 	extensions: [new DataFilterExtension({filterSize: 1})]
@@ -153,15 +171,8 @@ export default class Img extends PureComponent {
 
 		radius = radius * scale / adj;
 
-		var hasColor0 = hasColor(props.data.color0),
-			hasColor1 = hasColor(props.data.color1),
-			layer0 = hasColor0 &&
-				dataLayer('0', data, modelMatrix, props.data.color0,
-					radius, this.onHover),
-			layer1 = hasColor1 &&
-				dataLayer('1', data, modelMatrix, props.data.color1,
-					radius, this.onHover);
-
+		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
+				get(props.data, 'color1'), radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, levels, size: [iwidth, iheight]} = imageState,
@@ -196,7 +207,7 @@ export default class Img extends PureComponent {
 							size: imageState.size,
 							tileSize: imageState.tileSize,
 							visible: imageState.visible[i]})),
-					layer0, layer1
+					layer0
 				]),
 				views,
 				controller: true,

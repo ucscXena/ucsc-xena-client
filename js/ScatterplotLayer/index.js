@@ -27,37 +27,47 @@ import {Model, Geometry} from '@luma.gl/core';
 import {scales, floatProps, ordinalProps, floatFloatProps, floatOrdinalProps}
 	from '../webglScales';
 
-import vs from './point-cloud-layer-vertex.glsl';
-import fs from './point-cloud-layer-fragment.glsl';
+import vs from './scatterplot-layer-vertex.glsl';
+import fs from './scatterplot-layer-fragment.glsl';
 
-const DEFAULT_COLOR = [0, 255, 0, 255];
-const DEFAULT_NORMAL = [0, 0, 1];
+const DEFAULT_COLOR = [0, 0, 0, 255];
 
 const defaultProps = {
-  sizeUnits: 'pixels',
-  pointSize: {type: 'number', min: 0, value: 10}, //  point radius in pixels
+	radiusUnits: 'meters',
+	radiusScale: {type: 'number', min: 0, value: 1},
+	radiusMinPixels: {type: 'number', min: 0, value: 0}, //  min point radius in pixels
+	radiusMaxPixels: {type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER}, // max point radius in pixels
 
-  getPosition: {type: 'accessor', value: x => x.position},
-  getNormal: {type: 'accessor', value: DEFAULT_NORMAL},
-  getColor: {type: 'accessor', value: DEFAULT_COLOR},
+	lineWidthUnits: 'meters',
+	lineWidthScale: {type: 'number', min: 0, value: 1},
+	lineWidthMinPixels: {type: 'number', min: 0, value: 0},
+	lineWidthMaxPixels: {type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER},
 
-  material: false
+	stroked: false,
+	filled: true,
+	billboard: false,
+	antialiasing: true,
+
+	getPosition: {type: 'accessor', value: x => x.position},
+	getRadius: {type: 'accessor', value: 1},
+	getColor: {type: 'accessor', value: DEFAULT_COLOR},
+	getLineWidth: {type: 'accessor', value: 1},
 };
 
-/** Render a point cloud with 3D positions, normals and colors. */
-class XenaPointCloudLayer extends Layer {
-	static layerName = 'XenaPointCloudLayer';
+/** Render circles at given coordinates. */
+class ScatterplotLayer extends Layer {
 	static defaultProps = defaultProps;
+	static layerName = 'XenaScatterplotLayer';
 
 	getShaders() {
 		var {decl, color} = this.props;
 		return {
-			...super.getShaders({vs, fs, modules: [scales, project32, picking]}),
+			...super.getShaders({vs, fs, modules: [scales, project32, picking],
 			inject: {
 				'vs:#decl': decl,
 				'vs:DECKGL_FILTER_COLOR': color
 			}
-		};
+		})};
 	}
 
 	initializeState() {
@@ -70,20 +80,34 @@ class XenaPointCloudLayer extends Layer {
 				transition: true,
 				accessor: 'getPosition'
 			},
-			instanceNormals: {
-				size: 3,
+			instanceRadius: {
+				size: 1,
 				transition: true,
-				accessor: 'getNormal',
-				defaultValue: DEFAULT_NORMAL
+				accessor: 'getRadius',
+				defaultValue: 1
+			},
+			instanceColors: {
+				size: this.props.colorFormat.length,
+				transition: true,
+				normalized: true,
+				type: GL.UNSIGNED_BYTE,
+				accessor: 'getColor',
+				defaultValue: [0, 0, 0, 255]
+			},
+			instanceLineWidths: {
+				size: 1,
+				transition: true,
+				accessor: 'getLineWidth',
+				defaultValue: 1
 			},
 			...attributes
 		});
 	}
 
 	updateState(params) {
-		const {changeFlags} = params;
 		super.updateState(params);
-		if (changeFlags.extensionsChanged) {
+
+		if (params.changeFlags.extensionsChanged) {
 			const {gl} = this.context;
 			this.state.model?.delete();
 			this.state.model = this._getModel(gl);
@@ -92,34 +116,43 @@ class XenaPointCloudLayer extends Layer {
 	}
 
 	draw({uniforms}) {
-		const {pointSize, sizeUnits} = this.props,
+		const {radiusUnits, radiusScale, radiusMinPixels, radiusMaxPixels, stroked,
+			filled, billboard, antialiasing, lineWidthUnits, lineWidthScale,
+			lineWidthMinPixels, lineWidthMaxPixels } = this.props,
 			uniformProps = pick(this.props, this.props.uniforms || []);
 
 		this.state.model
 			.setUniforms(uniforms)
 			.setUniforms({
-				sizeUnits: UNIT[sizeUnits],
-				radiusPixels: pointSize,
+				stroked: stroked ? 1 : 0,
+				filled,
+				billboard,
+				antialiasing,
+				radiusUnits: UNIT[radiusUnits],
+				radiusScale,
+				radiusMinPixels,
+				radiusMaxPixels,
+				lineWidthUnits: UNIT[lineWidthUnits],
+				lineWidthScale,
+				lineWidthMinPixels,
+				lineWidthMaxPixels,
 				...uniformProps
 			})
 			.draw();
 	}
 
 	_getModel(gl) {
-		// a triangle that minimally cover the unit circle
-		const positions = [];
-		for (let i = 0; i < 3; i++) {
-			const angle = (i / 3) * Math.PI * 2;
-			positions.push(Math.cos(angle) * 2, Math.sin(angle) * 2, 0);
-		}
+		// a square that minimally cover the unit circle
+		const positions = [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0];
 
 		return new Model(gl, {
 			...this.getShaders(),
 			id: this.props.id,
 			geometry: new Geometry({
-				drawMode: GL.TRIANGLES,
+				drawMode: GL.TRIANGLE_FAN,
+				vertexCount: 4,
 				attributes: {
-					positions: new Float32Array(positions)
+					positions: {size: 3, value: new Float32Array(positions)}
 				}
 			}),
 			isInstanced: true
@@ -127,10 +160,10 @@ class XenaPointCloudLayer extends Layer {
 	}
 }
 
-export var pointCloudLayer = ({id, ...props}) =>
+export var scatterplotLayer = ({id, ...props}) =>
 	Let(({getColor, getValues0, getValues1} = props,
 		{key, ...layerProps} = getColor && getValues1 ? floatOrdinalProps :
 			getValues0 && getValues1 ? floatFloatProps :
 			getValues0 ? floatProps :
 			ordinalProps) =>
-		new XenaPointCloudLayer({id: id + key, ...props, ...layerProps}));
+		new ScatterplotLayer({id: id + key, ...props, ...layerProps}));

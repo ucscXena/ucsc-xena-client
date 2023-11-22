@@ -14,7 +14,7 @@ import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData,
-	getRadius, hasImage} from '../models/map';
+	getRadius, hasImage, isOrdinal} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -40,8 +40,6 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
-var isOrdinal = colors => colors && colors[0] === 'ordinal';
-
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	_.Let((
 		colorColumn = _.getIn(colorBy, ['field', 'mode']) &&
@@ -60,7 +58,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	sizeUnits: 'common',
 	modelMatrix,
 	material: false,
-	getNormal: [1, 1, 1],
+	getNormal: [1, 1, 1], // XXX deprecated?
 	pickable: true,
 	onHover,
 	// XXX optimize this, either passing in the typed array, or using
