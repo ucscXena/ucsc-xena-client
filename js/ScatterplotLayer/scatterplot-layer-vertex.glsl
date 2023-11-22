@@ -38,18 +38,16 @@ uniform float radiusMaxPixels;
 uniform float lineWidthScale;
 uniform float lineWidthMinPixels;
 uniform float lineWidthMaxPixels;
-uniform float stroked;
-uniform bool filled;
 uniform bool antialiasing;
 uniform bool billboard;
 uniform int radiusUnits;
 uniform int lineWidthUnits;
 
-varying vec4 vFillColor;
-varying vec4 vLineColor;
+varying vec4 vColor;
 varying vec2 unitPosition;
 varying float innerUnitRadius;
 varying float outerRadiusPixels;
+varying float stroked;
 
 
 void main(void) {
@@ -60,6 +58,11 @@ void main(void) {
     project_size_to_pixel(radiusScale * instanceRadius, radiusUnits),
     radiusMinPixels, radiusMaxPixels
   );
+  if (outerRadiusPixels > 10.) {
+      stroked = 1.;
+  } else {
+      stroked = 0.;
+  }
   
   // Multiply out line width and clamp to limits
   float lineWidthPixels = clamp(
@@ -94,9 +97,9 @@ void main(void) {
   }
 
   // Apply opacity to instance color, or return instance picking color
-//  vFillColor = vec4(instanceColors.rgb, instanceColors.a * opacity);
-//  DECKGL_FILTER_COLOR(vFillColor, geometry);
-//  vLineColor = vec4(instanceColors.rgb, instanceColors.a * opacity);
-  DECKGL_FILTER_COLOR(vLineColor, geometry);
+//  vColor = vec4(instanceColors.rgb, instanceColors.a * opacity);
+//  DECKGL_FILTER_COLOR(vColor, geometry);
+//  vColor = vec4(instanceColors.rgb, instanceColors.a * opacity);
+  DECKGL_FILTER_COLOR(vColor, geometry);
 }
 `;

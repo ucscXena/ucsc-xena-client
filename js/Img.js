@@ -104,14 +104,12 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	id: `scatter-plot`,
 	data: data[0],
 	modelMatrix,
-	stroked: true,
 	getLineWidth: 50,
 	pickable: true,
 	onHover,
 	// XXX see if we can switch to 'filled' when zoomed out & avoid
 	// the over-large dot. We want radius to shrink to zero (or 1). Currently it
 	// won't.
-	filled: false,
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 0,
 	lineWidthMaxPixels: 3,

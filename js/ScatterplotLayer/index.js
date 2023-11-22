@@ -43,8 +43,6 @@ const defaultProps = {
 	lineWidthMinPixels: {type: 'number', min: 0, value: 0},
 	lineWidthMaxPixels: {type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER},
 
-	stroked: false,
-	filled: true,
 	billboard: false,
 	antialiasing: true,
 
@@ -116,16 +114,14 @@ class ScatterplotLayer extends Layer {
 	}
 
 	draw({uniforms}) {
-		const {radiusUnits, radiusScale, radiusMinPixels, radiusMaxPixels, stroked,
-			filled, billboard, antialiasing, lineWidthUnits, lineWidthScale,
+		const {radiusUnits, radiusScale, radiusMinPixels, radiusMaxPixels,
+			billboard, antialiasing, lineWidthUnits, lineWidthScale,
 			lineWidthMinPixels, lineWidthMaxPixels } = this.props,
 			uniformProps = pick(this.props, this.props.uniforms || []);
 
 		this.state.model
 			.setUniforms(uniforms)
 			.setUniforms({
-				stroked: stroked ? 1 : 0,
-				filled,
 				billboard,
 				antialiasing,
 				radiusUnits: UNIT[radiusUnits],

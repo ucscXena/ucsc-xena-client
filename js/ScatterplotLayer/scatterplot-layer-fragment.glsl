@@ -23,12 +23,10 @@ export default `\
 
 precision highp float;
 
-uniform bool filled;
-uniform float stroked;
 uniform bool antialiasing;
 
-varying vec4 vFillColor;
-varying vec4 vLineColor;
+varying float stroked;
+varying vec4 vColor;
 varying vec2 unitPosition;
 varying float innerUnitRadius;
 varying float outerRadiusPixels;
@@ -50,18 +48,12 @@ void main(void) {
       smoothedge(innerUnitRadius * outerRadiusPixels, distToCenter) :
       step(innerUnitRadius * outerRadiusPixels, distToCenter);
 
-    if (filled) {
-      gl_FragColor = mix(vFillColor, vLineColor, isLine);
-    } else {
-      if (isLine == 0.0) {
-        discard;
-      }
-      gl_FragColor = vec4(vLineColor.rgb, vLineColor.a * isLine);
+    if (isLine == 0.0) {
+      discard;
     }
-  } else if (filled) {
-    gl_FragColor = vFillColor;
+    gl_FragColor = vec4(vColor.rgb, vColor.a * isLine);
   } else {
-    discard;
+    gl_FragColor = vColor;
   }
 
   gl_FragColor.a *= inCircle;
