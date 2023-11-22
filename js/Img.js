@@ -7,7 +7,7 @@ import {scatterplotLayer} from './ScatterplotLayer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
-import {isOrdinal, layerColors} from './models/map';
+import {hasColor, isOrdinal, layerColors} from './models/map';
 var {get, getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
@@ -169,7 +169,8 @@ export default class Img extends PureComponent {
 
 		radius = radius * scale / adj;
 
-		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
+		var layer0 = hasColor(props.data.color0) &&
+			dataLayer(data, modelMatrix, get(props.data, 'color0'),
 				get(props.data, 'color1'), radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
