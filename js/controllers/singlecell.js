@@ -105,9 +105,9 @@ var imageMetadata = m => {
 		inView = uniq((m.defaults || []).map(c => channels.indexOf(c))
 				.concat(range(stats.length))).slice(0, layers),
 		visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
-		{size, tileSize, levels, background} = m;
+		{size, tileSize, levels, background, fileformat} = m;
 	return {stats, opacity, inView, levels, size, tileSize, background, visible,
-		...defaultBackground(background)};
+		fileformat, ...defaultBackground(background)};
 };
 
 var fetchMethods = {

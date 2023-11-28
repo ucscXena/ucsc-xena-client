@@ -40,10 +40,11 @@ class XenaBitmapLayer extends BitmapLayer {
 	}
 }
 
-var tileLayer = ({name, path, index, levels, opacity, size, tileSize, visible}) =>
+var tileLayer = ({name, path, fileformat, index, levels, opacity, size,
+		tileSize, visible}) =>
 	new TileLayer({
 		id: `tile-layer-${index}`,
-		data: `${path}/${name}-{z}-{y}-{x}.png`,
+		data: `${path}/${name}-{z}-{y}-{x}.${fileformat}`,
 		minZoom: 0,
 		maxZoom: levels - 1,
 		tileSize,
@@ -174,7 +175,7 @@ export default class Img extends PureComponent {
 				get(props.data, 'color1'), radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
-			{inView, levels, size: [iwidth, iheight]} = imageState,
+			{inView, levels, size: [iwidth, iheight], fileformat = 'png'} = imageState,
 			{width, height} = props,
 			viewState = {
 				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
@@ -190,6 +191,7 @@ export default class Img extends PureComponent {
 				layers: id([
 					imageState.background && tileLayer({
 						name: 'i', path: image.path,
+						fileformat,
 						// XXX rename opacity
 						index: null, opacity: imageState.backgroundOpacity,
 						levels: imageState.levels,
@@ -200,6 +202,7 @@ export default class Img extends PureComponent {
 					...inView.map((c, i) =>
 						tileLayer({
 							name: `c${c}`, path: image.path,
+							fileformat,
 							// XXX rename opacity
 							index: i, opacity: imageState.opacity[c],
 							levels: imageState.levels,
