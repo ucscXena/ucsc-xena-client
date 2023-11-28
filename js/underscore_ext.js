@@ -2,7 +2,11 @@
 var _ = require('underscore');
 var ehmutable = require('ehmutable');
 var defer = require('./defer');
-var fastDeepEqual = require('fast-deep-equal');
+// react fiber code creates data structures with cycles, which breaks
+// this fast equality check. Need to modify it to check for cycles
+// (potentially defeating the performance boost) or add special handling of
+// react elements.
+//var fastDeepEqual = require('fast-deep-equal');
 
 var slice = Array.prototype.slice;
 
@@ -559,7 +563,7 @@ _.mixin({
 	groupByConsec,
 	insert,
 	intersection,
-	isEqual: fastDeepEqual,
+//	isEqual: fastDeepEqual,
 	listSetsEqual,
 	matchKeys,
 	matchPath,
