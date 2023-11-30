@@ -107,6 +107,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	modelMatrix,
 	getLineWidth: 50,
 	pickable: true,
+	antialiasing: false,
 	onHover,
 	// XXX see if we can switch to 'filled' when zoomed out & avoid
 	// the over-large dot. We want radius to shrink to zero (or 1). Currently it
