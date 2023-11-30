@@ -14,7 +14,7 @@
 	height: 800px;
 	margin-right: 5px;
 	border: 1px solid black;
-	cursor: url(cursor.png) 12 12, crosshair;
+	cursor: crosshair;
 }
 
 .status {
