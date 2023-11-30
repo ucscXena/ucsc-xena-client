@@ -146,19 +146,17 @@ var id = arr => arr.filter(identity);
 
 export default class Img extends PureComponent {
 	state = {}
-	static defaultProps = {
-		width: 800,
-		height: 600
-	}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
 	render() {
-		if (!this.props.data.columns || !this.props.data.imageState) {
+		if (!this.props.container || !this.props.data.columns ||
+				!this.props.data.imageState) {
 			return null;
 		}
 		var {props} = this,
+			{width, height} = props.container.getBoundingClientRect(),
 			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
@@ -176,9 +174,8 @@ export default class Img extends PureComponent {
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, levels, size: [iwidth, iheight], fileformat = 'png'} = imageState,
-			{width, height} = props,
 			viewState = {
-				zoom: Math.log(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)) / Math.LN2,
+				zoom: Math.log2(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)),
 				minZoom: 0,
 				maxZoom: levels + 1,
 				target: [iwidth / 2, iheight / 2]
