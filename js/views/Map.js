@@ -127,7 +127,8 @@ class MapDrawing extends PureComponent {
 
 		var data = this.props.data.columns;
 		var {radius} = this.props.data;
-		var scale = cubeWidth / Math.max(...maxs.map((max, i) => max - mins[i]));
+		var bounds = maxs.map((max, i) => max - mins[i]);
+		var scale = cubeWidth / Math.max(...bounds);
 		var offset = centroids.map(c => cubeWidth / 2 - scale * c);
 		var modelMatrix = getM(scale, offset);
 		// XXX write a better AxesLayer
@@ -141,13 +142,15 @@ class MapDrawing extends PureComponent {
 			padding: 0
 		});
 		var views, viewState;
+		var {width, height} = props.container.getBoundingClientRect();
 		if (twoD) {
 			var maxZoom =
 				Math.log2(maxDotRadius / cubeWidth * Math.sqrt(data[0].length));
 			// z is zero, so set far and near around it.
 			views = new OrthographicView({far: -1, near: 1});
 			viewState = {
-				zoom: 4,
+				zoom: Math.log2(
+					Math.min(0.8 * width / cubeWidth, 0.8 * height / cubeWidth)),
 				minZoom: 2,
 				maxZoom,
 				target: _.Let((c = cubeWidth / 2) => [c, c, 0])
