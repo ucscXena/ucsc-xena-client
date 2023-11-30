@@ -118,6 +118,16 @@ function categoryLegend(dataIn, colorScale, codes) {
 // will require a recursive split/flatmap to inject the <wbr> elements.
 var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
 
+var isLog = scale => _.get(scale, 0, '').indexOf('log') !== -1,
+	pow2m1 = x => Math.pow(2, x) - 1,
+	log2p1 = x => Math.log2(x + 1);
+
+// If it's a log scale, we want labels to be in the original domain, but want
+// the domain ticks to be spaced on the log scale.
+var logSampler = (min, max, scale) =>
+	_.Let((lm = log2p1(min), m = (log2p1(max) - lm) / (max - min)) =>
+			 x => _.Let((xl = (x - min) * m + lm) => scale.rgb(pow2m1(xl))));
+
 function renderFloatLegend(props) {
 	var {units, colors, data, vizSettings} = props;
 
@@ -135,13 +145,16 @@ function renderFloatLegend(props) {
 		values = scale.domain(),
 		footnotes = units && units[0] ? [<span title={units[0]}>{addWordBreaks(units[0])}</span>] : null,
 		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
-		multiScaled = colors && colors.length > 1 && !hasViz;
+		multiScaled = colors && colors.length > 1 && !hasViz,
+		min = _.first(values),
+		max = _.last(values),
+		lscale = isLog(colorSpec) ? {rgb: logSampler(min, max, scale)} : scale;
 
 	return (
 		<BandLegend
 			multiScaled={multiScaled}
-			range={{min: _.first(values), max: _.last(values)}}
-			colorScale={scale}
+			range={{min, max}}
+			colorScale={lscale}
 			footnotes={footnotes}
 			width={50}
 			height={20}/>);

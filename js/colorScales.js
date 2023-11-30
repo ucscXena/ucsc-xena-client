@@ -83,13 +83,15 @@ var linearColorScale = (domain, range) =>
 	(range.indexOf(null) === -1 ? linearOpaqueColorScale :
 		linearTransparentColorScale)(domain, range);
 
+var log2p1 = x => Math.log2(x + 1);
+
 var log2TransparentColorScale = ([d0, d1], [, r1]) => {
-	var m = 1. / (Math.log2(d1 + 1) - Math.log2(d0 + 1)),
-		b = 1. - m * Math.log2(d1 + 1);
+	var m = 1. / (log2p1(d1) - log2p1(d0)),
+		b = 1. - m * log2p1(d1);
 	return v => {
 		var a = v < d0 ? 0 :
 			v > d1 ? 1 :
-			m * Math.log(v + 1) + b;
+			(m * log2p1(v) + b);
 		return [...r1, round(a * 255)];
 	};
 };
@@ -97,8 +99,8 @@ var log2TransparentColorScale = ([d0, d1], [, r1]) => {
 // for now, only support one range
 var log2OpaqueColorScale = ([d0, d1], [r0, r1]) => {
 	var mb = _.mmap(r0, r1, (c0, c1) => {
-		var ld0 = Math.log2(d0),
-			ld1 = Math.log2(d1),
+		var ld0 = log2p1(d0),
+			ld1 = log2p1(d1),
 			m = (c1 - c0) / (ld1 - ld0),
 			b = c1 - m * ld1;
 		return {m, b};
@@ -110,9 +112,9 @@ var log2OpaqueColorScale = ([d0, d1], [r0, r1]) => {
 		if (v > d1) {
 			return r1;
 		}
-		return [round(mb[0].m * Math.log2(v) + mb[0].b),
-		        round(mb[1].m * Math.log2(v) + mb[1].b),
-		        round(mb[2].m * Math.log2(v) + mb[2].b)];
+		return [round(mb[0].m * log2p1(v) + mb[0].b),
+		        round(mb[1].m * log2p1(v) + mb[1].b),
+		        round(mb[2].m * log2p1(v) + mb[2].b)];
 	};
 };
 
