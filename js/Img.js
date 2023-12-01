@@ -8,6 +8,7 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
 import {hasColor, isOrdinal, layerColors} from './models/map';
+import {debounce} from './rx';
 var {get, getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
@@ -109,9 +110,6 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	pickable: true,
 	antialiasing: false,
 	onHover,
-	// XXX see if we can switch to 'filled' when zoomed out & avoid
-	// the over-large dot. We want radius to shrink to zero (or 1). Currently it
-	// won't.
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 0,
 	lineWidthMaxPixels: 3,
@@ -145,19 +143,29 @@ var getM = (s, [x, y, z = 0]) => [
 
 var id = arr => arr.filter(identity);
 
-export default class Img extends PureComponent {
+var initialZoom = props => {
+	var {width, height} = props.container.getBoundingClientRect(),
+		{data: {imageState: {size: [iwidth, iheight]}}} = props;
+
+	return Math.log2(Math.min(0.8 * width / iwidth, 0.8 * height / iheight));
+};
+
+var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom) * scale;
+
+class Img extends PureComponent {
 	state = {}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
+	onZoom = debounce(400, this.props.onZoom);
+	componentDidMount() {
+		var zoom = initialZoom(this.props),
+			{data: {image: {image_scalef: scale}, imageState: {levels}}} = this.props;
+		this.props.onZoom(currentScale(levels, zoom, scale));
+	}
 	render() {
-		if (!this.props.container || !this.props.data.columns ||
-				!this.props.data.imageState) {
-			return null;
-		}
 		var {props} = this,
-			{width, height} = props.container.getBoundingClientRect(),
 			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
@@ -176,7 +184,7 @@ export default class Img extends PureComponent {
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, levels, size: [iwidth, iheight], fileformat = 'png'} = imageState,
 			viewState = {
-				zoom: Math.log2(Math.min(0.8 * width / iwidth, 0.8 * height / iheight)),
+				zoom: initialZoom(props),
 				minZoom: 0,
 				maxZoom: levels + 1,
 				target: [iwidth / 2, iheight / 2]
@@ -185,6 +193,9 @@ export default class Img extends PureComponent {
 		return deckGL({
 				glOptions: {
 					alpha: false
+				},
+				onViewStateChange: e => {
+					this.onZoom(currentScale(levels, e.viewState.zoom, scale));
 				},
 				layers: id([
 					imageState.background && tileLayer({
@@ -224,3 +235,9 @@ export default class Img extends PureComponent {
 			});
 	}
 }
+var img = el(Img);
+
+export default props =>
+		(!props.container || !props.data.columns ||
+					!props.data.imageState) ? null :
+		img(props);

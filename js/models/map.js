@@ -10,7 +10,8 @@ var cohortMaps = cohortDatasets => ({cohort}) =>
 	allCohortDatasets(cohort, cohortDatasets)
 		.map(ds => getProps(ds.map)
 			.map(m => merge({dsID: ds.dsID, cohort},
-				pick(m, 'label', 'type', 'dimension', 'image', 'spot_diameter'))))
+				pick(m, 'micrometer_per_unit', 'label', 'type', 'dimension',
+					'image', 'spot_diameter'))))
 		.flat();
 
 export var maps = (cohorts, cohortDatasets) =>

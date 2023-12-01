@@ -1,7 +1,7 @@
 import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {div, el, img} from '../chart/react-hyper.js';
+import {div, el, img, span} from '../chart/react-hyper.js';
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
@@ -9,6 +9,7 @@ import {OrbitView, OrthographicView} from 'deck.gl';
 import {pointCloudLayer} from '../PointCloudLayer';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
+import {debounce} from '../rx';
 
 import AxesLayer from './axes-layer';
 
@@ -107,19 +108,34 @@ var maxDotRadius = 40;
 
 var id = arr => arr.filter(_.identity);
 
+var initialZoom = props => {
+	var {width, height} = props.container.getBoundingClientRect();
+
+	return Math.log2(Math.min(0.8 * width / cubeWidth, 0.8 * height / cubeWidth));
+};
+
+var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
+
 class MapDrawing extends PureComponent {
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
+	onZoom = debounce(400, this.props.onZoom);
+	componentDidMount() {
+		if (this.props.data.columns.length  !== 2) {
+			return;
+		}
+		var zoom = initialZoom(this.props),
+			{data: {columns}} = this.props,
+			mins = columns.map(_.minnull),
+			maxs = columns.map(_.maxnull),
+			bounds = maxs.map((max, i) => max - mins[i]),
+			scale = cubeWidth / Math.max(...bounds);
+		this.props.onZoom(currentScale(zoom, scale));
+	}
 	render() {
 		var {props} = this;
-		if (!props.data.columns) {
-			return null;
-		}
-		if (!this.props.container) {
-			return null;
-		}
 		var twoD = props.data.columns.length === 2;
 		var mins = props.data.columns.map(_.minnull),
 			maxs = props.data.columns.map(_.maxnull),
@@ -142,15 +158,13 @@ class MapDrawing extends PureComponent {
 			padding: 0
 		});
 		var views, viewState;
-		var {width, height} = props.container.getBoundingClientRect();
 		if (twoD) {
 			var maxZoom =
 				Math.log2(maxDotRadius / cubeWidth * Math.sqrt(data[0].length));
 			// z is zero, so set far and near around it.
 			views = new OrthographicView({far: -1, near: 1});
 			viewState = {
-				zoom: Math.log2(
-					Math.min(0.8 * width / cubeWidth, 0.8 * height / cubeWidth)),
+				zoom: initialZoom(props),
 				minZoom: 2,
 				maxZoom,
 				target: _.Let((c = cubeWidth / 2) => [c, c, 0])
@@ -170,6 +184,9 @@ class MapDrawing extends PureComponent {
 
 		return deckGL({
 			layers: id([!twoD && axesLayer(), layer0]),
+			onViewStateChange: twoD ? e => {
+				this.onZoom(currentScale(e.viewState.zoom, scale));
+			} : undefined,
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -185,7 +202,10 @@ class MapDrawing extends PureComponent {
 		});
 	}
 }
-var mapDrawing = el(MapDrawing);
+
+var mapDrawing = props =>
+	!props.data.columns || !props.container ? null :
+	el(MapDrawing)(props);
 
 var imgDrawing = el(Img);
 
@@ -221,6 +241,10 @@ var getStatusView = (loading, error, onReload) =>
 					icon('warning'))) :
 	null;
 
+var scale = onRef =>
+		div({className: styles.scale, ref: onRef},
+			span(), span(), span(), span());
+
 export class Map extends PureComponent {
 	state = {
 		tooltip: null
@@ -242,10 +266,24 @@ export class Map extends PureComponent {
 			this.setState({container: ref});
 		}
 	}
+	onScaleRef = ref => {
+		if (ref) {
+			this.setState({scale: ref});
+		}
+	}
+	onZoom = upp => {
+		var unit = _.getIn(this.props.state, ['dataset', 'micrometer_per_unit']);
+		if (unit && this.state.scale) {
+			this.state.scale.children[3].innerHTML =
+				// scale is 100px wide in css
+				`${(100 * upp * unit).toFixed(0)} \u03BCm`;
+		}
+	}
 	render() {
 		var handlers = _.pick(this.props, (v, k) => k.startsWith('on'));
 
-		var mapState = this.props.state,
+		var {onZoom} = this,
+			mapState = this.props.state,
 			params = _.get(mapState, 'dataset', []),
 			mapData = getData(mapState),
 			color0 = _.get(mapState, 'colorBy'),
@@ -260,11 +298,13 @@ export class Map extends PureComponent {
 			imageState = image && _.getIn(mapState, ['image', image.path]),
 			data = {columns, radius, color0, color1,
 				labels, view, image, imageState},
+			unit = _.get(params, 'micrometer_per_unit'),
 			drawing = image ? imgDrawing : mapDrawing;
 
 		return div({className: styles.content},
 				div({className: styles.graphWrapper, ref: this.onRef},
+					...(unit ? [scale(this.onScaleRef)] : []),
 					getStatusView(loading, error, this.onReload),
-					drawing({...handlers, data, container: this.state.container})));
+					drawing({...handlers, onZoom, data, container: this.state.container})));
 	}
 }

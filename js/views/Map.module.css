@@ -34,3 +34,36 @@
 	top: 50%;
 	left: 50%;
 }
+
+.scale {
+	position: absolute;
+	right: 0;
+	top: 0;
+	background-color: #FFFFFF;
+	z-index: 10;
+	opacity: .6;
+}
+
+.scale :nth-child(1), .scale :nth-child(3) {
+	display: inline-block;
+	width: 1px;
+	height: 11px;
+	background-color: #000000;
+}
+
+.scale :nth-child(1) {
+	margin-left: 2px;
+}
+
+.scale :nth-child(3) {
+	margin-right: 2px;
+}
+
+.scale :nth-child(2) {
+	display: inline-block;
+	position: relative;
+	bottom: 5px;
+	width: 100px;
+	height: 1px;
+	background-color: #000000;
+}
