@@ -150,7 +150,7 @@ var initialZoom = props => {
 	return Math.log2(Math.min(0.8 * width / iwidth, 0.8 * height / iheight));
 };
 
-var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom) * scale;
+var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / scale;
 
 class Img extends PureComponent {
 	state = {}
