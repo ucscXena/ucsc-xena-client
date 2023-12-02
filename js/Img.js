@@ -10,6 +10,7 @@ import * as colorScales from './colorScales';
 import {hasColor, isOrdinal, layerColors} from './models/map';
 import {debounce} from './rx';
 var {get, getIn, identity, Let} = require('./underscore_ext').default;
+import {hidden} from './nav';
 
 var deckGL = el(DeckGL);
 
@@ -91,7 +92,8 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
+const dataLayer = (data, antialiasing, modelMatrix, colorBy, colorBy2,
+		radius, onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -108,7 +110,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	modelMatrix,
 	getLineWidth: 50,
 	pickable: true,
-	antialiasing: false,
+	antialiasing,
 	onHover,
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 0,
@@ -153,7 +155,13 @@ var initialZoom = props => {
 var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / scale;
 
 class Img extends PureComponent {
-	state = {}
+	constructor(props) {
+		super(props);
+		this.state = {
+			antialias: hidden.create('antialias', 'Antialias ScatterPlot',
+				{onChange: antialias => this.setState({antialias}), default: false})
+		};
+	}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
@@ -165,7 +173,7 @@ class Img extends PureComponent {
 		this.props.onZoom(currentScale(levels, zoom, scale));
 	}
 	render() {
-		var {props} = this,
+		var {props, state: {antialias}} = this,
 			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
@@ -178,7 +186,7 @@ class Img extends PureComponent {
 		radius = radius * scale / adj;
 
 		var layer0 = hasColor(props.data.color0) &&
-			dataLayer(data, modelMatrix, get(props.data, 'color0'),
+			dataLayer(data, antialias, modelMatrix, get(props.data, 'color0'),
 				get(props.data, 'color1'), radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
