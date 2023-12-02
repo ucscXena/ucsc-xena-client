@@ -104,7 +104,7 @@ var getM = (s, [x, y, z = 0]) => [
 
 // Target dot radius for max zoom, assuming a roughly uniform
 // spatial distribution of data.
-var maxDotRadius = 40;
+var maxDotRadius = 100;
 
 var id = arr => arr.filter(_.identity);
 
