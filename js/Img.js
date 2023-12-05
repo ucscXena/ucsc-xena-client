@@ -10,7 +10,6 @@ import * as colorScales from './colorScales';
 import {hasColor, isOrdinal, layerColors} from './models/map';
 import {debounce} from './rx';
 var {get, getIn, identity, Let} = require('./underscore_ext').default;
-import {hidden} from './nav';
 
 var deckGL = el(DeckGL);
 
@@ -92,7 +91,7 @@ var filterFn = (colorColumn, hideColors) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
-const dataLayer = (data, antialiasing, modelMatrix, colorBy, colorBy2,
+const dataLayer = (data, modelMatrix, colorBy, colorBy2,
 		radius, onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
@@ -110,7 +109,7 @@ const dataLayer = (data, antialiasing, modelMatrix, colorBy, colorBy2,
 	modelMatrix,
 	getLineWidth: 50,
 	pickable: true,
-	antialiasing,
+	antialiasing: false,
 	onHover,
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 0,
@@ -155,13 +154,6 @@ var initialZoom = props => {
 var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / scale;
 
 class Img extends PureComponent {
-	constructor(props) {
-		super(props);
-		this.state = {
-			antialias: hidden.create('antialias', 'Antialias ScatterPlot',
-				{onChange: antialias => this.setState({antialias}), default: false})
-		};
-	}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
@@ -173,7 +165,7 @@ class Img extends PureComponent {
 		this.props.onZoom(currentScale(levels, zoom, scale));
 	}
 	render() {
-		var {props, state: {antialias}} = this,
+		var {props} = this,
 			{columns: data, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
@@ -186,7 +178,7 @@ class Img extends PureComponent {
 		radius = radius * scale / adj;
 
 		var layer0 = hasColor(props.data.color0) &&
-			dataLayer(data, antialias, modelMatrix, get(props.data, 'color0'),
+			dataLayer(data, modelMatrix, get(props.data, 'color0'),
 				get(props.data, 'color1'), radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
@@ -199,48 +191,49 @@ class Img extends PureComponent {
 			};
 
 		return deckGL({
-				glOptions: {
-					alpha: false
-				},
-				onViewStateChange: e => {
-					this.onZoom(currentScale(levels, e.viewState.zoom, scale));
-				},
-				layers: id([
-					imageState.background && tileLayer({
-						name: 'i', path: image.path,
+			ref: this.props.onDeck,
+			glOptions: {
+				alpha: false
+			},
+			onViewStateChange: e => {
+				this.onZoom(currentScale(levels, e.viewState.zoom, scale));
+			},
+			layers: id([
+				imageState.background && tileLayer({
+					name: 'i', path: image.path,
+					fileformat,
+					// XXX rename opacity
+					index: null, opacity: imageState.backgroundOpacity,
+					levels: imageState.levels,
+					size: imageState.size,
+					tileSize: imageState.tileSize,
+					visible: imageState.backgroundVisible
+				}),
+				...inView.map((c, i) =>
+					tileLayer({
+						name: `c${c}`, path: image.path,
 						fileformat,
 						// XXX rename opacity
-						index: null, opacity: imageState.backgroundOpacity,
+						index: i, opacity: imageState.opacity[c],
 						levels: imageState.levels,
 						size: imageState.size,
 						tileSize: imageState.tileSize,
-						visible: imageState.backgroundVisible
-					}),
-					...inView.map((c, i) =>
-						tileLayer({
-							name: `c${c}`, path: image.path,
-							fileformat,
-							// XXX rename opacity
-							index: i, opacity: imageState.opacity[c],
-							levels: imageState.levels,
-							size: imageState.size,
-							tileSize: imageState.tileSize,
-							visible: imageState.visible[i]})),
-					layer0
-				]),
-				views,
-				controller: true,
-				coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-				getCursor: () => 'inherit',
-				initialViewState: {
-					pitch: 0,
-					bearing: 0,
-					rotationX: 0,
-					rotationOrbit: 0,
-					...viewState
-				},
-				style: {backgroundColor: '#000000'}
-			});
+						visible: imageState.visible[i]})),
+				layer0
+			]),
+			views,
+			controller: true,
+			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+			getCursor: () => 'inherit',
+			initialViewState: {
+				pitch: 0,
+				bearing: 0,
+				rotationX: 0,
+				rotationOrbit: 0,
+				...viewState
+			},
+			style: {backgroundColor: '#000000'}
+		});
 	}
 }
 var img = el(Img);

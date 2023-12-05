@@ -1,6 +1,7 @@
 .content {
 	display: flex;
 	flex-direction: row;
+	position: relative;
 }
 
 .content * {
@@ -66,4 +67,11 @@
 	width: 100px;
 	height: 1px;
 	background-color: #000000;
+}
+
+.fps {
+	position: absolute;
+	right: 0%;
+	bottom: 100%;
+	color: #B0B0B0
 }

@@ -183,6 +183,7 @@ class MapDrawing extends PureComponent {
 					_.get(props.data, 'color1'), radius * scale, this.onHover);
 
 		return deckGL({
+			ref: this.props.onDeck,
 			layers: id([!twoD && axesLayer(), layer0]),
 			onViewStateChange: twoD ? e => {
 				this.onZoom(currentScale(e.viewState.zoom, scale));
@@ -249,6 +250,22 @@ export class Map extends PureComponent {
 	state = {
 		tooltip: null
 	}
+	componentDidMount() {
+		this.timer = setInterval(() => {
+			if (this.FPSRef && this.deckGL) {
+				this.FPSRef.innerHTML = `${this.deckGL.deck.metrics.fps.toFixed(0)} FPS`;
+			}
+		}, 1000);
+	}
+	componentWillUnmount() {
+		clearTimeout(this.timer);
+	}
+	onFPSRef = FPSRef => {
+		this.FPSRef = FPSRef;
+	}
+	onDeck = deckGL => {
+		this.deckGL = deckGL;
+	}
 //	onHideAll = () => {
 //		var {state} = this.props,
 //			colorId = state.map.colorColumn,
@@ -282,7 +299,7 @@ export class Map extends PureComponent {
 	render() {
 		var handlers = _.pick(this.props, (v, k) => k.startsWith('on'));
 
-		var {onZoom} = this,
+		var {onZoom, onDeck} = this,
 			mapState = this.props.state,
 			params = _.get(mapState, 'dataset', []),
 			mapData = getData(mapState),
@@ -299,12 +316,14 @@ export class Map extends PureComponent {
 			data = {columns, radius, color0, color1,
 				labels, view, image, imageState},
 			unit = _.get(params, 'micrometer_per_unit'),
-			drawing = image ? imgDrawing : mapDrawing;
+			drawing = image ? imgDrawing : mapDrawing,
+			{container} = this.state;
 
 		return div({className: styles.content},
+				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
 					...(unit ? [scale(this.onScaleRef)] : []),
 					getStatusView(loading, error, this.onReload),
-					drawing({...handlers, onZoom, data, container: this.state.container})));
+					drawing({...handlers, onZoom, onDeck, data, container})));
 	}
 }
