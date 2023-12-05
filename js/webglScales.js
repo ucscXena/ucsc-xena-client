@@ -64,9 +64,7 @@ export var floatProps = {
 	// XXX add opacity, from deckgl shader standards?
 	color: `
 		color.a = color_scale(log0, upper0, lower0, values0);
-		color.r = 1.;
-		color.g = 0.;
-		color.b = 0.;`,
+		color.rgb = vec3(1., 0., 0.);`,
 	attributes: value0Attr,
 	uniforms: ['lower0', 'upper0', 'log0'],
 };
