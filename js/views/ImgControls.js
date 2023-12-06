@@ -68,7 +68,7 @@ export default class ImgControls extends PureComponent {
 						control: checkbox({checked: backgroundVisible,
 							onChange: onBackgroundVisible})}),
 					slider({min: 0, max: 1, step: 0.001, value: backgroundOpacity,
-						onChange: onBackgroundOpacity}))] :
+						valueLabelDisplay: 'auto', onChange: onBackgroundOpacity}))] :
 				[]),
 			...inView.map((c, i) =>
 				span(
@@ -76,6 +76,7 @@ export default class ImgControls extends PureComponent {
 					channelSelect({channels: sorted(pluck(stats, 'name')),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.001,
-						value: imageState.opacity[c], onChange: this.onOpacity(c)}))));
+						valueLabelDisplay: 'auto', value: imageState.opacity[c],
+						onChange: this.onOpacity(c)}))));
 	}
 }
