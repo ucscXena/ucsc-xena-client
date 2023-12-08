@@ -348,7 +348,7 @@ class SingleCellPage extends PureComponent {
 		this.callback(['colorScale', key, newScale]);
 	}
 	codeKey(key, ev) {
-		var iStr = getIn(firstMatch(ev.target, '.' + item), ['dataset', 'i']);
+		var iStr = getIn(firstMatch(ev.target, '.' + item), ['dataset', 'code']);
 
 		if (iStr != null) {
 			var i = parseInt(iStr, 10),

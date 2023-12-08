@@ -111,7 +111,7 @@ function categoryLegend(dataIn, colorScale, codes) {
 		colors = _.map(data, colorScale),
 		labels = _.map(data, d => codes[d]);
 
-	return {colors: colors, labels: labels, titles: labels};
+	return {colors, codes: data, labels, titles: labels};
 }
 
 // might want to use <wbr> here, instead, so cut & paste work better, but that

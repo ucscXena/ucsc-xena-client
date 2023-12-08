@@ -17,19 +17,21 @@ class Legend extends React.Component {
 
 	render() {
 		var {labels, colors, titles, max, labelheader, footnotes, addBreakend = 0,
-				addNullNotation = 0, inline, onClick} = this.props,
+				codes, addNullNotation = 0, inline, onClick} = this.props,
 			style = classNames(onClick && compStyles.clickable,
 				inline && compStyles.inline),
 			ellipsis = labels.length > max,
-			items = _.map(_.last(_.zip(labels, colors, titles), max), ([l, c, t], i) =>
-				(<div key={i} data-i={Math.max(labels.length - max, 0) + i} title={t}
-							className={compStyles.item}>
-						<div className={compStyles.colorBox}
-							style={{backgroundColor: c}}/>
-						<Typography component='label' className={compStyles.label} variant='caption'>
-							{l}
-						</Typography>
-					</div>)).reverse(),
+			items = _.map(_.last(_.zip(labels, colors, titles, codes), max),
+				([l, c, t, code], i) =>
+					(<div key={i} data-code={code} title={t}
+								className={compStyles.item}>
+							<div className={compStyles.colorBox}
+								style={{backgroundColor: c}}/>
+							<Typography component='label' className={compStyles.label}
+										variant='caption'>
+								{l}
+							</Typography>
+						</div>)).reverse(),
 			footnotesItems = footnotes ? footnotes.map((text, i) =>
 								<Typography key={i} component='div' className={compStyles.footnotes} variant='caption'>
 									{text}
