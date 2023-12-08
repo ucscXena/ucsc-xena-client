@@ -245,14 +245,14 @@ var tooltipView = tooltip =>
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt0, br(), tooltip.valTxt1] :
 			['']));
 
-var viz = ({handlers: {onReset, onTooltip, onCode, ...handlers},
+var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 		tooltip, layout, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
 		div({className: styles.vizBody},
-			vizPanel({props: {state, onTooltip}}),
+			vizPanel({props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				legendTitle(state),
@@ -293,6 +293,9 @@ class SingleCellPage extends PureComponent {
 	callback = ([action, ...params]) => {
 		// set scope for actions, to prevent aliasing with other controllers.
 		this.props.callback(['singlecell-' + action, ...params]);
+	}
+	onViewState = viewState => {
+		this.callback(['view-state', viewState]);
 	}
 	onAdvanced = () => {
 		this.callback(['advanced']);

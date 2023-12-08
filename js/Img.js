@@ -158,11 +158,11 @@ class Img extends PureComponent {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
-	onZoom = debounce(400, this.props.onZoom);
+	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
 		var zoom = initialZoom(this.props),
 			{data: {image: {image_scalef: scale}, imageState: {levels}}} = this.props;
-		this.props.onZoom(currentScale(levels, zoom, scale));
+		this.props.onViewState(null, currentScale(levels, zoom, scale));
 	}
 	render() {
 		var {props} = this,
@@ -195,8 +195,9 @@ class Img extends PureComponent {
 			glOptions: {
 				alpha: false
 			},
-			onViewStateChange: e => {
-				this.onZoom(currentScale(levels, e.viewState.zoom, scale));
+			onViewStateChange: ({viewState}) => {
+				this.onViewState(viewState,
+					currentScale(levels, viewState.zoom, scale));
 			},
 			layers: id([
 				imageState.background && tileLayer({
@@ -225,13 +226,7 @@ class Img extends PureComponent {
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 			getCursor: () => 'inherit',
-			initialViewState: {
-				pitch: 0,
-				bearing: 0,
-				rotationX: 0,
-				rotationOrbit: 0,
-				...viewState
-			},
+			initialViewState: props.data.viewState || viewState,
 			style: {backgroundColor: '#000000'}
 		});
 	}

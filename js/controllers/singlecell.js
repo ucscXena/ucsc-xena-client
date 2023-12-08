@@ -213,7 +213,7 @@ var controls = actionPrefix({
 	// We reset colorBy to {} because of the query selectors on colorBy.data
 	// that will throw if we delete the object.
 	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
-		'colorBy', colorBy, 'colorBy2', {}, 'radius', null),
+		'colorBy', colorBy, 'colorBy2', {}, 'radius', null, 'viewState', null),
 	reset: state => assoc(state, 'dataset', null, 'data', {},
 		'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null),
 	advanced: state => updateIn(state, ['advanced'],  a => !a),
@@ -245,7 +245,8 @@ var controls = actionPrefix({
 			assocIn(state, ['image', path, 'backgroundVisible'], checked)),
 	'background-opacity': (state, opacity) =>
 		Let(({path} = hasImage(state)) =>
-			assocIn(state, ['image', path, 'backgroundOpacity'], opacity))
+			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
+	'view-state': (state, viewState) => assoc(state, 'viewState', viewState)
 });
 
 // global actions
