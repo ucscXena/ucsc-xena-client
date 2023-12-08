@@ -166,7 +166,7 @@ class Img extends PureComponent {
 	}
 	render() {
 		var {props} = this,
-			{columns: data, image, imageState, radius} = props.data,
+			{columns: data, color0, color1, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
 			// Adjust the scale here for the number of downsamples, so the data
@@ -177,9 +177,9 @@ class Img extends PureComponent {
 
 		radius = radius * scale / adj;
 
-		var layer0 = hasColor(props.data.color0) &&
-			dataLayer(data, modelMatrix, get(props.data, 'color0'),
-				get(props.data, 'color1'), radius, this.onHover);
+		var layer0 = data && hasColor(color0) &&
+			dataLayer(data, modelMatrix, color0,
+				color1, radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, levels, size: [iwidth, iheight], fileformat = 'png'} = imageState,
@@ -239,6 +239,5 @@ class Img extends PureComponent {
 var img = el(Img);
 
 export default props =>
-		(!props.container || !props.data.columns ||
-					!props.data.imageState) ? null :
+		(!props.container || !props.data.imageState) ? null :
 		img(props);

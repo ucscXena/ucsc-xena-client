@@ -15,7 +15,7 @@ import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData,
-	getRadius, hasImage, isOrdinal} from '../models/map';
+	getRadius, hasColor, hasImage, isOrdinal} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -305,14 +305,17 @@ export class Map extends PureComponent {
 			mapData = getData(mapState),
 			color0 = _.get(mapState, 'colorBy'),
 			color1 = _.get(mapState, 'colorBy2'),
-			loading = dataLoading(mapState) || colorLoading(mapState),
-			error = dataError(mapState) || colorError(mapState),
 			columns = _.getIn(mapData, ['req', 'values']),
 			view = mapState.view,
 			labels = _.get(params, 'dimension', []),
 			radius = getRadius(mapState),
 			image = hasImage(mapState),
 			imageState = image && _.getIn(mapState, ['image', image.path]),
+			// If we have an image, show data loading only if we already have a color.
+			// Otherwise data is loading in background & doesn't affect the user.
+			loading = (!image || hasColor(color0) || hasColor(color1))
+				&& dataLoading(mapState) || colorLoading(mapState),
+			error = dataError(mapState) || colorError(mapState),
 			data = {columns, radius, color0, color1,
 				labels, view, image, imageState},
 			unit = _.get(params, 'micrometer_per_unit'),
