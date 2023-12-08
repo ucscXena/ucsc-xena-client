@@ -4,11 +4,8 @@
 }
 
 .distributionSlider svg {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
+    height: 35px;
     z-index: -1;
     transform-origin: 50% 50%;
     transform: scale(1, -1);

@@ -129,7 +129,6 @@ var distribution = (req, avg, scaleBounds, log) =>
 			{min: minx, max: maxx} = logTransformBounds(scaleBounds, log)) =>
 		densityPlot({dist, viewBox: `${minx} 0 ${maxx - minx} ${maxy}`}));
 
-
 var cachedDistribution = createSelector(
 	state => state.colorBy.data.req,
 	state => state.colorBy.data.avg,
@@ -143,8 +142,8 @@ var emptyDist = state =>
 
 var distributionSlider = (state, onScale) =>
 	div({className: styles.distributionSlider},
-		slider(sliderOpts(state, onScale)),
-		...(!emptyDist(state) ? [cachedDistribution(state)] : []));
+		...(!emptyDist(state) ? [cachedDistribution(state)] : []),
+		slider(sliderOpts(state, onScale)));
 
 var modeOptions = {
 	'': () => null,
