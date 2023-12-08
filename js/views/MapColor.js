@@ -1,15 +1,18 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, get, getIn, identity, Let, mapObject, pick}
+var {assoc, assocIn, get, getIn, identity, Let, mapObject, maxnull, pick, range}
 	= require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
-import {el} from '../chart/react-hyper';
+import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
 	hasDatasource, hasDonor, hasGene, hasOther, hasTransferProb, otherValue,
 	probValue} from '../models/map';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
+import {kde} from '../chart/chart';
+import densityPlot from './densityPlot';
+import styles from './MapColor.module.css';
 
 var menuItem = el(MenuItem);
 var slider = el(Slider);
@@ -107,6 +110,32 @@ var sliderOpts = (state, onScale) => ({
 
 var isFloat = state => get(otherValue(state), 'type') === 'float';
 
+var logTransform = (k, state) =>
+	isLog(colorScale(state)) ? k.map(([x, y]) => [log2p1(x), y]) : k;
+
+var logTransformBounds = ({min, max}, state) =>
+	isLog(colorScale(state)) ? {min: log2p1(min), max: log2p1(max)} : {min, max};
+
+var dataDist = (data, min, max, n = 100) =>
+	kde().sample(data.filter(x => !isNaN(x)))(range(min, max, (max - min) / n));
+
+var distribution = state =>
+	Let(({data} = state.colorBy, {min: [min], max: [max]} = data.avg,
+			dist = logTransform(dataDist(data.req.values[0], min, max)),
+			maxy = maxnull(dist.map(([, y]) => y)),
+			{min: minx, max: maxx} = logTransformBounds(data.scaleBounds, state)) =>
+		densityPlot({dist, viewBox: `${minx} 0 ${maxx - minx} ${maxy}`}));
+
+
+var emptyDist = state =>
+	Let(({min: [min], max: [max]} =
+		getIn(state, ['colorBy', 'data', 'avg'], {})) => min === max);
+
+var distributionSlider = (state, onScale) =>
+	div({className: styles.distributionSlider},
+		slider(sliderOpts(state, onScale)),
+		...(!emptyDist(state) ? [distribution(state)] : []));
+
 var modeOptions = {
 	'': () => null,
 	datasource: () => null,
@@ -124,7 +153,7 @@ var modeOptions = {
 				value: otherValue(state), onChange
 			}, ...otherOpts(state)),
 			isFloat(state) && colorData(state) ?
-				slider(sliderOpts(state, onScale)) : null),
+				distributionSlider(state, onScale) : null),
 	prob: ({state, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
 			fragment(xSelect({
@@ -139,14 +168,14 @@ var modeOptions = {
 						value: probCellValue(state),
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
-				colorData(state) ? slider(sliderOpts(state, onScale)) :
+				colorData(state) ? distributionSlider(state, onScale) :
 					null)),
 	gene: ({state, onGene, onScale}) =>
 		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:
 				setDataSubType(state, hasGene(state, datasetCohort(state))),
 				onSelect: onGene, value: geneValue(state)}),
-			colorData(state) ? slider(sliderOpts(state, onScale)) :
+			colorData(state) ? distributionSlider(state, onScale) :
 				null)
 };
 

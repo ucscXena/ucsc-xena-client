@@ -17,7 +17,7 @@ import {div, select, option, label, el, textNode} from './react-hyper';
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
 
-function kde() {
+export function kde() {
 	var k = sc.stats.kde();
 	k.bandwidth(function(x) {
 		var bw = nrd(x);

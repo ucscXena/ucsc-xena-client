@@ -1,0 +1,16 @@
+.distributionSlider {
+	position: relative;
+    line-height: 0;
+}
+
+.distributionSlider svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    transform-origin: 50% 50%;
+    transform: scale(1, -1);
+    pointer-events: none;
+}
