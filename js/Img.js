@@ -160,7 +160,7 @@ class Img extends PureComponent {
 	}
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
-		var zoom = initialZoom(this.props),
+		var zoom = get(this.props.data.viewState, 'zoom', initialZoom(this.props)),
 			{data: {image: {image_scalef: scale}, imageState: {levels}}} = this.props;
 		this.props.onViewState(null, currentScale(levels, zoom, scale));
 	}

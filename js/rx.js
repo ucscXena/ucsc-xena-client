@@ -125,8 +125,8 @@ Rx.Observable.zipArray = (...obs) =>
 
 export var debounce = (time, cb) => {
 	var s = new Rx.Subject();
-	s.debounceTime(time).subscribe(cb);
-	return s.next.bind(s);
+	s.debounceTime(time).subscribe(args => cb(...args));
+	return (...args) => s.next(args);
 };
 
 export default Rx;

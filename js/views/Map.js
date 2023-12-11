@@ -126,7 +126,7 @@ class MapDrawing extends PureComponent {
 		if (this.props.data.columns.length  !== 2) {
 			return;
 		}
-		var zoom = initialZoom(this.props),
+		var zoom = _.get(this.props.data.viewState, 'zoom', initialZoom(this.props)),
 			{data: {columns}} = this.props,
 			mins = columns.map(_.minnull),
 			maxs = columns.map(_.maxnull),
@@ -241,13 +241,14 @@ var getStatusView = (loading, error, onReload) =>
 					icon('warning'))) :
 	null;
 
-var scale = onRef =>
-		div({className: styles.scale, ref: onRef},
-			span(), span(), span(), span());
+var scale = um =>
+	div({className: styles.scale},
+		span(), span(), span(), span(`${um == null ? '-' : um.toFixed()} \u03BCm`));
 
 export class Map extends PureComponent {
 	state = {
-		tooltip: null
+		tooltip: null,
+		scale: null
 	}
 	componentDidMount() {
 		this.timer = setInterval(() => {
@@ -282,17 +283,12 @@ export class Map extends PureComponent {
 			this.setState({container: ref});
 		}
 	}
-	onScaleRef = ref => {
-		if (ref) {
-			this.setState({scale: ref});
-		}
-	}
 	onViewState = (viewState, upp) => {
 		var unit = _.getIn(this.props.state, ['dataset', 'micrometer_per_unit']);
-		if (upp && unit && this.state.scale) {
-			this.state.scale.children[3].innerHTML =
-				// scale is 100px wide in css
-				`${(100 * upp * unit).toFixed(0)} \u03BCm`;
+		if (upp && unit) {
+			this.setState({scale: 100 * upp * unit});
+		} else {
+			this.setState({scale: null});
 		}
 		if (viewState) {
 			this.props.onViewState(viewState);
@@ -327,7 +323,7 @@ export class Map extends PureComponent {
 		return div({className: styles.content},
 				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
-					...(unit ? [scale(this.onScaleRef)] : []),
+					...(unit ? [scale(this.state.scale)] : []),
 					getStatusView(loading, error, this.onReload),
 					drawing({...handlers, onViewState, onDeck, data, container})));
 	}
