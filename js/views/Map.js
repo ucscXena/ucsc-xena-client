@@ -2,7 +2,8 @@ import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {div, el, img, span} from '../chart/react-hyper.js';
-var _ = require('../underscore_ext').default;
+var {get, getIn, identity, Let, maxnull, minnull,
+	pick} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
 import {OrbitView, OrthographicView} from 'deck.gl';
@@ -30,26 +31,26 @@ var deckGL = el(DeckGL);
 
 var filterFn = (colorColumn, hideColors) =>
 	colorColumn ?
-		_.Let((hidden = new Set(hideColors || [])) =>
-			(coords, {index}) => _.Let((v = colorColumn[index]) =>
+		Let((hidden = new Set(hideColors || [])) =>
+			(coords, {index}) => Let((v = colorColumn[index]) =>
 				isNaN(v) || hidden.has(v) ? 0 : 1))
 	: () => 1;
 
 var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?
-		_.Let((scale = colorScales.colorScale(colors)) =>
+		Let((scale = colorScales.colorScale(colors)) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
-	_.Let((
-		colorColumn = _.getIn(colorBy, ['field', 'mode']) &&
-			_.getIn(colorBy, ['data', 'req', 'values', 0]),
-		colorColumn2 = _.getIn(colorBy2, ['field', 'mode']) &&
-			_.getIn(colorBy2, ['data', 'req', 'values', 0]),
-		colors = _.getIn(colorBy, ['data', 'scale']),
-		colors2 = _.getIn(colorBy2, ['data', 'scale']),
-		hideColors = _.getIn(colorBy, ['hidden']),
+	Let((
+		colorColumn = getIn(colorBy, ['field', 'mode']) &&
+			getIn(colorBy, ['data', 'req', 'values', 0]),
+		colorColumn2 = getIn(colorBy2, ['field', 'mode']) &&
+			getIn(colorBy2, ['data', 'req', 'values', 0]),
+		colors = getIn(colorBy, ['data', 'scale']),
+		colors2 = getIn(colorBy2, ['data', 'scale']),
+		hideColors = getIn(colorBy, ['hidden']),
 		getColor = cvtColorScale(colorColumn, colors),
 		getFilterValue = filterFn(colorColumn, hideColors)) => pointCloudLayer({
 
@@ -76,12 +77,12 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, onHover) =>
 	getValues0: !colorColumn || isOrdinal(colors) ? null : (coords, {index}) => colorColumn[index],
 	getValues1: colorColumn2 ? (coords, {index}) => colorColumn2[index] : null,
 	...(isOrdinal(colors) ? {getColor} : {}),
-	lower0: _.get(colors, 3),
-	upper0: _.get(colors, 4),
-	log0: _.get(colors, 0) === 'float-log',
-	lower1: _.get(colors2, 3),
-	upper1: _.get(colors2, 4),
-	log1: _.get(colors2, 0) === 'float-log',
+	lower0: get(colors, 3),
+	upper0: get(colors, 4),
+	log0: get(colors, 0) === 'float-log',
+	lower1: get(colors2, 3),
+	upper1: get(colors2, 4),
+	log1: get(colors2, 0) === 'float-log',
 	updateTriggers: {getColor: [colorColumn, colors],
 		getValues0: [colorColumn],
 		getValues1: [colorColumn2],
@@ -106,7 +107,7 @@ var getM = (s, [x, y, z = 0]) => [
 // spatial distribution of data.
 var maxDotRadius = 100;
 
-var id = arr => arr.filter(_.identity);
+var id = arr => arr.filter(identity);
 
 var initialZoom = props => {
 	var {width, height} = props.container.getBoundingClientRect();
@@ -126,10 +127,10 @@ class MapDrawing extends PureComponent {
 		if (this.props.data.columns.length  !== 2) {
 			return;
 		}
-		var zoom = _.get(this.props.data.viewState, 'zoom', initialZoom(this.props)),
+		var zoom = get(this.props.data.viewState, 'zoom', initialZoom(this.props)),
 			{data: {columns}} = this.props,
-			mins = columns.map(_.minnull),
-			maxs = columns.map(_.maxnull),
+			mins = columns.map(minnull),
+			maxs = columns.map(maxnull),
 			bounds = maxs.map((max, i) => max - mins[i]),
 			scale = cubeWidth / Math.max(...bounds);
 		this.props.onViewState(null, currentScale(zoom, scale));
@@ -137,8 +138,8 @@ class MapDrawing extends PureComponent {
 	render() {
 		var {props} = this;
 		var twoD = props.data.columns.length === 2;
-		var mins = props.data.columns.map(_.minnull),
-			maxs = props.data.columns.map(_.maxnull),
+		var mins = props.data.columns.map(minnull),
+			maxs = props.data.columns.map(maxnull),
 			centroids = maxs.map((max, i) => (max + mins[i]) / 2);
 
 		var data = this.props.data.columns;
@@ -167,7 +168,7 @@ class MapDrawing extends PureComponent {
 				zoom: initialZoom(props),
 				minZoom: 2,
 				maxZoom,
-				target: _.Let((c = cubeWidth / 2) => [c, c, 0])
+				target: Let((c = cubeWidth / 2) => [c, c, 0])
 			};
 		} else {
 			views = new OrbitView();
@@ -175,12 +176,12 @@ class MapDrawing extends PureComponent {
 				zoom: 4,
 				minZoom: 2,
 				maxZoom: 12,
-				target: _.Let((c = cubeWidth / 2) => [c, c, c])
+				target: Let((c = cubeWidth / 2) => [c, c, c])
 			};
 		}
 
-		var layer0 = dataLayer(data, modelMatrix, _.get(props.data, 'color0'),
-					_.get(props.data, 'color1'), radius * scale, this.onHover);
+		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
+					get(props.data, 'color1'), radius * scale, this.onHover);
 
 		return deckGL({
 			ref: this.props.onDeck,
@@ -284,7 +285,7 @@ export class Map extends PureComponent {
 		}
 	}
 	onViewState = (viewState, upp) => {
-		var unit = _.getIn(this.props.state, ['dataset', 'micrometer_per_unit']);
+		var unit = getIn(this.props.state, ['dataset', 'micrometer_per_unit']);
 		if (upp && unit) {
 			this.setState({scale: 100 * upp * unit});
 		} else {
@@ -295,20 +296,20 @@ export class Map extends PureComponent {
 		}
 	}
 	render() {
-		var handlers = _.pick(this.props, (v, k) => k.startsWith('on'));
+		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
 
 		var {onViewState, onDeck} = this,
 			mapState = this.props.state,
-			params = _.get(mapState, 'dataset', []),
+			params = get(mapState, 'dataset', []),
 			mapData = getData(mapState),
-			color0 = _.get(mapState, 'colorBy'),
-			color1 = _.get(mapState, 'colorBy2'),
-			columns = _.getIn(mapData, ['req', 'values']),
+			color0 = get(mapState, 'colorBy'),
+			color1 = get(mapState, 'colorBy2'),
+			columns = getIn(mapData, ['req', 'values']),
 			{viewState} = mapState,
-			labels = _.get(params, 'dimension', []),
+			labels = get(params, 'dimension', []),
 			radius = getRadius(mapState),
 			image = hasImage(mapState),
-			imageState = image && _.getIn(mapState, ['image', image.path]),
+			imageState = image && getIn(mapState, ['image', image.path]),
 			// If we have an image, show data loading only if we already have a color.
 			// Otherwise data is loading in background & doesn't affect the user.
 			loading = (!image || hasColor(color0) || hasColor(color1))
@@ -316,7 +317,7 @@ export class Map extends PureComponent {
 			error = dataError(mapState) || colorError(mapState),
 			data = {columns, radius, color0, color1,
 				labels, viewState, image, imageState},
-			unit = _.get(params, 'micrometer_per_unit'),
+			unit = get(params, 'micrometer_per_unit'),
 			drawing = image ? imgDrawing : mapDrawing,
 			{container} = this.state;
 
