@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, get, getIn, identity, isEqual, Let, mapObject, maxnull, pick,
-	range} = require('../underscore_ext').default;
+var {assoc, assocIn, get, getIn, identity, Let, mapObject, maxnull,
+	pick} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
@@ -10,12 +10,8 @@ import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
-import {kde} from '../chart/chart';
 import densityPlot from './densityPlot';
 import styles from './MapColor.module.css';
-
-var {createSelectorCreator, defaultMemoize} = require('reselect');
-var createSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 var menuItem = el(MenuItem);
 var slider = el(Slider);
@@ -113,28 +109,14 @@ var sliderOpts = (state, onScale) => ({
 
 var isFloat = state => get(otherValue(state), 'type') === 'float';
 
-var logTransform = (k, log) =>
-	log ? k.map(([x, y]) => [log2p1(x), y]) : k;
-
 var logTransformBounds = ({min, max}, log) =>
 	log ? {min: log2p1(min), max: log2p1(max)} : {min, max};
 
-var dataDist = (data, min, max, n = 100) =>
-	kde().sample(data.filter(x => !isNaN(x)))(range(min, max, (max - min) / n));
-
-var distribution = (req, avg, scaleBounds, log) =>
-	Let(({min: [min], max: [max]} = avg,
-			dist = logTransform(dataDist(req.values[0], min, max), log),
-			maxy = maxnull(dist.map(([, y]) => y)),
-			{min: minx, max: maxx} = logTransformBounds(scaleBounds, log)) =>
+var distribution = ({colorBy: {data}}) =>
+	Let(({density: dist, scaleBounds, scale} = data,
+			maxy = maxnull(dist.map(([, y]) => y)), // XXX put in selector
+			{min: minx, max: maxx} = logTransformBounds(scaleBounds, isLog(scale))) =>
 		densityPlot({dist, viewBox: `${minx} 0 ${maxx - minx} ${maxy}`}));
-
-var cachedDistribution = createSelector(
-	state => state.colorBy.data.req,
-	state => state.colorBy.data.avg,
-	state => state.colorBy.data.scaleBounds,
-	state => isLog(colorScale(state)),
-	distribution);
 
 var emptyDist = state =>
 	Let(({min: [min], max: [max]} =
@@ -142,7 +124,7 @@ var emptyDist = state =>
 
 var distributionSlider = (state, onScale) =>
 	div({className: styles.distributionSlider},
-		...(!emptyDist(state) ? [cachedDistribution(state)] : []),
+		...(!emptyDist(state) ? [distribution(state)] : []),
 		slider(sliderOpts(state, onScale)));
 
 var modeOptions = {
@@ -177,8 +159,7 @@ var modeOptions = {
 						value: probCellValue(state),
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
-				colorData(state) ? distributionSlider(state, onScale) :
-					null)),
+				colorData(state) ? distributionSlider(state, onScale) : null)),
 	gene: ({state, onGene, onScale}) =>
 		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:

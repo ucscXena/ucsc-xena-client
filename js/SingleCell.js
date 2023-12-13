@@ -18,9 +18,10 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
 	dotRange, getData, getDataSubType, getRadius, getSamples, hasImage,
-	maps, otherValue, probValue, setRadius} from './models/map';
+	isLog, log2p1, maps, otherValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, without} = require('./underscore_ext').default;
+var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
+import {kde} from './chart/chart';
 import mapColor from './views/MapColor';
 import widgets from './columnWidgets';
 import xSelect from './views/xSelect';
@@ -403,6 +404,27 @@ var singleCellPage = el(SingleCellPage);
 var {createSelectorCreator, defaultMemoize} = require('reselect');
 var createSelector = createSelectorCreator(defaultMemoize, isEqual);
 
+var dataDist = (data, min, max, n = 100) =>
+	kde().sample(data.filter(x => !isNaN(x)))(range(min, max, (max - min) / n));
+
+var logTransform = (k, log) =>
+	log ? k.map(([x, y]) => [log2p1(x), y]) : k;
+
+var densitySelector = key => createSelector(
+	state => getIn(state, [key, 'data', 'req']),
+	state => getIn(state, [key, 'data', 'avg']),
+	state => isLog(getIn(state, [key, 'data', 'scale'])),
+	(req, avg, log) =>
+			req && avg &&
+			logTransform(dataDist(req.values[0], avg.min[0], avg.max[0]), log));
+
+var density0Selector = densitySelector('colorBy');
+var density1Selector = densitySelector('colorBy2');
+
+var mergeDensity = state =>
+	assocIn(state, ['colorBy', 'data', 'density'], density0Selector(state),
+		['colorBy2', 'data', 'density'], density1Selector(state));
+
 var mapSelector = createSelector(
 	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
@@ -420,7 +442,7 @@ var radiusSelector = createSelector(
 	setRadius);
 
 var selector = state => assoc(
-	merge(state, cohortFieldsSelector(state)),
+	merge(mergeDensity(state), cohortFieldsSelector(state)),
 	'radiusBase', radiusSelector(state),
 	'map', mapSelector(state)
 );

@@ -3,14 +3,14 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, maxnull,
+var {assoc, assocIn, findIndex, getIn, identity, Let, merge, maxnull,
 	minnull, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of, ajax} = Rx.Observable;
 import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset,
-	hasImage} from '../models/map';
+	hasImage, isLog, log2p1, pow2m1} from '../models/map';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
@@ -47,9 +47,6 @@ var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
 
-var log2p1 = v => Math.log2(v + 1),
-	pow2m1 = v => Math.pow(2, v) - 1;
-
 var getLogScale = (color, {min: [min], max: [max]}) =>
 	Let((nMin = log2p1(min), nMax = log2p1(max),
 			zone = (nMax - nMin) / 4, absmax = Math.max(-nMin, nMax)) =>
@@ -76,7 +73,6 @@ var extendScale = (min, max) =>
 	Let((over = 0.1 * (max - min)) => [min - over, max + over]);
 
 
-var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),
 			minIn = Math.min(...params, minnull(d)),
