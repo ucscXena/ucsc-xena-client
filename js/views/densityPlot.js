@@ -22,7 +22,7 @@ var computeCatmullRomSpline = (points, numPoints = 100) =>
 
 var spline = data =>
 	Let((spline = computeCatmullRomSpline(data)) =>
-        [`M 0, 0 L ${data[0].join(',')}`,
+        [`M ${data[0][0]}, 0 L ${data[0].join(',')}`,
             ...partitionN(spline.slice(0, spline.length - spline.length % 3), 3, 3)
                 .map(pts => `C ${pts.map(p => p.join(',')).join(' ')}`),
             `L ${spline[spline.length - 1][0]}, 0`].join(' '));
