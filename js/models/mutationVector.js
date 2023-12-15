@@ -11,6 +11,7 @@ var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper').default;
 var jStat = require('jStat').jStat;
 var parsePos = require('../parsePos');
+import sortOrder from './sparseSortOrder';
 
 //function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 //	var inData = new Set(valsInData),
@@ -666,11 +667,13 @@ function download({data: {req: {rows}}, samples, index, sampleFormat}) {
 
 widgets.cmp.add('mutation', cmp);
 widgets.index.add('mutation', index);
+widgets.data.add('mutation', sortOrder(cmp));
 widgets.transform.add('mutation', snvDataToDisplay);
 widgets.download.add('mutation', download);
 
 widgets.cmp.add('SV', cmp);
 widgets.index.add('SV', index);
+widgets.data.add('SV', sortOrder(cmp));
 widgets.transform.add('SV', svDataToDisplay);
 widgets.download.add('SV', download);
 

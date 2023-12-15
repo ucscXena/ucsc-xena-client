@@ -9,6 +9,7 @@ var columnFieldTypeSelector = x => x.column.fieldType;
 var widget = {
 	cmp: multi(fieldTypeSelector),
 	index: multi(x => x),
+	data: multi(fieldTypeSelector),
 	transform: multi(fieldTypeSelector),
 	avg: multi(fieldTypeSelector),
 	download: multi(columnFieldTypeSelector),
@@ -20,5 +21,6 @@ var widget = {
 
 widget.index.dflt = () => null;
 widget.avg.dflt = () => null;
+widget.data.dflt = (column, data) => data;
 
 module.exports = widget;

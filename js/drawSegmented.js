@@ -206,7 +206,7 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 	let {samples, index: {bySample: samplesInDS}} = props,
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
-		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
+		hasValue = _.map(samples.slice(index, index + count), s => samplesInDS[s]),
 		stripes = backgroundStripes(hasValue),
 		pixPerRow = height / count;
 

@@ -34,9 +34,9 @@ function renderFloatLegend(props) {
 
 	var [origin, , max] = color.slice(4),
 		powerScale = colorScale(color).lookup,
-		scale = v => v < origin ?
+		scale = {rgb: v => v < origin ?
 			powerScale(0, origin - v) :
-			powerScale(1, v - origin),
+			powerScale(1, v - origin)},
 		min = origin - (max - origin);
 
 	return (

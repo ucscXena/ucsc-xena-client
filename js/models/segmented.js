@@ -10,6 +10,7 @@ var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
 import * as heatmapColors from '../heatmapColors';
 var parsePos = require('../parsePos');
+import sortOrder from './sparseSortOrder';
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 	var inData = new Set(valsInData),
@@ -299,6 +300,7 @@ function averageSegments(column, data, count, index) {
 
 widgets.cmp.add('segmented', cmp);
 widgets.index.add('segmented', index);
+widgets.data.add('segmented', sortOrder(cmp));
 widgets.transform.add('segmented', dataToDisplay);
 widgets.avg.add('segmented', averageSegments);
 widgets.download.add('segmented', download);

@@ -33,33 +33,41 @@ var indiciesSelector = _.memoize1(n => {
 	return out;
 });
 
-// XXX Doesn't handle sparse data, or sort direction.
 var sortSubSelector = _.memoize1(
 	(length, columns, data) => {
-		var sorted;
-		var indicies = indiciesSelector(length);
-		var d = _.flatmap(data, d => _.getIn(d, ['req', 'values']))
-			.filter(x => x.length);
-		var dir = _.pluck(columns, 'sortDirection');
+		var indicies = indiciesSelector(length),
+			d = _.flatmap(data, d => _.getIn(d, ['req', 'values']))
+				.filter(x => x.length),
+			dir = _.pluck(columns, 'sortDirection');
 
-		sorted = fradixSortL16$64(d, dir, indicies);
-		return sorted || indicies;
+		return fradixSortL16$64(d, dir, indicies) || indicies;
 });
+
+// The point of this is that moving the sort of sparse data to webassembly
+// would be very involved. So we sort sparse data in javascript and create a
+// dense representation of the sort order. The order depends on the x zoom and
+// sortVisible flag, so we use a selector to cache the result and recompute on
+// change. The sparse data generally isn't very large, so we're not losing much
+// performance by keeping it in javascript.
+var dataSelector = createFmapSelector(
+	state => _.fmap(state.columns, (column, key) =>
+		[_.omit(column, 'sortDirection'), state.data[key], state.index[key],
+			state.length]),
+		args => widgets.data(...args));
 
 var sortSelector = createSelector(
 	state => state.cohortSamples,
-	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible', 'sortDirection')),
+	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom',
+		'sortVisible', 'sortDirection')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,
-	(cohortSamples, columns, columnOrder, data/*, index*/) => {
+	(cohortSamples, columns, columnOrder, data, index) => {
 		var length = (cohortSamples || []).length,
 			order = columnOrder.slice(1).filter(id => _.getIn(data, [id, 'req'])),
 			icolumns = order.map(id => columns[id]),
-			idata = order.map(id => data[id]);
-			// XXX Previously used for sparse data.
-			// How to handle this if sort depends on zoom?
-			//iindex = order.map(id => index[id]);
+			columnData = dataSelector({columns, data, index, length}),
+			idata = order.map(id => columnData[id]);
 		return sortSubSelector(length, icolumns, idata);
 	}
 );

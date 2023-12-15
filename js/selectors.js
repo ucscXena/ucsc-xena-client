@@ -5,7 +5,7 @@ function createFmapSelector(selector, resultFn) {
 	var resultFunc = fmapMemoize1(resultFn);
 	// XXX add recalc counter?
 
-	return (state, props, ...args) => resultFunc(selector(state, props, ...args));
+	return state => resultFunc(selector(state));
 }
 
 module.exports = {createFmapSelector};

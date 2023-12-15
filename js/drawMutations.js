@@ -166,7 +166,7 @@ var drawWithBackground = _.curry((draw, vg, props) => {
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
 		pixPerRow = height / count,
-		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
+		hasValue = _.map(samples.slice(index, index + count), s => samplesInDS[s]);
 
 	vg.labels(() => {
 		drawBackground(vg, width, height, pixPerRow, hasValue);
