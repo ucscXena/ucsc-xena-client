@@ -107,7 +107,7 @@ var imageMetadata = m => {
 };
 
 var fetchMethods = {
-	defaultStudy: () => fetchDefaultStudy,
+	defaultStudy: fetchDefaultStudy,
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
@@ -150,7 +150,6 @@ var cachePolicy = {
 var cohortList = state => getIn(state, ['singlecell', 'defaultStudy', 'studyList'])
 	.map(study => study.cohortList || []).flat();
 
-
 var allDatasets = state =>
 	Let((list = cohortList(state)) =>
 		list.map(({preferredDataset = []}) =>
@@ -163,7 +162,7 @@ var hasColorBy2 = state => getIn(state.singlecell, ['colorBy2', 'field', 'field'
 
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
-		[['defaultStudy']],
+		[['defaultStudy', ['params', 'defaultStudy', 0]]],
 		// There is overlap between cohortDatasets and datasetMetadata, but
 		// it's not worth resolving because they are needed at different times.
 		// We need datasetMetadata to draw the integration list, and need

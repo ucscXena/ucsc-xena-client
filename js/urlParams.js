@@ -49,15 +49,19 @@ function manifest() {
 	return mapObject(pick(allParameters(), 'manifest'), l => l[0]);
 }
 
+
+var studyParam = () => pick(allParameters(), 'defaultStudy');
+
 function getParams() {
 	var columns = columnsParam(),
 		hasCols = getIn(columns, ['columns', 'length'], 0) > 0,
 		// ignore heatmap param w/o column param.
 		heatmap = hasCols ? heatmapParam() : {},
-		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) => uniq(hubs.concat(pluck(columns.columns, 'host')))) :
+		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) =>
+			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(), fixLocalhost(datasetParams()), manifest(), columns,
-		heatmap);
+	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(),
+		fixLocalhost(datasetParams()), manifest(), studyParam(), columns, heatmap);
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'

@@ -604,6 +604,13 @@ var cohortDefaultURL = `${cohortMetaData}/defaultCohortMetadata.json`;
 
 var defaultStudyURL = `${cohortMetaData}/defaultStudy.json`;
 
+var getStudy =
+	_.Let((studyFiles = {
+			htan: `${cohortMetaData}/defaultStudy_HTAN.json`,
+			tcga: `${cohortMetaData}/defaultStudy_tcga.json`,
+			default: defaultStudyURL}) =>
+		study => studyFiles[study] || defaultStudyURL);
+
 // For testing
 //var analyticTest = encodeURIComponent(JSON.stringify({
 //	'TCGA Breast Cancer (BRCA)': [
@@ -637,7 +644,6 @@ var fetchJSON = url =>
 	}).map(xhr => xhr.response)
 	.catch(() => Rx.Observable.of({}, Rx.Scheduler.asap));
 
-
 module.exports = {
 	...queryPosts,
 
@@ -666,6 +672,6 @@ module.exports = {
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
 	fetchCohortAnalytic: fetchJSON(cohortAnalyticURL),
 	fetchCohortDefault: fetchJSON(cohortDefaultURL),
-	fetchDefaultStudy: fetchJSON(defaultStudyURL),
+	fetchDefaultStudy: _.compose(fetchJSON, getStudy),
 	fetchTumorMap: fetchJSON(tumorMapURL),
 };
