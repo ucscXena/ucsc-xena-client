@@ -162,7 +162,7 @@ var hasColorBy2 = state => getIn(state.singlecell, ['colorBy2', 'field', 'field'
 
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
-		[['defaultStudy', ['params', 'defaultStudy', 0]]],
+		[['defaultStudy', ['singlecell', 'defaultStudyID']]],
 		// There is overlap between cohortDatasets and datasetMetadata, but
 		// it's not worth resolving because they are needed at different times.
 		// We need datasetMetadata to draw the integration list, and need
@@ -246,6 +246,8 @@ var controls = actionPrefix({
 
 // global actions
 var pageControls = {
+	init: (state, url, params = {}) =>
+		assoc(state, 'defaultStudyID', params.defaultStudy || 'default'),
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
 	// serialization of binary objects for sessionStorage.
