@@ -17,7 +17,7 @@ import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
-	dotRange, getData, getDataSubType, getRadius, getSamples, hasImage,
+	dotRange, getData, getDataSubType, getRadius, getSamples, hasColor, hasImage,
 	isLog, log2p1, maps, otherValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
@@ -269,12 +269,10 @@ var page = state =>
 	welcome;
 
 var getColorTxt = (state, i) =>
-	Let((
-		colorVals = getIn(state, ['data', 'req', 'values', 0]),
-		hasColor = colorVals && getIn(state, ['field', 'mode']),
-		value = hasColor && get(colorVals, i)) =>
-	 hasColor ? getIn(state, ['data', 'codes', value],
-		String(value)) : '');
+	hasColor(state) ?
+		Let((value = getIn(state, ['data', 'req', 'values', 0, i])) =>
+			getIn(state, ['data', 'codes', value], String(value))) :
+		'';
 
 class SingleCellPage extends PureComponent {
 	constructor(props) {
@@ -421,9 +419,12 @@ var densitySelector = key => createSelector(
 var density0Selector = densitySelector('colorBy');
 var density1Selector = densitySelector('colorBy2');
 
+var mergeDensityField = (state, field, density) =>
+	density ? assocIn(state, [field, 'data', 'density'], density) : state;
+
 var mergeDensity = state =>
-	assocIn(state, ['colorBy', 'data', 'density'], density0Selector(state),
-		['colorBy2', 'data', 'density'], density1Selector(state));
+	Let((d0 = density0Selector(state), d1 = density1Selector(state)) =>
+		mergeDensityField(mergeDensityField(state, 'colorBy', d0), 'colorBy2', d1));
 
 var mapSelector = createSelector(
 	state => allCohorts(state),

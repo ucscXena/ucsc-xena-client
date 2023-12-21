@@ -3,13 +3,13 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, getIn, identity, Let, merge, maxnull,
+var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, maxnull,
 	minnull, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {of, ajax} = Rx.Observable;
-import {allCohorts, datasetCohort, dotRange, getSamples, hasDataset,
+import {allCohorts, datasetCohort, dotRange, getSamples, hasColorBy, hasDataset,
 	hasImage, isLog, log2p1, pow2m1} from '../models/map';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -157,9 +157,6 @@ var allDatasets = state =>
 
 var concat = (...arr) => arr.filter(identity).flat();
 
-var hasColorBy = state => getIn(state.singlecell, ['colorBy', 'field', 'field']);
-var hasColorBy2 = state => getIn(state.singlecell, ['colorBy2', 'field', 'field']);
-
 var singlecellData = state =>
 	state.page !== 'singlecell' ? [] : concat(
 		[['defaultStudy', ['singlecell', 'defaultStudyID']]],
@@ -186,10 +183,11 @@ var singlecellData = state =>
 			Let(({dsID, dimension} = state.singlecell.dataset) =>
 				[['data', dsID, JSON.stringify(dimension),
 					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
-		hasColorBy(state) && getSamples(state.singlecell) ?
+		hasColorBy(get(state.singlecell, ['colorBy'])) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
-		hasColorBy2(state) && getSamples(state.singlecell) ?
+		hasColorBy(get(state.singlecell, ['colorBy2']))
+				&& getSamples(state.singlecell) ?
 			[['colorBy2', 'data', ['singlecell', 'colorBy2', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 

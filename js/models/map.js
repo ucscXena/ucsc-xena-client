@@ -1,4 +1,6 @@
-var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn, identity, Let, map, mapObject, merge, minnull, maxnull, mmap, object, omit, pairs, pick, updateIn, values} = require('../underscore_ext').default;
+var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn,
+	identity, Let, map, mapObject, merge, minnull, maxnull, mmap, object, omit,
+	pairs, pick, updateIn, values} = require('../underscore_ext').default;
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -186,10 +188,15 @@ export var dataError = state =>
 		!getIn(state, ['_outOfDate', 'data', dsID, dims]) &&
 		getIn(state, ['data', dsID, dims, 'status']) === 'error');
 
+export var hasColorBy = colorBy => getIn(colorBy, ['field', 'field']);
+
+export var hasColor = colorBy =>
+	hasColorBy(colorBy) && getIn(colorBy, ['data', 'req', 'values', 0]);
+
 var colorLoadingField = (state, field) =>
-	getIn(state, [field, 'field', 'mode']) &&
-	(!getIn(state, [field, 'data']) ||
-		getIn(state, ['_outOfDate', field, 'data']));
+	Let((f = get(state, field)) =>
+		hasColorBy(f) &&
+		(!hasColor(f) || getIn(state, ['_outOfDate', field, 'data'])));
 
 export var colorLoading = state =>
 	colorLoadingField(state, 'colorBy') || colorLoadingField(state, 'colorBy2');
@@ -201,9 +208,6 @@ export var colorErrorField = (state, field) =>
 
 export var colorError = state =>
 	colorErrorField(state, 'colorBy') || colorErrorField(state, 'colorBy2');
-
-export var hasColor = colorBy =>
-	getIn(colorBy, ['field', 'mode']) && getIn(colorBy, ['data', 'req', 'values', 0]);
 
 export var getDataSubType = (state, host, name) =>
 	getIn(state.datasetMetadata, [host, name, 'dataSubType']);
