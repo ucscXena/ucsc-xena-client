@@ -248,10 +248,10 @@ export var defaultColor = (state, cohort) =>
 export var layerColors = [
 	[0.0, 0.0, 1.0],
 	[0.0, 1.0, 0.0],
-	[1.0, 0.0, 0.0],
+	[1.0, 1.0, 0.0],
 	[0.0, 1.0, 1.0],
 	[1.0, 0.0, 1.0],
-	[1.0, 1.0, 0.0],
+	[1.0, 0.0, 0.0]
 ];
 
 export var isOrdinal = colors => colors && colors[0] === 'ordinal';
