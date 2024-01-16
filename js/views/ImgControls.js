@@ -66,6 +66,7 @@ export default class ImgControls extends PureComponent {
 
 					formControlLabel({label: "H&E",
 						control: checkbox({checked: backgroundVisible,
+							style: {color: '#444444'},
 							onChange: onBackgroundVisible})}),
 					slider({min: 0, max: 1, step: 0.001, value: backgroundOpacity,
 						valueLabelDisplay: 'auto', onChange: onBackgroundOpacity}))] :
