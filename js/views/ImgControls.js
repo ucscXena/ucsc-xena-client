@@ -77,7 +77,7 @@ export default class ImgControls extends PureComponent {
 					channelSelect({channels: sorted(pluck(stats, 'name')),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.001,
-						valueLabelDisplay: 'auto', value: imageState.opacity[c],
+						/*valueLabelDisplay: 'auto', */value: imageState.opacity[c],
 						onChange: this.onOpacity(c)}))));
 	}
 }
