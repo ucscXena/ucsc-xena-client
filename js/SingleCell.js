@@ -142,7 +142,9 @@ var vizPanel = ({props: {state, ...handlers}}) =>
 	Let(({dataset, layout} = state) =>
 		dataset ? map({state, ...handlers}) :
 		layout ? h2(`Select a ${layouts[layout]} layout`) :
-		h2('Select a layout type'));
+		div({style: {flexDirection: 'column'}},
+			h2('All Xena derived data is in beta'),
+			h2('Select a layout type')));
 
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 
@@ -175,7 +177,7 @@ class MapTabs extends PureComponent {
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
 				tab({label: 'Color by', disabled: !validDataset(state, layout)}),
-				tab({label: 'Layers', disabled: !validDataset(state, layout) ||
+				tab({label: 'Image', disabled: !validDataset(state, layout) ||
 					!hasImage(state)}),
 				tab({label: 'Cells in View', disabled: true})
 			),
