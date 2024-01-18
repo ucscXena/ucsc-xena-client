@@ -245,7 +245,7 @@ var controls = actionPrefix({
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		assoc(state, 'defaultStudyID', params.defaultStudy || 'default'),
+		assoc(state, 'defaultStudyID', params.defaultTable || 'default'),
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
 	// serialization of binary objects for sessionStorage.

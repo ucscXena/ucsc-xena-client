@@ -50,7 +50,7 @@ function manifest() {
 }
 
 
-var studyParam = () => pick(allParameters(), 'defaultStudy');
+var studyParam = () => pick(allParameters(), 'defaultTable');
 
 function getParams() {
 	var columns = columnsParam(),
