@@ -109,7 +109,10 @@ var available = state =>
 var availableCategories = available => keys(pick(layouts, keys(available)));
 
 var integrationLabel = state =>
-	getIn(state, ['defaultStudy', 'studyList']).find(c => c.study === state.integration).label;
+	state.defaultStudy ?
+		getIn(state, ['defaultStudy', 'studyList'])
+			.find(c => c.study === state.integration).label :
+	'';
 
 
 var layoutSelect = ({onLayout, layout, state}) =>

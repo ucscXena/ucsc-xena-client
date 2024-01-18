@@ -39,18 +39,20 @@ function fixLocalhost(obj) {
 		updateIn(obj, ['host'], host => host === 'https://local.xena.ucsc.edu:7223' ? 'http://127.0.0.1:7222' : host) : obj;
 }
 
+var takeFirst = obj => mapObject(obj, l => l[0]);
+
 function datasetParams() {
 	// only take the first of these
-	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers', 'markdown'), l => l[0]);
+	return takeFirst(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers', 'markdown'));
 }
 
 function manifest() {
 	// only take the first of these
-	return mapObject(pick(allParameters(), 'manifest'), l => l[0]);
+	return takeFirst(pick(allParameters(), 'manifest'));
 }
 
 
-var studyParam = () => pick(allParameters(), 'defaultTable');
+var studyParams = () => takeFirst(pick(allParameters(), 'defaultTable', 'study'));
 
 function getParams() {
 	var columns = columnsParam(),
@@ -61,7 +63,7 @@ function getParams() {
 			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
 	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(),
-		fixLocalhost(datasetParams()), manifest(), studyParam(), columns, heatmap);
+		fixLocalhost(datasetParams()), manifest(), studyParams(), columns, heatmap);
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
