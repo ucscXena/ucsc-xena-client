@@ -52,7 +52,14 @@ function manifest() {
 }
 
 
-var studyParams = () => takeFirst(pick(allParameters(), 'defaultTable', 'study'));
+var resetStudy = x => {
+	history.replaceState({}, 'UCSC Xena',
+		location.pathname + location.search.replace(/&?study=[^&]+/, ''));
+	return x;
+};
+
+var studyParams = () => resetStudy(
+	takeFirst(pick(allParameters(), 'defaultTable', 'study')));
 
 function getParams() {
 	var columns = columnsParam(),
