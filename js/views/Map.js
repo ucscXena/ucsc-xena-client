@@ -251,16 +251,17 @@ export class Map extends PureComponent {
 		tooltip: null,
 		scale: null
 	}
-	componentDidMount() {
-		this.timer = setInterval(() => {
-			if (this.FPSRef && this.deckGL) {
-				this.FPSRef.innerHTML = `${this.deckGL.deck.metrics.fps.toFixed(0)} FPS`;
-			}
-		}, 1000);
-	}
-	componentWillUnmount() {
-		clearTimeout(this.timer);
-	}
+	//	For displaying FPS
+//	componentDidMount() {
+//		this.timer = setInterval(() => {
+//			if (this.FPSRef && this.deckGL) {
+//				this.FPSRef.innerHTML = `${this.deckGL.deck.metrics.fps.toFixed(0)} FPS`;
+//			}
+//		}, 1000);
+//	}
+//	componentWillUnmount() {
+//		clearTimeout(this.timer);
+//	}
 	onFPSRef = FPSRef => {
 		this.FPSRef = FPSRef;
 	}
