@@ -173,7 +173,7 @@ class MapDrawing extends PureComponent {
 		} else {
 			views = new OrbitView();
 			viewState = {
-				zoom: 4,
+				zoom: 5,
 				minZoom: 2,
 				maxZoom: 12,
 				target: Let((c = cubeWidth / 2) => [c, c, c])
