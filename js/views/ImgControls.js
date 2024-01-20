@@ -5,7 +5,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from '../views/XAutosuggestInput';
 var {getIn, Let, pluck, sorted} = require('../underscore_ext').default;
 import styles from './ImgControls.module.css';
-import {hasImage, layerColors} from '../models/map';
+import {hasImage, layerColors, segmentedColor} from '../models/map';
 var {RGBToHex} = require('../color_helper').default;
 
 var autocomplete = el(Autocomplete);
@@ -14,7 +14,9 @@ var slider = el(Slider);
 var checkbox = el(Checkbox);
 var xAutosuggestInput = el(XAutosuggestInput);
 
-var colorsCss = layerColors.map(c => RGBToHex(...c.map(v => v * 255)));
+var toCss = c => RGBToHex(...c.map(v => ~~(v * 255)));
+var colorsCss = layerColors.map(toCss);
+var segmentedCss = toCss(segmentedColor);
 
 // Adds 20% of range over and under the min/max of the dataset.
 // The color scales will clamp the result to [0, 1].
@@ -49,6 +51,9 @@ export default class ImgControls extends PureComponent {
 	onBackgroundOpacity = (ev, op) => {
 		this.props.onBackgroundOpacity(op);
 	}
+	onSegmentationVisible = i => (ev, checked) => {
+		this.props.onSegmentationVisible(i, checked);
+	}
 	render() {
 		var {state} = this.props;
 		var image = hasImage(state),
@@ -57,13 +62,13 @@ export default class ImgControls extends PureComponent {
 			return null;
 		}
 
-		var {stats, inView, background, backgroundVisible,
+		var {stats, inView, segmentation, background, backgroundVisible,
 				backgroundOpacity} = imageState,
-			{onVisible, onBackgroundVisible, onBackgroundOpacity} = this;
+			{onVisible, onSegmentationVisible, onBackgroundVisible,
+				onBackgroundOpacity} = this;
 		return div(
 			...(background ?
 				[span(
-
 					formControlLabel({label: "H&E",
 						control: checkbox({checked: backgroundVisible,
 							style: {color: '#444444'},
@@ -78,6 +83,12 @@ export default class ImgControls extends PureComponent {
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.001,
 						/*valueLabelDisplay: 'auto', */value: imageState.opacity[c],
-						onChange: this.onOpacity(c)}))));
+						onChange: this.onOpacity(c)}))),
+			...segmentation.map((c, i) =>
+				formControlLabel({label: c.name,
+					control: checkbox({checked: !!c.visible,
+						style: {color: segmentedCss},
+						onChange: onSegmentationVisible(i)})}))
+		);
 	}
 }

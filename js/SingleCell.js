@@ -172,10 +172,10 @@ class MapTabs extends PureComponent {
 		this.setState({value});
 	}
 	render() {
-		var {onChange, state: {value}, props: {handlers: {
-			onOpacity, onVisible, onChannel, onBackgroundOpacity, onBackgroundVisible,
-			onAdvanced, onLayout, onDataset, onRadius, onColorByHandlers},
-			state, layout}} = this;
+		var {onChange, state: {value}, props: {handlers: {onOpacity,
+			onVisible, onSegmentationVisible, onChannel, onBackgroundOpacity,
+			onBackgroundVisible, onAdvanced, onLayout, onDataset, onRadius,
+			onColorByHandlers}, state, layout}} = this;
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
@@ -200,8 +200,8 @@ class MapTabs extends PureComponent {
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								handlers: onColorByHandlers[1]}))))),
 			tabPanel({value, index: 2},
-				imgControls({state, onOpacity, onVisible, onChannel,
-					onBackgroundOpacity, onBackgroundVisible})));
+				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
+					onChannel, onBackgroundOpacity, onBackgroundVisible})));
 	}
 }
 
@@ -372,6 +372,9 @@ class SingleCellPage extends PureComponent {
 	};
 	onVisible = (i, checked) => {
 		this.callback(['channel-visible', i, checked]);
+	}
+	onSegmentationVisible = (i, checked) => {
+		this.callback(['segmentation-visible', i, checked]);
 	}
 	onChannel = (i, channel) => {
 		this.callback(['channel', i, channel]);

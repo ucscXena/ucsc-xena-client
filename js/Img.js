@@ -7,17 +7,19 @@ import {scatterplotLayer} from './ScatterplotLayer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
-import {hasColor, isOrdinal, layerColors} from './models/map';
+import {hasColor, isOrdinal, layerColors, segmentedColor} from './models/map';
 import {debounce} from './rx';
 var {get, getIn, identity, Let} = require('./underscore_ext').default;
 
 var deckGL = el(DeckGL);
 
-var fromGray = i =>
+var getLayerColor = i => layerColors[i % layerColors.length];
+
+var fromGray = color =>
 	`color.a = min(1., max(color.r - lower, 0.) / (upper - lower));
-	color.r = ${layerColors[i % layerColors.length][0].toFixed(1)};
-	color.g = ${layerColors[i % layerColors.length][1].toFixed(1)};
-	color.b = ${layerColors[i % layerColors.length][2].toFixed(1)};`;
+	color.r = ${color[0].toFixed(1)};
+	color.g = ${color[1].toFixed(1)};
+	color.b = ${color[2].toFixed(1)};`;
 
 class XenaBitmapLayer extends BitmapLayer {
 	getShaders() {
@@ -25,7 +27,7 @@ class XenaBitmapLayer extends BitmapLayer {
 			...super.getShaders(),
 			inject: {
 				'fs:#decl': `uniform float lower; uniform float upper;`,
-				'fs:DECKGL_FILTER_COLOR': fromGray(this.props.i)
+				'fs:DECKGL_FILTER_COLOR': fromGray(this.props.color)
 			}
 		};
 	}
@@ -41,7 +43,7 @@ class XenaBitmapLayer extends BitmapLayer {
 	}
 }
 
-var tileLayer = ({name, path, fileformat, index, levels, opacity, size,
+var tileLayer = ({name, path, fileformat, index, levels, opacity, size, color,
 		tileSize, visible}) =>
 	new TileLayer({
 		id: `tile-layer-${index}`,
@@ -61,12 +63,12 @@ var tileLayer = ({name, path, fileformat, index, levels, opacity, size,
 		renderSubLayers: props => {
 			var {bbox: {left, top, right, bottom}} = props.tile;
 
-			return index !== null ? new XenaBitmapLayer(props, {
+			return opacity.length ? new XenaBitmapLayer(props, {
 					data: null,
 					image: props.data,
 					lower: opacity[0],
 					upper: opacity[1],
-					i: index,
+					color,
 					bounds: [left, bottom, right, top]
 				}) : new BitmapLayer(props, {
 					data: null,
@@ -182,7 +184,8 @@ class Img extends PureComponent {
 				color1, radius, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
-			{inView, levels, size: [iwidth, iheight], fileformat = 'png'} = imageState,
+			{inView, segmentation, levels, size: [iwidth, iheight],
+				fileformat = 'png'} = imageState,
 			viewState = {
 				zoom: initialZoom(props),
 				minZoom: 0,
@@ -204,7 +207,7 @@ class Img extends PureComponent {
 					name: 'i', path: image.path,
 					fileformat,
 					// XXX rename opacity
-					index: null, opacity: imageState.backgroundOpacity,
+					index: 'background', opacity: imageState.backgroundOpacity,
 					levels: imageState.levels,
 					size: imageState.size,
 					tileSize: imageState.tileSize,
@@ -216,10 +219,21 @@ class Img extends PureComponent {
 						fileformat,
 						// XXX rename opacity
 						index: i, opacity: imageState.opacity[c],
+						color: getLayerColor(i),
 						levels: imageState.levels,
 						size: imageState.size,
 						tileSize: imageState.tileSize,
 						visible: imageState.visible[i]})),
+				...segmentation.map((c, i) =>
+					tileLayer({
+						name: `s${i}`, path: image.path,
+						fileformat: c.fileformat || 'png',
+						index: `segmentation-${i}`, opacity: [0.0, 1.0],
+						color: segmentedColor,
+						levels: imageState.levels,
+						size: imageState.size,
+						tileSize: imageState.tileSize,
+						visible: c.visible})),
 				layer0
 			]),
 			views,

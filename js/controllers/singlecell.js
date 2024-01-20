@@ -101,9 +101,9 @@ var imageMetadata = m => {
 		inView = uniq((m.defaults || []).map(c => channels.indexOf(c))
 				.concat(range(stats.length))).slice(0, layers),
 		visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
-		{size, tileSize, levels, background, fileformat} = m;
+		{size, tileSize, levels, background, fileformat, segmentation = []} = m;
 	return {stats, opacity, inView, levels, size, tileSize, background, visible,
-		fileformat, ...defaultBackground(background)};
+		fileformat, segmentation, ...defaultBackground(background)};
 };
 
 var fetchMethods = {
@@ -233,6 +233,9 @@ var controls = actionPrefix({
 	'channel-opacity': (state, i, opacity) =>
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'opacity', i], opacity)),
+	'segmentation-visible': (state, i, checked) =>
+		Let(({path} = hasImage(state)) =>
+			assocIn(state, ['image', path, 'segmentation', i, 'visible'], checked)),
 	'background-visible': (state, checked) =>
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundVisible'], checked)),

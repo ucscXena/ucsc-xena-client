@@ -254,6 +254,8 @@ export var layerColors = [
 	[1.0, 0.0, 0.0]
 ];
 
+export var segmentedColor = [0.3, 0.3, 0.3];
+
 export var isOrdinal = colors => colors && colors[0] === 'ordinal';
 
 export var log2p1 = v => Math.log2(v + 1);
