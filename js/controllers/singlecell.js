@@ -200,6 +200,10 @@ var {controller: fetchController/*, invalidatePath*/} =
 var actionPrefix = actions =>
 	object(pairs(actions).map(([k, v]) => ['singlecell-' + k, v]));
 
+var reset = state => assoc(state, 'dataset', null, 'data', {},
+	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null);
+
+
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
@@ -207,8 +211,7 @@ var controls = actionPrefix({
 	// that will throw if we delete the object.
 	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
 		'colorBy', colorBy, 'colorBy2', {}, 'radius', null, 'viewState', null),
-	reset: state => assoc(state, 'dataset', null, 'data', {},
-		'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null),
+	reset,
 	advanced: state => updateIn(state, ['advanced'],  a => !a),
 	colorBy: (state, key, colorBy) =>
 		Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
@@ -245,13 +248,16 @@ var controls = actionPrefix({
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState)
 });
 
+var resetIntegration = (state = {}, params) =>
+	params.defaultTable !== state.defaultStudyID ? reset(state) : state;
+
 var setParamStudy = (state, params) =>
 	params.study ? assoc(state, 'integration', params.study, 'enter', true) : state;
 
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		assoc(setParamStudy(state, params),
+		assoc(setParamStudy(resetIntegration(state, params), params),
 			'defaultStudyID', params.defaultTable || 'default'),
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
