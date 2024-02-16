@@ -18,5 +18,5 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^bookmarks/', include('bookmarks.urls')),
-    url(r'^ties/', include('ties.urls')),
+#    url(r'^ties/', include('ties.urls')),
 ]

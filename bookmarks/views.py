@@ -7,7 +7,7 @@ from datetime import datetime
 from hashlib import md5
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
-from forms import BookmarksSaveForm, BookmarksForm, WeekForm
+from .forms import BookmarksSaveForm, BookmarksForm, WeekForm
 from django.db.models import Q
 
 # Save the bookmark to the global pool
