@@ -44,6 +44,12 @@ class Application extends PureComponent {
 //			Perf.start();
 //		}
 //	}
+	componentDidMount() {
+		const { getState, onImport, onNavigate, state: { isPublic } } = this.props;
+
+		// nested render to different DOM tree
+		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
+	}
 	componentDidUpdate() {
 		const { getState, onImport, onNavigate, state: { isPublic } } = this.props;
 
