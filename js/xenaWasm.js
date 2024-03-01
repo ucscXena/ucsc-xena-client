@@ -200,8 +200,8 @@ export function tallyDomains(data, order, start, end, domain) {
 
 function allocScaleLog(domain, range) {
 	var [r0, r1] = range;
-	var ld0 = Math.log2(domain[0]);
-	var ld1 = Math.log2(domain[1]);
+	var ld0 = Math.log2(domain[0] + 1);
+	var ld1 = Math.log2(domain[1] + 1);
 	var mb = _.mmap(r0, r1, (c0, c1) => {
 		var m = (c1 - c0) / (ld1 - ld0),
 			b = c1 - m * ld1;
