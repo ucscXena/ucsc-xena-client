@@ -608,6 +608,7 @@ var getStudy =
 	_.Let((studyFiles = {
 			htan: `${cohortMetaData}/defaultStudy_HTAN.json`,
 			tcga: `${cohortMetaData}/defaultStudy_tcga.json`,
+			collisson: `${cohortMetaData}/defaultStudy_collisson.json`,
 			default: defaultStudyURL}) =>
 		study => studyFiles[study] || defaultStudyURL);
 
