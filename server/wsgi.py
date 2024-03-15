@@ -12,7 +12,7 @@ import sys
 import site
 appdir = os.path.join(os.path.dirname(__file__), '..')
 
-site.addsitedir(os.path.join(appdir, '../virtualenv/lib/python2.7/site-packages'))
+site.addsitedir(os.path.join(appdir, '../virtualenv/lib/python3.10/site-packages'))
 from django.core.wsgi import get_wsgi_application
 
 sys.path.append(appdir)
