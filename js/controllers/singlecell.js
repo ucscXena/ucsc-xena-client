@@ -249,7 +249,7 @@ var controls = actionPrefix({
 });
 
 var resetIntegration = (state = {}, params) =>
-	params.defaultTable !== state.defaultStudyID ? reset(state) : state;
+	params.navigate === 'navigate' ? reset(state) : state;
 
 var setParamStudy = (state, params) =>
 	params.study ? assoc(state, 'integration', params.study, 'enter', true) : state;

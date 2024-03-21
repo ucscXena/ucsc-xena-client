@@ -51,6 +51,25 @@ function manifest() {
 	return takeFirst(pick(allParameters(), 'manifest'));
 }
 
+var types = {
+	0: 'navigate',
+	1: 'reload',
+	2: 'back_forward'
+};
+
+function navigate() {
+	var navigate;
+
+	try {
+		navigate = types[performance.navigation.type];
+	} catch (e) {}
+	if (!navigate) {
+		try {
+			navigate = performance.getEntriesByType('navigation')[0].type;
+		} catch (e) {}
+	}
+	return {navigate};
+}
 
 var resetStudy = x => {
 	history.replaceState({}, 'UCSC Xena',
@@ -69,7 +88,7 @@ function getParams() {
 		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) =>
 			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(),
+	return merge(navigate(), hub2, bookmarkParam(), inlineStateParam(), hubParams(),
 		fixLocalhost(datasetParams()), manifest(), studyParams(), columns, heatmap);
 }
 
