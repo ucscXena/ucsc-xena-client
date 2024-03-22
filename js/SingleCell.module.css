@@ -2,6 +2,14 @@
 	background-color: #5555EE;
 }*/
 
+.welcome {
+	margin-top: 50px;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	text-align: center;
+}
+
 .integration {
 	margin: 20px;
 }
