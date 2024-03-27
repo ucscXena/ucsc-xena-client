@@ -1139,8 +1139,8 @@ function callDrawChart(xenaState, params) {
 };
 
 class HighchartView extends PureComponent {
-	shouldComponentUpdate() {
-		return false;
+	shouldComponentUpdate(nextProps) {
+		return nextProps.xenaState.showWelcome !== this.props.xenaState.showWelcome;
 	}
 
 	componentDidMount() {
@@ -1153,10 +1153,20 @@ class HighchartView extends PureComponent {
 		window.removeEventListener('resize', () => sizeChartView());
 	}
 
+	componentDidUpdate() {
+		sizeChartView();
+	}
+
 	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
-		if (!_.isEqual(newProps, this.props)) {
+		if (this.shouldCallDrawChart(newProps)) {
 			callDrawChart(newProps.xenaState, newProps.drawProps);
 		}
+	}
+
+	shouldCallDrawChart = (newProps) => {
+		const currentProps = {...this.props, xenaState: _.omit(this.props.xenaState, 'showWelcome')};
+		const nextProps = {...newProps, xenaState: _.omit(newProps.xenaState, 'showWelcome')};
+		return !_.isEqual(currentProps, nextProps);
 	}
 
 	render() {
