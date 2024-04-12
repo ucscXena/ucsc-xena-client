@@ -97,6 +97,14 @@ const theme = createTheme({
 
 export const xenaTheme = createTheme(theme, {
 	overrides: {
+		MuiAccordion: {
+			root: {
+				minWidth: 0,
+				'&::before': {
+					backgroundColor: xenaColor.GRAY_DARK,
+				}
+			},
+		},
 		MuiAppBar: {
 			colorDefault: {
 				backgroundColor: theme.palette.common.white,

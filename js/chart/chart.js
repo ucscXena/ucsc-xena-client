@@ -11,6 +11,9 @@ var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
 import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
 	Box,
 	Button,
 	Card,
@@ -25,6 +28,7 @@ import {
 } from '@material-ui/core';
 var sc = require('science');
 import {div, el, fragment, label, textNode} from './react-hyper';
+import classNames from 'classnames';
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
@@ -45,6 +49,7 @@ export function kde() {
 // Styles
 var compStyles = require('./chart.module.css');
 
+var accordionDetails = el(AccordionDetails);
 var box = el(Box);
 var button = el(Button);
 var icon = el(Icon);
@@ -67,6 +72,30 @@ var selectProps = {
 	},
 	size: 'small',
 	variant: 'outlined'
+};
+
+var sxAccordion = {
+	'&.Mui-expanded': {
+		margin: 0,
+		'&::before': {
+			opacity: 1,
+		},
+	},
+};
+var sxAccordionSummary = {
+	'&.Mui-expanded': {
+		margin: 0,
+		minHeight: 0,
+		'.MuiAccordionSummary-content': {
+			margin: 0,
+		},
+	},
+	'& .MuiAccordionSummary-content': {
+		margin: 0,
+	},
+	'& .MuiAccordionSummary-expandIcon': {
+		padding: 0,
+	},
 };
 
 // group field0 by code0, where field1 has value
@@ -601,8 +630,6 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 		anova({matrices, yfields, ydata, groups});
 	}
 
-	chart.redraw();
-	chart.reflow();
 	return chart;
 }
 
@@ -652,8 +679,6 @@ function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions)
 		type: 'areaspline',
 		data: density,
 		marker: {enabled: false}});
-	chart.redraw();
-	chart.reflow();
 	return chart;
 }
 
@@ -688,8 +713,6 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 		showInLegend: false,
 		color: 0,
 		description: nNumberSeries});
-	chart.redraw();
-	chart.reflow();
 	return chart;
 }
 
@@ -810,8 +833,6 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		statsDiv.classList.toggle(compStyles.visible);
 	}
 
-	chart.redraw();
-	chart.reflow();
 	return chart;
 }
 
@@ -1001,8 +1022,6 @@ function floatVFloat({samplesLength, xfield, xdata,
 		statsDiv.classList.toggle(compStyles.visible);
 	}
 
-	chart.redraw();
-	chart.reflow();
 	return chart;
 }
 
@@ -1064,12 +1083,18 @@ function getStdev(fields, data, norm) {
 	return _.object(fields, stdev);
 }
 
+function shouldCallDrawChart(prevProps, currentProps) {
+	return !_.isEqual(
+		{...prevProps, xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+}
+
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
 	var {ydata, yexp, ycolumn, xdata, xexp, xcolumn, doScatter,
-			colorColumn, xcodemap, ycodemap, destroy, yfields} = params,
+			colorColumn, xcodemap, ycodemap, yfields} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
 		{violin} = chartState,
@@ -1126,7 +1151,6 @@ function callDrawChart(xenaState, params) {
 
 	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, yNormalization);
 
-	destroy();
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
 		xlabel, ylabel,
@@ -1139,34 +1163,28 @@ function callDrawChart(xenaState, params) {
 };
 
 class HighchartView extends PureComponent {
-	shouldComponentUpdate(nextProps) {
-		return nextProps.xenaState.showWelcome !== this.props.xenaState.showWelcome;
-	}
-
 	componentDidMount() {
 		sizeChartView();
-		callDrawChart(this.props.xenaState, this.props.drawProps);
+		this.chart = callDrawChart(this.props.xenaState, this.props.drawProps);
+		this.chart.redraw();
+		this.chart.reflow();
 		window.addEventListener('resize', () => sizeChartView());
 	}
 
 	componentWillUnmount() {
+		this.chart.destroy();
 		window.removeEventListener('resize', () => sizeChartView());
 	}
 
-	componentDidUpdate() {
-		sizeChartView();
-	}
-
-	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
-		if (this.shouldCallDrawChart(newProps)) {
-			callDrawChart(newProps.xenaState, newProps.drawProps);
+	componentDidUpdate(prevProps) {
+		if (shouldCallDrawChart(prevProps, this.props)) {
+			this.chart.destroy();
+			this.chart = callDrawChart(this.props.xenaState, this.props.drawProps);
+			this.chart.redraw();
+		} else {
+			sizeChartView();
 		}
-	}
-
-	shouldCallDrawChart = (newProps) => {
-		const currentProps = {...this.props, xenaState: _.omit(this.props.xenaState, 'showWelcome')};
-		const nextProps = {...newProps, xenaState: _.omit(newProps.xenaState, 'showWelcome')};
-		return !_.isEqual(currentProps, nextProps);
+		this.chart.reflow();
 	}
 
 	render() {
@@ -1197,16 +1215,9 @@ var gaAnother = fn => () => {
 };
 
 class Chart extends PureComponent {
-
-	destroy = () => {
-		if (this.chart) {
-			this.chart.destroy();
-			this.chart = undefined;
-		}
-	}
-
-	componentWillUnmount() {
-		this.destroy();
+	constructor() {
+		super();
+		this.state = {advanced: false};
 	}
 
 	onClose = () => {
@@ -1216,6 +1227,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
+			{advanced} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1230,7 +1242,7 @@ class Chart extends PureComponent {
 			return box({display: 'flex', justifyContent: 'center', my: 12},
 				card({elevation: 2},
 					cardHeader({action: closeButton(() => callback(['heatmap']))}),
-					cardContent("There is no plottable data. Please add some from the Visual Spreadsheet.")));
+					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
 		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
@@ -1250,7 +1262,6 @@ class Chart extends PureComponent {
 		var drawProps = {ydata, ycolumn,
 			xdata, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, yfields, xfield, callback,
-			destroy: this.destroy,
 			yexp: yexpOpts[chartState.expState[ycolumn]],
 			xexp: xexpOpts[chartState.expState[xcolumn]]
 		};
@@ -1289,7 +1300,13 @@ class Chart extends PureComponent {
 				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
-		var advOpt = fragment(colorAxisDiv && colorAxisDiv, yExp, normalization, xExp && xExp);
+		var onAdvanced = () => this.setState({advanced: !advanced});
+
+		var advOpt = fragment(box(
+			{className: compStyles.chartActionsSecondary, component: Accordion, expanded: advanced, onChange: onAdvanced, square: true, sx: sxAccordion},
+			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
+				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp && xExp)));
 
 		var HCV = highchartView({xenaState, drawProps});
 
@@ -1303,13 +1320,13 @@ class Chart extends PureComponent {
 						closeButton(this.onClose),
 						HCV,
 						typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))),
-				card({className: compStyles.card},
-					div({className: compStyles.chartActions},
-						div({className: compStyles.chartActionsGroup},
+				card({className: classNames(compStyles.card, compStyles.chartActions)},
+					div({className: compStyles.chartActionsPrimary},
+						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
 							swapAxes,
-						violinOpt && violinOpt),
-						yExp && advOpt)));
+						violinOpt && violinOpt), colorAxisDiv && colorAxisDiv),
+						yExp && advOpt));
 	};
 }
 
