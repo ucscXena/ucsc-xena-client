@@ -256,7 +256,7 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 	statsDiv.classList.toggle(compStyles.visible);
 }
 
-var getOpt = opt => menuItem({key: opt.value, dense: true, ...opt}, opt.label);
+var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
 
 var normalizationOptions = [{
 		"value": "none",
@@ -1172,7 +1172,7 @@ class HighchartView extends PureComponent {
 	}
 
 	componentWillUnmount() {
-		this.chart.destroy();
+		this.chart?.destroy();
 		window.removeEventListener('resize', () => sizeChartView());
 	}
 
