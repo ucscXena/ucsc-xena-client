@@ -19,6 +19,7 @@ import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
 	dotRange, getData, getDataSubType, getRadius, getSamples, hasColor, hasImage,
 	isLog, log2p1, maps, otherValue, probValue, setRadius} from './models/map';
+import {isAuthPending, nextAuth} from './models/auth';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
@@ -28,6 +29,7 @@ import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
 import ImgControls from './views/ImgControls';
+import authDialog from './Auth';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -269,6 +271,10 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 					legend(state2.colorBy, handlers.onColorByHandlers[1].onCode)]),
 				tooltipView(tooltip))));
 
+var auth = ({props: {state}, handlers: {onCancelLogin}}) =>
+	Let(([origin, {location, error}] = nextAuth(state)) =>
+		authDialog(origin, location, onCancelLogin, error));
+
 var page = state =>
 	get(state, 'integration') ? viz :
 	get(state, 'enter') ? integration :
@@ -389,6 +395,9 @@ class SingleCellPage extends PureComponent {
 	onBackgroundVisible = visible => {
 		this.callback(['background-visible', visible]);
 	}
+	onCancelLogin = origin => {
+		this.callback(['cancel-login', origin]);
+	}
 
 	componentDidMount() {
 		const {getState, onImport, state: {isPublic}} = this.props,
@@ -400,9 +409,12 @@ class SingleCellPage extends PureComponent {
 
 	render() {
 		var {props: {state},
-			handlers: {onNavigate, ...handlers}} = this;
+			handlers: {onNavigate, ...handlers}} = this,
+			viewArgs = {...this.state, props: {state}, handlers};
 
-		return page(state)({...this.state, props: {state}, handlers});
+		return div(
+			...(nextAuth(state) && !isAuthPending(state) ? [auth(viewArgs)] : []),
+			page(state)(viewArgs));
 	}
 }
 

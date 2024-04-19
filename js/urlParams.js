@@ -80,6 +80,19 @@ var resetStudy = x => {
 var studyParams = () => resetStudy(
 	takeFirst(pick(allParameters(), 'defaultTable', 'study')));
 
+var resetAuth = x => {
+	history.replaceState({}, 'UCSC Xena',
+		location.pathname + location.search.replace(/&?state=[^&]+/, '')
+			.replace(/&?code=[^&]+/, '')
+			.replace(/&?scope=[^&]+/, '')
+			.replace(/&?authuser=[^&]+/, '')
+			.replace(/&?prompt=[^&]+/, '')
+			.replace(/&?hd=[^&]+/, ''));
+	return x;
+};
+
+var authParams = () => resetAuth(takeFirst(pick(allParameters(), 'state', 'code')));
+
 function getParams() {
 	var columns = columnsParam(),
 		hasCols = getIn(columns, ['columns', 'length'], 0) > 0,
@@ -88,8 +101,9 @@ function getParams() {
 		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) =>
 			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(navigate(), hub2, bookmarkParam(), inlineStateParam(), hubParams(),
-		fixLocalhost(datasetParams()), manifest(), studyParams(), columns, heatmap);
+	return merge(navigate(), authParams(), hub2, bookmarkParam(), inlineStateParam(),
+		hubParams(), fixLocalhost(datasetParams()), manifest(), studyParams(),
+		columns, heatmap);
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'

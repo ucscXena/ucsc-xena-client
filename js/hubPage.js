@@ -16,7 +16,7 @@ import {
 var React = require('react');
 var Rx = require('./rx').default;
 
-var {testHost} = require('./xenaQuery');
+var {logout, testHost, testLogin} = require('./xenaQuery');
 var _ = require('./underscore_ext').default;
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 var {parseServer, getHubParams} = require('./hubParams');
@@ -24,6 +24,7 @@ import nav from './nav';
 import XTypography, {XTypographyVariants} from './views/XTypography';
 import {xenaColor} from './xenaColor';
 var {encodeObject} = require('./util').default;
+import PureComponent from './PureComponent';
 
 // Styles
 var styles = require('./hubPage.module.css');
@@ -52,12 +53,14 @@ var reqStatus = (ping) =>
 				(ping ? '' : ' (not running)');
 
 var checkHost = host => testHost(host).take(1).map(v => ({[host]: v}));
+var checkLogin = host => testLogin(host).take(1).map(v => ({[host]: v}));
 
-var Hub = class extends React.Component {
+var Hub = class extends PureComponent {
 	static displayName = 'Hub';
 
 	state = {
-		ping: {}
+		ping: {},
+		login: {}
 	};
 
 	onNavigate = (page, params) => {
@@ -77,30 +80,41 @@ var Hub = class extends React.Component {
 			.subscribe(this.updatePing);
 
 		this.ping.next();
-	}
 
-	onStartup = () => {
-		this.ping.next();
+		this.login = new Rx.Subject();
+		this.logingSub = this.login.switchMapTo(Rx.Observable.from(allHosts.map(checkLogin)).mergeAll())
+			.subscribe(this.updateLogin);
+
+		this.login.next();
 	}
 
 	componentWillUnmount() {
 		this.sub.unsubscribe();
+		this.logingSub.unsubscribe();
 	}
 
-	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
+	componentDidUpdate(/*oldProps, oldState*/) {
 		var {ping} = this.state,
-			{state, selector} = newProps,
-			servers = selector(state),
-			old = _.omit(ping, _.keys(servers));
+			{state, selector} = this.props,
+			servers = selector(state);
 
-		this.setState({ping: _.omit(ping, old)});
+		// drop old state
+		this.setState({ping: _.pick(ping, _.keys(servers))});
 
+		// check new servers
 		_.difference(_.keys(servers), _.keys(ping))
-			.forEach(h => checkHost(h).subscribe(this.updatePing));
+			.forEach(h => {
+				checkHost(h).subscribe(this.updatePing);
+				checkLogin(h).subscribe(this.updateLogin);
+			});
 	}
 
-	updatePing = (h) => {
+	updatePing = h => {
 		this.setState({ping: {...this.state.ping, ...h}});
+	};
+
+	updateLogin = h => {
+		this.setState({login: {...this.state.login, ...h}});
 	};
 
 	onKeyDown = (ev) => {
@@ -130,18 +144,27 @@ var Hub = class extends React.Component {
 		this.props.callback(['remove-host', host]);
 	};
 
+	onLogout = (ev) => {
+		var host = ev.currentTarget.getAttribute('data-host');
+		logout(host).subscribe(() => {
+			var login = this.state.login;
+			this.setState({login: _.assoc(login, host, false)});
+		});
+	}
+
 	setAddHubInputRef = ref => this.newHost = ref;
 
 	render() {
 		var {state, selector, badge} = this.props,
 			hubParams = getHubParams(state),
-			{ping} = this.state,
+			{ping, login} = this.state,
 			servers = selector(state),
 			hostList = _.mapObject(servers, (s, h) => ({
 				selected: s.user,
 				host: h,
 				name: getName(h),
 				statusStr: getStatus(s.user, ping[h]),
+				loggedin: login[h],
 				reqStatus: reqStatus(ping[h])
 			}));
 		return (
@@ -168,6 +191,10 @@ var Hub = class extends React.Component {
 								</Link>
 								<Typography display='inline' variant='body1'>{h.host === localHub ? badge : h.reqStatus}</Typography>
 							</Box>
+							{h.loggedin ?
+							(<IconButton tooltip="logout" data-host={h.host} edge='end' onClick={this.onLogout}>
+								<Icon tooltip="logout">eject</Icon>
+							</IconButton>) : null}
 							<IconButton data-host={h.host} edge='end' onClick={this.onRemove}>
 								<Icon className={styles.remove}>close</Icon>
 							</IconButton>

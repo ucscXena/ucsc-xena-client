@@ -260,9 +260,12 @@ function xenaPost(host, query) {
 	};
 }
 
+// XXX setting redirect to href here feels a bit dodgy. Do we know this request
+// was made from the current href? Probably need to used a fixed redirect url
+// specifically for handling this, and patch up the history after page load.
 var xenaPostBPJ = (host, query) => ({
 		crossDomain: true,
-		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json'},
+		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json', 'X-Redirect-To': location.href},
 		url: host + '/data/',
 		body: query,
 		// rxjs 5 defaults to 'json', which will cause the browser to parse
@@ -271,6 +274,7 @@ var xenaPostBPJ = (host, query) => ({
 		// phantom 1.9 and IE. If removing this, also remove the JSON.parse
 		// from jsonResp.
 		responseType: 'arraybuffer',
+		withCredentials: true,
 		method: 'POST'
 	});
 
@@ -592,6 +596,26 @@ var testStatus = (host, timeout = 5000) =>
 // test if host is up
 var testHost = (host, timeout = 5000) => testStatus(host, timeout).map(({status}) => status === 'up' || status === 'old');
 
+var loginQuery = host => dispatchQuery({
+	url: host + '/code?loggedin=true',
+	method: 'GET',
+	crossDomain: true,
+	withCredentials: true,
+	responseType: 'text'});
+
+var testLogin = (host, timeout = 5000) =>
+	loginQuery(host).map(r => r.response === 'true')
+		.timeoutWith(timeout, Rx.Observable.of(false))
+		.catch(() => Rx.Observable.of(false));
+
+var logout = host =>
+	dispatchQuery({
+	url: host + '/code?logout=true',
+	method: 'GET',
+	crossDomain: true,
+	withCredentials: true,
+	responseType: 'text'});
+
 var cohortMetaURL = `${cohortMetaData}/xenacohort_tag.json`;
 
 var cohortPreferredURL = `${cohortMetaData}/defaultDataset.json`;
@@ -662,6 +686,8 @@ module.exports = {
 	xenaPost,
 	testHost,
 	testStatus,
+	testLogin,
+	logout,
 
 	// reference
 	refGene,

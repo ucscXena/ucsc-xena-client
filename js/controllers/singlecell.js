@@ -11,9 +11,12 @@ var Rx = require('../rx').default;
 var {of, ajax} = Rx.Observable;
 import {allCohorts, datasetCohort, dotRange, getSamples, hasColorBy, hasDataset,
 	hasImage, isLog, log2p1, pow2m1} from '../models/map';
+import {isAuthPending, nextAuth, resetAuthRequired, setAuthRequired,
+	setAuthError, setAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
+var {encodeObject} = require('../util.js').default;
 
 // Number of image layers in display
 var layers = 6;
@@ -158,7 +161,7 @@ var allDatasets = state =>
 var concat = (...arr) => arr.filter(identity).flat();
 
 var singlecellData = state =>
-	state.page !== 'singlecell' ? [] : concat(
+	state.page !== 'singlecell' || isAuthPending(state.singlecell) ? [] : concat(
 		[['defaultStudy', ['singlecell', 'defaultStudyID']]],
 		// There is overlap between cohortDatasets and datasetMetadata, but
 		// it's not worth resolving because they are needed at different times.
@@ -171,8 +174,8 @@ var singlecellData = state =>
 				cohorts.map(({cohort}) =>
 					[['cohortDatasets', cohort, server],
 						['donorFields', cohort, server],
-					...getIn(state.singlecell, ['cohortDatasets', cohort, server], []).
-						filter(isPhenotype)
+					...getIn(state.singlecell, ['cohortDatasets', cohort, server], [])
+						.filter(isPhenotype)
 						.map(ds => ['cohortFeatures', cohort, server, ds.name])])
 				.flat())
 			.flat()),
@@ -192,7 +195,7 @@ var singlecellData = state =>
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
 // Don't yet need invalidatePath
-var {controller: fetchController/*, invalidatePath*/} =
+var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, singlecellData, cachePolicy, 'singlecell');
 
 // append 'singlecell-' to actions, so we don't have any aliasing with
@@ -205,6 +208,16 @@ var reset = state => assoc(state, 'dataset', null, 'data', {},
 
 
 var controls = actionPrefix({
+	'merge-data-error': (state, path, err) => {
+		// XXX what if we have multiple hubs? How do we associate
+		// the auth with the hub?
+		if (err.status === 403) {
+			var {location, origin} = err;
+			console.log('need auth for ', path);
+			return setAuthRequired(state, origin, path, location);
+		}
+		return state;
+	},
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	// We reset colorBy to {} because of the query selectors on colorBy.data
@@ -245,20 +258,52 @@ var controls = actionPrefix({
 	'background-opacity': (state, opacity) =>
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
-	'view-state': (state, viewState) => assoc(state, 'viewState', viewState)
+	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
+	// XXX could be a race here if the user clicks another auth link, for a
+	// second hub?
+	'auth': (state, resp, origin) => resetAuthRequired(state, origin),
+	'auth-post!': (serverBus, state/*, nextState, resp, origin*/) => {
+		nextAuth(state)[1].paths.forEach(path => invalidatePath(serverBus, path));
+	},
+	'auth-error': (state, err, origin) =>
+		setAuthError(state, origin, 'Authorization Error')
 });
 
 var resetIntegration = (state = {}, params) =>
-	params.navigate === 'navigate' ? reset(state) : state;
+	// If user clicked link to get here, drop the state. However, if
+	// the click was a login, don't drop state.
+	params.navigate === 'navigate' && !params.code ? reset(state) : state;
 
 var setParamStudy = (state, params) =>
 	params.study ? assoc(state, 'integration', params.study, 'enter', true) : state;
 
+var updateAuthPending = (state, params) =>
+	params.code ? setAuthPending(state, nextAuth(state)[0]) : state;
+
+// compose a list of functions, retaining trailing arguments
+var thread = (...fns) =>
+	(state, ...args) => fns.reduce((acc, fn) => fn(acc, ...args), state);
+
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		assoc(setParamStudy(resetIntegration(state, params), params),
+		assoc(
+			thread(updateAuthPending, setParamStudy, resetIntegration)(state, params),
 			'defaultStudyID', params.defaultTable || 'default'),
+	'init-post!': (serverBus, state, newState, url, params = {}) => {
+		if (params.code) {
+			var [origin] = nextAuth(state),
+				p = pick(params, ['code', 'state']);
+			serverBus.next(['singlecell-auth',
+				ajax({
+					url: `${origin}/code?${encodeObject(p)}`,
+					headers: {'X-Redirect-To': location.href},
+					method: 'GET',
+					withCredentials: true,
+					crossDomain: true
+				}), origin]);
+		}
+	},
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
 	// serialization of binary objects for sessionStorage.
@@ -269,5 +314,14 @@ var pageControls = {
 			['samples'], undefined)
 };
 
-export default compose(fetchController,
+// Have to separate this to get access to the server list. Need a better
+// mechanism.
+var cancelControls = {
+	'singlecell-cancel-login': (state, origin) =>
+		assocIn(
+			updateIn(state, ['singlecell'], sc => resetAuthRequired(sc, origin)),
+			['spreadsheet', 'servers', origin, 'user'], false)
+};
+
+export default compose(fetchController, make(cancelControls),
 	mount(make(merge(pageControls, controls)), ['singlecell']));
