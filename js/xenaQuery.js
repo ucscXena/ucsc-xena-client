@@ -260,12 +260,12 @@ function xenaPost(host, query) {
 	};
 }
 
-// XXX setting redirect to href here feels a bit dodgy. Do we know this request
+// XXX setting redirect to location here feels a bit dodgy. Do we know this request
 // was made from the current href? Probably need to used a fixed redirect url
 // specifically for handling this, and patch up the history after page load.
 var xenaPostBPJ = (host, query) => ({
 		crossDomain: true,
-		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json', 'X-Redirect-To': location.href},
+		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json', 'X-Redirect-To': location.origin + location.pathname},
 		url: host + '/data/',
 		body: query,
 		// rxjs 5 defaults to 'json', which will cause the browser to parse
