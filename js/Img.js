@@ -48,6 +48,14 @@ var tileLayer = ({name, path, fileformat, index, levels, opacity, size, color,
 	new TileLayer({
 		id: `tile-layer-${index}`,
 		data: `${path}/${name}-{z}-{y}-{x}.${fileformat}`,
+		loadOptions: {
+			fetch: {
+				credentials: 'include',
+				headers: {
+					'X-Redirect-To': location.origin + location.pathname
+				}
+			}
+		},
 		minZoom: 0,
 		maxZoom: levels - 1,
 		tileSize,

@@ -127,6 +127,8 @@ var fetchMethods = {
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, blue)),
 	image: path => ajax({
 			url: `${path}/metadata.json`,
+			withCredentials: true,
+			headers: {'X-Redirect-To': location.origin + location.pathname},
 			responseType: 'text', method: 'GET', crossDomain: true
 		}).map(r => imageMetadata(JSON.parse(r.response)))
 };
@@ -280,6 +282,10 @@ var setParamStudy = (state, params) =>
 var updateAuthPending = (state, params) =>
 	params.code ? setAuthPending(state, nextAuth(state)[0]) : state;
 
+var setDefaultStudyID = (state, params) =>
+	updateIn(state, ['defaultStudyID'], ds =>
+		(params.code ? ds : params.defaultTable) || 'default');
+
 // compose a list of functions, retaining trailing arguments
 var thread = (...fns) =>
 	(state, ...args) => fns.reduce((acc, fn) => fn(acc, ...args), state);
@@ -287,9 +293,8 @@ var thread = (...fns) =>
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		assoc(
-			thread(updateAuthPending, setParamStudy, resetIntegration)(state, params),
-			'defaultStudyID', params.defaultTable || 'default'),
+		thread(updateAuthPending, setParamStudy,
+			resetIntegration, setDefaultStudyID)(state, params),
 	'init-post!': (serverBus, state, newState, url, params = {}) => {
 		if (params.code) {
 			var [origin] = nextAuth(state),
@@ -297,7 +302,7 @@ var pageControls = {
 			serverBus.next(['singlecell-auth',
 				ajax({
 					url: `${origin}/code?${encodeObject(p)}`,
-					headers: {'X-Redirect-To': location.href},
+					headers: {'X-Redirect-To': location.origin + location.pathname},
 					method: 'GET',
 					withCredentials: true,
 					crossDomain: true
