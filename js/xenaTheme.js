@@ -97,6 +97,14 @@ const theme = createTheme({
 
 export const xenaTheme = createTheme(theme, {
 	overrides: {
+		MuiAccordion: {
+			root: {
+				minWidth: 0,
+				'&::before': {
+					backgroundColor: xenaColor.GRAY_DARK,
+				}
+			},
+		},
 		MuiAppBar: {
 			colorDefault: {
 				backgroundColor: theme.palette.common.white,
@@ -535,6 +543,9 @@ export const xenaTheme = createTheme(theme, {
 			inputAdornedEnd: {
 				padding: '12px 48px 12px 12px !important',
 			},
+			marginDense: {
+				lineHeight: '20px',
+			},
 			root: {
 				...theme.typography.subtitle2,
 				borderColor: xenaColor.GRAY_DARKEST,
@@ -551,6 +562,12 @@ export const xenaTheme = createTheme(theme, {
 				},
 				'& + .MuiFormHelperText-root': {
 					whiteSpace: 'normal',
+				},
+				'& .MuiSelect-iconOutlined': {
+					color: 'inherit',
+					fontSize: 20,
+					right: 12,
+					top: 'unset',
 				},
 			},
 			notchedOutline: {
@@ -581,6 +598,9 @@ export const xenaTheme = createTheme(theme, {
 			icon: {
 				color: theme.palette.text.hint,
 				fontSize: 24,
+			},
+			outlined: {
+				padding: '8px 12px',
 			},
 			select: {
 				'&:focus': {
