@@ -5,110 +5,107 @@
  * Rules necessary for styling chart component.
  */
 
+.chartView {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: 1fr 256px;
+	margin: 0 12px;
+	padding: 24px 0 48px;
+}
+
+.card {
+	border-radius: 6px;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.20), 0 2px 1px 0 rgba(0, 0, 0, 0.12), 0 1px 1px 0 rgba(0, 0, 0, 0.14);
+	display: grid;
+	min-height: 0; /* required for chart resize */
+	position: relative; /* positions chartViewButton */
+}
+
+.chartViewButton {
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	z-index: 1;
+}
+
+.chartRender {
+	display: flex;
+	min-height: 0; /* required for chart resize */
+	min-width: 0; /* required for chart resize */
+	padding: 24px 16px;
+}
+
+.chart {
+	flex: 1;
+	overflow: hidden;
+}
+
+.chartActions {
+	align-content: flex-start;
+}
+
+.chartActionsPrimary {
+	display: grid;
+	gap: 16px;
+	padding: 16px;
+}
+
+.chartActionsButtons {
+	display: grid;
+	gap: 8px;
+}
+
+.chartActionsSecondary {
+	box-shadow: none;
+}
+
+.chartActionsSecondarySummary {
+	font-size: 14px;
+	font-weight: 500;
+	letter-spacing: 0.46px;
+	line-height: 26px;
+	padding: 16px;
+	text-transform: uppercase;
+}
+
+.chartActionsSecondaryDetails {
+	display: grid;
+	gap: 16px;
+	padding: 0 16px 16px 16px;
+}
+
+.chartAction {
+	display: flex;
+	gap: 4px;
+}
+
+.chartAction label {
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 20px;
+}
+
+.chartAction .formControl {
+	margin: 0;
+}
+
 .violinTooltip td {
 	border: 1px solid black;
-	padding: 0px 1px;
+	padding: 0 1px;
 }
 
 .violinTooltip table {
 	 border-collapse: collapse;
  }
 
-.right {
-	display: flex;
-	flex-direction: column-reverse;
-	height: 70vh;
-	overflow: hidden;
-}
-
-.actions {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	justify-content: flex-end;
-	flex-grow: 1;
-}
-
-/* Container around control panel (Y Axis, X Axis, Color etc) */
-.controlPanel {
-	margin-top: 24px;
-	width: 70vw;
-	overflow: hidden;
-}
-
-.accordion {
-	transform: translateY(-100%);
-	transition: transform 0.7s;
-}
-
-.accordion.show {
-	transform: translateY(0%);
-}
-
-/* Row inside control panel */
-.row {
-	align-items: center;
-	display: flex;
-	justify-content: flex-start;
-}
-
-.row+.row {
-	margin-top: 24px;
-}
-
-.row select {
-	background-color: #fff;
-	background-image: none;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-	color: #555;
-	display: block;
-	font-size: 14px;
-	height: 34px;
-	padding: 6px 12px;
-	transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-	width: 100%;
-}
-
-.row select:focus {
-	outline: none;
-}
-
-/* Column inside control panel */
-.column {
-	max-width: 33%;
-}
-
-/* Padding allocated to even columns */
-.column:nth-of-type(even) {
-	padding: 0 32px;
-}
-
-/* Right padding removed from last column, if even */
-.column:nth-of-type(even):last-of-type {
-	padding: 0 0 0 32px;
-}
-
-.column label {
-	display: block;
-	font-weight: normal; /* BS override */
-	margin-bottom: 4px;
-}
-
 /* Stats container */
 .stats {
 	display: none;
-	overflow-y: auto;
 }
 
 .stats.visible {
 	display: block;
-	margin-bottom: 5px;
-	margin-left: 24px;
-}
-
-.chart {
-	width: 70vw;
-	height: 70vh;
+	flex: none;
+	overflow: auto;
+	padding: 48px 24px;
 }

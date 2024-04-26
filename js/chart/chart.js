@@ -10,9 +10,25 @@ var jStat = require('../jStatShim');
 var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
-import {Box, Button, Card, CardContent, CardHeader, Icon, IconButton, Typography} from '@material-ui/core';
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Box,
+	Button,
+	Card,
+	CardContent,
+	CardHeader,
+	FormControl,
+	Icon,
+	IconButton,
+	MenuItem,
+	TextField,
+	Typography
+} from '@material-ui/core';
 var sc = require('science');
-import {div, select, option, label, el, textNode} from './react-hyper';
+import {div, el, fragment, label, textNode} from './react-hyper';
+import classNames from 'classnames';
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
@@ -33,6 +49,7 @@ export function kde() {
 // Styles
 var compStyles = require('./chart.module.css');
 
+var accordionDetails = el(AccordionDetails);
 var box = el(Box);
 var button = el(Button);
 var icon = el(Icon);
@@ -40,7 +57,46 @@ var iconButton = el(IconButton);
 var card = el(Card);
 var cardContent = el(CardContent);
 var cardHeader = el(CardHeader);
+var formControl = el(FormControl);
+var menuItem = el(MenuItem);
+var textField = el(TextField);
 var typography = el(Typography);
+
+var selectProps = {
+	className: compStyles.formControl,
+	select: true,
+	SelectProps: {
+		MenuProps: {
+			style: {width: 224},
+		},
+	},
+	size: 'small',
+	variant: 'outlined'
+};
+
+var sxAccordion = {
+	'&.Mui-expanded': {
+		margin: 0,
+		'&::before': {
+			opacity: 1,
+		},
+	},
+};
+var sxAccordionSummary = {
+	'&.Mui-expanded': {
+		margin: 0,
+		minHeight: 0,
+		'.MuiAccordionSummary-content': {
+			margin: 0,
+		},
+	},
+	'& .MuiAccordionSummary-content': {
+		margin: 0,
+	},
+	'& .MuiAccordionSummary-expandIcon': {
+		padding: 0,
+	},
+};
 
 // group field0 by code0, where field1 has value
 function groupIndexWithValueByCode(field0, codes0, field1) {
@@ -200,7 +256,7 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 	statsDiv.classList.toggle(compStyles.visible);
 }
 
-var getOpt = opt => option({key: opt.value, ...opt});
+var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
 
 var normalizationOptions = [{
 		"value": "none",
@@ -217,25 +273,23 @@ var normalizationOptions = [{
 ];
 
 function buildNormalizationDropdown(index, onUpdate) {
-	var dropDownDiv =
-		select({
-				className: 'form-control',
-				value: normalizationOptions[index || 0].value,
-				onChange: ev => onUpdate(ev.currentTarget.selectedIndex)},
-			...normalizationOptions.map(getOpt));
-
-	return typography({className: compStyles.column, component: 'div', variant: 'body1'},
-			label(textNode("Y data linear transform ")),
-			dropDownDiv);
+	return formControl({className: compStyles.chartAction},
+		label(textNode('Y data linear transform')),
+		textField({
+			onChange: ev => onUpdate(normalizationOptions.findIndex(o => o.value === ev.target.value)),
+			value: normalizationOptions[index || 0].value,
+			...selectProps},
+			...normalizationOptions.map(getOpt)));
 }
 
 function buildExpDropdown({opts, index, label: text, onChange}) {
-	var dropDownDiv =
-		select({className: 'form-control', value: opts[index || 0].value,
-				onChange: ev => onChange(ev.currentTarget.selectedIndex)},
-				...opts.map(getOpt));
-
-	return typography({className: compStyles.column, component: 'div', variant: 'body1'}, label(textNode(text)), dropDownDiv);
+	return formControl({className: compStyles.chartAction},
+		label(textNode(text)),
+		textField({
+		onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value)),
+		value: opts[index || 0].value,
+		...selectProps},
+		...opts.map(getOpt)));
 }
 
 var isFloat = (columns, id) => v(id) && !columns[id].codes;
@@ -275,15 +329,15 @@ function axisSelector(xenaState, selectorID, onChange) {
 	var {prop, label: text, options} = axisSettings[selectorID],
 		storedColumn = _.get(xenaState.chartState, prop),
 		axisOpts = options(xenaState),
-		value = storedColumn || 'none',
-		sel;
+		value = storedColumn || 'none';
 
-	sel = select({className: 'form-control', value, onChange},
-		...axisOpts.map(getOpt));
-
-	return (
-		typography({className: compStyles.column, component: 'div', variant: 'body1'},
-			label(textNode(text)), div(sel)));
+	return formControl({className: compStyles.chartAction},
+		label(textNode(text)),
+		textField({
+		onChange,
+		value,
+		...selectProps},
+		...axisOpts.map(getOpt)));
 }
 
 function colUnit(colSettings) {
@@ -309,6 +363,13 @@ var expOptions = (column, data)  =>
 
 function newChart(opts) {
 	return new Highcharts.Chart(opts);
+}
+
+function sizeChartView() {
+	var chartViewEl = document.getElementById('chartView');
+	var chartViewRect = chartViewEl.getBoundingClientRect();
+	var height = window.innerHeight - chartViewRect.top;
+	chartViewEl.style.setProperty('height', `${height}px`);
 }
 
 const LOWERWHISKER = 0;
@@ -569,7 +630,6 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 		anova({matrices, yfields, ydata, groups});
 	}
 
-	chart.redraw();
 	return chart;
 }
 
@@ -619,7 +679,6 @@ function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions)
 		type: 'areaspline',
 		data: density,
 		marker: {enabled: false}});
-	chart.redraw();
 	return chart;
 }
 
@@ -654,7 +713,6 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 		showInLegend: false,
 		color: 0,
 		description: nNumberSeries});
-	chart.redraw();
 	return chart;
 }
 
@@ -775,7 +833,6 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		statsDiv.classList.toggle(compStyles.visible);
 	}
 
-	chart.redraw();
 	return chart;
 }
 
@@ -956,6 +1013,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 			btn.innerHTML = "Run Stats";
 			btn.onclick = function() {
 				printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+				chart.reflow();
 			};
 		} else {
 			printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
@@ -964,7 +1022,6 @@ function floatVFloat({samplesLength, xfield, xdata,
 		statsDiv.classList.toggle(compStyles.visible);
 	}
 
-	chart.redraw();
 	return chart;
 }
 
@@ -1026,12 +1083,18 @@ function getStdev(fields, data, norm) {
 	return _.object(fields, stdev);
 }
 
+function shouldCallDrawChart(prevProps, currentProps) {
+	return !_.isEqual(
+		{...prevProps, xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+}
+
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
 	var {ydata, yexp, ycolumn, xdata, xexp, xcolumn, doScatter,
-			colorColumn, xcodemap, ycodemap, destroy, yfields} = params,
+			colorColumn, xcodemap, ycodemap, yfields} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
 		{violin} = chartState,
@@ -1088,7 +1151,6 @@ function callDrawChart(xenaState, params) {
 
 	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, yNormalization);
 
-	destroy();
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
 		xlabel, ylabel,
@@ -1101,18 +1163,28 @@ function callDrawChart(xenaState, params) {
 };
 
 class HighchartView extends PureComponent {
-	shouldComponentUpdate() {
-		return false;
-	}
-
 	componentDidMount() {
-		callDrawChart(this.props.xenaState, this.props.drawProps);
+		sizeChartView();
+		this.chart = callDrawChart(this.props.xenaState, this.props.drawProps);
+		this.chart.redraw();
+		this.chart.reflow();
+		window.addEventListener('resize', () => sizeChartView());
 	}
 
-	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase
-		if (!_.isEqual(newProps, this.props)) {
-			callDrawChart(newProps.xenaState, newProps.drawProps);
+	componentWillUnmount() {
+		this.chart?.destroy();
+		window.removeEventListener('resize', () => sizeChartView());
+	}
+
+	componentDidUpdate(prevProps) {
+		if (shouldCallDrawChart(prevProps, this.props)) {
+			this.chart.destroy();
+			this.chart = callDrawChart(this.props.xenaState, this.props.drawProps);
+			this.chart.redraw();
+		} else {
+			sizeChartView();
 		}
+		this.chart.reflow();
 	}
 
 	render() {
@@ -1121,17 +1193,10 @@ class HighchartView extends PureComponent {
 }
 var highchartViewSelect = el(HighchartView);
 
-// XXX This is suboptimal. We drop 'advanced' from chartState because
-// otherwise it causes a re-render when the user expands the options.
-// Should probably not be putting 'advanced' in the global state, but
-// instead keep it in local state. We could also prune what we send
-// to HighchartView, but that's a larger refactor.
-var highchartView = props =>
-	highchartViewSelect(
-		_.updateIn(props, ['xenaState', 'chartState'], cs => _.omit(cs, 'advanced'))) ;
+var highchartView = props => highchartViewSelect(props);
 
 var closeButton = onClose =>
-	iconButton({edge: 'end', onClick: onClose}, icon('close'));
+	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
 
 // wrap handlers to add gaEvents
 var gaSwap = fn => () => {
@@ -1150,16 +1215,9 @@ var gaAnother = fn => () => {
 };
 
 class Chart extends PureComponent {
-
-	destroy = () => {
-		if (this.chart) {
-			this.chart.destroy();
-			this.chart = undefined;
-		}
-	}
-
-	componentWillUnmount() {
-		this.destroy();
+	constructor() {
+		super();
+		this.state = {advanced: false};
 	}
 
 	onClose = () => {
@@ -1169,6 +1227,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
+			{advanced} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1183,10 +1242,10 @@ class Chart extends PureComponent {
 			return box({display: 'flex', justifyContent: 'center', my: 12},
 				card({elevation: 2},
 					cardHeader({action: closeButton(() => callback(['heatmap']))}),
-					cardContent("There is no plottable data. Please add some from the Visual Spreadsheet.")));
+					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, colorColumn, advanced, violin} = chartState,
+		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
 			{columns} = xenaState,
 			xdata = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1203,16 +1262,15 @@ class Chart extends PureComponent {
 		var drawProps = {ydata, ycolumn,
 			xdata, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, yfields, xfield, callback,
-			destroy: this.destroy,
 			yexp: yexpOpts[chartState.expState[ycolumn]],
 			xexp: xexpOpts[chartState.expState[xcolumn]]
 		};
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
-				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
+				ev => set(['colorColumn'], ev.target.value)) : null;
 		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
 			!isFloat(columns, ycolumn);
-		var swapAxes = codedVCoded || doScatter ? button({color: 'default', disableElevation: true,
+		var swapAxes = codedVCoded || doScatter ? button({color: 'secondary', disableElevation: true,
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
 				'Swap X and Y') :
 			null;
@@ -1237,50 +1295,38 @@ class Chart extends PureComponent {
 				i => set(['normalizationState', chartState.ycolumn], i));
 
 		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({color: 'default', disableElevation: true,
+			button({color: 'secondary', disableElevation: true,
 				onClick: gaViolin(() => set(['violin'], !violin)), variant: 'contained'},
 				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
-		var advOpt =
-			div({className: compStyles.controlPanel},
-				div({className: compStyles.accordion +
-						(advanced ? ` ${compStyles.show}` : '')},
-					colorAxisDiv && div({className: compStyles.row},
-						colorAxisDiv),
-					div({className: compStyles.row},
-						yExp,
-						normalization),
-					xExp && div({className: compStyles.row},
-						xExp)));
+		var onAdvanced = () => this.setState({advanced: !advanced});
 
-		var HCV =
-			div(highchartView({xenaState, drawProps}),
-				yExp && button({color: 'default', fullWidth: true,
-					startIcon: advanced ? icon('expand_less') : icon('expand_more'),
-					onClick: () => set(['advanced'], !advanced)},
-					advanced ? 'Hide options' : 'Advanced options'),
-				yExp && advOpt);
+		var advOpt = fragment(box(
+			{className: compStyles.chartActionsSecondary, component: Accordion, expanded: advanced, onChange: onAdvanced, square: true, sx: sxAccordion},
+			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
+				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp && xExp)));
 
+		var HCV = highchartView({xenaState, drawProps});
 
 		// statistics XXX note that we scribble over stats. Should either render
 		// it in react, or make another wrapper component so react won't touch it.
 		// otoh, since we always re-render, it kinda works as-is.
 
-		return box({position: 'relative', mx: 3, my: 12},
-				card({elevation: 2},
-					cardContent(
-						box({sx: {padding: 16, position: 'absolute', right: 0, top: 0}}, closeButton(this.onClose)),
-						box({sx: {display: 'grid', gap: 24, gridTemplateColumns: '1.5fr 1fr', justifyItems: 'flex-start'}},
+		return box({className: compStyles.chartView, id: 'chartView'},
+				card({className: compStyles.card},
+					div({className: compStyles.chartRender},
+						closeButton(this.onClose),
 						HCV,
-						div({className: compStyles.right},
-							div({className: compStyles.actions},
-								button({color: 'default', disableElevation: true,
-									onClick: gaAnother(() => set(['another'], true)), variant: 'contained'},
-									'Make another graph'),
-								swapAxes,
-								violinOpt),
-							typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))))));
+						typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))),
+				card({className: classNames(compStyles.card, compStyles.chartActions)},
+					div({className: compStyles.chartActionsPrimary},
+						div({className: compStyles.chartActionsButtons},
+							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
+							swapAxes,
+						violinOpt && violinOpt), colorAxisDiv && colorAxisDiv),
+						yExp && advOpt));
 	};
 }
 
