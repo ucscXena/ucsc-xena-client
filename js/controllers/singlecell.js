@@ -268,7 +268,7 @@ var controls = actionPrefix({
 		nextAuth(state)[1].paths.forEach(path => invalidatePath(serverBus, path));
 	},
 	'auth-error': (state, err, origin) =>
-		setAuthError(state, origin, 'Authorization Error')
+		setAuthError(state, origin, 'Authentication Error')
 });
 
 var resetIntegration = (state = {}, params) =>
