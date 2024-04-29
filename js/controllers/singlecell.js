@@ -8,7 +8,7 @@ var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, maxnull,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
-var {of, ajax} = Rx.Observable;
+var {ajax} = Rx.Observable;
 import {allCohorts, datasetCohort, dotRange, getSamples, hasColorBy, hasDataset,
 	hasImage, isLog, log2p1, pow2m1} from '../models/map';
 import {isAuthPending, nextAuth, resetAuthRequired, setAuthRequired,
@@ -113,9 +113,9 @@ var fetchMethods = {
 	defaultStudy: fetchDefaultStudy,
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
 	cohortDatasets: (cohort, server) =>
-		datasetList(server, [cohort]).catch(() => of([])),
+		datasetList(server, [cohort]),
 	cohortFeatures: (cohort, server, dataset) =>
-		allFieldMetadata(server, dataset).catch(() => of([])),
+		allFieldMetadata(server, dataset),
 	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
