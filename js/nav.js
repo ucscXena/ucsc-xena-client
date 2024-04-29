@@ -164,7 +164,7 @@ if (module.hot) {
 hiddenOpts.subscribe(() => {}); // stupid rx hack for laziness
 
 // caller API
-// var initVal = hidden.create(key, label, {onChange, localStorage, default})
+// var initVal = hidden.create(key, label, {onChange, local, default})
 // hidden.create(key, label, {onClick})
 // hidden.delete(key);
 
