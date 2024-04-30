@@ -633,6 +633,7 @@ var getStudy =
 			htan: `${cohortMetaData}/defaultStudy_HTAN.json`,
 			tcga: `${cohortMetaData}/defaultStudy_tcga.json`,
 			collisson: `${cohortMetaData}/defaultStudy_collisson.json`,
+			collissonControlAccess: `${cohortMetaData}/defaultStudy_collissonControlAccess.json`,
 			default: defaultStudyURL}) =>
 		study => studyFiles[study] || defaultStudyURL);
 
