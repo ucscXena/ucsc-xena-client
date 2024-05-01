@@ -196,7 +196,6 @@ var singlecellData = state =>
 			[['colorBy2', 'data', ['singlecell', 'colorBy2', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
-// Don't yet need invalidatePath
 var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, singlecellData, cachePolicy, 'singlecell');
 
@@ -215,7 +214,6 @@ var controls = actionPrefix({
 		// the auth with the hub?
 		if (err.status === 403) {
 			var {location, origin} = err;
-			console.log('need auth for ', path);
 			return setAuthRequired(state, origin, path, location);
 		}
 		return state;
