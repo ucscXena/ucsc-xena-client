@@ -1,5 +1,6 @@
 var {assocIn, dissoc, find, findIndexDefault, getIn, identity, isArray, isEqual, last, Let, matchKeys, matchPath, updateIn} = require('../underscore_ext').default;
 import {make, compose} from './utils';
+import {nextAuth} from '../models/auth';
 import Rx from '../rx';
 
 var {of} = Rx.Observable;
@@ -92,7 +93,17 @@ export default function source(fetchMethods, dataRequest, cachePolicy, mount) {
 		[`${mount}-invalidate`]: (state, _, path) => invalidatePath(state, path),
 		[`${mount}-invalidate-post!`]: (serverBus, state, newState, _, path) => {
 			queue = queue.filter(([p]) => !matchPath(path, p));
-		}
+		},
+		// See auth.js controller. We keep this here for access to
+		// invalidatePath.
+		'auth-post!': (serverBus, state/*, nextState, resp, origin*/) => {
+			var [, {paths}] = nextAuth(state);
+			paths.forEach(([m, ...path]) => {
+				if (m === mount) {
+					invalidatePath(serverBus, path);
+				};
+			});
+		},
 	};
 
 	// 'count' is a horrible hack to work around a) needing to invalidate

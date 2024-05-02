@@ -8,7 +8,9 @@ import ImportPage from '../import/ImportPage';
 import SingleCell from '../SingleCell';
 import PureComponent from '../PureComponent';
 import {xenaTheme} from '../xenaTheme';
-var {isEqual} = require('../underscore_ext').default;
+import authDialog from '../Auth';
+import {nextAuth, isAuthPending} from '../models/auth';
+var {isEqual, Let} = require('../underscore_ext').default;
 
 import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
@@ -32,6 +34,10 @@ var ErrorMsg = ({error}) => (
 		<pre style={{fontSize: '80%', lineHeight: '100%'}}>{error.stack}</pre>
 	</div>);
 
+var auth = ({state}, onCancelLogin) =>
+	Let(([origin, {location, error}] = nextAuth(state)) =>
+		authDialog(origin, location, onCancelLogin, error));
+
 const notFound = () => <p>Oops... can't find this page</p>;
 export class PageContainer extends PureComponent {
 	state = {error: null}
@@ -41,6 +47,9 @@ export class PageContainer extends PureComponent {
 			this.setState({error: null}); //eslint-disable-line react/no-did-update-set-state
 		}
 	}
+	onCancelLogin = origin => {
+		this.props.callback(['auth-cancel', origin]);
+	}
 	render() {
 		var {props} = this,
 			{page} = props.state,
@@ -48,7 +57,14 @@ export class PageContainer extends PureComponent {
 			Page = pages[page] || notFound;
 
 		return error ? ErrorMsg({error}) :
-			<MuiThemeProvider theme={xenaTheme}><CssBaseline/><Page {...props}/></MuiThemeProvider>;
+			<MuiThemeProvider theme={xenaTheme}>
+				<CssBaseline/>
+				<div>
+					{(nextAuth(props.state) && !isAuthPending(props.state) ?
+						auth(props, this.onCancelLogin) : null)}
+					<Page {...props}/>
+				</div>
+			</MuiThemeProvider>;
 	}
 };
 

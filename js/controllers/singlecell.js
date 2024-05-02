@@ -11,12 +11,10 @@ var Rx = require('../rx').default;
 var {ajax} = Rx.Observable;
 import {allCohorts, datasetCohort, dotRange, getSamples, hasColorBy, hasDataset,
 	hasImage, isLog, log2p1, pow2m1} from '../models/map';
-import {isAuthPending, nextAuth, resetAuthRequired, setAuthRequired,
-	setAuthError, setAuthPending} from '../models/auth';
+import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
-var {encodeObject} = require('../util.js').default;
 
 // Number of image layers in display
 var layers = 6;
@@ -163,7 +161,7 @@ var allDatasets = state =>
 var concat = (...arr) => arr.filter(identity).flat();
 
 var singlecellData = state =>
-	state.page !== 'singlecell' || isAuthPending(state.singlecell) ? [] : concat(
+	state.page !== 'singlecell' || isAuthPending(state) ? [] : concat(
 		[['defaultStudy', ['singlecell', 'defaultStudyID']]],
 		// There is overlap between cohortDatasets and datasetMetadata, but
 		// it's not worth resolving because they are needed at different times.
@@ -196,7 +194,7 @@ var singlecellData = state =>
 			[['colorBy2', 'data', ['singlecell', 'colorBy2', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
-var {controller: fetchController, invalidatePath} =
+var {controller: fetchController/*, invalidatePath*/} =
 	query(fetchMethods, singlecellData, cachePolicy, 'singlecell');
 
 // append 'singlecell-' to actions, so we don't have any aliasing with
@@ -209,15 +207,6 @@ var reset = state => assoc(state, 'dataset', null, 'data', {},
 
 
 var controls = actionPrefix({
-	'merge-data-error': (state, path, err) => {
-		// XXX what if we have multiple hubs? How do we associate
-		// the auth with the hub?
-		if (err.status === 403) {
-			var {location, origin} = err;
-			return setAuthRequired(state, origin, path, location);
-		}
-		return state;
-	},
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	// We reset colorBy to {} because of the query selectors on colorBy.data
@@ -259,14 +248,6 @@ var controls = actionPrefix({
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
-	// XXX could be a race here if the user clicks another auth link, for a
-	// second hub?
-	'auth': (state, resp, origin) => resetAuthRequired(state, origin),
-	'auth-post!': (serverBus, state/*, nextState, resp, origin*/) => {
-		nextAuth(state)[1].paths.forEach(path => invalidatePath(serverBus, path));
-	},
-	'auth-error': (state, err, origin) =>
-		setAuthError(state, origin, 'Authentication Error')
 });
 
 var resetIntegration = (state = {}, params) =>
@@ -276,9 +257,6 @@ var resetIntegration = (state = {}, params) =>
 
 var setParamStudy = (state, params) =>
 	params.study ? assoc(state, 'integration', params.study, 'enter', true) : state;
-
-var updateAuthPending = (state, params) =>
-	params.code ? setAuthPending(state, nextAuth(state)[0]) : state;
 
 var setDefaultStudyID = (state, params) =>
 	updateIn(state, ['defaultStudyID'], ds =>
@@ -292,22 +270,7 @@ var thread = (...fns) =>
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		thread(updateAuthPending, setParamStudy,
-			resetIntegration, setDefaultStudyID)(state, params),
-	'init-post!': (serverBus, state, newState, url, params = {}) => {
-		if (params.code) {
-			var [origin] = nextAuth(state),
-				p = pick(params, ['code', 'state']);
-			serverBus.next(['singlecell-auth',
-				ajax({
-					url: `${origin}/code?${encodeObject(p)}`,
-					headers: {'X-Redirect-To': location.origin + location.pathname},
-					method: 'GET',
-					withCredentials: true,
-					crossDomain: true
-				}), origin]);
-		}
-	},
+		thread(setParamStudy, resetIntegration, setDefaultStudyID)(state, params),
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
 	// serialization of binary objects for sessionStorage.
@@ -320,12 +283,5 @@ var pageControls = {
 
 // Have to separate this to get access to the server list. Need a better
 // mechanism.
-var cancelControls = {
-	'singlecell-cancel-login': (state, origin) =>
-		assocIn(
-			updateIn(state, ['singlecell'], sc => resetAuthRequired(sc, origin)),
-			['spreadsheet', 'servers', origin, 'user'], false)
-};
-
-export default compose(fetchController, make(cancelControls),
+export default compose(fetchController,
 	mount(make(merge(pageControls, controls)), ['singlecell']));

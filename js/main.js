@@ -16,6 +16,7 @@ import wizardController from './controllers/wizard';
 import singlecellController from './controllers/singlecell';
 import transcriptController from './controllers/transcripts';
 import importController from './controllers/import';
+import authController from './controllers/auth';
 //import tiesController from './controllers/ties';
 import PageContainer from './containers/PageContainer';
 import { compose } from './controllers/utils';
@@ -80,7 +81,7 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // controllers run in the opposite order as listed in compose().
-const controller = compose(connectionController(store.uiBus), hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
 
 xenaWasm.loaded.then(() => {
 	connector({...store, initialState, controller, main, Page: PageContainer, persist: true, history: false});

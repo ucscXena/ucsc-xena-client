@@ -218,7 +218,7 @@ var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
 
 var markdownValue = (value) => {
-	if (value && !value.error) {
+	if (value) {
 		var converter = new showdown.Converter();
 		return (<div className={styles.header}
 			dangerouslySetInnerHTML={{__html: xss(converter.makeHtml(value))}}/>);

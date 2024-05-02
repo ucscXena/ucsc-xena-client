@@ -1,4 +1,4 @@
-var {Let, assocIn, dissoc, get, identity,
+var {Let, assocIn, dissoc, deepMerge, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
 import {make, mount, compose} from './utils';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
@@ -11,6 +11,7 @@ var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx').default;
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
+import {isAuthPending} from '../models/auth';
 import query from './query';
 
 var hubsToAdd = ({hubs, addHub}) =>
@@ -30,24 +31,28 @@ var addHubs = (state, params) =>
 
 var setHubs = (state, params) => addHubs(removeHubs(state, params), params);
 
+var authParams = () => ({
+	withCredentials: true,
+	headers: {'X-Redirect-To': location.origin + location.pathname}
+});
+
 var {ajax, of, zip, zipArray} = Rx.Observable;
-var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});
+
+var authAjax = opts => ajax(deepMerge(authParams(), opts));
+
+var ajaxGet = url => authAjax({url, crossDomain: true, method: 'GET', responseType: 'text'});
 
 var hostToGitURL = host => `${cohortMetaData}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
-var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response)
-        .catch(() => of({error: 'not available'}));
+var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response);
 
-var cohortMeta = cohort => ajaxGet(`${cohortMetaData}/cohort_${cohort}/info.mdown`).map(r => r.response)
-	.catch(() => of({error: 'not available'}));
+var cohortMeta = cohort => ajaxGet(`${cohortMetaData}/cohort_${cohort}/info.mdown`).map(r => r.response);
 
-var datasetDescription = dataset => ajaxGet(`${cohortMetaData}/dataset/${dataset}/info.mdown`).map(r => r.response)
-	.catch(() => of({error: 'not available'}));
+var datasetDescription = dataset => ajaxGet(`${cohortMetaData}/dataset/${dataset}/info.mdown`).map(r => r.response);
 
-var getMarkDown = url => ajaxGet(url).map(r => r.response)
-	.catch(() => of({error: 'not available'}));
+var getMarkDown = url => ajaxGet(url).map(r => r.response);
 
 // emit url if HEAD request succeeds
-var head = url => ajax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
+var head = url => authAjax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
 
 // Check for dataset download link. If not there, try the link with '.gz'
 // suffix. If not there, return undefined.
@@ -59,10 +64,9 @@ var checkDownload = (host, dataset) => {
 		dl = head(link),
 		gzdl = head(gzlink),
 		s3dl = head(s3link),
-		s3gzdl = head (s3gzlink),
-		nodl = of(undefined);
+		s3gzdl = head (s3gzlink);
 
-	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl).catch(() => nodl);
+	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl);
 };
 
 var noSnippets = () => of(undefined);
@@ -78,8 +82,7 @@ function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 1
 			.mergeMap(([samples, fields]) => datasetFetch(host, dataset, samples, fields));
 
 	return zipArray(samplesQ, fieldQ, codeQ, dataQ)
-		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data: data.map(toArray)}))
-		.catch(noSnippets);
+		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data: data.map(toArray)}));
 }
 
 var mutationAttrs = ({rows}) => ({
@@ -90,8 +93,7 @@ var mutationAttrs = ({rows}) => ({
 });
 
 var fetchMutationDataSnippets = (host, dataset, nProbes = 10) =>
-	sparseDataExamples(host, dataset, nProbes).map(mutationAttrs)
-	.catch(noSnippets);
+	sparseDataExamples(host, dataset, nProbes).map(mutationAttrs);
 
 var segmentAttrs = ({rows}) => ({
 	chrom: pluck(rows.position, 'chrom'),
@@ -101,8 +103,7 @@ var segmentAttrs = ({rows}) => ({
 });
 
 var fetchSegmentedDataSnippets = (host, dataset, nProbes = 10) =>
-	segmentDataExamples(host, dataset, nProbes).map(segmentAttrs)
-	.catch(noSnippets);
+	segmentDataExamples(host, dataset, nProbes).map(segmentAttrs);
 
 var snippetMethod = ({type = 'genomicMatrix'} = {}) =>
 	type === 'clinicalMatrix' ? fetchMatrixDataSnippets :
@@ -185,7 +186,7 @@ var sectionDataMethods = {
 };
 
 var sectionData = state =>
-	state.page !== 'datapages' ? [] :
+	state.page !== 'datapages' || isAuthPending(state) ? [] :
 	Let((method = sectionDataMethods[getSection(defaultHost(state.params))]) =>
 		method ? method(state) : []);
 
@@ -202,8 +203,8 @@ var fetchMethods = {
 	// OTOH it will fetch any recently enabled hubs. So, the view should
 	// iterate over the userServer list, not this cache.
 	cohortDatasets: (cohort, server) =>
-		datasetList(server, [cohort]).catch(() => of([])),
-	cohorts: server => cohortSummary(server, ignoredType).catch(() => of([])),
+		datasetList(server, [cohort]),
+	cohorts: server => cohortSummary(server, ignoredType),
 	hubMeta: hubMeta
 };
 
