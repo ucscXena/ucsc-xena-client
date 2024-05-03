@@ -93,15 +93,30 @@ var resetAuth = x => {
 
 var authParams = () => resetAuth(takeFirst(pick(allParameters(), 'state', 'code')));
 
+var splitChar = (str, chr) => Let((i = str.indexOf(chr)) =>
+	[str.slice(0, i), str.slice(i + 1)]);
+
+var restoreFromAuth = () =>  {
+	var auth = authParams();
+
+	if (auth.state) {
+		var [page, state] = splitChar(auth.state, '@');
+		history.replaceState({}, 'UCSC Xena', page);
+		return {...auth, ...{state}};
+	}
+	return {};
+};
+
 function getParams() {
-	var columns = columnsParam(),
+	var auth = restoreFromAuth(),
+		columns = columnsParam(),
 		hasCols = getIn(columns, ['columns', 'length'], 0) > 0,
 		// ignore heatmap param w/o column param.
 		heatmap = hasCols ? heatmapParam() : {},
 		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) =>
 			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(navigate(), authParams(), hub2, bookmarkParam(), inlineStateParam(),
+	return merge(navigate(), auth, hub2, bookmarkParam(), inlineStateParam(),
 		hubParams(), fixLocalhost(datasetParams()), manifest(), studyParams(),
 		columns, heatmap);
 }
