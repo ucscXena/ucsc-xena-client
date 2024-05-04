@@ -52,7 +52,7 @@ var tileLayer = ({name, path, fileformat, index, levels, opacity, size, color,
 			fetch: {
 				credentials: 'include',
 				headers: {
-					'X-Redirect-To': location.origin + location.pathname
+					'X-Redirect-To': location.origin
 				}
 			}
 		},

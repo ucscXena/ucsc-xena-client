@@ -34,7 +34,7 @@ var authControls = {
 			serverBus.next(['auth',
 				ajax({
 					url: `${origin}/code?${encodeObject(p)}`,
-					headers: {'X-Redirect-To': location.origin + location.pathname},
+					headers: {'X-Redirect-To': location.origin},
 					method: 'GET',
 					withCredentials: true,
 					crossDomain: true

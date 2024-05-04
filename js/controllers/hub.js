@@ -33,7 +33,7 @@ var setHubs = (state, params) => addHubs(removeHubs(state, params), params);
 
 var authParams = () => ({
 	withCredentials: true,
-	headers: {'X-Redirect-To': location.origin + location.pathname}
+	headers: {'X-Redirect-To': location.origin}
 });
 
 var {ajax, of, zip, zipArray} = Rx.Observable;

@@ -247,7 +247,7 @@ var filterByPrefix = prefix => list => {
 function xenaPost(host, query) {
 	return {
 		crossDomain: true,
-		headers: {'Content-Type': 'text/plain' },
+		headers: {'Content-Type': 'text/plain', 'X-Redirect-To': location.origin},
 		url: host + '/data/',
 		body: query,
 		// rxjs 5 defaults to 'json', which will cause the browser to parse
@@ -256,6 +256,7 @@ function xenaPost(host, query) {
 		// phantom 1.9 and IE. If removing this, also remove the JSON.parse
 		// from jsonResp.
 		responseType: 'text',
+		withCredentials: true,
 		method: 'POST'
 	};
 }
@@ -265,7 +266,7 @@ function xenaPost(host, query) {
 // specifically for handling this, and patch up the history after page load.
 var xenaPostBPJ = (host, query) => ({
 		crossDomain: true,
-		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json', 'X-Redirect-To': location.origin + location.pathname},
+		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json', 'X-Redirect-To': location.origin},
 		url: host + '/data/',
 		body: query,
 		// rxjs 5 defaults to 'json', which will cause the browser to parse

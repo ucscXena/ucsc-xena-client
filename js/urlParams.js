@@ -116,9 +116,10 @@ function getParams() {
 		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) =>
 			uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(navigate(), auth, hub2, bookmarkParam(), inlineStateParam(),
+	return [location.pathname,
+		merge(navigate(), auth, hub2, bookmarkParam(), inlineStateParam(),
 		hubParams(), fixLocalhost(datasetParams()), manifest(), studyParams(),
-		columns, heatmap);
+		columns, heatmap)];
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'

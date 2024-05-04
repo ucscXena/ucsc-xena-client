@@ -52,7 +52,7 @@ var parse = str => schemaCheckThrow(expandState(migrateState(JSON.parse(LZ.decom
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
-	.map(() => ['history', {path: location.pathname, params: urlParams()}]);
+	.map(() => ['history', _.object(['path', 'params'], urlParams())]);
 
 //
 module.exports = function({
@@ -92,6 +92,6 @@ module.exports = function({
 	}
 
 	// Kick things off.
-	uiBus.next(['init', location.pathname, urlParams()]);
+	uiBus.next(['init', ...urlParams()]);
 	return dom;
 };

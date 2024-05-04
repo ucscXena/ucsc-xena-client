@@ -58,7 +58,7 @@ function getSavedState(persist) {
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
-	.map(() => ['history', {path: location.pathname, params: urlParams()}]);
+	.map(() => ['history', _.object(['path', 'params'], urlParams())]);
 
 module.exports = function({
 	Page,
@@ -117,7 +117,7 @@ module.exports = function({
 		// loads. Here we intercept the devtools actions & re-issue 'init' on
 		// RESET.
 		if (ac.type === 'RESET') {
-			setTimeout(() => uiBus.next(['init', location.pathname, urlParams()]), 0);
+			setTimeout(() => uiBus.next(['init', ...urlParams()]), 0);
 		}
 
 		inEffectsReducer = false;
@@ -156,6 +156,6 @@ module.exports = function({
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
-	uiBus.next(['init', location.pathname, urlParams()]);
+	uiBus.next(['init', ...urlParams()]);
 	return dom;
 };

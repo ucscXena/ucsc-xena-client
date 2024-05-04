@@ -126,7 +126,7 @@ var fetchMethods = {
 	image: path => ajax({
 			url: `${path}/metadata.json`,
 			withCredentials: true,
-			headers: {'X-Redirect-To': location.origin + location.pathname},
+			headers: {'X-Redirect-To': location.origin},
 			responseType: 'text', method: 'GET', crossDomain: true
 		}).map(r => imageMetadata(JSON.parse(r.response)))
 };
