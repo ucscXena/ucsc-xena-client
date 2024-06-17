@@ -635,7 +635,7 @@ var getStudy =
 			tcga: `${cohortMetaData}/defaultStudy_tcga.json`,
 			collisson: `${cohortMetaData}/defaultStudy_collisson.json`,
 			collissonControlAccess: `${cohortMetaData}/defaultStudy_collissonControlAccess.json`,
-			16-080L: `${cohortMetaData}/defaultStudy_16-080L.json`,
+			16080L: `${cohortMetaData}/defaultStudy_16-080L.json`,
 			default: defaultStudyURL}) =>
 		study => studyFiles[study] || defaultStudyURL);
 
