@@ -183,7 +183,7 @@ class MapTabs extends PureComponent {
 				tab({label: 'Color by', disabled: !validDataset(state, layout)}),
 				tab({label: 'Image', disabled: !validDataset(state, layout) ||
 					!hasImage(state)}),
-				tab({label: 'Cells in View', disabled: true})
+//				tab({label: 'Cells in View', disabled: true})
 			),
 			tabPanel({value, index: 0},
 				layoutSelect({onLayout, layout, state}),
