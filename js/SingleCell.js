@@ -245,7 +245,7 @@ var legendTitle = state =>
 		legendTitleMode[getIn(state, ['colorBy', 'field', 'mode']) || null](state));
 
 var datasetLabel = state =>
-	state.dataset ? h3(state.dataset.label) : null;
+	state.dataset ? [span(state.dataset.cohort), h3(state.dataset.label)] : [];
 
 var tooltipView = tooltip =>
 	div({className: styles.tooltip},
@@ -257,7 +257,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
-		datasetLabel(state),
+		...datasetLabel(state),
 		div({className: styles.vizBody},
 			vizPanel({props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
