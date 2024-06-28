@@ -90,6 +90,9 @@ var colorParams = (field, color) => colorData =>
 			'scale', scale,
 			'scaleBounds', scaleBounds(data, scale)));
 
+var enableSegmentation = segmentation =>
+	updateIn(segmentation, [0], first => first && {...first, visible: true});
+
 var defaultBackground = background =>
 	background ? {backgroundOpacity: 1, backgroundVisible: true} : {};
 var imageMetadata = m => {
@@ -104,7 +107,8 @@ var imageMetadata = m => {
 		visible = inView.map((c, i) => !m.defaults || i < m.defaults.length),
 		{size, tileSize, levels, background, fileformat, segmentation = []} = m;
 	return {stats, opacity, inView, levels, size, tileSize, background, visible,
-		fileformat, segmentation, ...defaultBackground(background)};
+		fileformat, segmentation: enableSegmentation(segmentation),
+		...defaultBackground(background)};
 };
 
 var fetchMethods = {
