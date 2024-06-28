@@ -180,9 +180,9 @@ class MapTabs extends PureComponent {
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
-				tab({label: 'Color by', disabled: !validDataset(state, layout)}),
 				tab({label: 'Image', disabled: !validDataset(state, layout) ||
 					!hasImage(state)}),
+				tab({label: 'Cell/dot', disabled: !validDataset(state, layout)}),
 //				tab({label: 'Cells in View', disabled: true})
 			),
 			tabPanel({value, index: 0},
@@ -191,6 +191,9 @@ class MapTabs extends PureComponent {
 					state.dataset, onDataset),
 				dotSize(state, onRadius)),
 			tabPanel({value, index: 1},
+				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
+					onChannel, onBackgroundOpacity, onBackgroundVisible})),
+			tabPanel({value, index: 2},
 				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
 					handlers: onColorByHandlers[0]}),
@@ -199,10 +202,7 @@ class MapTabs extends PureComponent {
 					accordionDetails({className: styles.advanced},
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
-								handlers: onColorByHandlers[1]}))))),
-			tabPanel({value, index: 2},
-				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
-					onChannel, onBackgroundOpacity, onBackgroundVisible})));
+								handlers: onColorByHandlers[1]}))))));
 	}
 }
 
