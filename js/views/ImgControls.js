@@ -18,12 +18,13 @@ var toCss = c => RGBToHex(...c.map(v => ~~(v * 255)));
 var colorsCss = layerColors.map(toCss);
 var segmentedCss = toCss(segmentedColor);
 
+var sliderScale = v => v / 256;
+
 // Adds 20% of range over and under the min/max of the dataset.
 // The color scales will clamp the result to [0, 1].
 var colorRange = ({min, max}) =>
 	Let((over = (max - min) * 0.2) =>
-		({min: (min - over) / 256, max: (max + over) / 256}));
-
+		({min: sliderScale(min - over), max: sliderScale(max + over)}));
 
 var channelSelect = ({channels, value, onChange}) =>
 	autocomplete({
@@ -82,6 +83,8 @@ export default class ImgControls extends PureComponent {
 					channelSelect({channels: sorted(pluck(stats, 'name')),
 						value: stats[c].name, onChange: this.onChannel(i)}),
 					slider({...colorRange(stats[c]), step: 0.001,
+						marks: [{value: sliderScale(stats[c].lower)},
+							{value: sliderScale(stats[c].upper)}],
 						/*valueLabelDisplay: 'auto', */value: imageState.opacity[c],
 						onChange: this.onOpacity(c)}))),
 			...segmentation.map((c, i) =>
