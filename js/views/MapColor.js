@@ -174,7 +174,7 @@ var modeLabel = {
 	donor: 'Donor',
 	type: 'Cell types/clusters',
 	prob: 'Cell type/cluster scores',
-	gene: 'Gene',
+	gene: 'Gene/protein',
 	'': 'None',
 	other: 'More options'
 };
