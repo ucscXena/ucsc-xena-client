@@ -87,6 +87,7 @@ export default class ImgControls extends PureComponent {
 							{value: sliderScale(stats[c].upper)}],
 						/*valueLabelDisplay: 'auto', */value: imageState.opacity[c],
 						onChange: this.onOpacity(c)}))),
+			div({style: {backgroundColor: '#000000', height: 1, margin: 10}}),
 			...segmentation.map((c, i) =>
 				formControlLabel({label: c.name,
 					control: checkbox({checked: !!c.visible,
