@@ -36,6 +36,8 @@ var channelSelect = ({channels, value, onChange}) =>
 		value
 	});
 
+var noseg = 'No cell segmentation available';
+
 export default class ImgControls extends PureComponent {
 	onOpacity = i => (ev, op) => {
 		this.props.onOpacity(i, op);
@@ -88,11 +90,11 @@ export default class ImgControls extends PureComponent {
 						/*valueLabelDisplay: 'auto', */value: imageState.opacity[c],
 						onChange: this.onOpacity(c)}))),
 			div({style: {backgroundColor: '#000000', height: 1, margin: 10}}),
-			...segmentation.map((c, i) =>
+			...(segmentation.length ? segmentation.map((c, i) =>
 				formControlLabel({label: c.name,
 					control: checkbox({checked: !!c.visible,
 						style: {color: segmentedCss},
-						onChange: onSegmentationVisible(i)})}))
+						onChange: onSegmentationVisible(i)})})) : [noseg])
 		);
 	}
 }
