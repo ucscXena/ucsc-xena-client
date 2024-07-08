@@ -320,9 +320,13 @@ class SingleCellPage extends PureComponent {
 	onEnter = () => {
 		this.callback(['enter']);
 	}
-	onHighlight = i => {
+	onHighlight = (ev, i) => {
 		// highlight integration when clicked
-		this.setState({highlight: i});
+		if (ev.type === 'dblclick') {
+			this.onIntegration();
+		} else {
+			this.setState({highlight: i});
+		}
 	}
 	onIntegration = () => {
 		var row = this.state.highlight;

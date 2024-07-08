@@ -51,7 +51,8 @@ var addSelected = props => updateIn(props, ['className'],
 var setHighlight = (highlight, onClick, i) =>
 	Let((addSel = highlight === i ? addSelected : identity) =>
 		row => updateIn(row, [0], props =>
-			merge(addSel(props), {onClick: () => onClick(i)})));
+			merge(addSel(props),
+				{onClick: ev => onClick(ev, i), onDoubleClick: ev => onClick(ev, i)})));
 
 var studyRows = (highlight, onClick) => ({label, studies}, i) => ident([
 	labelRow(label),
