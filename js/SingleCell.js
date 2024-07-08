@@ -9,7 +9,7 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {br, div, el, h2, h3, label, span} from './chart/react-hyper';
+import {br, div, el, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
 	IconButton, ListSubheader, MenuItem, Slider, Tab, Tabs} from '@material-ui/core';
@@ -245,7 +245,7 @@ var legendTitle = state =>
 		legendTitleMode[getIn(state, ['colorBy', 'field', 'mode']) || null](state));
 
 var datasetLabel = state =>
-	state.dataset ? [span(state.dataset.cohort), h3(state.dataset.label)] : [];
+	state.dataset ? div(`${state.dataset.cohort} - ${state.dataset.label}`) : null;
 
 var tooltipView = tooltip =>
 	div({className: styles.tooltip},
@@ -257,7 +257,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
-		...datasetLabel(state),
+		datasetLabel(state),
 		div({className: styles.vizBody},
 			vizPanel({props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
