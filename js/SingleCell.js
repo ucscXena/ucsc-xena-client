@@ -127,8 +127,10 @@ var getOpt = opt => menuItem({value: opt.value}, opt.label);
 var mapValue = (list, selected) =>
 	findIndexDefault(list, m => isEqual(m, selected), '');
 
+var subHeaderOpt = {style: {fontSize: 'unset'}};
 var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
-	Object.keys(g).sort().map(k => [listSubheader(k), ...g[k].map(getOpt)]).flat());
+	Object.keys(g).sort().map(k =>
+		[listSubheader(subHeaderOpt, k), ...g[k].map(getOpt)]).flat());
 
 function mapSelect(availableMaps, layout, selected, onChange) {
 	var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i));
