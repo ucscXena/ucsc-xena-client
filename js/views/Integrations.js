@@ -33,7 +33,7 @@ var tableLayout = (header, rows) =>
 	tableContainer({component: Paper, className: styles.table},
 		table(th(trCells(...header)), tb(...rows.map(row => trCells(...row)))));
 
-var headers = ['Name', 'Donors', 'Cells/Spots', 'Data types'];
+var headers = ['Name', 'Donors', 'Cells/Dots', 'Data types'];
 
 var number = n => [{className: styles.number}, n.toString()];
 
