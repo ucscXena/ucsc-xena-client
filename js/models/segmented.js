@@ -11,6 +11,7 @@ var {pxTransformInterval} = require('../layoutPlot');
 import * as heatmapColors from '../heatmapColors';
 var parsePos = require('../parsePos');
 import sortOrder from './sparseSortOrder';
+var {fastats} = require('../xenaWasm');
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 	var inData = new Set(valsInData),
@@ -284,16 +285,19 @@ function averageSegments(column, data, count, index) {
 			zeroNorm !== undefined ? zeroNorm :
 			zeroDefaultNorm !== undefined ? zeroDefaultNorm : 0,
 		values = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, xzoom)],
-		geneValues = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, {start: limits.start, end: limits.end})];
+		geneValues = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, {start: limits.start, end: limits.end})],
+		mm = geneValues.map(fastats);
 
 	return {
 		avg: {
 			values,
 			// re-calculating this isn't really necessary. We could move it earlier, like in the 'index'
 			// selector, since it doesn't depend on zoom.
-			geneValues
-			// XXX do we need the mean? Only for a normalized view. Are we doing that?
-//			mean: values.map(_.meannull)
+			geneValues,
+			mean: _.pluck(mm, 'mean'),
+			median: _.pluck(mm, 'median'),
+			min: _.pluck(mm, 'min'),
+			max: _.pluck(mm, 'max')
 		}
 	};
 }
