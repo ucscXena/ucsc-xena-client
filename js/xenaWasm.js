@@ -102,30 +102,30 @@ export function fradixSortL16$64(input, direction, indicies) {
 }
 
 var floatSize = 4;
-export function faminmax(arr) {
-	var arrW = allocArrayAsType('float', arr);
-	var r = Module._faminmax(arrW, arr.length);
-	Module._free(arrW);
-	return {min: Module.getValue(r, 'float'), max: Module.getValue(r + floatSize, 'float')};
-}
-
-export function fameanmedian(arr) {
-	var arrW = allocArrayAsType('float', arr);
-	var r = Module._fameanmedian(arrW, arr.length);
-	Module._free(arrW);
-	return {mean: Module.getValue(r, 'float'), median: Module.getValue(r + floatSize, 'float')};
-}
+var getFloatIndex =
+	(arr, index) => Module.getValue(arr + index * floatSize, 'float');
 
 export function fastats(arr) {
 	var arrW = allocArrayAsType('float', arr);
-	var r = Module._fameanmedian(arrW, arr.length);
-	var s = Module._faminmax(arrW, arr.length);
+	var r = Module._fastats(arrW, arr.length); // modifies the input array
+	var e = Module.enum.stat;
 	Module._free(arrW);
 	return {
-		mean: Module.getValue(r, 'float'),
-		median: Module.getValue(r + floatSize, 'float'),
-		min: Module.getValue(s, 'float'),
-		max: Module.getValue(s + floatSize, 'float')
+		mean: getFloatIndex(r, e.MEAN),
+		median: getFloatIndex(r, e.MEAN),
+		min: getFloatIndex(r, e.MIN),
+		max: getFloatIndex(r, e.MAX),
+		sd: getFloatIndex(r, e.SD),
+		p01: getFloatIndex(r, e.P01),
+		p99: getFloatIndex(r, e.P99),
+		p05: getFloatIndex(r, e.P05),
+		p95: getFloatIndex(r, e.P95),
+		p10: getFloatIndex(r, e.P10),
+		p90: getFloatIndex(r, e.P90),
+		p25: getFloatIndex(r, e.P25),
+		p75: getFloatIndex(r, e.P75),
+		p33: getFloatIndex(r, e.P33),
+		p66: getFloatIndex(r, e.P66),
 	};
 }
 
@@ -288,6 +288,5 @@ export var loaded = wasm().then(m => {
 	Module = m;
 	Module._fradixSort16_64_init();
 	Module._fradixSort16_init();
-	Module._faminmax_init();
-	Module._fameanmedian_init();
+	Module._fastats_init();
 });
