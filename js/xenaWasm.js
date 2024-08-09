@@ -112,7 +112,7 @@ export function fastats(arr) {
 	Module._free(arrW);
 	return {
 		mean: getFloatIndex(r, e.MEAN),
-		median: getFloatIndex(r, e.MEAN),
+		median: getFloatIndex(r, e.MEDIAN),
 		min: getFloatIndex(r, e.MIN),
 		max: getFloatIndex(r, e.MAX),
 		sd: getFloatIndex(r, e.SD),
