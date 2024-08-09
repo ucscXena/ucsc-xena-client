@@ -272,24 +272,45 @@ var normalizationOptions = [{
 	} //selected sample level current heatmap normalization
 ];
 
-function buildNormalizationDropdown(index, onUpdate) {
-	return formControl({className: compStyles.chartAction},
-		label(textNode('Y data linear transform')),
-		textField({
-			onChange: ev => onUpdate(normalizationOptions.findIndex(o => o.value === ev.target.value)),
-			value: normalizationOptions[index || 0].value,
-			...selectProps},
-			...normalizationOptions.map(getOpt)));
-}
+var pctRange = {
+	'3σ': ['sd03_', 'sd03'],
+	'2σ': ['sd02_', 'sd02'],
+	'1σ': ['sd01_', 'sd01'],
+	'1st and 99th': ['p01', 'p99'],
+	'5th and 95th': ['p05', 'p95'],
+	'10th and 90th': ['p10', 'p90'],
+	'25th and 75th': ['p25', 'p75'],
+	'33rd and 66th': ['p33', 'p66'],
+};
 
-function buildExpDropdown({opts, index, label: text, onChange}) {
+var avgOptions = [
+	{label: 'none', value: 0},
+	{label: 'mean', value: 1},
+	{label: 'median', value: 2}
+];
+
+var pctOptions = [
+	{label: 'none', value: 0},
+	{label: '3σ', value: 1},
+	{label: '2σ', value: 2},
+	{label: '1σ', value: 3},
+	{label: '1st and 99th', value: 4},
+	{label: '5th and 95th', value: 5},
+	{label: '10th and 90th', value: 6},
+	{label: '25th and 75th', value: 7},
+	{label: '33rd and 66th', value: 8},
+];
+
+var filterPctOptions = (pctOptions, yavg) => pctOptions.filter(({label}) => label === 'none' || pctRange[label].every(pctRange => pctRange in yavg));
+
+function buildDropdown({index = 0, label: text, onChange, opts, value}) {
 	return formControl({className: compStyles.chartAction},
 		label(textNode(text)),
 		textField({
-		onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value)),
-		value: opts[index || 0].value,
-		...selectProps},
-		...opts.map(getOpt)));
+			onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value), ev.target.value),
+			value: value || opts[index].value,
+			...selectProps},
+			...opts.map(getOpt)));
 }
 
 var isFloat = (columns, id) => v(id) && !columns[id].codes;
@@ -664,14 +685,16 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
-function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions) {
-	chartOptions = highchartsHelper.densityChart({chartOptions, yaxis: field, Y});
+function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange, setView}, chartOptions) {
+	setView('density');
+	chartOptions = highchartsHelper.densityChart({chartOptions, yavg, yaxis: field, Y});
 	var nndata = _.filter(data, x => !isNaN(x)),
 		min = _.min(nndata),
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
 		density = kde().sample(nndata)
-			(_.range(min, max, (max - min) / points));
+		(_.range(min, max, (max - min) / points));
+	setRange({min, max});
 
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
@@ -1052,6 +1075,34 @@ getColumnValues.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']
 getColumnValues.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
 getColumnValues.add('undefined', () => undefined);
 
+var mapSD = (mean, sd, factor) => mean.map((m, index) => m + factor * sd[index]);
+
+function addSDs({mean, sd, ...yavg}) {
+	return {
+		mean,
+		sd,
+		sd01_: mapSD(mean, sd, -1),
+		sd01: mapSD(mean, sd, 1),
+		sd02_: mapSD(mean, sd, -2),
+		sd02: mapSD(mean, sd, 2),
+		sd03_: mapSD(mean, sd, -3),
+		sd03: mapSD(mean, sd, 3),
+		...yavg,
+	};
+}
+
+var inRange = (number, {max, min}) => number >= min && number <= max;
+
+function pickMetrics(yavg, range) {
+	if (!range) {return yavg;}
+	return Object.entries(yavg).reduce((acc,  [key, value]) => {
+		if (inRange(_.first(value), range)) {
+			acc[key] = value;
+		}
+		return acc;
+	}, {});
+}
+
 function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	if (!v(id)) {
 		return '';
@@ -1072,6 +1123,19 @@ var expMethods = {
 var applyExp = (data, setting) =>
 	expMethods[_.get(setting, 'value', 'none')](data);
 
+function getMeasures({avgState, pctState, ycolumn}, yavg) {
+	let measures = [];
+	var centralMeasure = _.Let((n = avgOptions[avgState[ycolumn]]) => n && v(n.label));
+	var pctMeasure = _.Let((n = pctOptions[pctState[ycolumn]]) => n && v(n.label));
+	if (centralMeasure) {
+		measures.push(centralMeasure);
+	}
+	if (pctMeasure) {
+		measures.push(...pctRange[pctMeasure]);
+	}
+	return _.pick(yavg, measures);
+}
+
 function getStdev(fields, data, norm) {
 	var stdev = (norm !== 'subset_stdev') ?
 		new Array(fields.length).fill(1) :
@@ -1085,8 +1149,8 @@ function getStdev(fields, data, norm) {
 
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
-		{...prevProps, xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
-		{...currentProps, xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
 }
 
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
@@ -1151,6 +1215,8 @@ function callDrawChart(xenaState, params) {
 
 	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, yNormalization);
 
+	var yavg = getMeasures(chartState, params.yavg);
+
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
 		xlabel, ylabel,
@@ -1158,7 +1224,8 @@ function callDrawChart(xenaState, params) {
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		violin,
-		xdata, ydata // normalized
+		xdata, ydata, // normalized
+		yavg,
 	}));
 };
 
@@ -1217,7 +1284,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false};
+		this.state = {advanced: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1227,12 +1294,14 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced} = this.state,
+			{advanced, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
-			};
+			},
+			setRange = (range) => this.setState({range}),
+			setView = (view) => this.setState({view});
 
 		// XXX note that this will also display if data is still loading, which is
 		// a bit misleading.
@@ -1251,10 +1320,15 @@ class Chart extends PureComponent {
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
 			ydata = getColumnValues(xenaState, ycolumn),
 			ycodemap = _.getIn(columns, [ycolumn, 'codes']),
+			yavg = _.getIn(xenaState.data, [ycolumn, 'avg']),
 			yexpOpts = expOptions(columns[ycolumn], ydata),
 			xexpOpts = expOptions(columns[xcolumn], xdata),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].fields,
+			// doAvg is really "show mean or median selector", which
+			// we only do for density plots.
+			doAvg = view === 'density' && 'mean' in yavg && 'median' in yavg,
+			doPct = view === 'density' && 'mean' in yavg && 'sd' in yavg,
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
@@ -1262,8 +1336,11 @@ class Chart extends PureComponent {
 		var drawProps = {ydata, ycolumn,
 			xdata, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, yfields, xfield, callback,
+			yavg: pickMetrics(addSDs(yavg), range),
 			yexp: yexpOpts[chartState.expState[ycolumn]],
-			xexp: xexpOpts[chartState.expState[xcolumn]]
+			xexp: xexpOpts[chartState.expState[xcolumn]],
+			setRange,
+			setView,
 		};
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
@@ -1276,23 +1353,25 @@ class Chart extends PureComponent {
 			null;
 
 		var yExp = ycodemap ? null :
-			buildExpDropdown({
+			buildDropdown({
 				opts: yexpOpts,
 				index: chartState.expState[ycolumn],
 				label: 'Y unit',
 				onChange: i => set(['expState', ycolumn], i)});
 
 		var xExp = !v(xcolumn) || xcodemap ? null :
-			buildExpDropdown({
+			buildDropdown({
 				opts: xexpOpts,
 				index: chartState.expState[xcolumn],
 				label: 'X unit',
 				onChange: i => set(['expState', chartState.xcolumn], i)});
 
 		var normalization = ycodemap ? null :
-			buildNormalizationDropdown(
-				chartState.normalizationState[ycolumn],
-				i => set(['normalizationState', chartState.ycolumn], i));
+			buildDropdown({
+				index: chartState.normalizationState[ycolumn],
+				label: 'Y data linear transform',
+				onChange: i => set(['normalizationState', chartState.ycolumn], i),
+				opts: normalizationOptions});
 
 		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
 			button({color: 'secondary', disableElevation: true,
@@ -1300,13 +1379,27 @@ class Chart extends PureComponent {
 				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
+		var avg = doAvg ?
+			buildDropdown({
+				index: chartState.avgState[ycolumn],
+				label: 'Show mean or median',
+				onChange: i => set(['avgState', chartState.ycolumn], i),
+				opts: avgOptions}) : null;
+
+		var pct = doPct ?
+			buildDropdown({
+				label: 'Percentile shown',
+				onChange: (_, v) => set(['pctState', chartState.ycolumn], v),
+				opts: filterPctOptions(pctOptions, drawProps.yavg),
+				value: chartState.pctState[ycolumn]}) : null;
+
 		var onAdvanced = () => this.setState({advanced: !advanced});
 
 		var advOpt = fragment(box(
 			{className: compStyles.chartActionsSecondary, component: Accordion, expanded: advanced, onChange: onAdvanced, square: true, sx: sxAccordion},
 			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
-			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp && xExp)));
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp, avg, pct)));
 
 		var HCV = highchartView({xenaState, drawProps});
 
