@@ -41,6 +41,7 @@ var radioGroup = el(RadioGroup);
 var select = el(TextField);
 
 var styles = require('./ChartWizard.module.css');
+var sxFormControl = {'& .MuiFormControl-root': {width: 392}};
 var sxModeLabel = {alignItems: 'center', display: 'grid', gridTemplateColumns: '100px auto'};
 var sxModes = {display: 'flex', flexDirection: 'column'};
 var sxModesContainer = {display: 'flex', justifyContent: 'center'};
@@ -99,10 +100,10 @@ var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 	wizard({title: "Compare subgroups", onClose,
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(isValid(state) && onDone)},
-		box({sx: sxModesContainer}, box({sx: {...sxModes, gap: 8, width: 392}},
-			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Show data from', onChange: onY,
+		box({sx: sxModesContainer}, box({sx: {...sxModes, ...sxFormControl, gap: 8}},
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Show data from', onChange: onY,
 					select: true, value: state.ycolumn || ''}, selectOptions(boxOrViolinYDatasets(appState))),
-			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Subgroup samples by', onChange: onX,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Subgroup samples by', onChange: onX,
 				select: true, value: state.xcolumn || ''}, selectOptions(boxOrViolinXDatasets(appState))),
 			needType(state, appState) ?
 				formControl(formLabel('I want a'),
@@ -125,8 +126,8 @@ var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) 
 	wizard({title: 'See a Column Distribution', onClose,
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(yIsSet(state) && onDone)},
-		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
-			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Show data from', onChange: onY,
+		box({sx: sxModesContainer}, box({sx: {...sxModes, ...sxFormControl}},
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Show data from', onChange: onY,
 				select: true, value: state.ycolumn || ''}, selectOptions(histDatasets(appState))))));
 
 //
@@ -144,10 +145,10 @@ var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}
 	wizard({title: "Scatter plot", onClose,
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(xyIsSet(state) && onDone)},
-		box({sx: sxModesContainer}, box({sx: {...sxModes, width: 392}},
-			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Pick the X axis', onChange: onX,
+		box({sx: sxModesContainer}, box({sx: {...sxModes, ...sxFormControl}},
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Pick the X axis', onChange: onX,
 					select: true, value: state.xcolumn || ''}, selectOptions(scatterXDatasets(appState))),
-			select({SelectProps: {MenuProps: {style: {width: 392}}}, fullWidth: true, label: 'Pick the Y axis', onChange: onY,
+			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Pick the Y axis', onChange: onY,
 					select: true, value: state.ycolumn || ''}, selectOptions(scatterYDatasets(appState))))));
 
 var noop = () => {};
