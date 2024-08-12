@@ -301,6 +301,7 @@ var pctOptions = [
 	{label: '33rd and 66th', value: 8},
 ];
 
+var filterAvgOptions = (avgOptions, yavg) => avgOptions.filter(({label}) => label === 'none' || label in yavg);
 var filterPctOptions = (pctOptions, yavg) => pctOptions.filter(({label}) => label === 'none' || pctRange[label].every(pctRange => pctRange in yavg));
 
 function buildDropdown({index = 0, label: text, onChange, opts, value}) {
@@ -308,7 +309,7 @@ function buildDropdown({index = 0, label: text, onChange, opts, value}) {
 		label(textNode(text)),
 		textField({
 			onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value), ev.target.value),
-			value: value || opts[index].value,
+			value: (opts.find(({value: oValue}) => oValue === value) || opts[index]).value,
 			...selectProps},
 			...opts.map(getOpt)));
 }
@@ -1379,18 +1380,20 @@ class Chart extends PureComponent {
 				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
-		var avg = doAvg ?
+		var avgOpts = filterAvgOptions(avgOptions, drawProps.yavg),
+		avg = doAvg && avgOpts.length > 1 ?
 			buildDropdown({
-				index: chartState.avgState[ycolumn],
 				label: 'Show mean or median',
-				onChange: i => set(['avgState', chartState.ycolumn], i),
-				opts: avgOptions}) : null;
+				onChange: (_, v) => set(['avgState', chartState.ycolumn], v),
+				opts: avgOpts,
+				value: chartState.avgState[ycolumn]}) : null;
 
-		var pct = doPct ?
+		var pctOpts = filterPctOptions(pctOptions, drawProps.yavg),
+		pct = doPct && pctOpts.length > 1 ?
 			buildDropdown({
 				label: 'Percentile shown',
 				onChange: (_, v) => set(['pctState', chartState.ycolumn], v),
-				opts: filterPctOptions(pctOptions, drawProps.yavg),
+				opts: pctOpts,
 				value: chartState.pctState[ycolumn]}) : null;
 
 		var onAdvanced = () => this.setState({advanced: !advanced});

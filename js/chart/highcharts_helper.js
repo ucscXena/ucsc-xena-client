@@ -119,7 +119,7 @@ var isBelowMean = key => /^(p([0-4][0-9])|sd0[1-3]_)$/.test(key);
 var isMeanOrMedian = key => /^(mean|median)$/.test(key);
 
 function plotlineOpts([key, values]) {
-	if (!key) {
+	if (!key || !values) {
 		return;
 	}
 	var isPct = Boolean(pctLabel[key]),
@@ -164,10 +164,11 @@ function addCopyToXAxisPlotlineLabel({chart}) {
 	chart.xAxis[0].plotLinesAndBands.forEach((plotLine) => {
 		if (plotLine && plotLine.svgElem) {
 			setTimeout(() => {
-				var {label, options: {value}} = plotLine;
-				label?.on('click', function () {
-					navigator.clipboard.writeText(value);
-				});
+				var {label, options} = plotLine,
+					{value} = options || {};
+					label?.on('click', function () {
+						navigator.clipboard.writeText(value);
+					});
 			}, 0);
 		}
 	});
