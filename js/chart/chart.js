@@ -302,14 +302,17 @@ var pctOptions = [
 ];
 
 var filterAvgOptions = (avgOptions, yavg) => avgOptions.filter(({label}) => label === 'none' || label in yavg);
-var filterPctOptions = (pctOptions, yavg) => pctOptions.filter(({label}) => label === 'none' || pctRange[label].every(pctRange => pctRange in yavg));
+var filterPctOptions = (pctOptions, yavg) => pctOptions.filter(({label}) => label === 'none' || pctRange[label].some(pctRange => pctRange in yavg));
 
-function buildDropdown({index = 0, label: text, onChange, opts, value}) {
+var dropdownOpt = (opts, value, index = 0) => (opts.find(({value: v}) => v === value) || opts[index]);
+
+function buildDropdown({disabled = false, index = 0, label: text, onChange, opts, value}) {
 	return formControl({className: compStyles.chartAction},
 		label(textNode(text)),
 		textField({
+			disabled,
 			onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value), ev.target.value),
-			value: (opts.find(({value: oValue}) => oValue === value) || opts[index]).value,
+			value: dropdownOpt(opts, value, index).value,
 			...selectProps},
 			...opts.map(getOpt)));
 }
@@ -1381,16 +1384,18 @@ class Chart extends PureComponent {
 			null;
 
 		var avgOpts = filterAvgOptions(avgOptions, drawProps.yavg),
-		avg = doAvg && avgOpts.length > 1 ?
+		avg = doAvg ?
 			buildDropdown({
+				disabled: avgOpts.length === 1,
 				label: 'Show mean or median',
 				onChange: (_, v) => set(['avgState', chartState.ycolumn], v),
 				opts: avgOpts,
 				value: chartState.avgState[ycolumn]}) : null;
 
 		var pctOpts = filterPctOptions(pctOptions, drawProps.yavg),
-		pct = doPct && pctOpts.length > 1 ?
+		pct = doPct ?
 			buildDropdown({
+				disabled: pctOpts.length === 1,
 				label: 'Percentile shown',
 				onChange: (_, v) => set(['pctState', chartState.ycolumn], v),
 				opts: pctOpts,
