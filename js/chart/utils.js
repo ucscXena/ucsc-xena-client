@@ -51,6 +51,8 @@ var initSettings = chartState => {
 	if (v(ycolumn)) {
 		chartState = setIfNot(chartState, ['normalizationState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['expState', ycolumn], 0);
+		chartState = setIfNot(chartState, ['avgState', ycolumn], 0);
+		chartState = setIfNot(chartState, ['pctState', ycolumn], 0);
 	}
 	var xcolumn = chartState.xcolumn;
 	if (v(xcolumn)) {
