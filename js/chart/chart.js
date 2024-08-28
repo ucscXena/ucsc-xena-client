@@ -1329,10 +1329,11 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].fields,
-			// doAvg is really "show mean or median selector", which
+			isDensity = view === 'density',
+			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
 			// we only do for density plots.
-			doAvg = view === 'density' && 'mean' in yavg && 'median' in yavg,
-			doPct = view === 'density' && 'mean' in yavg && 'sd' in yavg,
+			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
+			doPct = isDensity && 'mean' in yavg && 'sd' in yavg,
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
@@ -1360,7 +1361,7 @@ class Chart extends PureComponent {
 			buildDropdown({
 				opts: yexpOpts,
 				index: chartState.expState[ycolumn],
-				label: 'Y unit',
+				label: isDensity ? 'Data unit' : 'Y unit',
 				onChange: i => set(['expState', ycolumn], i)});
 
 		var xExp = !v(xcolumn) || xcodemap ? null :
@@ -1373,7 +1374,7 @@ class Chart extends PureComponent {
 		var normalization = ycodemap ? null :
 			buildDropdown({
 				index: chartState.normalizationState[ycolumn],
-				label: 'Y data linear transform',
+				label: isDensity ? 'Data linear transform' : 'Y data linear transform',
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
