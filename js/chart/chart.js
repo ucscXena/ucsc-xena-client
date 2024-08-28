@@ -1407,7 +1407,7 @@ class Chart extends PureComponent {
 			{className: compStyles.chartActionsSecondary, component: Accordion, expanded: advanced, onChange: onAdvanced, square: true, sx: sxAccordion},
 			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
-			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp, avg, pct)));
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp)));
 
 		var HCV = highchartView({xenaState, drawProps});
 
@@ -1426,7 +1426,7 @@ class Chart extends PureComponent {
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
 							swapAxes,
-						violinOpt && violinOpt), colorAxisDiv && colorAxisDiv),
+						violinOpt && violinOpt), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
