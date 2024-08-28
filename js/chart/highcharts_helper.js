@@ -234,7 +234,7 @@ function densityChart({chartOptions, yavg, Y}) {
 		},
 		tooltip: {
 			formatter: function() {
-				return this.point.y.toPrecision(3);
+				return `${this.point.x.toPrecision(3)}, ${this.point.y.toPrecision(3)}`;
 			}
 		}
 	};
