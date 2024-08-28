@@ -107,12 +107,12 @@ var pctLabel = {
 	'p90': '90th',
 	'p95': '95th',
 	'p99': '99th',
-	'sd01': '1σ',
-	'sd01_': '-1σ',
-	'sd02': '2σ',
-	'sd02_': '-2σ',
-	'sd03': '3σ',
-	'sd03_': '-3σ'
+	'sd01': '1 stdev',
+	'sd01_': '-1 stdev',
+	'sd02': '2 stdev',
+	'sd02_': '-2 stdev',
+	'sd03': '3 stdev',
+	'sd03_': '-3 stdev'
 };
 
 var isBelowMean = key => /^(p([0-4][0-9])|sd0[1-3]_)$/.test(key);
@@ -132,6 +132,9 @@ function plotlineOpts([key, values]) {
 		dashStyle: isPct ? 'dash' : 'solid',
 		label: {
 			align: isLeft ? 'left' : 'right',
+			style: {
+				textTransform: isPct ? 'none' : 'capitalize',
+			},
 			text: `<div style='margin: 0 7px;'><span>${label}: ${value.toPrecision(4)}</span>
 						<svg fill='none' height='10' style='bottom: -9px; left: ${isLeft ? '-9px' : 'undefined'}; position: absolute; right: ${isLeft ? 'undefined' : '-9px'};' viewBox='0 0 10 10' width='10'><path opacity='0.5' d='${isLeft ? 'M9 1L1 9' : 'M9 9.00003L1 1.00003'}' stroke='#212121'/></svg>
 						<svg class='copy' fill='none' height='14' viewBox='0 0 14 14' width='14'><path d='M5.25 10.5C4.92917 10.5 4.65451 10.3858 4.42604 10.1573C4.19757 9.92883 4.08333 9.65417 4.08333 9.33334V2.33334C4.08333 2.01251 4.19757 1.73785 4.42604 1.50938C4.65451 1.28091 4.92917 1.16667 5.25 1.16667H10.5C10.8208 1.16667 11.0955 1.28091 11.324 1.50938C11.5524 1.73785 11.6667 2.01251 11.6667 2.33334V9.33334C11.6667 9.65417 11.5524 9.92883 11.324 10.1573C11.0955 10.3858 10.8208 10.5 10.5 10.5H5.25ZM5.25 9.33334H10.5V2.33334H5.25V9.33334ZM2.91667 12.8333C2.59583 12.8333 2.32118 12.7191 2.09271 12.4906C1.86424 12.2622 1.75 11.9875 1.75 11.6667V3.50001H2.91667V11.6667H9.33333V12.8333H2.91667Z' fill='#1C1B1F'/></svg>

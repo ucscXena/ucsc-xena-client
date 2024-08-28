@@ -273,9 +273,9 @@ var normalizationOptions = [{
 ];
 
 var pctRange = {
-	'3σ': ['sd03_', 'sd03'],
-	'2σ': ['sd02_', 'sd02'],
-	'1σ': ['sd01_', 'sd01'],
+	'3 stdev': ['sd03_', 'sd03'],
+	'2 stdev': ['sd02_', 'sd02'],
+	'1 stdev': ['sd01_', 'sd01'],
 	'1st and 99th': ['p01', 'p99'],
 	'5th and 95th': ['p05', 'p95'],
 	'10th and 90th': ['p10', 'p90'],
@@ -291,9 +291,9 @@ var avgOptions = [
 
 var pctOptions = [
 	{label: 'none', value: 0},
-	{label: '3σ', value: 1},
-	{label: '2σ', value: 2},
-	{label: '1σ', value: 3},
+	{label: '3 stdev', value: 1},
+	{label: '2 stdev', value: 2},
+	{label: '1 stdev', value: 3},
 	{label: '1st and 99th', value: 4},
 	{label: '5th and 95th', value: 5},
 	{label: '10th and 90th', value: 6},
