@@ -6,7 +6,6 @@ export const servers = {
 	icgcHub: 'https://icgc.xenahubs.net',
 	toilHub: 'https://toil.xenahubs.net',
 	pcawgHub: 'https://pcawg.xenahubs.net',
-	singlecellHub: 'https://singlecellnew.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
@@ -22,7 +21,6 @@ export const serverNames = {
 	[servers.icgcHub]: 'ICGC Hub',
 	[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
 	[servers.pcawgHub]: 'PCAWG Hub',
-	[servers.singlecellHub]: 'Single-cell RNAseq Hub',
 	[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 	[servers.treehouseHub]: 'Treehouse Hub',
 	[servers.gdcHub]: 'GDC Hub',
@@ -37,7 +35,6 @@ export const serverS3url = {
 	[servers.icgcHub]: 'https://icgc-xena-hub.s3.us-east-1.amazonaws.com/download',
 	[servers.toilHub]: 'https://toil-xena-hub.s3.us-east-1.amazonaws.com/download',
 	[servers.pcawgHub]: 'https://pcawg-hub.s3.us-east-1.amazonaws.com/download',
-	//[servers.singlecellHub]: 'Single-cell RNAseq Hub',
 	[servers.pancanAtlasHub]: 'https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/download',
 	[servers.gdcHub]: 'https://gdc-hub.s3.us-east-1.amazonaws.com/download',
 	[servers.atacSeqHub]: 'https://tcgaatacseq.s3.us-east-1.amazonaws.com/download',
@@ -83,9 +80,8 @@ export const publicServers = [
 	servers.treehouseHub,
 	servers.gdcHub,
 	servers.atacSeqHub,
-	servers.singlecellHub,
 	servers.kidsFirstHub,
-	'https://tdi.xenahubs.net',
-	'https://luad.xenahubs.net',
-	'https://preview.xenahubs.net'
+	'https://clear.xenahubs.net',
+	'https://kaposi.xenahubs.net',
+	'https://legacy.xenahubs.net'
 ];

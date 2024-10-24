@@ -10,7 +10,7 @@ var links = [
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
 	['heatmap', 'e381bdc7dffb8af7d934d97335c08fb3',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['heatmap', '6451afae2ee964475a2eb9c79d46900c',
+	['heatmap', '873b5bdf3633ce8c57598d7052b13c7b',
 		'Genetic separation of lower grade gliomas: one characterized by loss of chromosomes 1p & 19q, \
 		the other by TP53 & ATRX mutations.'],
 	['heatmap', '3f4b3fa8901f4c24f5f791e036566424',
