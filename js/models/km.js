@@ -224,7 +224,7 @@ function floatVals(avg, uniq, colorfn) {
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 	var clarification = heatmap.length > 1 ? 'average' : undefined,
 		avg = average(heatmap),
-		uniq = _.without(_.uniq(avg), null, undefined),
+		uniq = _.without(_.uniq(avg), null, undefined, NaN),
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
@@ -269,7 +269,7 @@ toCoded.add('coded', codedVals);
 toCoded.add('mutation', mutationVals);
 toCoded.add('segmented', segmentedVals);
 
-var has = (obj, v) => obj[v] != null;
+var has = (obj, v) => !isNaN(obj[v]);
 
 // Give tte and ev for each subgroup, compute p-value.
 // Not sure why we recombine the data after splitting by group.
@@ -363,6 +363,11 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
+// XXX We might be able to remove 'samples' from this call, since order
+// doesn't matter any more. Previously it was useful for reading column.heatmap,
+// which was in sorted order. It would require a range() call, which is expensive
+// for large cohorts, though filterIndices is also expensive for large cohorts.
+// If performance is an issue, drop 'samples' and move some of this to wasm.
 function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		samples, cohortSamples) {
 	let {unit, survivalData} = findSurvDataByType(survival, survivalType),
@@ -371,10 +376,10 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
 		{values, download, columnValues} = codedFeat,
-		usableSamples = _.filterIndices(samples, (s, i) =>
-			has(tte, s) && has(ev, s) && has(values, i)),
+		usableSamples = _.filterIndices(samples, s =>
+			has(tte, s) && has(ev, s) && has(values, s)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
-		groupedIndices = _.groupBy(usableSamples, i => values[i]),
+		groupedIndices = _.groupBy(usableSamples, i => values[samples[i]]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
 		{groups, colors, labels, warning, clarification} = usableData,
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
@@ -394,8 +399,8 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 			[survivalData.tteFeature]: usableSamples.map(s => tte[samples[s]]),
 			// defer toDownload because it's expensive
 			[kmColumnLabel(column)]: _.Let((vals = toDownload(values, download)) =>
-				usableSamples.map(s => vals[s])),
-			...(columnValues ? {data: usableSamples.map(s => columnValues[s])} : {})
+				usableSamples.map(s => vals[samples[s]])),
+			...(columnValues ? {data: usableSamples.map(s => columnValues[samples[s]])} : {})
 		}),
 		colors,
 		labels,
