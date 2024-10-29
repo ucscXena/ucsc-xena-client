@@ -351,7 +351,7 @@ function findSurvDataByType(survival, survivalType) {
 var kmColumnLabel = ({user: {columnLabel, fieldLabel}}) =>
 	columnLabel ? `${columnLabel}: ${fieldLabel}` : fieldLabel;
 
-var bounds = x => [_.minnull(x), _.maxnull(x)];
+var bounds = x => [_.min(x), _.max(x)];
 
 // After toCoded, we can still end up with empty groups if
 // we don't have survival data for the samples in question.

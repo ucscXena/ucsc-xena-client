@@ -1,5 +1,5 @@
 var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn,
-	identity, Let, map, mapObject, merge, minnull, maxnull, mmap, object, omit,
+	identity, Let, map, mapObject, merge, min, max, mmap, object, omit,
 	pairs, pick, updateIn, values} = require('../underscore_ext').default;
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
@@ -170,7 +170,7 @@ var pickRadius = (mins, maxs, len, pct = 0.3) =>
 export var setRadius = (sd, datasetData) =>
 	Let((data = getIn(datasetData, ['req', 'values'], [])) =>
 		!(data.length && every(data, identity)) ? NaN :
-		Let((mins = data.map(minnull), maxs = data.map(maxnull)) =>
+		Let((mins = data.map(min), maxs = data.map(max)) =>
 			sd ? sd / 2 : pickRadius(mins, maxs, data[0].length)));
 
 export var getRadius = state => get(state, 'radius') || get(state, 'radiusBase');

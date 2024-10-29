@@ -3,8 +3,8 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, maxnull,
-	minnull, object, pairs, pluck, pick, range, uniq,
+var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, max: _max,
+	min: _min, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
@@ -76,8 +76,8 @@ var extendScale = (min, max) =>
 
 var scaleBounds = (data, scale) =>
 	Let((d = data.req.values[0], params = scaleParams(scale),
-			minIn = Math.min(...params, minnull(d)),
-			maxIn = Math.max(...params, maxnull(d)),
+			minIn = Math.min(...params, _min(d)),
+			maxIn = Math.max(...params, _max(d)),
 			[min, max] = (isLog(scale) ?
 				applyLog : applyLinear)(extendScale, minIn, maxIn)) => ({min, max}));
 

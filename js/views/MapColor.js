@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, get, getIn, identity, Let, mapObject, maxnull,
+var {assoc, assocIn, get, getIn, identity, Let, mapObject, max,
 	pick} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
@@ -114,7 +114,7 @@ var logTransformBounds = ({min, max}, log) =>
 
 var distribution = ({colorBy: {data}}) =>
 	Let(({density: dist, scaleBounds, scale} = data,
-			maxy = maxnull(dist.map(([, y]) => y)), // XXX put in selector
+			maxy = max(dist.map(([, y]) => y)), // XXX put in selector
 			{min: minx, max: maxx} = logTransformBounds(scaleBounds, isLog(scale))) =>
 		densityPlot({dist, viewBox: `${minx} 0 ${maxx - minx} ${maxy}`}));
 

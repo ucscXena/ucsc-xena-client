@@ -248,13 +248,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				dataMin, dataMax;
 
 	        if (valueType === "float") {
-				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
-				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
+				dataMin = _.min(_.map(data.req.values, values => _.min(values)));
+				dataMax = _.max(_.map(data.req.values, values => _.max(values)));
 				scaleDefaults[valueType].min = dataMin;
 				scaleDefaults[valueType].max = dataMax;
 			} else if (valueType === 'segmented') {
-				dataMin = _.minnull(_.map(data.req.rows, row => row.value));
-				dataMax = _.maxnull(_.map(data.req.rows, row => row.value));
+				dataMin = _.min(_.map(data.req.rows, row => row.value));
+				dataMax = _.max(_.map(data.req.rows, row => row.value));
 				if (dataMin >= 0) {
 					scaleDefaults[valueType].origin = 2;
 					scaleDefaults[valueType].max = 6;
@@ -415,7 +415,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		};
 
 	    render() {
-			let dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values))),
+			let dataMin = _.min(_.map(data.req.values, values => _.min(values))),
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},

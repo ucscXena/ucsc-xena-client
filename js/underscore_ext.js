@@ -501,33 +501,6 @@ function deepMerge(a, ...args) {
 // a mem copy.
 var copyStr = str => (' ' + str).slice(1);
 
-function minnull(arr) {
-	var r = Infinity,
-		n = arr.length,
-		v;
-	while (n) {
-		v = arr[--n];
-		if (v < r) {
-			r = v;
-		}
-	}
-	return r;
-}
-
-// cache these in the column data
-function maxnull(arr) {
-	var r = -Infinity,
-		n = arr.length,
-		v;
-	while (n) {
-		v = arr[--n];
-		if (v > r) {
-			r = v;
-		}
-	}
-	return r;
-}
-
 //
 //function* irange(n) {
 //	for (let i = 0; i < n; ++i) {
@@ -568,12 +541,10 @@ _.mixin({
 	matchKeys,
 	matchPath,
 	maxWith,
-	maxnull,
 	meannull,
 	medianNull,
 	memoize1,
 	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
-	minnull,
 	mmap,
 	negate,
 	objectFn,

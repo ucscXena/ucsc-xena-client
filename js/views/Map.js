@@ -2,7 +2,7 @@ import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {div, el, img, span} from '../chart/react-hyper.js';
-var {get, getIn, identity, Let, maxnull, minnull,
+var {get, getIn, identity, Let, max, min,
 	pick} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
@@ -129,8 +129,8 @@ class MapDrawing extends PureComponent {
 		}
 		var zoom = get(this.props.data.viewState, 'zoom', initialZoom(this.props)),
 			{data: {columns}} = this.props,
-			mins = columns.map(minnull),
-			maxs = columns.map(maxnull),
+			mins = columns.map(min),
+			maxs = columns.map(max),
 			bounds = maxs.map((max, i) => max - mins[i]),
 			scale = cubeWidth / Math.max(...bounds);
 		this.props.onViewState(null, currentScale(zoom, scale));
@@ -138,8 +138,8 @@ class MapDrawing extends PureComponent {
 	render() {
 		var {props} = this;
 		var twoD = props.data.columns.length === 2;
-		var mins = props.data.columns.map(minnull),
-			maxs = props.data.columns.map(maxnull),
+		var mins = props.data.columns.map(min),
+			maxs = props.data.columns.map(max),
 			centroids = maxs.map((max, i) => (max + mins[i]) / 2);
 
 		var data = this.props.data.columns;

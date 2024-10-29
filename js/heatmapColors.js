@@ -162,8 +162,8 @@ var prec2 = x => parseFloat(x.toPrecision(2));
 function colorSegmented(column, settings = {}, codes, data) {
 	var values = data,
 		[low, , high] = defaultColors[settings.colorClass || column.colorClass],
-		minVal = _.minnull(values),
-		maxVal = _.maxnull(values),
+		minVal = _.min(values),
+		maxVal = _.max(values),
 		{origin, thresh, max} = settings || {},
 		spec,
 		absmax,

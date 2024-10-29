@@ -899,7 +899,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 		if (!useCodedSeries) {
 			average = highchartsHelper.average(scatterColorData);
 			stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
-			colorMin = _.minnull(scatterColorData);
+			colorMin = _.min(scatterColorData);
 			bin = stdDev * 0.1;
 			colorScale = v => isNaN(v) ? 'gray' : scatterColorScale(v);
 		}
