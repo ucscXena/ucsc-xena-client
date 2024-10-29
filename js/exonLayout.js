@@ -164,7 +164,7 @@ var toPosition = layout => (px0, chrN, x) => {
 			[c0, c1]  = chrom[i];
 		return chrN(c0, c1, Math.floor(px0(x0, x1, x) * (c1 - c0 + 1) / (x1 - x0)));
 	}
-	return null;
+	return NaN;
 };
 
 // pixel translated to origin
@@ -186,7 +186,7 @@ function chromRangeFromScreen(layout, start, end) {
 // This isn't precisely correct, but should be good enough. Gives us roughly
 // the coordinate in the middle of the pixel.
 var chromPositionFromScreen = (layout, x) =>
-	Math.round(_.meannull(chromRangeFromScreen(layout, x, x)));
+	Math.round(_.mean(chromRangeFromScreen(layout, x, x)));
 
 // closed coord len
 var chrlen = ([s, e]) => e - s + 1;

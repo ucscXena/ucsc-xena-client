@@ -133,7 +133,7 @@ var survivalOptions = {
 };
 
 function average(data) {
-	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
+	return data[0].map((v, s) => _.mean(data.map(p => p[s])));
 }
 
 // Currently assumes we have only one field. Right now we only

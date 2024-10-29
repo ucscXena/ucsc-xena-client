@@ -1136,7 +1136,7 @@ function callDrawChart(xenaState, params) {
 		// mean normalize
 		// XXX why are we transforming the data instead of the view?
 		ydata = ydata.map(data => {
-			var mean = _.meannull(data);
+			var mean = _.mean(data);
 			return data.map(x => isNaN(x) ? x : x - mean);
 		});
 	}

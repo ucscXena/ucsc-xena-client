@@ -160,10 +160,7 @@ function* segmentRegions(colorSpec, index, count, width, height, zoom, nodes) {
 			} else {
 				pxEnd = nextEndNode.xEnd;
 			}
-			// generators with regenerator seem to be slow, perhaps due to try/catch.
-			// So, _.meannull generator version, and _.i methods are limiting.
-//			let avg = meannullIter(_.i.map(scope.values(), v => v.value)),
-			let mp = trendPowerNullIter(scope.values(), zero), // this is much faster than _.i.map
+			let mp = trendPowerNullIter(scope.values(), zero),
 				lastRow = i + regions[i],
 				color = lookup(...mp);
 			yield {pxStart, pxEnd, color, lastRow, i};

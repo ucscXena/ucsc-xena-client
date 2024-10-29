@@ -111,7 +111,8 @@ function memoize1(fn) {
 	};
 }
 
-function meannull(values) {
+// compute mean, ignoring NaN.
+function mean(values) {
 	if (!values) {
 		return null;
 	}
@@ -154,28 +155,6 @@ function cmpNumberOrNull(v1, v2) {
 		return -1;
 	}
 	return v2 - v1;
-}
-
-function firstNaNIndex(arr) {
-	var l = arr.length;
-	for (var i = 0; i < l; ++i) {
-		if (isNaN(arr[i])) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-function medianNull(values) {
-	if (!values) {
-		return null;
-	}
-	var sorted = values.slice(0).sort(cmpNumberOrNull),
-		firstNaN = firstNaNIndex(values),
-		notNaN = firstNaN !== -1 ? sorted.slice(0, firstNaN) : sorted,
-		n = notNaN.length;
-
-	return (notNaN[Math.ceil((n - 1) / 2)] + notNaN[Math.floor((n - 1) / 2)]) / 2;
 }
 
 function fmapMemoize1(fn) {
@@ -541,8 +520,7 @@ _.mixin({
 	matchKeys,
 	matchPath,
 	maxWith,
-	meannull,
-	medianNull,
+	mean,
 	memoize1,
 	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 	mmap,
