@@ -182,14 +182,14 @@ function zoomableDataToHeatmap(column, vizSettings, data) {
 // sort
 //
 
-var {cmpNumberOrNull} = _;
+var {cmpNumber} = _;
 
 function cmpSamples(probes, data, s1, s2) {
 	var diff = data && find(data, function (f) {
-		return cmpNumberOrNull(f[s1], f[s2]);
+		return cmpNumber(f[s1], f[s2]);
 	});
 	if (diff) {
-		return cmpNumberOrNull(diff[s1], diff[s2]);
+		return cmpNumber(diff[s1], diff[s2]);
 	} else {
 		return 0;
 	}

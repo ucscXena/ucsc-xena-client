@@ -146,7 +146,7 @@ function mean(values) {
 //	return (count > 0) ? sum / count : null;
 //}
 
-function cmpNumberOrNull(v1, v2) {
+function cmpNumber(v1, v2) {
 	if (isNaN(v1) && isNaN(v2)) {
 		return 0;
 	} else if (isNaN(v1)) {
@@ -500,7 +500,7 @@ _.mixin({
 	array,
 	concat,
 	copyStr,
-	cmpNumberOrNull,
+	cmpNumber,
 	curry,
 	curryN, // useful if the fn as multiple arities.
 	deepMerge,

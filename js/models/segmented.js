@@ -47,7 +47,7 @@ function cmp(column, data) {
 		values = _.getIn(data, ['avg', sortVisible ? 'values' : 'geneValues', 0]);
 
 	return values ?
-		(s1, s2) => _.cmpNumberOrNull(values[s1], values[s2]) :
+		(s1, s2) => _.cmpNumber(values[s1], values[s2]) :
 		() => 0;
 }
 
@@ -217,8 +217,10 @@ function formatSamples(sampleFormat, rows) {
 	return rows ? _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat)) : rows;
 }
 
+var NaNtoNull  = arr => arr.map(v => isNaN(v) ? null : v);
+
 function download({column, data, samples, sampleFormat}) {
-	let geneAverages = _.getIn(data, ['avg', 'geneValues', 0]),
+	let geneAverages = NaNtoNull(_.getIn(data, ['avg', 'geneValues', 0])),
 		columnLabel =  column.user.fieldLabel || column.fieldLabel;
 
 	return [['sample', `${columnLabel} (average)`],
@@ -239,14 +241,14 @@ function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFor
 	};
 }
 
-var avgOrNull = (rows, xzoom, zero) => rows ? (_.isEmpty(rows) ? zero : segmentAverage(rows, xzoom)) : null;
+var avgOrNaN = (rows, xzoom, zero) => rows ? (_.isEmpty(rows) ? zero : segmentAverage(rows, xzoom)) : NaN;
 
 function avgSegWithZoom(count, samplesInResp, zero, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
 		perSamp = _.groupBy(matches, 'sample'),
 		perSamplesInResp = _.object(samplesInResp, samplesInResp.map(i => perSamp[i] || []));
 
-	return _.times(count, i => avgOrNull(perSamplesInResp[i], zoom, zero));
+	return _.times(count, i => avgOrNaN(perSamplesInResp[i], zoom, zero));
 }
 
 function chromLimits(pos) {

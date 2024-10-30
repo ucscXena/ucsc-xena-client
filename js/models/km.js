@@ -156,13 +156,13 @@ function codedVals({heatmap, colors, codes}) {
 
 var toDownload = (values, download) => download ? download() : values;
 
-var saveNull = fn => v => v == null ? v : fn(v);
+var saveNaN = fn => v => isNaN(v) ? v : fn(v);
 
 // XXX Here we include samples that might not have tte and ev, when
 // picking the range. Ideal would be to partition not including
 // samples w/o survival data.
 function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-vars
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+	let vals = _.without(avg, NaN).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
 		low = vals[Math.round(vals.length / 3)],
@@ -170,7 +170,7 @@ function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-
 		labelLow = low.toPrecision(4),
 		labelHigh = high.toPrecision(4);
 	return {
-		values: _.map(avg, saveNull(v => v < low ? 'low' :
+		values: _.map(avg, saveNaN(v => v < low ? 'low' :
 							(v < high ? 'middle' : 'high'))),
 		groups: ['low', 'middle', 'high'],
 		colors: [colorfn(min), colorfn((min + max) / 2), colorfn(max)],
@@ -179,7 +179,7 @@ function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-
 }
 
 function partitionedValsQuartile(avg, uniq, colorfn) {
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+	let vals = _.without(avg, NaN).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
 		low = vals[Math.round(vals.length / 4)],
@@ -187,7 +187,7 @@ function partitionedValsQuartile(avg, uniq, colorfn) {
 		labelLow = low.toPrecision(4),
 		labelHigh = high.toPrecision(4);
 	return {
-		values: _.map(avg, saveNull(v => v < low ? 'low' : (v > high ? 'high' : null))),
+		values: _.map(avg, saveNaN(v => v < low ? 'low' : (v > high ? 'high' : NaN))),
 		groups: ['low', 'high'],
 		colors: [colorfn(min), colorfn(max)],
 		labels: [`< ${labelLow}`, `> ${labelHigh}`]
@@ -195,13 +195,13 @@ function partitionedValsQuartile(avg, uniq, colorfn) {
 }
 
 function partitionedVals2(avg, uniq, colorfn) {
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+	let vals = _.without(avg, NaN).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
 		mid = vals[Math.round(vals.length / 2)],
 		labelMid = mid.toPrecision(4);
 	return {
-		values: _.map(avg, saveNull(v => v < mid ? 'low' : 'high')),
+		values: _.map(avg, saveNaN(v => v < mid ? 'low' : 'high')),
 		groups: ['low', 'high'],
 		colors: [colorfn(min), colorfn(max)],
 		labels: [`< ${labelMid}`, `>= ${labelMid}`]
@@ -224,7 +224,7 @@ function floatVals(avg, uniq, colorfn) {
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 	var clarification = heatmap.length > 1 ? 'average' : undefined,
 		avg = average(heatmap),
-		uniq = _.without(_.uniq(avg), null, undefined, NaN),
+		uniq = _.without(_.uniq(avg), NaN),
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
@@ -236,10 +236,10 @@ var mutLabel = [
 	'Has Mutation'
 ];
 
-function mutationVals(column, data, {bySample}, sortedSamples) {
+function mutationVals(column, data, {bySample}, samples) {
 	var mutCode = _.mapObject(bySample, vs => vs.length > 0 ? 1 : 0);
 	return {
-		values: _.map(sortedSamples, s => mutLabel[mutCode[s]]),
+		values: _.times(samples.length, s => mutLabel[mutCode[s]] || NaN),
 		groups: mutLabel,
 		colors: [
 			"#ffffff", // white
@@ -249,18 +249,15 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 	};
 }
 
-//var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
-
 function segmentedVals(column, data, index, samples, splits) {
 	var {color} = column,
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
-		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
-		uniq = _.without(_.uniq(avg), null, undefined),
+		uniq = _.without(_.uniq(avg), NaN),
 		scale = colorScale(color),
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {columnValues: avg, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {columnValues: avg, maySplit: true, ...partFn(avg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);
@@ -269,7 +266,9 @@ toCoded.add('coded', codedVals);
 toCoded.add('mutation', mutationVals);
 toCoded.add('segmented', segmentedVals);
 
-var has = (obj, v) => !isNaN(obj[v]);
+// checking x === x is slightly different than isNaN, in that
+// isNaN('foo') returns true. This only fails on NaN.
+var has = (obj, v) => obj[v] === obj[v];
 
 // Give tte and ev for each subgroup, compute p-value.
 // Not sure why we recombine the data after splitting by group.
