@@ -53,6 +53,8 @@ export const defaultServers = [
 	servers.gdcHub,
 	servers.atacSeqHub,
 	servers.kidsFirstHub,
+	"https://previewsinglecell.xenahubs.net",
+	"https://tmpsinglecell.xenahubs.net",
 	servers.notebook
 ];
 
@@ -67,6 +69,8 @@ export const enabledServers = [
 	servers.gdcHub,
 	servers.atacSeqHub,
 	servers.kidsFirstHub,
+	"https://previewsinglecell.xenahubs.net",
+	"https://tmpsinglecell.xenahubs.net",
 	servers.notebook
 ];
 
