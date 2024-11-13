@@ -148,9 +148,8 @@ export class AppControls extends PureComponent {
 
 	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
-			m = inv ? invert(samplesMatched, _.range(cohortSamples.length)) :
+			m = inv ? invert(samplesMatched, cohortSamples.length) :
 				samplesMatched;
-		console.warn("XXX inv is untested after singlecell merge");
 		gaEvents('spreadsheet', 'samplesearch', inv ? 'remove' : 'keep');
 		callback(['sampleFilter', m]);
 	};
