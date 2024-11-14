@@ -46,11 +46,6 @@ function datasetParams() {
 	return takeFirst(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers', 'markdown'));
 }
 
-function manifest() {
-	// only take the first of these
-	return takeFirst(pick(allParameters(), 'manifest'));
-}
-
 var types = {
 	0: 'navigate',
 	1: 'reload',
@@ -118,7 +113,7 @@ function getParams() {
 			hubParams2;
 	return [location.pathname,
 		merge(navigate(), auth, hub2, bookmarkParam(), inlineStateParam(),
-		hubParams(), fixLocalhost(datasetParams()), manifest(), studyParams(),
+		hubParams(), fixLocalhost(datasetParams()), studyParams(),
 		columns, heatmap)];
 }
 

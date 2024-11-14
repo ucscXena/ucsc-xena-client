@@ -146,13 +146,6 @@ var controls = {
 							getNotifications()) :
 						bookmark)),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
-	// Here we need to load cohort data if servers or cohort has changed,
-	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
-	'manifest': (state, {cohort, samples}) =>
-		_.updateIn(state, ['spreadsheet'], setCohort({name: cohort, sampleFilter: samples}, null)),
-	'manifest-post!': (serverBus, state, newState) =>
-		// just samples now
-		fetchCohortData(serverBus, newState.spreadsheet),
 	inlineState: (state, newState) => resetLoadPending(newState),
 	samples: (state, resp) => {
 		var fieldMatches = _.getIn(state, ['spreadsheet', 'fieldMatches']),

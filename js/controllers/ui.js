@@ -10,7 +10,6 @@ var {fetchInlineState} = require('../inlineState');
 import {make, mount, compose} from './utils';
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
-import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
 import {defaultState as chartDefaultState} from '../chart/utils';
@@ -37,14 +36,6 @@ function fetchBookmark(serverBus, bookmark) {
 		url: `/api/bookmarks/bookmark?id=${bookmark}`
 	}).switchMap(r => fromWasm(wasm())
 		.map(Module => parseBookmark(Module, r.response)))]);
-}
-
-function fetchManifest(serverBus, url) {
-	serverBus.next(['manifest', Rx.Observable.ajax({
-		responseType: 'text',
-		method: 'GET',
-		url
-	}).map(r => parseManifest(r.response))]);
 }
 
 function fetchDatasetCohort(serverBus, {host, name}) {
@@ -109,8 +100,7 @@ var controls = {
 	'init-post!': (serverBus, state, newState, pathname, params = {}) => {
 		var bookmark = _.get(params, 'bookmark'),
 			cohort = columnsParam.cohort(params.columns),
-			inlineState = _.get(params, 'inlineState'),
-			manifest = _.get(params, 'manifest');
+			inlineState = _.get(params, 'inlineState');
 		if (inlineState) {
 			fetchState(serverBus);
 		} else if (bookmark) {
@@ -121,9 +111,6 @@ var controls = {
 			// All cohorts must match, so take the first one &
 			// later filter any datasets not in the cohort.
 			fetchDatasetCohort(serverBus, params.columns[0]);
-		}
-		if (manifest) { // not sure why this is separate. bookmark + manifest??
-			fetchManifest(serverBus, manifest);
 		}
 	},
 	navigate: (state, page, params = {}) => _.assoc(state, 'page', page, 'params', params),
