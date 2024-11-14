@@ -37,7 +37,7 @@ function evalIn({samples}, list) {
 function samplesAsData({samples}) {
 	return {
 		req: {
-			values: [_.range(samples.length)]
+			values: [Float32Array.from(_.range(samples.length))]
 		},
 		codes: samples
 	};

@@ -12,6 +12,9 @@ var styles = require('./TranscriptPage.module.css');
 var {StateError} = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
 import spinner from '../ajax-loader.gif';
+var migrateState = require('../migrateState');
+var {expandState} = require('../compactData');
+var wasm = require('ucsc-xena-wasm');
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
@@ -84,11 +87,14 @@ class Transcripts extends React.Component {
 	};
 
 	onImport = (content) => {
-		try {
-			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
-		} catch(err) {
-			this.props.callback(['import-error']);
-		}
+		wasm().then(Module => {
+			try {
+				this.props.callback(['import', schemaCheckThrow(migrateState(expandState(Module, JSON.parse(content))))]);
+			} catch(err) {
+				console.error('import error', err);
+				this.props.callback(['import-error']);
+			}
+		});
 	};
 
 	onHideError = () => {

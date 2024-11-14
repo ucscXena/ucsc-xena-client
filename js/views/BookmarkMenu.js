@@ -17,6 +17,7 @@ var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
 var {createBookmark, getRecent, setRecent} = require('../bookmark');
 var gaEvents = require('../gaEvents');
+var {compactState} = require('../compactData');
 import {hidden} from '../nav';
 import {xenaColor} from '../xenaColor';
 
@@ -43,6 +44,8 @@ var sxWarning = {
 var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead.';
 
 var linking; // XXX move to state?
+
+var stringify = state => JSON.stringify(compactState(state));
 
 class BookmarkMenu extends React.Component {
 	state = {anchorEl: null, loading: false, open: false, recent: false};
@@ -89,7 +92,7 @@ class BookmarkMenu extends React.Component {
 	onExport = () => {
 		gaEvents('bookmark', 'export');
 		var {getState} = this.props;
-		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
+		var url = URL.createObjectURL(new Blob([stringify(getState())], { type: 'application/json' }));
 		var a = document.createElement('a');
 		var filename = 'xenaState.json';
 		_.extend(a, { id: filename, download: filename, href: url });

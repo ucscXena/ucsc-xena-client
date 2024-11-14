@@ -48,7 +48,7 @@ var dropTransient = state =>
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
-var parse = str => schemaCheckThrow(expandState(migrateState(JSON.parse(LZ.decompressFromUTF16(str)))));
+var parse = (Module, str) => schemaCheckThrow(expandState(Module, migrateState(JSON.parse(LZ.decompressFromUTF16(str)))));
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
@@ -56,6 +56,7 @@ var historyObs = Rx.Observable
 
 //
 module.exports = function({
+	Module,
 	Page,
 	controller,
 	persist,
@@ -73,7 +74,7 @@ module.exports = function({
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
 		try {
-			initialState = parse(sessionStorage.xena);
+			initialState = parse(Module, sessionStorage.xena);
 		} catch (e) {
 			initialState = _.assoc(initialState, 'stateError', 'session');
 		}

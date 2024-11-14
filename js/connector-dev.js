@@ -33,22 +33,22 @@ function stringify(state) {
 		   committedState: compactState(dropTransient(state.committedState))
 	}));
 }
-function parse(str) {
+function parse(Module, str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
 	return {
 		...state,
-		committedState: schemaCheckThrow(expandState(migrateState(state.committedState)))
+		committedState: schemaCheckThrow(expandState(Module, migrateState(state.committedState)))
 	};
 }
 
 //
 var unwrapDevState = state => _.last(state.computedStates).state;
 
-function getSavedState(persist) {
+function getSavedState(Module, persist) {
 	delete sessionStorage.xena; // Free up space & don't try to share with prod.
 	if (persist && nostate('debugSession')) {
 		try {
-			return parse(sessionStorage.debugSession);
+			return parse(Module, sessionStorage.debugSession);
 		} catch(err) {
 			console.log("Unable to load saved debug session", err);
 		}
@@ -61,6 +61,7 @@ var historyObs = Rx.Observable
 	.map(() => ['history', _.object(['path', 'params'], urlParams())]);
 
 module.exports = function({
+	Module,
 	Page,
 	controller,
 	persist,
@@ -84,7 +85,7 @@ module.exports = function({
 		</DockMonitor>),
 
 		devReducer = DevTools.instrument(controller, initialState),
-		savedState = getSavedState(persist),
+		savedState = getSavedState(Module, persist),
 		// Here we need not just the initial state, but to know if we have a
 		// saved state. The initial state is used in devtools as the 'reset'
 		// target. So, we can't replace initial state with saved state.

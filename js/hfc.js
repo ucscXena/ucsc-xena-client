@@ -165,20 +165,26 @@ export function hfcCompress(Module, strings) {
 	};
 	var ret = new Uint8Array(Module.HEAP8.buffer.slice(bytes.buff, bytes.buff + bytes.length));
 	Module._free(bytes.buff);
-	Module._free(bytes);
+	Module._free(hfc);
 	return ret;
 }
 
+export function hfcSync(Module, samples, hasPrivateSamples) {
+	hfcSet(Module, samples);
+	return hfcProxy(Module, hasPrivateSamples);
+}
+
 export function hfc(pub, priv) {
-	return Rx.Observable.bindCallback(wasm().then)().map(Module => {
-		hfcSetEmpty(Module);
-		pub.forEach(([samples]) => {
-			hfcMerge(Module, samples);
+	return Rx.Observable.bindCallback(wasm().then)().map(
+		Module => {
+			hfcSetEmpty(Module);
+			pub.forEach(([samples]) => {
+				hfcMerge(Module, samples);
+			});
+			var pubLength = hfcLength(Module);
+			priv.forEach(([samples]) => {
+				hfcMerge(Module, samples);
+			});
+			return hfcProxy(Module, hfcLength(Module) > pubLength);
 		});
-		var pubLength = hfcLength(Module);
-		priv.forEach(([samples]) => {
-			hfcMerge(Module, samples);
-		});
-		return hfcProxy(Module, hfcLength(Module) > pubLength);
-	});
 }

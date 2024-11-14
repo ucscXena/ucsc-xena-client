@@ -33,12 +33,11 @@ export function allocArray(arr, M = Module) {
 var pointerSize = 4;
 
 export function allocStrings(arr, M = Module) {
-	var sorted = arr.slice().sort();
-	var total = sorted.reduce((acc, s) => acc + s.length + 1, 0);
-	var list = M._malloc(sorted.length * pointerSize);
+	var total = arr.reduce((acc, s) => acc + s.length + 1, 0);
+	var list = M._malloc(arr.length * pointerSize);
 	var buff = M._malloc(total);
 	var offset = 0;
-	sorted.forEach((s, i) => {
+	arr.forEach((s, i) => {
 		var ptr = buff + offset;
 		M.writeAsciiToMemory(s, ptr, false);
 		M.setValue(list + i * pointerSize, ptr, '*');
