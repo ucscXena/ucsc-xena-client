@@ -132,7 +132,6 @@ var sortDense = (order, data) =>
 		_.updateIn(data, ['req', 'values'], values =>
 			values.map(subcol => norder.map(i => subcol[i]))));
 
-// XXX spreadsheet.cohort.sampleFilter -> boolean
 var sortColumn = order => (data, key) =>
 	key === 'samples' ? data :
 	// This is an ad hoc check for sparse vs. dense
@@ -148,15 +147,19 @@ var sortSurvival = (state, order) =>
 			data: sortColumn(order)(data)
 		})));
 
+// In old state the data is not in compressed (sorted) order, so
+// we reorder it here. Also apply an ad hoc migration of sampleFilter
+// to a boolean.
 var sortData = state =>
-	_.Let(({spreadsheet: {cohortSamples, data}} = state,
+	_.Let(({spreadsheet: {cohortSamples, data, cohort: {sampleFilter}}} = state,
 			idxs = _.range(cohortSamples.length).sort(cmp(cohortSamples)),
 			sorted = idxs.map(i => cohortSamples[i]),
 			sortedData = _.fmap(data, sortColumn(idxs)),
 			sortedSurvival = sortSurvival(state, idxs)) =>
 		_.assocIn(state, ['spreadsheet', 'cohortSamples'], sorted,
 			['spreadsheet', 'data'], sortedData,
-			['spreadsheet', 'survival'], sortedSurvival));
+			['spreadsheet', 'survival'], sortedSurvival,
+			['spreadsheet', 'cohort', 'sampleFilter'], !!sampleFilter));
 
 var reorderSamples = state =>
 	_.Let(({spreadsheet: {cohortSamples}} = state) =>
@@ -186,7 +189,6 @@ var setSamples = (state, samples) =>
 var expandSamples = (Module, state) =>
 	_.Let(({cohortSamples} = state.spreadsheet) =>
 		!cohortSamples ? state :
-		// XXX drop old spreadsheet.hasPrivateSamples?
 		_.Let((samples = createSamples(Module, cohortSamples,
 			state.spreadsheet.hasPrivateSamples)) => setSamples(state, samples)));
 
