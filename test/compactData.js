@@ -51,7 +51,7 @@ describe('compactData', function () {
 						}
 					}
 				}, state = {spreadsheet};
-				assert.deepEqual(state, expandState(compactState(state)));
+				assert.deepEqual(state, expandState(null, compactState(state)));
 				return true;
 			});
 	});

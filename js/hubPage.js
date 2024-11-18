@@ -99,7 +99,7 @@ var Hub = class extends PureComponent {
 			servers = selector(state);
 
 		// drop old state
-		this.setState({ping: _.pick(ping, _.keys(servers))});
+		this.setState({ping: _.pick(ping, _.keys(servers))}); //eslint-disable-line react/no-did-update-set-state
 
 		// check new servers
 		_.difference(_.keys(servers), _.keys(ping))
