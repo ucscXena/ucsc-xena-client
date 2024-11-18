@@ -68,16 +68,36 @@ var allAssays = state => cohort => (cohort.preferredDataset || []).map(({host, n
 var findStudy = (studyList, studyID) =>
 	studyList.find(({study}) => study === studyID);
 
-var studyRows = (state, study, label = study.label) => ({
-	label,
-	cohorts: (study.cohortList || [])
+var studyRows = (state, study, label = study.label) => {
+	let cohorts = (study.cohortList || [])
 		.filter(cohort => get(cohort.preferredDataset, 'length'))
 		.map(cohort => ({
 			donors: cohort.donorNumber,
 			cells: maxCells(state, cohort.preferredDataset),
 			assays: allAssays(state)(cohort)
-		}))
-});
+		}));
+
+	// Grouping by 'assays' and summing 'donors' and 'cells'
+	let groupedCohorts = cohorts.reduce((acc, item) => {
+		let key = item.assays;
+
+		if (!acc[key]) {
+			acc[key] = { donors: 0, cells: 0, assays: key }; // Initialize with 0 sums
+	    }
+
+	    // Sum the 'donors' and 'cells' for the group
+	    acc[key].donors += item.donors;
+	    acc[key].cells += item.cells;
+
+	    return acc;
+	}, {});
+
+	// Convert the result to an array
+	return {
+		label,
+		cohorts: Object.values(groupedCohorts)
+	};
+};
 
 var integrationsList = state =>
 	Let((slist = getIn(state, studyList, [])) =>
