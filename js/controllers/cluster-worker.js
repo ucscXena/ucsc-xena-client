@@ -1,6 +1,6 @@
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
-var {getIn} = require('../underscore_ext').default;
+var {getIn, map} = require('../underscore_ext').default;
 var Rx = require('../rx').default;
 
 var {fromEvent} = Rx.Observable;
@@ -27,13 +27,17 @@ var filterWithMap = (list, pred) => {
 	return [out, map, omitted];
 };
 
+// shimming this to JS for now, since the math hasn't been tested
+// with NaN.
+var Float32ArrayToJS = arr => map(arr, x => x !== x ? null : x);
+
 var cmds = {
 	cluster: data => {
 		var mean = getIn(data, ['avg', 'mean'], []),
-			all = getIn(data, ['req', 'values'], []),
-			// null columns will have null mean. Filter them out before
+			all = getIn(data, ['req', 'values'], []).map(Float32ArrayToJS),
+			// empty columns will have NaN mean. Filter them out before
 			// trying to cluster. Tack them on the end, later.
-			[cols, mapping, omit] = filterWithMap(all, (_, i) => mean[i] != null),
+			[cols, mapping, omit] = filterWithMap(all, (_, i) => !isNaN(mean[i])),
 			values = fillNulls(cols, i => mean[mapping[i]]);
 
 		if (!values.length) {

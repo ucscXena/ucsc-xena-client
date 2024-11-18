@@ -150,7 +150,7 @@ function codedVals({heatmap, colors, codes}) {
 		// XXX This nonsense is because coded columns are represented
 		// differently, with 'values' not being human readable. So, we
 		// provide a converting lambda, here.
-		download: () => heatmap[0].map(v => codes[v])
+		download: () => _.map(heatmap[0], v => codes[v])
 	};
 }
 
@@ -399,7 +399,8 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 			// defer toDownload because it's expensive
 			[kmColumnLabel(column)]: _.Let((vals = toDownload(values, download)) =>
 				usableSamples.map(s => vals[samples[s]])),
-			...(columnValues ? {data: usableSamples.map(s => columnValues[samples[s]])} : {})
+			...(columnValues ? {data:
+				usableSamples.map(s => columnValues[samples[s]].toPrecision(4))} : {})
 		}),
 		colors,
 		labels,

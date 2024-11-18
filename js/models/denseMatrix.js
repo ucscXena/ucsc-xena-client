@@ -303,14 +303,15 @@ var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 var fetchGene = ({dsID, fields}, samples) => datasetGeneProbeAvg(dsID, samples, fields)
 	.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
+var fmtNum = n => n !== n ? '' : n.toPrecision(4);
+
 ////////////////////////////////
 // download of on-screen data
 
 function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	var fieldNames = ['sample'].concat(fields);
-	var coded = _.map(fields, (f, i) => codes ?
-		_.map(heatmap[i], _.propertyOf(codes)) :
-		heatmap[i]);
+	var coded = _.map(fields, (f, i) =>
+		_.map(heatmap[i], codes ? _.propertyOf(codes) : fmtNum));
 	var transposed = _.zip.apply(null, coded);
 	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
 

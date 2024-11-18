@@ -114,7 +114,7 @@ function memoize1(fn) {
 // compute mean, ignoring NaN.
 function mean(values) {
 	if (!values) {
-		return null;
+		return NaN;
 	}
 	var count = 0, sum = 0, len = values.length, v;
 	for (var i = 0; i < len; ++i) {
@@ -127,7 +127,7 @@ function mean(values) {
 	if (count > 0) {
 		return sum / count;
 	}
-	return null;
+	return NaN;
 }
 
 // Version that works with iterables. Not using it for now

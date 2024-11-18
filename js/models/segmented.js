@@ -224,7 +224,7 @@ function download({column, data, samples, sampleFormat}) {
 		columnLabel =  column.user.fieldLabel || column.fieldLabel;
 
 	return [['sample', `${columnLabel} (average)`],
-		samples.map(sample => [sampleFormat (sample), geneAverages[sample]])];
+		_.map(samples, sample => [sampleFormat(sample), geneAverages[sample]])];
 }
 
 function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFormat}) {
