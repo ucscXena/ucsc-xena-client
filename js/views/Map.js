@@ -112,7 +112,7 @@ var id = arr => arr.filter(identity);
 var initialZoom = props => {
 	var {width, height} = props.container.getBoundingClientRect();
 
-	return Math.log2(Math.min(0.8 * width / cubeWidth, 0.8 * height / cubeWidth));
+	return Math.log2(Math.min(2 * width / cubeWidth, 2 * height / cubeWidth));
 };
 
 var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
