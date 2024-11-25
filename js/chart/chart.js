@@ -836,6 +836,8 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 	return chart;
 }
 
+var nullStr = v => v !== v ? 'null' : v;
+
 function floatVFloat({samplesLength, xfield, xdata,
 		yfields, ydata,
 		xlabel, ylabel,
@@ -890,7 +892,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 			bin;
 
 		getCodedColor = code => {
-			if ("null" === code) {
+			if ("NaN" === code) {
 				return gray;
 			}
 			return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
@@ -941,7 +943,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 						};
 					}
 					multiSeries[colorCode].data.push({
-						colorLabel: scatterColorData[i],
+						colorLabel: nullStr(scatterColorData[i]),
 						name: sampleLabels[i],
 						x: x,
 						y: y,
@@ -1173,6 +1175,7 @@ class HighchartView extends PureComponent {
 
 	componentWillUnmount() {
 		this.chart?.destroy();
+		this.chart = undefined;
 		window.removeEventListener('resize', () => sizeChartView());
 	}
 

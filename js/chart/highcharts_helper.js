@@ -478,27 +478,23 @@ function addSeriesToColumn({chart, yIsCategorical = false, showDataLabel = true,
 	chart.addSeries(seriesOptions, false);
 }
 
-function average(data) {
-	var sum = data.reduce(function(a, b) {
-		return a + b;
-	}, 0);
-
-	var avg = sum / data.length;
-
-	return avg;
-}
+var average = _.mean;
 
 function standardDeviation(values, avg) {
-	var squareDiffs = values.map(function(value) {
-		var diff = value - avg;
-		var sqrDiff = diff * diff;
-		return sqrDiff;
-	});
+	if (isNaN(avg)) { // no usable data
+		return NaN;
+	}
+	var squareDiffSum = 0, count = 0;
 
-	var avgSquareDiff = average(squareDiffs);
+	for (var i = 0; i < values.length; ++i) {
+		if (!isNaN(values[i])) {
+			var d = values[i] - avg;
+			squareDiffSum += d * d;
+			count++;
+		}
+	}
 
-	var stdDev = Math.sqrt(avgSquareDiff);
-	return stdDev;
+	return Math.sqrt(squareDiffSum / count);
 }
 
 module.exports = {
