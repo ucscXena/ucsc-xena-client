@@ -370,8 +370,8 @@ var split = (str, pat) => str ? str.split(pat) : [];
 
 var resolveCodes = (probes, codes, data) =>
 	mmap(probes, data, (probe, row) =>
-			codes[probe] ? map(row, v => isNaN(v) ? v : codes[probe][v]) :
-			row);
+			map(row, codes[probe] ? v => isNaN(v) ? 'null' : codes[probe][v] :
+				v => isNaN(v) ? 'null' : v.toPrecision(4)));
 
 // not the most efficient algorithm :-/
 var addHeaders = (fields, samples, data) =>

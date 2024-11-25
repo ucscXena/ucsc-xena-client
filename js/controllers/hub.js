@@ -72,7 +72,8 @@ var checkDownload = (host, dataset) => {
 var noSnippets = () => of(undefined);
 
 // XXX See note in models/denseMatrix.js. Move this to binpack, or something.
-var toArray = x => new Float32Array(x.buffer);
+var toArray = x =>
+	x instanceof Uint8Array ? new Float32Array(x.buffer) : new Float32Array(x);
 
 function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 10) {
 	var samplesQ = datasetSamplesExamples(host, dataset, nSamples).share(),
