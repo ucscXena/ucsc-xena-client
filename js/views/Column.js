@@ -248,7 +248,7 @@ var supportsClustering = ({fieldType, fields}) =>
 var supportsDEA = (column, data) =>
 	column.codes &&
 	_.reject(_.uniq(_.getIn(data, ['req', 'values', 0])),
-		x => x == null).length > 1;
+		x => x !== x).length > 1;
 
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff, onBlitzGSEA}) {
 	var {column, isPublic, preferredExpression, data} = props,
@@ -395,6 +395,11 @@ var zoomTranslateSelection = (props, selection, zone) => {
 		zoomTo
 	};
 };
+
+
+var dataToJS = data =>
+	_.updateIn(data, ['req', 'values', 0], farr =>
+		_.map(farr, v => v !== v ? null : v));
 
 export default class Column extends PureComponent {
 	state = {
@@ -706,7 +711,7 @@ export default class Column extends PureComponent {
 		gaEvents('spreadsheet', 'DEA');
 		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
 				column} = this.props,
-			data = setUserCodes(column, dataIn),
+			data = setUserCodes(column, dataToJS(dataIn)),
 			samples = _.times(indicies.length, sampleFormat),
 			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
 			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
@@ -742,7 +747,7 @@ export default class Column extends PureComponent {
 		gaEvents('spreadsheet', 'BlitzGSEA');
 		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
 				column} = this.props,
-			data = setUserCodes(column, dataIn),
+			data = setUserCodes(column, dataToJS(dataIn)),
 			samples = _.times(indicies.length, sampleFormat),
 			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
 			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
