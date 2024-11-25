@@ -636,6 +636,7 @@ var getStudy =
 			collisson: `${cohortMetaData}/defaultStudy_collisson.json`,
 			collissonControlAccess: `${cohortMetaData}/defaultStudy_collissonControlAccess.json`,
 			controlAccess16080L: `${cohortMetaData}/defaultStudy_16-080L.json`,
+			RongFanLab: `${cohortMetaData}/defaultStudy_RongFanLab.json`,
 			default: defaultStudyURL}) =>
 		study => studyFiles[study] || defaultStudyURL);
 
