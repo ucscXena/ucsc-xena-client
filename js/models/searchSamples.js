@@ -57,16 +57,17 @@ var searchCoded = _.curry((cmp, ctx, search, data) => {
 });
 
 var tol = 0.01;
-var near = _.curry((x, y) => (x === null || y === null) ? y === x : Math.abs(x - y) < tol);
+var near = _.curry((x, y) => isNaN(x) && isNaN(y) || Math.abs(x - y) < tol);
 
 var searchFloat = _.curry((dataField, cmp, ctx, search, data) => {
 	var values = _.getIn(data, [dataField, 'values'], [[]]),
 		searchVal = search === 'null' ? null : parseFloat(search);
 
+	// three input cases: float, null, or string
 	if (searchVal === null) { // special case for null: handle sub-columns.
 		let cols = _.range(values.length),
 			rows = _.range(values[0].length);
-		return _.filterIndices(rows, i => _.every(cols, j => values[j][i] === null));
+		return _.filterIndices(rows, i => _.every(cols, j => isNaN(values[j][i])));
 	}
 	if (isNaN(searchVal) || values.length > 1) {
 		// don't try to search strings against floats, and don't try to
@@ -97,7 +98,8 @@ var searchMethod = {
 	samples: searchSampleIds
 };
 
-var eq = _.curry((x, y) => x === y);
+// using x !== x to avoid type convertion in isNaN(str)
+var eq = _.curry((x, y) => x === y || (x !== x && y !== y));
 
 var searchExactMethod = {
 	coded: searchCoded(eq),
@@ -108,10 +110,10 @@ var searchExactMethod = {
 };
 
 var empty = () => [];
-var lt = _.curry((x, y) => x !== null && y !== null && y < x);
-var le = _.curry((x, y) => x !== null && y !== null && y <= x);
-var gt = _.curry((x, y) => x !== null && y !== null && y > x);
-var ge = _.curry((x, y) => x !== null && y !== null && y >= x);
+var lt = _.curry((x, y) => !isNaN(x) && !isNaN(y) && y < x);
+var le = _.curry((x, y) => !isNaN(x) && !isNaN(y) && y <= x);
+var gt = _.curry((x, y) => !isNaN(x) && !isNaN(y) && y > x);
+var ge = _.curry((x, y) => !isNaN(x) && !isNaN(y) && y >= x);
 
 var searchLt = {
 	coded: empty,
@@ -300,7 +302,7 @@ function extendDown({index, count}, pred) {
 function equalMatrix(data, index, samples, s0, s1) {
 	var values = _.getIn(data, ['req', 'values']);
 	return values.length > 1 ? false :
-		values[0][samples[s0]] === values[0][samples[s1]];
+		eq(values[0][samples[s0]], values[0][samples[s1]]);
 }
 
 function equalFalse() {
@@ -324,7 +326,7 @@ function equalMutation(data, index, samples, s0, s1) {
 
 function equalSegmented(data, index, samples, s0, s1) {
 	var values = _.getIn(data, ['avg', 'values']);
-	return values[0][samples[s0]] === values[0][samples[s1]];
+	return eq(values[0][samples[s0]], values[0][samples[s1]]);
 }
 
 
@@ -340,7 +342,7 @@ var equalMethod = {
 	samples: equalFalse
 };
 
-var codeOrNull = (codes, val) => val == null ? 'null' : `"${codes[val]}"`;
+var codeOrNull = (codes, val) => isNaN(val) ? 'null' : `"${codes[val]}"`;
 
 function matchEqualCoded(data, index, samples, id, s) {
 	var {req: {values: [field]}, codes} = data;
@@ -348,7 +350,7 @@ function matchEqualCoded(data, index, samples, id, s) {
 }
 
 function matchEqualFloat(data, index, samples, id, s) {
-	if (_.every(data.req.values, field => field[samples[s]] == null)) {
+	if (_.every(data.req.values, field => isNaN(field[samples[s]]))) {
 		return `${id}:=null`;
 	}
 	if (data.req.values.length !== 1) {
@@ -359,8 +361,10 @@ function matchEqualFloat(data, index, samples, id, s) {
 }
 
 function matchEqualSegmented(data, index, samples, id, s) {
-	var {avg: {values: [field]}} = data;
-	return `${id}:=${field[samples[s]]}`;
+	var {avg: {values: [field]}} = data,
+		v = field[samples[s]],
+		str = isNaN(v) ? 'null' : v;
+	return `${id}:=${str}`;
 }
 
 var mutationMatches = {
@@ -392,7 +396,7 @@ function matchRangeCoded(data, index, samples, id, start, end, first) {
 
 function matchRangeFloat(data, index, samples, id, start, end) {
 	// XXX review meaning of null on multivalued columns
-	if (_.every(data.req.values, field => field[samples[start]] == null)) {
+	if (_.every(data.req.values, field => isNaN(field[samples[start]]))) {
 		return `${id}:=null`;
 	}
 	if (data.req.values.length !== 1) {
@@ -416,7 +420,7 @@ function matchRangeMutation(data, index, samples, id, start, end, first) {
 }
 
 function matchRangeSegmented(data, index, samples, id, start, end) {
-	if (_.every(data.avg.values, field => field[samples[start]] == null)) {
+	if (_.every(data.avg.values, field => isNaN(field[samples[start]]))) {
 		return `${id}:=null`;
 	}
 	var {avg: {values: [field]}} = data,
@@ -437,22 +441,25 @@ var matchRangeMethod = {
 var nullMismatchMethod = {
 	float: (data, s0, s1) =>
 		// XXX review meaning of null on multivalued columns
-		(data.req.values[0][s0] == null) !== (data.req.values[0][s1] == null),
+		isNaN(data.req.values[0][s0]) !== isNaN(data.req.values[0][s1]),
 	coded: () => false,
 	mutation: () => false,
 	segmented: (data, s0, s1) =>
-		(data.avg.values[0][s0] == null) !== (data.avg.values[0][s1] == null)
+		isNaN(data.avg.values[0][s0]) !== isNaN(data.avg.values[0][s1])
 };
 
+// This weirdness is special handling for drag on sampleID. Normally
+// we don't consider sampleID for the filter range, so we slice(1) the
+// columns and data to skip it. If the user specifically drags on the
+// sampleIDs then we leave it in, but it's the only column. We use
+// the original column count, columnsIn.length, for setting the field id.
+var draggingSamples = (columns, data, index) =>
+	columns.length === 1 ? [columns, data, index] :
+	[columns.slice(1), data.slice(1), index.slice(1)];
+
 function pickSamplesFilter(flop, dataIn, indexIn, samples, columnsIn, id, range) {
-	// This weirdness is special handling for drag on sampleID. Normally
-	// we don't consider sampleID for the filter range, so we slice(1) the
-	// columns and data to skip it. If the user specifically drags on the
-	// sampleIDs then we leave it in, but it's the only column. We use
-	// the original column count, columnsIn.length, for setting the field id.
-	var [columns, data, index] =
-		columnsIn.length === 1 ? [columnsIn, dataIn, indexIn] :
-		[columnsIn.slice(1), dataIn.slice(1), indexIn.slice(1)];
+	var [columns, data, index] = draggingSamples(columnsIn,
+			_.mmap(columnsIn, dataIn, setUserCodes), indexIn);
 	var leftCols = _.initial(columns),
 		thisCol = _.last(columns);
 	var neq = (mark, i) =>
@@ -474,9 +481,9 @@ function pickSamplesFilter(flop, dataIn, indexIn, samples, columnsIn, id, range)
 var subsortableMethod = {
 	coded: (column, data) => data.req,
 	float: (column, data, index, samples, si) => data.req &&
-		data.req.values.length === 1  && data.req.values[0][samples[si]] == null,
+		data.req.values.length === 1  && isNaN(data.req.values[0][samples[si]]),
 	segmented: (column, data, index, samples, si) => data.avg &&
-		data.avg.values.length === 1  && data.avg.values[0][samples[si]] == null,
+		data.avg.values.length === 1  && isNaN(data.avg.values[0][samples[si]]),
 	mutation: (column, data, index, samples, si) => data.req &&
 		_.isEmpty(index.bySample[samples[si]])
 };
