@@ -396,6 +396,35 @@ var zoomTranslateSelection = (props, selection, zone) => {
 	};
 };
 
+function sendAnalysis(notebook, payload) {
+	var i;
+	var ack = ev => {
+		var xenahubs = /^https?:\/\/([a-z]+\.)?xenahubs.net$/;
+		if (!xenahubs.test(ev.origin) || ev.data !== 'ack') {
+			return;
+		}
+		if (i != null) {
+			clearInterval(i);
+			i = null;
+		}
+		window.removeEventListener('message', ack, false);
+	};
+	var w = window.open(notebook);
+
+	var count = 0, d = 50;
+	i = setInterval(function() {
+		w.postMessage(payload, '*');
+		count++;
+		if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
+			clearInterval(i);
+			i = null;
+			window.removeEventListener('message', ack, false);
+		}
+
+	}, d);
+	window.addEventListener("message", ack, false);
+}
+
 
 var dataToJS = data =>
 	_.updateIn(data, ['req', 'values', 0], farr =>
@@ -720,26 +749,7 @@ export default class Column extends PureComponent {
 			//notebook = 'http://localhost:4000';
 			notebook = 'http://analysis.xenahubs.net';
 
-		var w = window.open(notebook);
-
-		var count = 0, d = 50;
-		var i = setInterval(function() {
-			w.postMessage(payload, '*');
-			count++;
-			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
-				clearInterval(i);
-				i = null;
-			}
-
-		}, d);
-		window.addEventListener("message", () => {
-			//	  if (event.origin !== "http://localhost:5000")
-			//		return;
-			if (i != null) {
-				clearInterval(i);
-				i = null;
-			}
-		}, false);
+		sendAnalysis(notebook, payload);
 	}
 
 	onBlitzGSEA = () => {
@@ -755,26 +765,7 @@ export default class Column extends PureComponent {
 			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
 			notebook = 'http://blitzGSEA.xenahubs.net';
 
-		var w = window.open(notebook);
-
-		var count = 0, d = 50;
-		var i = setInterval(function() {
-			w.postMessage(payload, '*');
-			count++;
-			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
-				clearInterval(i);
-				i = null;
-			}
-
-		}, d);
-		window.addEventListener("message", () => {
-			//	  if (event.origin !== "http://localhost:5000")
-			//		return;
-			if (i != null) {
-				clearInterval(i);
-				i = null;
-			}
-		}, false);
+		sendAnalysis(notebook, payload);
 	}
 
 	onTumorMap = (tumorMap) => {
