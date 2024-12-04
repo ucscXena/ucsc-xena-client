@@ -1,7 +1,6 @@
 var _ = require('../underscore_ext').default;
 var {parse} = require('./searchParser');
 import {setUserCodes} from './denseMatrix';
-import shortestDecimal from './shortestDecimal';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 import {listToBitmap, mapToBitmap, union, intersection, invert, isSet} from './bitmap';
 
