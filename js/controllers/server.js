@@ -232,8 +232,7 @@ var controls = {
 			var {columns, columnOrder, data, cohortSamples} = merged;
 			var matches = searchSamples(filter, columns, columnOrder, data, cohortSamples);
 			// XXX no support for cross. Always take the first.
-			var nextSamples = matches.matches[0].map(i => cohortSamples[i]);
-			serverBus.next(['sampleFilter', Rx.Observable.of(nextSamples, Rx.Scheduler.async)]);
+			serverBus.next(['sampleFilter', Rx.Observable.of(matches.matches[0], Rx.Scheduler.async)]);
 		}
 	}
 };

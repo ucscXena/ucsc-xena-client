@@ -15,6 +15,7 @@ import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
 import {hidden} from './nav';
 import {xenaColor} from './xenaColor';
+import {isSet, bitCount} from './models/bitmap';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -118,7 +119,7 @@ function getFilterColumn(samples, title, matches, exprs, opts = {}) {
 	var field = signatureField(title, {
 			columnLabel: 'Subgroup',
 			valueType: 'coded',
-			signature: ['data', columnData(samples, matches, exprs)],
+			signature: ['data', columnData(samples.length, matches, exprs)],
 			...opts
 		}),
 		settings = _.assoc(field,
@@ -148,7 +149,7 @@ export class AppControls extends PureComponent {
 
 	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
-			m = inv ? invert(samplesMatched, cohortSamples.length) :
+			m = inv ? invert(cohortSamples.length, samplesMatched) :
 				samplesMatched;
 		gaEvents('spreadsheet', 'samplesearch', inv ? 'remove' : 'keep');
 		callback(['sampleFilter', m]);
@@ -157,10 +158,9 @@ export class AppControls extends PureComponent {
 	onIntersection = () => {
 		var {columns, columnOrder, data, cohortSamples} = this.props.appState,
 			m = _.last(searchSamples("!=null", columns,
-					columnOrder, data, cohortSamples).matches),
-			matching = _.map(m, i => cohortSamples[i]);
+					columnOrder, data, cohortSamples).matches);
 		gaEvents('spreadsheet', 'samplesearch', 'nulls');
-		this.props.callback(['sampleFilter', matching]);
+		this.props.callback(['sampleFilter', m]);
 	}
 
 	onResetSampleFilter = () => {
@@ -170,9 +170,8 @@ export class AppControls extends PureComponent {
 
 	onFilterZoom = () => {
 		const {appState: {samples, samplesMatched, zoom: {height}}, callback} = this.props,
-			toOrder = _.object(samples, _.range(samples.length)),
-			index = toOrder[_.min(samplesMatched, s => toOrder[s])],
-			last = toOrder[_.max(samplesMatched, s => toOrder[s])];
+			index = _.findIndex(samples, i => isSet(samplesMatched, i)),
+			last = _.findLastIndex(samples, i => isSet(samplesMatched, i));
 		gaEvents('spreadsheet', 'samplesearch', 'zoom');
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	};
@@ -264,7 +263,7 @@ export class AppControls extends PureComponent {
 				onReset, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples,
-			matches = _.get(samplesMatched, 'length', samples.length),
+			matches = samplesMatched ? bitCount(samplesMatched) : samples.length,
 			{onMap, onPdf, onDownload, onShowWelcome} = this,
 			onMode = anyCanDraw(this.props.appState) ? this.onMode : undefined,
 			tiesOpen = _.get(ties, 'open'),

@@ -15,6 +15,7 @@ import * as columnsParam from '../columnsParam';
 import {defaultState as chartDefaultState} from '../chart/utils';
 var xenaQuery = require('../xenaQuery');
 var wasm = require('ucsc-xena-wasm');
+import {fromBitmap} from '../models/bitmap';
 
 // Rx.Observable.from() handles promises, in theory, but the wasm promise
 // does not handle then(null, errfn). This expression appears in the implementation
@@ -152,7 +153,7 @@ var spreadsheetControls = {
 			['survival'], null),
 	'sampleFilter-post!': (serverBus, state, newState, sampleFilter) => {
 		if (sampleFilter) {
-			serverBus.next(['samples', newState.cohortSamples.filter(sampleFilter).map(samples => ({samples, over: false, hasPrivateSamples: newState.hasPrivateSamples}))]);
+			serverBus.next(['samples', newState.cohortSamples.filter(fromBitmap(sampleFilter)).map(samples => ({samples, over: false, hasPrivateSamples: newState.hasPrivateSamples}))]);
 		} else {
 			fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples);
 		}

@@ -29,6 +29,7 @@ import {
 var sc = require('science');
 import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
+import {isSet, bitCount} from '../models/bitmap';
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
@@ -950,8 +951,8 @@ function floatVFloat({samplesLength, xfield, xdata,
 					});
 				}
 
-				if (samplesMatched && samplesLength !== samplesMatched.length &&
-					samplesMatched.indexOf(i) !== -1) {
+				if (samplesMatched && samplesLength !== bitCount(samplesMatched) &&
+					isSet(samplesMatched, i)) {
 					highlightSeries.push({
 						name: sampleLabels[i],
 						x: x,

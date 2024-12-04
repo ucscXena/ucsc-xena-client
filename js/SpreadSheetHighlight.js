@@ -2,6 +2,7 @@
 var React = require('react');
 var _ = require('./underscore_ext').default;
 var vgcanvas = require('./vgcanvas');
+import {isSet} from './models/bitmap';
 
 var tickWidth = 5,
 	borderWidth = 5;
@@ -24,14 +25,10 @@ var highlightImg = _.memoize1((width, height, samplesMatched, samples) => {
 	var img = new Uint32Array(width * height);
 	img.fill(0xFFFFFFFF);
 	if (samplesMatched) {
-		let matches = [];
-		for (let i = 0; i < samplesMatched.length; ++i) {
-			matches[samplesMatched[i]] = 1;
-		}
 		let count = samples.length,
 			rows = new Array(height);
 		for (let i = 0; i < samples.length; ++i) {
-			if (matches[samples[i]]) {
+			if (isSet(samplesMatched, samples[i])) {
 				rows.fill(1, i * height / count, (i + 1) * height / count + 1);
 			}
 		}
