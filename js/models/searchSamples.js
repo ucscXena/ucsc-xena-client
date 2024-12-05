@@ -2,6 +2,7 @@ var _ = require('../underscore_ext').default;
 var {parse} = require('./searchParser');
 import {setUserCodes} from './denseMatrix';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
+import shortestDecimal from './shortestDecimal';
 import {listToBitmap, mapToBitmap, union, intersection, invert, isSet} from './bitmap';
 
 var includes = (target, str) => {
@@ -381,9 +382,13 @@ function matchRangeFloat(data, index, samples, id, start, end) {
 		return '';
 	}
 	var {req: {values: [field]}} = data,
-		matches = [start, end - 1].map(i => field[samples[i]]),
-		max = _.max(matches),
-		min = _.min(matches);
+		[low, high] = [start, end - 1].map(i => field[samples[i]])
+			.sort((x, y) => x - y),
+		nlow = _.max(field, v => v < low ? v : -Infinity),
+		nhigh = _.min(field, v => v > high ? v : Infinity),
+		min = shortestDecimal(low, nlow > low ? low - 0.1 : nlow),
+		max = shortestDecimal(high, nhigh < high ? high + 0.1 : nhigh);
+
 	return `${id}:>=${min} ${id}:<=${max}`;
 }
 
