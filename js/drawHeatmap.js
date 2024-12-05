@@ -35,9 +35,9 @@ function floatLabels(rowData, minSpan) {
 	var nnLabels = minSpan <= 1 ?
 			_.filter(_.map(rowData, (v, i) => {
  				return (v % 1) ? [v.toPrecision([3]), i, 1] : [v, i, 1]; // display float with 3 significant digit, integer no change
- 			}), ([v]) => v !== null) : [],
+ 			}), ([v]) => !isNaN(v)) : [],
 		nullLabels = _.filter(findContiguous(rowData, minSpan).map(([start, len]) => [rowData[start], start, len]),
-				([v]) => v === null);
+				([v]) => isNaN(v)).map(([, start, len]) => ['null', start, len]);
 	return [...nnLabels, ...nullLabels];
 }
 
