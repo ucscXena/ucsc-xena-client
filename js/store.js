@@ -7,7 +7,7 @@ module.exports = function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
 	// responses.  To do that, we have to allocate somewhere. We can manage it by
 	// doing using a unique tag for the type of request, and using groupBy, then
-	// switchLatest. groupBy is leaky, groups last forever.
+	// switchMap.
 	var serverBus = new Rx.Subject();
 
 	// Allow a slot to be an array, in which case the groupBy key is
