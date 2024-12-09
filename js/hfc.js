@@ -140,17 +140,19 @@ function hfcProxy(Module, hasPrivateSamples) {
 	});
 }
 
-// XXX FIX ME
-// This needs to create a new hfc after filtering, to avoid large
-// memory consumption. Also need to fix the wasm method to not
-// inflate the whole thing in memory.
+// Since we can't recover wasm memory after it expands, the only way
+// to recover memory is create a smaller wasm & GC the old one. Here
+// we duplicate a wasm, then perform a filter operation. The filter
+// will expand all of the selected strings, then compress them. The
+// space used for expansion is recovered by duplicating the wasm.
 hfcFilter = function(ModuleIn, list, hasPrivateSamples) {
 	return hfcDup(ModuleIn).map(Module => {
 		var s = allocArray(new Uint32Array(list), Module);
 		Module._hfc_filter(s, list.length);
 		Module._free(s);
-		return hfcProxy(Module, hasPrivateSamples);
-	});
+		return Module;
+	}).mergeMap(Module => hfcDup(Module)) // 2nd dup, to free memory
+		.map(Module => hfcProxy(Module, hasPrivateSamples));
 };
 
 export function hfcCompress(Module, strings) {
