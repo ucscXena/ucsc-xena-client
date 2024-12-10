@@ -10,12 +10,11 @@ var gaEvents = require('./gaEvents');
 var {signatureField} = require('./models/fieldSpec');
 var {invert, searchSamples} = require('./models/searchSamples');
 import { SampleSearch } from './views/SampleSearch';
-import {columnData} from './models/searchSamples';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
 import {hidden} from './nav';
 import {xenaColor} from './xenaColor';
-import {isSet, bitCount} from './models/bitmap';
+import {fromBitmap, union, removeRows, isSet, bitCount} from './models/bitmap';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -115,11 +114,11 @@ var TiesActions = ({onTies, onTiesColumn}) => (
 		<IconButton edge='end' onClick={onTies}><Icon>close</Icon></IconButton>
 	</>);
 
-function getFilterColumn(samples, title, matches, exprs, opts = {}) {
+function getFilterColumn(title, samples, matches, exprs, opts = {}) {
 	var field = signatureField(title, {
 			columnLabel: 'Subgroup',
 			valueType: 'coded',
-			signature: ['data', columnData(samples.length, matches, exprs)],
+			signature: ['cross', samples, matches, exprs],
 			...opts
 		}),
 		settings = _.assoc(field,
@@ -180,7 +179,14 @@ export class AppControls extends PureComponent {
 		const {appState: {cohortSamples, sampleSearch, allMatches}, callback} = this.props;
 
 		gaEvents('spreadsheet', 'samplesearch', 'new column');
-		callback(['add-column', 0, getFilterColumn(cohortSamples, sampleSearch, allMatches.matches, allMatches.exprs, {filter: sampleSearch})]);
+		var u = union(...allMatches.matches);
+		cohortSamples.filter(fromBitmap(u)).subscribe(samples => {
+			var matching = allMatches.matches.map(m =>
+				removeRows(m, u, cohortSamples.length, samples.length));
+			callback(['add-column', 0,
+				getFilterColumn(sampleSearch, samples, matching, allMatches.exprs,
+								{filter: sampleSearch})]);
+		});
 	};
 
 	onTiesColumn = () => {

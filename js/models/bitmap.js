@@ -1,9 +1,9 @@
 var _ = require('../underscore_ext').default;
 
-var setBit = (bitmap, i) => bitmap[~~(i / 8)] |= 1 << i % 8;
+export var setBit = (bitmap, i) => bitmap[~~(i / 8)] |= 1 << i % 8;
 export var isSet = (bitmap, i) => bitmap[~~(i / 8)] & (1 << i % 8);
 export var listToBitmap = (n, arr) => {
-	var res = new Uint8Array(Math.ceil(n / 8));//.fill(0);
+	var res = new Uint8Array(Math.ceil(n / 8));
 	arr.forEach(v => setBit(res, v));
 	return res;
 };
@@ -52,3 +52,19 @@ var bitCounts = _.Let((r = [0]) => {
 });
 
 export var bitCount = bitmap => bitmap.reduce((acc, b) => acc + bitCounts[b], 0);
+
+// Cut rows from bitmap a where bitmap b is zero. Requires the lengths
+// of the inputs, and the output.
+export function removeRows(a, b, n, nc) {
+	var c = listToBitmap(nc, []);
+
+	for (var i = 0, j = 0; i < n; ++i) {
+		if (isSet(b, i)) {
+			if (isSet(a, i)) {
+				setBit(c, j);
+			}
+			++j;
+		}
+	}
+	return c;
+}

@@ -3,7 +3,7 @@ var {parse} = require('./searchParser');
 import {setUserCodes} from './denseMatrix';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 import shortestDecimal from './shortestDecimal';
-import {listToBitmap, mapToBitmap, union, intersection, invert, isSet} from './bitmap';
+import {listToBitmap, mapToBitmap, union, intersection, invert} from './bitmap';
 
 var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
@@ -493,39 +493,8 @@ function canPickSamples(columns, data, index, samples, columnOrder, id, si) {
 	return canSubsort && sortable(columns[id], data[id], index[id], samples, si);
 }
 
-function membershipSum(n, lists) {
-	var ret = new Float32Array(n);
-	for (var i = 0; i < n; ++i) {
-		ret[i] = lists.reduce((acc, list, j) => acc += isSet(list, i) ? 1 << j : 0, 0);
-	};
-
-	return ret;
-}
-
-// cross product of boolean terms, as text, e.g. for 2 terms,
-// !a !b, a !b, !a b, a b
-function booleanCross(terms, i = 0, acc = []) {
-	return i === terms.length ? acc :
-		booleanCross(terms, i + 1,
-			acc.length === 0 ? ['false', 'true'] :
-				acc.map(t => `${t};false`).concat(
-					acc.map(t => `${t};true`)));
-}
-
-function columnData(n, lists, exprs) {
-	var column = membershipSum(n, lists);
-
-	return {
-		req: {
-			values: [column]
-		},
-		codes: booleanCross(exprs)
-	};
-}
-
 module.exports = {
 	searchSamples,
-	columnData,
 	treeToString,
 	remapFields,
 	pickSamplesFilter,
