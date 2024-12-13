@@ -36,10 +36,13 @@ var indiciesSelector = _.memoize1(n => {
 var sortSubSelector = _.memoize1(
 	(length, columns, data) => {
 		var indicies = indiciesSelector(length),
-			d = _.flatmap(data, d => _.getIn(d, ['req', 'values']))
-				.filter(x => x.length),
-			dir = _.pluck(columns, 'sortDirection');
+			sd = _.pluck(columns, 'sortDirection'),
+			scd = _.flatmap(data, (d, i) =>
+					_.getIn(d, ['req', 'values']).map(sc => [sc, sd[i]]))
+				.filter(([x]) => x.length === length),
+			[d, dir] = scd.length ? _.transpose(scd) : [[], []];
 
+		// XXX this || looks wrong. The sort never returns falsey.
 		return fradixSortL16$64(d, dir, indicies) || indicies;
 });
 
