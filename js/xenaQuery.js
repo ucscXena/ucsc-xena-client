@@ -348,7 +348,14 @@ function doPostBPJ(name, host, ...params) {
 	var query = getBPJQuery(name);
 	return dispatchQuery(
 		xenaPostBPJ(host, xenaCallBPJ(query, ...params))
-	).map(ajax => ({ajax, resp: parse(new Uint8Array(ajax.response))}));
+	).map(ajax => {
+		if (ajax.status === 0) {
+			// ajax failures in Firefox are not throwing for some reason,
+			// so check status here & explicitly throw.
+			throw ajax;
+		}
+		return {ajax, resp: parse(new Uint8Array(ajax.response))};
+	});
 }
 
 function doPostJSON(name, host, ...params) {
