@@ -22,7 +22,6 @@ import wrapLaunchHelper from '../LaunchHelper';
 var migrateState = require('../migrateState');
 var {expandState} = require('../compactData');
 import selector from '../appSelector';
-var wasm = require('ucsc-xena-wasm');
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -107,15 +106,15 @@ class ApplicationContainer extends PureComponent {
 		this.props.callback(['navigate', page, params]);
 	};
 
-	onImport = (content) => {
-		wasm().then(Module => {
-			try {
-				this.props.callback(['import', schemaCheckThrow(migrateState(expandState(Module, JSON.parse(content))))]);
-			} catch (err) {
+	onImport = content => {
+		Rx.Observable.of(content).map(c => migrateState(JSON.parse(c)))
+		.flatMap(expandState)
+		.map(schemaCheckThrow).subscribe(
+			state => this.props.callback(['import', state]),
+			err => {
 				console.error('import error', err);
 				this.props.callback(['import-error']);
-			}
-		});
+			});
 	};
 
 	onHighlightSelect = highlight => {

@@ -4,7 +4,6 @@ var Rx = require('./rx').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
 var LZ = require('./lz-string');
-var nostate = require('./nostate');
 import urlParams from './urlParams';
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
@@ -47,16 +46,18 @@ var dropTransient = state =>
 	_.assoc(state, 'wizard', {}, 'datapages', undefined, 'localStatus', undefined, 'localQueue', undefined, 'import', undefined);
 
 // Serialization
-var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
-var parse = (Module, str) => schemaCheckThrow(expandState(Module, migrateState(JSON.parse(LZ.decompressFromUTF16(str)))));
+var stringify = state => LZ.compressToUTF16(
+	JSON.stringify(compactState(dropTransient(state))));
+var parse = str => expandState(migrateState(JSON.parse(LZ.decompressFromUTF16(str))))
+	.map(schemaCheckThrow);
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
 	.map(() => ['history', _.object(['path', 'params'], urlParams())]);
 
 //
-module.exports = function({
-	Module,
+function connect({
+	savedState,
 	Page,
 	controller,
 	persist,
@@ -72,11 +73,11 @@ module.exports = function({
 		runner = controlRunner(serverBus, controller);
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
-	if (persist && nostate('xena')) {
-		try {
-			initialState = parse(Module, sessionStorage.xena);
-		} catch (e) {
+	if (persist && savedState) {
+		if (savedState instanceof Error) {
 			initialState = _.assoc(initialState, 'stateError', 'session');
+		} else {
+			initialState = savedState;
 		}
 	}
 
@@ -95,4 +96,13 @@ module.exports = function({
 	// Kick things off.
 	uiBus.next(['init', ...urlParams()]);
 	return dom;
+};
+
+var {Observable: {of}} = Rx;
+module.exports = function(args) {
+	var saved = sessionStorage.xena;
+
+	of(saved).flatMap(s => s ? parse(s) : of(null)).subscribe(
+		savedState => connect({...args, savedState}),
+		savedState => connect({...args, savedState})); // pass error as state
 };

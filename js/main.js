@@ -26,7 +26,6 @@ var {initialState} = require('./initialState');
 const connector = require('./connector');
 const createStore = require('./store');
 const xenaWasm = require('./xenaWasm');
-var wasm = require('ucsc-xena-wasm');
 
 // Hot load controllers. Note that hot loading won't work if one of the methods
 // is captured in a closure or variable which we can't access.  References to
@@ -84,6 +83,7 @@ const main = window.document.getElementById('main');
 // controllers run in the opposite order as listed in compose().
 const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
 
-xenaWasm.loaded.then(() => wasm()).then(Module => {
-	connector({...store, Module, initialState, controller, main, Page: PageContainer, persist: true, history: false});
+xenaWasm.loaded.then(() => {
+	connector({...store, initialState, controller, main, Page: PageContainer,
+		persist: true, history: false});
 });

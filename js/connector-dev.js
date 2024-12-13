@@ -6,7 +6,6 @@ var ReactDOM = require('react-dom');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
-var nostate = require('./nostate');
 import urlParams from './urlParams';
 var LZ = require('./lz-string');
 var {compactState, expandState} = require('./compactData');
@@ -33,35 +32,23 @@ function stringify(state) {
 		   committedState: compactState(dropTransient(state.committedState))
 	}));
 }
-function parse(Module, str) {
+function parse(str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
-	return {
+	return expandState(migrateState(state.committedState)).map(cstate => ({
 		...state,
-		committedState: schemaCheckThrow(expandState(Module, migrateState(state.committedState)))
-	};
+		committedState: schemaCheckThrow(cstate)
+	}));
 }
 
 //
 var unwrapDevState = state => _.last(state.computedStates).state;
 
-function getSavedState(Module, persist) {
-	delete sessionStorage.xena; // Free up space & don't try to share with prod.
-	if (persist && nostate('debugSession')) {
-		try {
-			return parse(Module, sessionStorage.debugSession);
-		} catch(err) {
-			console.log("Unable to load saved debug session", err);
-		}
-	}
-	return null;
-}
-
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
 	.map(() => ['history', _.object(['path', 'params'], urlParams())]);
 
-module.exports = function({
-	Module,
+function connect({
+	savedState,
 	Page,
 	controller,
 	persist,
@@ -78,6 +65,8 @@ module.exports = function({
 		devCh = devBus,
 		devtoolsVisible = false; // Change this to turn on the debug window at start.
 
+	delete sessionStorage.xena; // Free up space & don't try to share with prod.
+
 	var DevTools = createDevTools(
 		<DockMonitor defaultIsVisible={devtoolsVisible}
 				toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
@@ -85,12 +74,12 @@ module.exports = function({
 		</DockMonitor>),
 
 		devReducer = DevTools.instrument(controller, initialState),
-		savedState = getSavedState(Module, persist),
 		// Here we need not just the initial state, but to know if we have a
 		// saved state. The initial state is used in devtools as the 'reset'
 		// target. So, we can't replace initial state with saved state.
-		devInitialState = devReducer(null, savedState ?
+		devInitialState = devReducer(null, persist && savedState ?
 			{type: 'IMPORT_STATE', nextLiftedState: savedState} : {});
+
 
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this
 	// from 'scan', since 'scan' should be side-effect free. However we've lost
@@ -159,4 +148,16 @@ module.exports = function({
 	// setting hubs, for example.
 	uiBus.next(['init', ...urlParams()]);
 	return dom;
+};
+
+var {Observable: {of}} = Rx;
+module.exports = function(args) {
+	var saved = sessionStorage.debugSession;
+
+	of(saved).flatMap(s => s ? parse(s) : of(null)).subscribe(
+		savedState => connect({...args, savedState}),
+		err => {
+			console.warn("Unable to load saved debug session", err);
+			connect({...args, savedState: null});
+		});
 };

@@ -14,7 +14,7 @@ var {schemaCheckThrow} = require('../schemaCheck');
 import spinner from '../ajax-loader.gif';
 var migrateState = require('../migrateState');
 var {expandState} = require('../compactData');
-var wasm = require('ucsc-xena-wasm');
+var Rx = require('../rx');
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
@@ -87,14 +87,14 @@ class Transcripts extends React.Component {
 	};
 
 	onImport = (content) => {
-		wasm().then(Module => {
-			try {
-				this.props.callback(['import', schemaCheckThrow(migrateState(expandState(Module, JSON.parse(content))))]);
-			} catch(err) {
+		Rx.Observable.of(content).map(c => migrateState(JSON.parse(c)))
+		.flatMap(expandState)
+		.map(schemaCheckThrow).subscribe(
+			state => this.props.callback(['import', state]),
+			err => {
 				console.error('import error', err);
 				this.props.callback(['import-error']);
-			}
-		});
+			});
 	};
 
 	onHideError = () => {

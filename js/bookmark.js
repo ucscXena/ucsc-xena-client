@@ -4,6 +4,7 @@ var {uniq} = require('./underscore_ext').default;
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
+var {Observable: {of}} = require('./rx').default;
 
 var version = 1;
 
@@ -13,7 +14,9 @@ var version = 1;
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify({version, appState: compactState(state)}));
-var parse = (Module, bookmark) => schemaCheckThrow(expandState(Module, migrateState(JSON.parse(LZ.decompressFromUTF16(bookmark)).appState)));
+var parse = bookmark => of(bookmark)
+	.map(b => migrateState(JSON.parse(LZ.decompressFromUTF16(b)).appState))
+	.flatMap(expandState).map(schemaCheckThrow);
 
 function getRecent() {
 	try {

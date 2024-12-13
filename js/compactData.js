@@ -1,17 +1,33 @@
 
 // ad hoc reversible state transforms that make it more compressable.
 // Also handles serialization of binary objects, and conversion of plain
-// js to binary objects.
+// js to binary objects (in the case of migrating from old schema).
 
 var _ = require('./underscore_ext').default;
 var arrays = require('./arrays');
 import {hfcSync, hfcCompress} from './hfc';
+var wasm = require('ucsc-xena-wasm');
+import {listToBitmap} from './models/bitmap';
+var Rx = require('./rx').default;
+
+var {Observable: {from, of, zipArray}} = Rx;
+
 
 var to32BinStr = arr => arrays.ab2str(Uint32Array.from(arr).buffer);
 var from32BinStr = str => Array.from(new Uint32Array(arrays.str2ab(str)));
 var to16BinStr = arr => arrays.ab2str(Uint16Array.from(arr).buffer);
 var from16BinStr = str => Array.from(new Uint16Array(arrays.str2ab(str)));
 
+// ab2str requires even byte count, so amend the length if necessary.
+var even = arr => arr.length % 2 === 0 ? arr : Uint8Array.from([...Array.from(arr), 0]);
+
+// Note these returned typed arrays, while the above return js arrays. The
+// above are for sparse data types which we don't hold in state as typed.
+// The below are for serializing typed data introduced with the singlecell
+// support.
+var to8BinStr = arr => ({length: arr.length, str: arrays.ab2str(even(arr).buffer)});
+var from8BinStr = ({length, str}) => new Uint8Array(arrays.str2ab(str))
+	.slice(0, length);
 var float32To32BinStr = arr => arrays.ab2str(arr.buffer);
 var float32From32BinStr = str => new Float32Array(arrays.str2ab(str));
 
@@ -99,6 +115,16 @@ var compactData = state =>
 	_.updateIn(state, ['spreadsheet', 'data'], data =>
 			_.fmap(data, (colData, uuid) => encode(colType(state, uuid), colData)));
 
+var compactSubgroupSamples = state =>
+	_.updateIn(state, ['spreadsheet', 'columns'],
+		columns => _.fmap(columns, col =>
+			_.getIn(col, ['signature', 0]) === 'cross' ?
+				_.updateIn(col, ['signature', 1],
+					s => ({buffer: arrays.ab2str(s.proxied.buffer)}),
+					['signature', 2],
+					matches => matches.map(to8BinStr)) :
+				col));
+
 var compactSamples = state =>
 	_.updateIn(state, ['spreadsheet', 'cohortSamples'],
 		s => ({buffer: arrays.ab2str(s.proxied.buffer),
@@ -107,7 +133,8 @@ var compactSamples = state =>
 
 var compactState = state =>
 	_.get(state.spreadsheet, 'cohortSamples') ?
-		compactSamples(compactSurvival(compactData(state))) : state;
+		compactSubgroupSamples(compactSamples(compactSurvival(compactData(state)))) :
+		state;
 
 var expandSurvival = state =>
 	_.getIn(state, survivalPath) ?
@@ -165,9 +192,14 @@ var reorderSamples = state =>
 	_.Let(({spreadsheet: {cohortSamples}} = state) =>
 		_.isArray(cohortSamples) ? sortData(state) : state);
 
-var createSamples = (Module, samples, hasPrivateSamples) =>
-	_.isArray(samples) ? hfcSync(Module, hfcCompress(Module, samples),
-		hasPrivateSamples) :
+// XXX doesn't recover memory after compressing from an array.
+// Would need to create another wasm to do this, and make this
+// code path async.
+var hfcFromArray = (Module, samples, hasPrivateSamples) =>
+	hfcSync(Module, hfcCompress(Module, samples), hasPrivateSamples);
+
+var createHfc = (Module, samples, hasPrivateSamples) =>
+	_.isArray(samples) ? hfcFromArray(Module, samples, hasPrivateSamples) :
 	hfcSync(Module, new Uint8Array(arrays.str2ab(samples.buffer)),
 		samples.hasPrivateSamples);
 
@@ -184,18 +216,49 @@ var setSamples = (state, samples) =>
 		})
 	});
 
+var findHfc = state =>
+	_.Let((columns = _.getIn(state, ['spreadsheet', 'columns'], {})) =>
+		Object.keys(columns).filter(k => _.getIn(columns, [k, 'signature', 0]) === 'cross'));
+
+var expandCross = (Module, cross) =>
+	_.Let(([, samples, matches, exprs] = cross) =>
+		['cross', createHfc(Module, samples, false), matches.map(from8BinStr), exprs]);
+
+// migrate old cross signatures to hfc & bitmaps
+var migrateCross = (Module, cross) =>
+	_.Let(([, matches, exprs] = cross,
+		union = _.union(...matches).sort(),
+		bitmaps = matches.map(list =>
+			_.Let((s = new Set(list)) =>
+				listToBitmap(union.length,
+					_.filterIndices(union, sample => s.has(sample)))))) =>
+	['cross', hfcFromArray(Module, union, false), bitmaps, exprs]);
+
+
+var expandMigrateCross = (Module, cross) =>
+	(cross.length === 4 ? expandCross : migrateCross)(Module, cross);
+
+var expandSubgroupSamples = state =>
+	_.Let((columns = findHfc(state)) =>
+		zipArray(columns.map(() => from(wasm())))
+			.map(Modules => Modules.reduce((state, Module, i) =>
+				_.updateIn(state, ['spreadsheet', 'columns', columns[i], 'signature'],
+					cross => expandMigrateCross(Module, cross)), state)));
+
 // If there is a sample list instantiate an hfc to represent it. Can be
 // a compressed binary blob or a plain js array.
-var expandSamples = (Module, state) =>
+var expandSamples = state =>
 	_.Let(({cohortSamples} = state.spreadsheet) =>
-		!cohortSamples ? state :
-		_.Let((samples = createSamples(Module, cohortSamples,
-			state.spreadsheet.hasPrivateSamples)) => setSamples(state, samples)));
+		!cohortSamples ? of(state) :
+		from(wasm()).map(Module =>
+			_.Let((samples = createHfc(Module, cohortSamples,
+				state.spreadsheet.hasPrivateSamples)) => setSamples(state, samples)))
+		.flatMap(expandSubgroupSamples));
 
-var expandState = (Module, state) =>
+var expandState = state =>
 	state.spreadsheet ?
-		expandSamples(Module, reorderSamples(expandSurvival(expandData(state)))) :
-		state;
+		expandSamples(reorderSamples(expandSurvival(expandData(state)))) :
+		of(state);
 
 module.exports = {
 	compactState,

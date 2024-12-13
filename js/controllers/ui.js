@@ -14,20 +14,7 @@ var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
 import {defaultState as chartDefaultState} from '../chart/utils';
 var xenaQuery = require('../xenaQuery');
-var wasm = require('ucsc-xena-wasm');
 import {fromBitmap} from '../models/bitmap';
-
-// Rx.Observable.from() handles promises, in theory, but the wasm promise
-// does not handle then(null, errfn). This expression appears in the implementation
-// of from(), for error handling. wasm throws calling the null. So, wrap it here.
-// Not sure we actually need this, except to silence the error.
-var fromWasm = wasm =>
-	Rx.Observable.create(function (observer) {
-		wasm.then(next => {
-			observer.next(next);
-			observer.complete();
-		}, err => observer.error(err));
-	});
 
 function fetchBookmark(serverBus, bookmark) {
 	gaEvents('bookmark', 'load');
@@ -35,8 +22,7 @@ function fetchBookmark(serverBus, bookmark) {
 		responseType: 'text',
 		method: 'GET',
 		url: `/api/bookmarks/bookmark?id=${bookmark}`
-	}).switchMap(r => fromWasm(wasm())
-		.map(Module => parseBookmark(Module, r.response)))]);
+	}).flatMap(r => parseBookmark(r.response))]);
 }
 
 function fetchDatasetCohort(serverBus, {host, name}) {
