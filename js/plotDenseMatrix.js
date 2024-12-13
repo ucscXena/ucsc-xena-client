@@ -55,7 +55,10 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
-function sigTooltip(genes, missing, val) {
+var crossTooltip = ([, , exprs], missing, val) =>
+	_.Let((s = exprs.join('; ')) => [['sig', s, s, val]]);
+
+function geneTooltip([, , genes], missing, val) {
 	let visibleCount = 2,
 		moreCount = genes.length - visibleCount,
 		visible = genes.slice(0, visibleCount),
@@ -69,15 +72,19 @@ function sigTooltip(genes, missing, val) {
 			 val]];
 }
 
+
+var sigTooltip = _.Let((type = {cross: crossTooltip, geneSignature: geneTooltip}) =>
+	(sig, ...args) => type[sig[0]](sig, ...args));
+
+
 function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
-	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, {genes, missing}, ev) {
+	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, {signature: sig, missing}, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
 		pos = _.get(position, fieldIndex),
-		field = fields[fieldIndex],
-		sig = !!genes;
+		field = fields[fieldIndex];
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleID]),
 		code = _.get(codes, val),
@@ -92,7 +99,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		id,
 		fieldIndex,
 		rows: [
-			sig ? sigTooltip(genes, missing, val) : [['labelValue', label, val]],
+			sig ? sigTooltip(sig, missing, val) : [['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
 			...(!codes && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
@@ -241,11 +248,10 @@ class extends PureComponent {
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
 			{assembly, fields, heatmap, width, dataset, missing, signature} = column,
-			[, , genes] = signature || [],
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
-			codes, position, width, zoom, samples, {genes, missing}, ev);
+			codes, position, width, zoom, samples, {signature, missing}, ev);
 	};
 
 	// To reduce this set of properties, we could
