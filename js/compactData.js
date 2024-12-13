@@ -115,20 +115,23 @@ var compactData = state =>
 	_.updateIn(state, ['spreadsheet', 'data'], data =>
 			_.fmap(data, (colData, uuid) => encode(colType(state, uuid), colData)));
 
+var encodeHfc = samples => ({
+	encoding: 'hfc',
+	buffer: arrays.ab2str(samples.proxied.buffer),
+	hasPrivateSamples: samples.hasPrivateSamples
+});
+
 var compactSubgroupSamples = state =>
 	_.updateIn(state, ['spreadsheet', 'columns'],
 		columns => _.fmap(columns, col =>
 			_.getIn(col, ['signature', 0]) === 'cross' ?
-				_.updateIn(col, ['signature', 1],
-					s => ({encoding: 'hfc', buffer: arrays.ab2str(s.proxied.buffer)}),
-					['signature', 2],
-					matches => matches.map(to8BinStr)) :
+				_.updateIn(col, ['signature'], ([, matches, exprs, samples]) =>
+					['cross', matches.map(to8BinStr), exprs, encodeHfc(samples)]) :
 				col));
 
 var compactSamples = state =>
 	_.updateIn(state, ['spreadsheet', 'cohortSamples'],
-		s => ({encoding: 'hfc', buffer: arrays.ab2str(s.proxied.buffer),
-			hasPrivateSamples: s.hasPrivateSamples}),
+		encodeHfc,
 		['spreadsheet', 'data', 'samples'], data => _.dissoc(data, 'codes'));
 
 var compactState = state =>
@@ -221,8 +224,8 @@ var findHfc = state =>
 		Object.keys(columns).filter(k => _.getIn(columns, [k, 'signature', 0]) === 'cross'));
 
 var expandCross = (Module, cross) =>
-	_.Let(([, samples, matches, exprs] = cross) =>
-		['cross', createHfc(Module, samples, false), matches.map(from8BinStr), exprs]);
+	_.Let(([, matches, exprs, samples] = cross) =>
+		['cross', matches.map(from8BinStr), exprs, createHfc(Module, samples, false)]);
 
 // migrate old cross signatures to hfc & bitmaps
 var migrateCross = (Module, cross) =>
@@ -232,7 +235,7 @@ var migrateCross = (Module, cross) =>
 			_.Let((s = new Set(list)) =>
 				listToBitmap(union.length,
 					_.filterIndices(union, sample => s.has(sample)))))) =>
-	['cross', hfcFromArray(Module, union, false), bitmaps, exprs]);
+	['cross', bitmaps, exprs, hfcFromArray(Module, union, false)]);
 
 
 var expandMigrateCross = (Module, cross) =>

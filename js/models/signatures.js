@@ -75,7 +75,7 @@ function matchSamples(a, b, bmaps) {
 	return amaps;
 }
 
-function evalCross({samples}, filterSamples, matches, exprs) {
+function evalCross({samples}, matches, exprs, filterSamples) {
 	var nMatches = matchSamples(samples, filterSamples, matches);
 
 	return {

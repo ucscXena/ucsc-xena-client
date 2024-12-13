@@ -118,7 +118,7 @@ function getFilterColumn(title, samples, matches, exprs, opts = {}) {
 	var field = signatureField(title, {
 			columnLabel: 'Subgroup',
 			valueType: 'coded',
-			signature: ['cross', samples, matches, exprs],
+			signature: ['cross', matches, exprs, samples],
 			...opts
 		}),
 		settings = _.assoc(field,
