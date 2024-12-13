@@ -11,7 +11,7 @@ require('./scale');
 require('./underscore_ext').default;
 // this is unreliable in CI
 //require('./fieldFetch');
-require('./compactData');
+//require('./compactData');
 require('./parsePos');
 require('./permuteCase');
 require('./lcs');
