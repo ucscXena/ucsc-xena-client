@@ -25,7 +25,7 @@ var even = arr => arr.length % 2 === 0 ? arr : Uint8Array.from([...Array.from(ar
 // above are for sparse data types which we don't hold in state as typed.
 // The below are for serializing typed data introduced with the singlecell
 // support.
-var to8BinStr = arr => ({length: arr.length, str: arrays.ab2str(even(arr).buffer)});
+var to8BinStr = arr => ({encoding: 'Uint8Array', length: arr.length, str: arrays.ab2str(even(arr).buffer)});
 var from8BinStr = ({length, str}) => new Uint8Array(arrays.str2ab(str))
 	.slice(0, length);
 var float32To32BinStr = arr => arrays.ab2str(arr.buffer);
@@ -120,14 +120,14 @@ var compactSubgroupSamples = state =>
 		columns => _.fmap(columns, col =>
 			_.getIn(col, ['signature', 0]) === 'cross' ?
 				_.updateIn(col, ['signature', 1],
-					s => ({buffer: arrays.ab2str(s.proxied.buffer)}),
+					s => ({encoding: 'hfc', buffer: arrays.ab2str(s.proxied.buffer)}),
 					['signature', 2],
 					matches => matches.map(to8BinStr)) :
 				col));
 
 var compactSamples = state =>
 	_.updateIn(state, ['spreadsheet', 'cohortSamples'],
-		s => ({buffer: arrays.ab2str(s.proxied.buffer),
+		s => ({encoding: 'hfc', buffer: arrays.ab2str(s.proxied.buffer),
 			hasPrivateSamples: s.hasPrivateSamples}),
 		['spreadsheet', 'data', 'samples'], data => _.dissoc(data, 'codes'));
 
