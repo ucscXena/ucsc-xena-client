@@ -96,6 +96,7 @@ export function fradixSortL16$64(input, direction, indicies) {
 
 	var r = new Uint32Array(Module.HEAPU8.buffer.slice(indiciesW, indiciesW + 4 * N));
 	freeList(list, input.length);
+	Module._free(dirs);
 	Module._free(indiciesW);
 	return r;
 }
