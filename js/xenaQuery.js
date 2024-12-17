@@ -311,7 +311,8 @@ function xenaCallBPJ(queryFn, ...params) {
 var BPJAlts = {
 	cohortSamples: 'cohortSamplesHFC',
 	datasetSamplesExamples: 'datasetSamplesHFCExamples',
-	datasetMetadata: 'datasetMetadataHFC'
+	datasetMetadata: 'datasetMetadataHFC',
+	datasetList: 'datasetListHFC'
 };
 
 var getBPJQuery = name => _.get(qs, _.get(BPJAlts, name, name));
