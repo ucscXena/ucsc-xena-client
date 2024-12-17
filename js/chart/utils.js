@@ -23,13 +23,16 @@ function cardinality(coll, max) {
 	return s.size;
 }
 
+// no dense data
+var noData = subcols => subcols.every(subcol => subcol.every(isNaN));
+
 var isSuitable = ({data, columns}, allowMulti, id) =>
 	!(
 		id === "samples" ||  // ignore samples column
 		!columns[id] || // deleted
 		columns[id].valueType === "mutation" || // to be implemented
 		data[id].status !== "loaded" || // bad column
-		data[id].req.values && data[id].req.values.length === 0 || // bad column
+		data[id].req.values && noData(data[id].req.values) || // bad column
 		data[id].req.rows && data[id].req.rows.length === 0 || // bad column
 		// ignore any coded columns with too many items
 		columns[id].codes && cardinality(data[id].req.values[0], 100) === 100 ||
