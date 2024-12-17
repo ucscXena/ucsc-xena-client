@@ -274,7 +274,7 @@ var thread = (...fns) =>
 // global actions
 var pageControls = {
 	init: (state, url, params = {}) =>
-		thread(setParamStudy, resetIntegration, setDefaultStudyID)(state, params),
+		thread(resetIntegration, setParamStudy, setDefaultStudyID)(state, params),
 	// This drops our large data, so we can preserve the page state w/o
 	// overflowing browser limits. It also avoids needing to handle
 	// serialization of binary objects for sessionStorage.
