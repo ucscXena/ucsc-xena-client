@@ -54,7 +54,6 @@ export const defaultServers = [
 	servers.atacSeqHub,
 	servers.kidsFirstHub,
 	"https://previewsinglecell.xenahubs.net",
-	"https://tmpsinglecell.xenahubs.net",
 	servers.notebook
 ];
 
