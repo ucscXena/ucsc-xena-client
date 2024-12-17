@@ -10,11 +10,22 @@ var COHORT_UNASSIGNED = '(unassigned)';
 var renderInputComponent = ({...props}) => (
 	<XAutosuggestInput {...props} />);
 
+var numPrefix = a => a[0] >= '0' && a[0] <= '9';
+var neStrCmp = (a, b) => a < b ? -1 : 1;
+var cohortCmp = (a, b) =>
+	a === b ? 0 :
+	a === COHORT_UNASSIGNED ? 1 :
+	b === COHORT_UNASSIGNED ? -1 :
+	numPrefix(a) && numPrefix(b) ? neStrCmp(a, b) : // hack to put 10x cohorts at end
+	numPrefix(a) ? 1 :
+	numPrefix(b) ? -1 :
+	neStrCmp(a, b);
+
 var getSuggestions = (value, cohorts) => {
 	const wordValues = value.toLowerCase().trim().split(/\s+/);
 	return cohorts
 		.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1))
-		.sort((a, b) => a === COHORT_UNASSIGNED ? 1 : b === COHORT_UNASSIGNED ? -1 : a < b ? -1 : 1);
+		.sort(cohortCmp);
 };
 
 export class CohortSuggest extends PureComponent {
