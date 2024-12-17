@@ -89,6 +89,28 @@
 	margin: 0;
 }
 
+.chart [class*='highcharts-plot-line-label'] div {
+	align-items: center;
+	background-color: rgba(255, 255, 255, 0.6);
+	border: 1px solid rgba(33, 33, 33, 0.5);
+	color: #212121;
+	cursor: pointer;
+	display: flex;
+	font-size: 11px;
+	gap: 4px;
+	line-height: 16px;
+	padding: 2px 6px;
+	position: relative;
+}
+
+.chart [class*='highcharts-plot-line-label'] [class='copy'] {
+	display: none;
+}
+
+.chart [class*='highcharts-plot-line-label']:hover [class='copy'] {
+	display: flex;
+}
+
 .violinTooltip td {
 	border: 1px solid black;
 	padding: 0 1px;

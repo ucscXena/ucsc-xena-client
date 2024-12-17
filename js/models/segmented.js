@@ -299,7 +299,18 @@ function averageSegments(column, data, count, index) {
 			mean: _.pluck(mm, 'mean'),
 			median: _.pluck(mm, 'median'),
 			min: _.pluck(mm, 'min'),
-			max: _.pluck(mm, 'max')
+			max: _.pluck(mm, 'max'),
+			sd: _.pluck(mm, 'sd'),
+			p01: _.pluck(mm, 'p01'),
+			p99: _.pluck(mm, 'p99'),
+			p05: _.pluck(mm, 'p05'),
+			p95: _.pluck(mm, 'p95'),
+			p10: _.pluck(mm, 'p10'),
+			p90: _.pluck(mm, 'p90'),
+			p25: _.pluck(mm, 'p25'),
+			p75: _.pluck(mm, 'p75'),
+			p33: _.pluck(mm, 'p33'),
+			p66: _.pluck(mm, 'p66'),
 		}
 	};
 }

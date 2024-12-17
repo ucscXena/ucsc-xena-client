@@ -96,9 +96,117 @@ var codedTooltip = (isHisto, xAxisTitle, categories, Y) =>
 	isHisto ? histoTooltip(categories, Y) :
 	distTooltip(categories, Y);
 
-function densityChart({chartOptions, Y}) {
+var pctLabel = {
+	'p01': '1st',
+	'p05': '5th',
+	'p10': '10th',
+	'p25': '25th',
+	'p33': '33rd',
+	'p66': '66th',
+	'p75': '75th',
+	'p90': '90th',
+	'p95': '95th',
+	'p99': '99th',
+	'sd01': '1 stdev',
+	'sd01_': '-1 stdev',
+	'sd02': '2 stdev',
+	'sd02_': '-2 stdev',
+	'sd03': '3 stdev',
+	'sd03_': '-3 stdev'
+};
+
+var isBelowMean = key => /^(p([0-4][0-9])|sd0[1-3]_)$/.test(key);
+var isMeanOrMedian = key => /^(mean|median)$/.test(key);
+
+function plotlineOpts([key, values]) {
+	if (!key || !values) {
+		return;
+	}
+	var isPct = Boolean(pctLabel[key]),
+		belowMean = isBelowMean(key),
+		meanOrMedian = isMeanOrMedian(key),
+		isLeft = belowMean || meanOrMedian, // plotline label alignment
+		label = pctLabel[key] || key,
+		value = _.first(values);
+	return {
+		dashStyle: isPct ? 'dash' : 'solid',
+		label: {
+			align: isLeft ? 'left' : 'right',
+			style: {
+				textTransform: isPct ? 'none' : 'capitalize',
+			},
+			text: `<div style='margin: 0 7px;'><span>${label}: ${value.toPrecision(4)}</span>
+						<svg fill='none' height='10' style='bottom: -9px; left: ${isLeft ? '-9px' : 'undefined'}; position: absolute; right: ${isLeft ? 'undefined' : '-9px'};' viewBox='0 0 10 10' width='10'><path opacity='0.5' d='${isLeft ? 'M9 1L1 9' : 'M9 9.00003L1 1.00003'}' stroke='#212121'/></svg>
+						<svg class='copy' fill='none' height='14' viewBox='0 0 14 14' width='14'><path d='M5.25 10.5C4.92917 10.5 4.65451 10.3858 4.42604 10.1573C4.19757 9.92883 4.08333 9.65417 4.08333 9.33334V2.33334C4.08333 2.01251 4.19757 1.73785 4.42604 1.50938C4.65451 1.28091 4.92917 1.16667 5.25 1.16667H10.5C10.8208 1.16667 11.0955 1.28091 11.324 1.50938C11.5524 1.73785 11.6667 2.01251 11.6667 2.33334V9.33334C11.6667 9.65417 11.5524 9.92883 11.324 10.1573C11.0955 10.3858 10.8208 10.5 10.5 10.5H5.25ZM5.25 9.33334H10.5V2.33334H5.25V9.33334ZM2.91667 12.8333C2.59583 12.8333 2.32118 12.7191 2.09271 12.4906C1.86424 12.2622 1.75 11.9875 1.75 11.6667V3.50001H2.91667V11.6667H9.33333V12.8333H2.91667Z' fill='#1C1B1F'/></svg>
+					</div>`,
+			y: meanOrMedian ? 0 : belowMean ? -32 : 32,
+		},
+		value
+	};
+}
+
+function addXAxisPlotline({chart, ...opts}) {
+	var plotLineOptions = _.deepMerge({
+		color: '#21212180',
+		label: {
+			rotation: 0,
+			style: {
+				fontSize: '11px',
+				textTransform: 'capitalize',
+			},
+			useHTML: true,
+			verticalAlign: 'middle',
+			x: 0,
+		},
+		width: 1,
+	}, opts);
+	chart.xAxis[0].addPlotLine(plotLineOptions);
+}
+
+function addCopyToXAxisPlotlineLabel({chart}) {
+	chart.xAxis[0].plotLinesAndBands.forEach((plotLine) => {
+		if (plotLine && plotLine.svgElem) {
+			setTimeout(() => {
+				var {label, options} = plotLine,
+					{value} = options || {};
+					label?.on('click', function () {
+						navigator.clipboard.writeText(value);
+					});
+			}, 0);
+		}
+	});
+}
+
+function positionXAxisPlotlineLabel({chart}) {
+	var {chartWidth, xAxis} = chart;
+	xAxis[0].plotLinesAndBands.forEach(({label}) => {
+		if (label) {
+			var {alignAttr, alignOptions: {align} = {}, element} = label;
+			if (align === 'right') {
+				element.style.removeProperty('left');
+				element.style.setProperty('right', `${chartWidth - alignAttr.x}px`);
+			}
+		}
+	});
+}
+
+function densityChart({chartOptions, yavg, Y}) {
 	var opts = {
-		chart: {zoomType: 'x'},
+		chart: {
+			events: {
+				load: function() {
+					Object.entries(yavg || {}).forEach((measure) => {
+						addXAxisPlotline({chart: this,  ...plotlineOpts(measure)});
+					});
+					addCopyToXAxisPlotlineLabel({chart: this});
+					positionXAxisPlotlineLabel({chart: this});
+				},
+				redraw: function() {
+					positionXAxisPlotlineLabel({chart: this});
+				},
+			},
+			zoomType: 'x'
+		},
 		legend: {
 			enabled: false
 		},
@@ -126,7 +234,7 @@ function densityChart({chartOptions, Y}) {
 		},
 		tooltip: {
 			formatter: function() {
-				return this.point.y.toPrecision(3);
+				return `${this.point.x.toPrecision(3)}, ${this.point.y.toPrecision(3)}`;
 			}
 		}
 	};
