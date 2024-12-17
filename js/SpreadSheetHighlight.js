@@ -23,7 +23,7 @@ var style = {
 // singleton img data
 var highlightImg = _.memoize1((width, height, samplesMatched, samples) => {
 	var img = new Uint32Array(width * height);
-	img.fill(0xFFFFFFFF);
+	img.fill(0);
 	if (samplesMatched) {
 		let count = samples.length,
 			rows = new Array(height);
