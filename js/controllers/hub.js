@@ -66,7 +66,8 @@ var checkDownload = (host, dataset) => {
 		s3dl = head(s3link),
 		s3gzdl = head (s3gzlink);
 
-	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl);
+	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl)
+		.catch(() => of(null));
 };
 
 var noSnippets = () => of(undefined);
