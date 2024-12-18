@@ -15,7 +15,7 @@ var links = [
 		the other by TP53 & ATRX mutations.'],
 	['heatmap', '3f4b3fa8901f4c24f5f791e036566424',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
-	['heatmap', '2dc4735dd97964b7c2a57afe053a9764',
+	['heatmap', '448466c7ca3b5784ef412c7dd007b250',
 		'MGMT promoter DNA methylation is inversely correlated with MGMT expression'],
 	['heatmap', '0f9954a525987445ba7faef1e2081027',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
