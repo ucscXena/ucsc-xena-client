@@ -1230,6 +1230,8 @@ var expMethods = {
 var applyExp = (data, setting) =>
 	expMethods[_.get(setting, 'value', 'none')](data);
 
+var passAsArray = fn => (v, ...args) => fn([v], ...args)[0];
+
 // transform data, compute stats
 function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	ydata = applyExp(ydata, yexp);
@@ -1239,10 +1241,11 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	var transform = ynorm === 'subset_stdev' ?
 		(data, std, mean) => data.map(x => isNaN(x) ? x : (x - mean) / std) :
 		(data, std, mean) => data.map(x => isNaN(x) ? x : x - mean);
+	var statTransform = passAsArray(transform);
 
 	if (ynorm !== 'none') {
 		ydata = _.mmap(ydata, yavg.sd, yavg.mean, transform);
-		yavg = _.mapObject(yavg, vs => transform(vs, yavg.sd, yavg.mean));
+		yavg = _.mapObject(yavg, vs => _.mmap(vs, yavg.sd, yavg.mean, statTransform));
 	}
 
 	return {ydata, xdata, yavg};
