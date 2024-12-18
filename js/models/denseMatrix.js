@@ -378,5 +378,6 @@ module.exports = {
 	fetchFeature,
 	getCustomColor,
 	toArrays,
-	setUserCodes
+	setUserCodes,
+	reOrderFields
 };

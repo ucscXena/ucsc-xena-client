@@ -31,6 +31,7 @@ import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
 var {fastats} = require('../xenaWasm');
+var {reOrderFields} = require('../models/denseMatrix');
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
@@ -1077,9 +1078,12 @@ function drawChart(params) {
 	}
 }
 
+var getDenseValues = ({columns, data}, id) =>
+	_.getIn(reOrderFields(columns[id], data[id]).data, ['req', 'values']);
+
 var getColumnValues = multi(({columns}, id) => v(id) && columns[id].valueType);
-getColumnValues.add('float', ({data}, id) => _.getIn(data[id], ['req', 'values']));
-getColumnValues.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']));
+getColumnValues.add('float', getDenseValues);
+getColumnValues.add('coded', getDenseValues);
 getColumnValues.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
 getColumnValues.add('undefined', () => undefined);
 
