@@ -145,6 +145,8 @@ function geneProbesToHeatmap(column, vizSettings, data) {
 		...(probesInView.length ? heatmapData : {}),
 		layout,
 		position: dataInView.req.position,
+		// hack to pass probes to chart
+		probes: data.req.probes,
 		maxXZoom: maxChromXZoom
 	};
 }
@@ -172,7 +174,7 @@ function zoomableDataToHeatmap(column, vizSettings, data) {
 		heatmap = {
 			...dataToHeatmap(zoomedColumn, vizSettings, dataInView),
 			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
-			fieldList: fields // Set field list to complete (max zoom) set of fields
+			fieldList: fields // Override field list to complete (max zoom) set of fields
 		};
 
 	return heatmap;
