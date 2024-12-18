@@ -1242,7 +1242,7 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 
 	if (ynorm !== 'none') {
 		ydata = _.mmap(ydata, yavg.sd, yavg.mean, transform);
-		yavg = fastats(ydata);
+		yavg = _.mapObject(yavg, vs => transform(vs, yavg.sd, yavg.mean));
 	}
 
 	return {ydata, xdata, yavg};
