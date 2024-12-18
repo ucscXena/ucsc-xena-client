@@ -1247,7 +1247,7 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 		(data, std, mean) => data.map(x => isNaN(x) ? x : x - mean);
 	var statTransform = passAsArray(transform);
 
-	if (ynorm !== 'none') {
+	if (v(ynorm)) {
 		ydata = _.mmap(ydata, yavg.sd, yavg.mean, transform);
 		yavg = _.mapObject(yavg, vs => _.mmap(vs, yavg.sd, yavg.mean, statTransform));
 	}
