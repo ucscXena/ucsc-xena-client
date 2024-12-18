@@ -1322,7 +1322,7 @@ class Chart extends PureComponent {
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
 			ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, ynorm),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
-			yfields = columns[ycolumn].fields,
+			yfields = columns[ycolumn].fieldList || columns[ycolumn].fields,
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
