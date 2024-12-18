@@ -288,7 +288,7 @@ function averageSegments(column, data, count, index) {
 			zeroDefaultNorm !== undefined ? zeroDefaultNorm : 0,
 		values = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, xzoom)],
 		geneValues = [avgSegWithZoom(count, samplesInResp, zero, index.byPosition, {start: limits.start, end: limits.end})],
-		mm = geneValues.map(fastats);
+		mm = fastats(geneValues);
 
 	return {
 		avg: {
@@ -296,21 +296,7 @@ function averageSegments(column, data, count, index) {
 			// re-calculating this isn't really necessary. We could move it earlier, like in the 'index'
 			// selector, since it doesn't depend on zoom.
 			geneValues,
-			mean: _.pluck(mm, 'mean'),
-			median: _.pluck(mm, 'median'),
-			min: _.pluck(mm, 'min'),
-			max: _.pluck(mm, 'max'),
-			sd: _.pluck(mm, 'sd'),
-			p01: _.pluck(mm, 'p01'),
-			p99: _.pluck(mm, 'p99'),
-			p05: _.pluck(mm, 'p05'),
-			p95: _.pluck(mm, 'p95'),
-			p10: _.pluck(mm, 'p10'),
-			p90: _.pluck(mm, 'p90'),
-			p25: _.pluck(mm, 'p25'),
-			p75: _.pluck(mm, 'p75'),
-			p33: _.pluck(mm, 'p33'),
-			p66: _.pluck(mm, 'p66'),
+			...mm
 		}
 	};
 }

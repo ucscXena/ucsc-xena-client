@@ -30,6 +30,7 @@ var sc = require('science');
 import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
+var {fastats} = require('../xenaWasm');
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;
@@ -1121,15 +1122,6 @@ function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	return label + unit + noralization;
 }
 
-var expMethods = {
-	exp2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.pow(2, x))),
-	log2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.log2(x + 1))),
-	none: _.identity
-};
-
-var applyExp = (data, setting) =>
-	expMethods[_.get(setting, 'value', 'none')](data);
-
 function getMeasures({avgState, pctState, ycolumn}, yavg) {
 	let measures = [];
 	var centralMeasure = _.Let((n = avgOptions[avgState[ycolumn]]) => n && v(n.label));
@@ -1143,17 +1135,6 @@ function getMeasures({avgState, pctState, ycolumn}, yavg) {
 	return _.pick(yavg, measures);
 }
 
-function getStdev(fields, data, norm) {
-	var stdev = (norm !== 'subset_stdev') ?
-		new Array(fields.length).fill(1) :
-		fields.map((field, i) => {
-			var subcol = data[i].filter(x => !isNaN(x)),
-				ave = highchartsHelper.average(subcol);
-			return highchartsHelper.standardDeviation(subcol, ave);
-		});
-	return _.object(fields, stdev);
-}
-
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
 		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
@@ -1164,8 +1145,7 @@ function shouldCallDrawChart(prevProps, currentProps) {
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
-	var {ydata, yexp, ycolumn, xdata, xexp, xcolumn, doScatter,
-			colorColumn, xcodemap, ycodemap, yfields} = params,
+	var {ydata, xdata, doScatter, colorColumn} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
 		{violin} = chartState,
@@ -1194,39 +1174,10 @@ function callDrawChart(xenaState, params) {
 		scatterColorData = scatterColorData[0];
 	}
 
-	ydata = applyExp(ydata, yexp);
-	xdata = xdata && applyExp(xdata, xexp);
-
-	var yNormalization = !ycodemap &&
-		_.Let((n = normalizationOptions[
-					chartState.normalizationState[chartState.ycolumn]]) =>
-				n && v(n.value));
-
-
-	if (yNormalization) {
-		// mean normalize
-		// XXX why are we transforming the data instead of the view?
-		ydata = ydata.map(data => {
-			var mean = _.mean(data);
-			return data.map(x => isNaN(x) ? x : x - mean);
-		});
-	}
-
-	if (!ycodemap) {
-		let STDEV = getStdev(yfields, ydata, yNormalization);
-		// z-score
-		ydata = ydata.map((data, i) => _.map(data, d => isNaN(d) ? d : d / STDEV[yfields[i]]));
-	}
-
-	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp);
-
-	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, yNormalization);
-
 	var yavg = getMeasures(chartState, params.yavg);
 
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
-		xlabel, ylabel,
 		cohort, cohortSamples, samplesLength, // why both cohortSamples an samplesLength??
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
@@ -1266,9 +1217,36 @@ class HighchartView extends PureComponent {
 		return div({id: 'xenaChart', className: compStyles.chart});
 	}
 }
-var highchartViewSelect = el(HighchartView);
+var highchartViewSelect = el(HighchartView); // XXX deprecate this?
 
 var highchartView = props => highchartViewSelect(props);
+
+var expMethods = {
+	exp2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.pow(2, x))),
+	log2: data => _.map(data, d => _.map(d, x => isNaN(x) ? x : Math.log2(x + 1))),
+	none: _.identity
+};
+
+var applyExp = (data, setting) =>
+	expMethods[_.get(setting, 'value', 'none')](data);
+
+// transform data, compute stats
+function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
+	ydata = applyExp(ydata, yexp);
+	xdata = xdata && applyExp(xdata, xexp);
+	var yavg = fastats(ydata);
+
+	var transform = ynorm === 'subset_stdev' ?
+		(data, std, mean) => data.map(x => isNaN(x) ? x : (x - mean) / std) :
+		(data, std, mean) => data.map(x => isNaN(x) ? x : x - mean);
+
+	if (ynorm !== 'none') {
+		ydata = _.mmap(ydata, yavg.sd, yavg.mean, transform);
+		yavg = fastats(ydata);
+	}
+
+	return {ydata, xdata, yavg};
+}
 
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
@@ -1324,30 +1302,37 @@ class Chart extends PureComponent {
 
 		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
 			{columns} = xenaState,
-			xdata = getColumnValues(xenaState, xcolumn),
+			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
-			ydata = getColumnValues(xenaState, ycolumn),
+			ydata0 = getColumnValues(xenaState, ycolumn),
 			ycodemap = _.getIn(columns, [ycolumn, 'codes']),
-			yavg = _.getIn(xenaState.data, [ycolumn, 'avg']),
-			yexpOpts = expOptions(columns[ycolumn], ydata),
-			xexpOpts = expOptions(columns[xcolumn], xdata),
+			yexpOpts = expOptions(columns[ycolumn], ydata0),
+			xexpOpts = expOptions(columns[xcolumn], xdata0),
+			xexp = xexpOpts[chartState.expState[xcolumn]],
+			yexp = yexpOpts[chartState.expState[ycolumn]],
+			ynorm = !ycodemap && _.get(normalizationOptions[
+					chartState.normalizationState[chartState.ycolumn]], 'value'),
+			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
+			ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, ynorm),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].fields,
 			isDensity = view === 'density',
-			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
-			// we only do for density plots.
-			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
-			doPct = isDensity && 'mean' in yavg && 'sd' in yavg,
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
+		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
+			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
+			// we only do for density plots.
+			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
+			doPct = isDensity && 'mean' in yavg && 'sd' in yavg;
+		// XXX is callback used??
 		var drawProps = {ydata, ycolumn,
 			xdata, xcolumn, doScatter, colorColumn, columns,
-			xcodemap, ycodemap, yfields, xfield, callback,
+			xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, callback,
 			yavg: pickMetrics(addSDs(yavg), range),
-			yexp: yexpOpts[chartState.expState[ycolumn]],
-			xexp: xexpOpts[chartState.expState[xcolumn]],
+			yexp,
+			xexp,
 			setRange,
 			setView,
 		};
@@ -1388,7 +1373,7 @@ class Chart extends PureComponent {
 				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
 			null;
 
-		var avgOpts = filterAvgOptions(avgOptions, drawProps.yavg),
+		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
 			buildDropdown({
 				disabled: avgOpts.length === 1,
@@ -1397,7 +1382,7 @@ class Chart extends PureComponent {
 				opts: avgOpts,
 				value: chartState.avgState[ycolumn]}) : null;
 
-		var pctOpts = filterPctOptions(pctOptions, drawProps.yavg),
+		var pctOpts = filterPctOptions(pctOptions, yavg),
 		pct = doPct ?
 			buildDropdown({
 				disabled: pctOpts.length === 1,

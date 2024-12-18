@@ -105,28 +105,21 @@ var floatSize = 4;
 var getFloatIndex =
 	(arr, index) => Module.getValue(arr + index * floatSize, 'float');
 
-export function fastats(arr) {
+// convert enum to object
+var allStats = Module => _.object(
+	_.pairs(_.omit(Module.enum.stat, 'LAST')).map(([k, i]) => [k.toLowerCase(), i]));
+
+function fastats1(arr) {
 	var arrW = allocArrayAsType('float', arr);
 	var r = Module._fastats(arrW, arr.length); // modifies the input array
-	var e = Module.enum.stat;
 	Module._free(arrW);
-	return {
-		mean: getFloatIndex(r, e.MEAN),
-		median: getFloatIndex(r, e.MEDIAN),
-		min: getFloatIndex(r, e.MIN),
-		max: getFloatIndex(r, e.MAX),
-		sd: getFloatIndex(r, e.SD),
-		p01: getFloatIndex(r, e.P01),
-		p99: getFloatIndex(r, e.P99),
-		p05: getFloatIndex(r, e.P05),
-		p95: getFloatIndex(r, e.P95),
-		p10: getFloatIndex(r, e.P10),
-		p90: getFloatIndex(r, e.P90),
-		p25: getFloatIndex(r, e.P25),
-		p75: getFloatIndex(r, e.P75),
-		p33: getFloatIndex(r, e.P33),
-		p66: getFloatIndex(r, e.P66),
-	};
+	return _.mapObject(allStats(Module), i => getFloatIndex(r, i));
+}
+
+export function fastats(arrs) {
+	var all = arrs.map(fastats1);
+	// handles empty arrs
+	return _.mapObject(allStats(Module), (i, k) => _.pluck(all, k));
 }
 
 var rgb = (r, g, b) => ((255 << 24) | ((b) << 16) | ((g) << 8) | r);
