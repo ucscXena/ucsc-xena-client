@@ -37,22 +37,22 @@ var authParams = () => ({
 });
 
 var {ajax, of, zip, zipArray} = Rx.Observable;
+var ajaxGet = (url, opts = {}) => ajax(
+	deepMerge({url, crossDomain: true, method: 'GET', responseType: 'text'}, opts));
 
-var authAjax = opts => ajax(deepMerge(authParams(), opts));
-
-var ajaxGet = url => authAjax({url, crossDomain: true, method: 'GET', responseType: 'text'});
+var authAjax = (url, opts = {}) => ajaxGet(url, deepMerge(authParams(), opts));
 
 var hostToGitURL = host => `${cohortMetaData}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
-var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response);
+var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => authAjax(`${host}/download/meta/info.mdown`)).map(r => r.response);
 
 var cohortMeta = cohort => ajaxGet(`${cohortMetaData}/cohort_${cohort}/info.mdown`).map(r => r.response);
 
 var datasetDescription = dataset => ajaxGet(`${cohortMetaData}/dataset/${dataset}/info.mdown`).map(r => r.response);
 
-var getMarkDown = url => ajaxGet(url).map(r => r.response);
+var getMarkDown = url => ajaxGet(url).map(r => r.response); // XXX deprecate
 
 // emit url if HEAD request succeeds
-var head = url => authAjax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
+var head = url => authAjax(url, {method: 'HEAD'}).map(() => url);
 
 // Check for dataset download link. If not there, try the link with '.gz'
 // suffix. If not there, return undefined.
