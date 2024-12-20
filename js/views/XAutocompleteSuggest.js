@@ -17,10 +17,6 @@ import XFormControl from './XFormControl';
 import {xenaColor} from '../xenaColor';
 import XToggleButtonGroup from './XToggleButtonGroup';
 
-// Template variables
-var ADVANCED_HEIGHT = 74; // 74px autocomplete advanced actions (73px autocomplete actions, 1px hr).
-var LISTBOX_MARGIN = 16;  // 16px listbox margin.
-
 // Styles
 var sxFormControl = {
 	'& .MuiAutocomplete-clearIndicator': {
@@ -83,8 +79,8 @@ var getOptions = (options, hideBadge) =>
 	}));
 
 // Renders autocomplete lists.
-var Listbox = forwardRef(({children, listBoxHeight, ...props}, ref) => {
-		return <Box component={List} ref={ref} sx={{...sxListbox, maxHeight: `${listBoxHeight}px !important`}} {...props}>{children}</Box>;
+var Listbox = forwardRef(({children, ...props}, ref) => {
+		return <Box component={List} ref={ref} sx={{...sxListbox}} {...props}>{children}</Box>;
 	}
 );
 
@@ -109,12 +105,10 @@ export default function XAutocompleteSuggest({
 }) {
 	const autoCompleteRef = useRef();
 	const [autocompleteActions, setAutocompleteActions] = useState(actions);
-	const [availableCardHeight, setAvailableCardHeight] = useState(0);
 	const [inputValue, setInputValue] = useState('');
 	const options = getOptions(suggestions, hideBadge);
 	const isGroupBy = options.every(option => option.group);
 	const values = selectedValues.map(selectedValue => options.find(option => option.value === selectedValue));
-	const listBoxHeight = availableCardHeight - LISTBOX_MARGIN - (autocompleteActions ? ADVANCED_HEIGHT : 0);
 
 	// Autocomplete onChange (on selection of option).
 	const onSelect = ({key, type}, value, reason) => {
@@ -186,12 +180,6 @@ export default function XAutocompleteSuggest({
 		setAutocompleteActions(actions);
 	}, [actions, autocompleteActions]);
 
-	useEffect(() => {
-		const y0 = autoCompleteRef?.current?.getBoundingClientRect().bottom + 9; // 8px space below, 1px card border.
-		const y1 = document.getElementById('wizardActions').getBoundingClientRect().top - 9; // 8px space above, 1px card border.
-		setAvailableCardHeight(y1 - y0);
-	}, []);
-
 	return (
 		<Box ref={autoCompleteRef} sx={{display: 'grid', gridGap: 8}}>
 			<Box component={XFormControl} sx={sxFormControl}>
@@ -208,7 +196,6 @@ export default function XAutocompleteSuggest({
 					groupBy={isGroupBy ? ({group}) => group : undefined}
 					inputValue={inputValue}
 					ListboxComponent={Listbox}
-					ListboxProps={{listBoxHeight}}
 					multiple
 					onChange={onSelect}
 					onClose={onClose}
