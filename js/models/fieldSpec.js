@@ -7,7 +7,8 @@ function supportsEdit(fs) {
 	return fs.fetchType === 'signature' ? canEdit(fs.signature) : true;
 }
 
-var setFieldType = _.curry((type, fs) => _.assoc(fs, 'fieldType', type));
+var setFieldType = _.curry((type, fs) =>
+	_.dissoc(_.assoc(fs, 'fieldType', type), 'xzoom'));
 
 var signatureField = (fieldName, opts) => ({
 	fetchType: 'signature',
