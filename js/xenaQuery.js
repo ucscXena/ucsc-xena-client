@@ -353,7 +353,9 @@ function doPostBPJ(name, host, ...params) {
 		if (ajax.status === 0) {
 			// ajax failures in Firefox are not throwing for some reason,
 			// so check status here & explicitly throw.
-			throw new Error('AJAX status 0', {cause: ajax});
+			var err = new Error('AJAX status 0');
+			err.xhr = ajax;
+			throw err;
 		}
 		return {ajax, resp: parse(new Uint8Array(ajax.response))};
 	});
