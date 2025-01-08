@@ -492,6 +492,21 @@ var selector = state => assoc(
 // receive the outer theme.
 var theme = outer => createTheme(outer, {
 	overrides: {
+		MuiAccordion: {
+			root: {
+				backgroundColor: '#00000000'
+			}
+		},
+		MuiAccordionSummary: {
+			root: {
+				minHeight: 'unset',
+				fontSize: '90%',
+				color: 'rgba(0, 0, 0, 0.38)'
+			},
+			content: {
+				margin: 'unset'
+			}
+		},
 		MuiList: {
 			root: {
 				'& li': {
