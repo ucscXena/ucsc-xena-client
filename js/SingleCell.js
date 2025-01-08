@@ -494,7 +494,11 @@ var theme = outer => createTheme(outer, {
 	overrides: {
 		MuiAccordion: {
 			root: {
-				backgroundColor: '#00000000'
+				backgroundColor: '#00000000',
+				'&:before': {
+					opacity: '0.5 !important'
+				},
+				boxShadow: 'unset'
 			}
 		},
 		MuiAccordionSummary: {
