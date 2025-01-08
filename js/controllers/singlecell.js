@@ -59,11 +59,14 @@ var getLogScale = (color, {min: [min], max: [max]}) =>
 			['float-log', null, color, pow2m1(nMin + zone), pow2m1(nMax - zone / 2)] :
 		['float-log', null, color, pow2m1(nMin + zone / 2), pow2m1(nMax - zone)]);
 
+var getLinearScale = (color, {min: [min], max: [max]}) =>
+	Let((zone = (max - min) / 8) =>
+		['float-pos', null, color, min + zone, max - zone]);
+
 var getScale = (color, normalization, {codes, avg}) =>
 	codes ? ['ordinal', codes.length] :
 	normalization === 'log2(x)' ? getLogScale(color, avg) :
-	Let((zone = (avg.max[0] - avg.min[0]) / 4) =>
-		['float-pos', null, color, avg.mean[0] - zone, avg.mean[0] + zone]);
+	getLinearScale(color, avg);
 
 var red = '#ff0000';
 var blue = '#0000ff';
