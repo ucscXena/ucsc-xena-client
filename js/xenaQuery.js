@@ -353,8 +353,10 @@ function doPostBPJ(name, host, ...params) {
 		if (ajax.status === 0) {
 			// ajax failures in Firefox are not throwing for some reason,
 			// so check status here & explicitly throw.
+			// If the error is from a notebook we're not holding an xhr.
+			// XXX revisit this wrt notebook support.
 			var err = new Error('AJAX status 0');
-			err.xhr = ajax;
+			err.xhr = ajax.xhr;
 			throw err;
 		}
 		return {ajax, resp: parse(new Uint8Array(ajax.response))};
