@@ -69,3 +69,8 @@
 .advanced {
 	display: block;
 }
+
+.showHideButton {
+	font-size: 70%;
+	margin-right: 5px;
+}

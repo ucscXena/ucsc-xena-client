@@ -9,7 +9,7 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {br, div, el, h2, label, span} from './chart/react-hyper';
+import {br, div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
 	IconButton, ListSubheader, MenuItem, Slider, Tab, Tabs} from '@material-ui/core';
@@ -230,9 +230,16 @@ class MapTabs extends PureComponent {
 
 var mapTabs = el(MapTabs);
 
+var shButton = (onClick, txt) =>
+	button({className: styles.showHideButton, onClick,
+	        variant: 'outlined', size: 'small'}, txt);
+
+var showHideButtons = ({onHideAll, onShowAll}) =>
+	div(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
+
 var gray = '#F0F0F0';
 var fieldType = 'probes';
-var legend = (state, onCode) => {
+var legend = (state, {onCode, onShowAll, onHideAll}) => {
 	var codes = getIn(state, ['data', 'codes']),
 		valueType = codes ? 'coded' : 'float',
 		heatmap = [getIn(state, ['data', 'req', 'values', 0])],
@@ -243,8 +250,11 @@ var legend = (state, onCode) => {
 			: scale];
 
 	return getIn(state, ['field', 'mode']) && heatmap[0] ?
-		widgets.legend({inline: true, max: Infinity, onClick: onCode,
-			column: {fieldType, valueType, heatmap, colors, codes, units: [unit]}}) :
+		fragment(
+			codes ? showHideButtons({onHideAll, onShowAll}) : null,
+			widgets.legend({inline: true, max: Infinity, onClick: onCode,
+				column: {fieldType, valueType, heatmap, colors, codes,
+				         units: [unit]}})) :
 		null;
 };
 
@@ -285,10 +295,10 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				legendTitle(state),
-				legend(state.colorBy, handlers.onColorByHandlers[0].onCode),
+				legend(state.colorBy, handlers.onColorByHandlers[0]),
 				...Let((state2 = colorBy2State(state)) => [
 					legendTitle(state2),
-					legend(state2.colorBy, handlers.onColorByHandlers[1].onCode)]),
+					legend(state2.colorBy, handlers.onColorByHandlers[1])]),
 				tooltipView(tooltip))));
 
 var page = state =>
@@ -312,7 +322,9 @@ class SingleCellPage extends PureComponent {
 			['colorBy', 'colorBy2'].map(key => ({
 				onColorBy: colorBy => this.colorByKey(key, colorBy),
 				onScale: (ev, params) => this.scaleKey(key, params),
-				onCode: ev => this.codeKey(key, ev)
+				onCode: ev => this.codeKey(key, ev),
+				onHideAll: ev => this.hideAllKey(key, ev),
+				onShowAll: ev => this.showAllKey(key, ev)
 			}));
 
 		this.handlers = pick(this, (v, k) => k.startsWith('on'));
@@ -390,6 +402,13 @@ class SingleCellPage extends PureComponent {
 				next = (contains(hidden, i) ? without : conj)(hidden, i);
 			this.callback(['hidden', key, next]);
 		}
+	}
+	hideAllKey(key) {
+		var codes = getIn(this.props.state, [key, 'data', 'codes']);
+		this.callback(['hidden', key, range(codes.length)]);
+	}
+	showAllKey(key) {
+		this.callback(['hidden', key, []]);
 	}
 	onRadius = (ev, r) => {
 		this.callback(['radius', r, this.props.state.radiusBase]);

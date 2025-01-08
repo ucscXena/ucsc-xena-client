@@ -210,26 +210,6 @@ var mapDrawing = props =>
 
 var imgDrawing = el(Img);
 
-//var nbsp = '\u00A0';
-//class SideBar extends PureComponent {
-//	render() {
-//		var {tooltip, state} = this.props,
-//			id = getColorColumn(state),
-//			column = null, //state.columns[id],
-//			data = _.getIn(state, ['data', id]);
-//
-//		return div({className: styles.sideBar, onClick: this.onClick},
-//			colorSelector(state, this.onColor),
-//			p(tooltip ? `Sample ${tooltip.sampleID}` : nbsp),
-//			p(tooltip && tooltip.valTxt ? `Value: ${tooltip.valTxt}` : nbsp),
-//			column ? p({className: styles.actions},
-//				button({color: 'default', disableElevation: true, onClick: this.props.onHideAll, variant: 'contained'}, 'Hide all'),
-//				button({color: 'default', disableElevation: true, onClick: this.props.onShowAll, variant: 'contained'}, 'Show all')) : null,
-//			column ? div({className: styles.legend},
-//				widgets.legend({column, data, clickable: true})) : null);
-//	}
-//}
-
 var getStatusView = (loading, error, onReload) =>
 	loading ? div({className: styles.status},
 				img({style: {textAlign: 'center'}, src: spinner})) :
@@ -268,18 +248,6 @@ export class Map extends PureComponent {
 	onDeck = deckGL => {
 		this.deckGL = deckGL;
 	}
-//	onHideAll = () => {
-//		var {state} = this.props,
-//			colorId = state.map.colorColumn,
-//			count = state.data[colorId].codes.length;
-//		this.props.callback(['map-hide-codes', _.range(count)]);
-//	}
-//	onShowAll = () => {
-//		this.props.callback(['map-hide-codes', []]);
-//	}
-//	onReload = () => {
-//		this.props.callback(['map', true]);
-//	}
 	onRef = ref => {
 		if (ref) {
 			this.setState({container: ref});
