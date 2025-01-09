@@ -4,24 +4,24 @@ var React = require('react');
 var Welcome = require('../views/Welcome');
 
 var links = [
-	['heatmap', 'bc7f3f46b042bcf5c099439c2816ff01',
+	['heatmap', '634da50313613e659e865c2bfb958ea1',
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
-	['heatmap', 'cd6d8adead7d720fea7df197dc807147',
+	['heatmap', '2e553fc5ca9858653e225fabce0c36ab',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['heatmap', 'e381bdc7dffb8af7d934d97335c08fb3',
+	['heatmap', 'c03d52bed79d2b474ffcef679796a12d',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['heatmap', '873b5bdf3633ce8c57598d7052b13c7b',
+	['heatmap', 'd5de509a8ff0032298a0547c97638e3f',
 		'Genetic separation of lower grade gliomas: one characterized by loss of chromosomes 1p & 19q, \
 		the other by TP53 & ATRX mutations.'],
-	['heatmap', '3f4b3fa8901f4c24f5f791e036566424',
+	['heatmap', '16e1d1a37ab7d9820a6bf1399ce5135e',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
 	['heatmap', '3547cb283a111e68991e9b8a8d5f8b42',
 		'MGMT promoter DNA methylation is inversely correlated with MGMT expression'],
-	['heatmap', '0f9954a525987445ba7faef1e2081027',
+	['heatmap', 'c6429007551de3bf0ea491c96814a1cf',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['transcripts', '75fd7d99bbc1bb04aae9b4e5e34b077f',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal'],
-	['heatmap', 'dfc37064d62ea0c0302881c05277b7b3',
+	['heatmap', 'ba5edb23fe570ef22f5f518859ca0911',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma']];
 
 class WelcomeContainer extends PureComponent {
