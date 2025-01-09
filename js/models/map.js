@@ -101,7 +101,8 @@ var cohortOther = (cohort, state, features) =>
 		labelTransferProb = getIn(state, ['labelTransferProb', cohort])
 			.map(f => [f.dsID, f.category]),
 		cellType = getIn(state, ['cellType', cohort]).map(f => [f.dsID, [f.field]]),
-		pruned = [labelTransfer, labelTransferProb, cellType].flat()
+		signature = getIn(state, ['signature', cohort]).map(f => [f.dsID, [f.field]]),
+		pruned = [labelTransfer, labelTransferProb, cellType, signature].flat()
 			.reduce(dropFields, dropIgnored(features))) =>
 
 		flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
@@ -140,7 +141,8 @@ export var hasDonor = hasField('_DONOR');
 export var hasDatasource = hasField('_DATASOURCE');
 
 export var hasCellType = (state, cohort = datasetCohort(state)) =>
-	state.cellType[cohort].length || state.labelTransfer[cohort].length;
+	state.cellType[cohort].length || state.labelTransfer[cohort].length ||
+	state.signature[cohort].length;
 
 export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
 	state.labelTransferProb[cohort].length;
@@ -251,8 +253,8 @@ export var defaultColor = (state, cohort) =>
 		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
 	hasCellType(state, cohort) &&
 		Let(({dsID, field} = first(state.cellType[cohort]) ||
-			first(state.labelTransfer[cohort]), {host, name} = JSON.parse(dsID)) =>
-				({mode: 'type', host, name, field})) ||
+			first(state.labelTransfer[cohort]) || first(state.signature[cohort]),
+			{host, name} = JSON.parse(dsID)) => ({mode: 'type', host, name, field})) ||
 	{};
 
 export var layerColors = [
