@@ -40,11 +40,14 @@ var ident = a => a.map(identity);
 var cellTypeOpts = state =>
 	Let((cohort = datasetCohort(state),
 			{cellType: {[cohort]: cellType},
+			 signature: {[cohort]: signature},
 			 labelTransfer: {[cohort]: labelTransfer}} = state) => ident([
 		cellType.length && [listSubheader('Cell types / clusters'),
 			...cellType.map(value => menuItem({value}, value.label))],
 		labelTransfer.length && [listSubheader('Transferred cell types / clusters'),
-			...labelTransfer.map(value => menuItem({value}, value.label))]]).flat());
+			...labelTransfer.map(value => menuItem({value}, value.label))],
+		signature.length && [listSubheader('Cell types by gene signatures'),
+			...signature.map(value => menuItem({value}, value.label))]]).flat());
 
 // XXX Use label
 var otherOpts = state => state.other[datasetCohort(state)]

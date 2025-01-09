@@ -29,6 +29,14 @@ var cellTypeCluster = datasets =>
 			label: m.label
 		}))).flat();
 
+var signature = datasets =>
+	datasets.map(ds => getProps(ds.signatureassignment)
+		.map(m => ({
+			dsID: ds.dsID,
+			field: m.assignment,
+			label: m.label
+		}))).flat();
+
 var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
 			dsID: ds.dsID,
@@ -48,6 +56,7 @@ var empty = {
 	cellType: {},
 	labelTransfer: {},
 	labelTransferProb: {},
+	signature: {},
 	other: {}
 };
 
@@ -58,9 +67,9 @@ export var curatedFields = (cohorts, cohortDatasets) =>
 		...cohorts.map(({cohort}) =>
 			Let((ds = allCohortDatasets(cohort, cohortDatasets)) =>
 				object(
-					['cellType', 'labelTransfer', 'labelTransferProb'],
-					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds)]
-					.map(d => ({[cohort]: d}))))));
+					['cellType', 'labelTransfer', 'labelTransferProb', 'signature'],
+					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds),
+					 signature(ds)].map(d => ({[cohort]: d}))))));
 
 var studyById = (state, id) =>
 		getIn(state, ['defaultStudy', 'studyList'], [])
@@ -219,6 +228,7 @@ export var cellTypeValue = state =>
 	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
 			cohort = datasetCohort(state)) =>
 		state.cellType[cohort].concat(state.labelTransfer[cohort])
+			.concat(state.signature[cohort])
 			.find(t => t.dsID === dsID && t.field === field) || '');
 
 export var otherValue = state =>
