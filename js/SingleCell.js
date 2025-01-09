@@ -53,7 +53,7 @@ var firstMatch = (el, selector) =>
 
 var welcome = ({handlers: {onEnter}}) =>
 	div({className: styles.welcome},
-		span("Welcome to the Xena's multi-omic integration single cell portal"),
+		span("Welcome to Xena Single Cell"),
 			button({onClick: onEnter}, 'enter'));
 
 var studyList = ['defaultStudy', 'studyList'];
