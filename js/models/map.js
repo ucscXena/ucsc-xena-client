@@ -37,6 +37,14 @@ var signature = datasets =>
 			label: m.label
 		}))).flat();
 
+var signatureScore = datasets =>
+	datasets.map(ds => getProps(ds.signaturescorematrix).map(m =>
+		m.category.map(field => ({
+			dsID: ds.dsID,
+			field,
+			label: field
+		}))).flat()).flat();
+
 var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
 			dsID: ds.dsID,
@@ -57,6 +65,7 @@ var empty = {
 	labelTransfer: {},
 	labelTransferProb: {},
 	signature: {},
+	signatureScore: {},
 	other: {}
 };
 
@@ -67,9 +76,10 @@ export var curatedFields = (cohorts, cohortDatasets) =>
 		...cohorts.map(({cohort}) =>
 			Let((ds = allCohortDatasets(cohort, cohortDatasets)) =>
 				object(
-					['cellType', 'labelTransfer', 'labelTransferProb', 'signature'],
+					['cellType', 'labelTransfer', 'labelTransferProb', 'signature',
+						'signatureScore'],
 					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds),
-					 signature(ds)].map(d => ({[cohort]: d}))))));
+					 signature(ds), signatureScore(ds)].map(d => ({[cohort]: d}))))));
 
 var studyById = (state, id) =>
 		getIn(state, ['defaultStudy', 'studyList'], [])
@@ -102,8 +112,10 @@ var cohortOther = (cohort, state, features) =>
 			.map(f => [f.dsID, f.category]),
 		cellType = getIn(state, ['cellType', cohort]).map(f => [f.dsID, [f.field]]),
 		signature = getIn(state, ['signature', cohort]).map(f => [f.dsID, [f.field]]),
-		pruned = [labelTransfer, labelTransferProb, cellType, signature].flat()
-			.reduce(dropFields, dropIgnored(features))) =>
+		signatureScore = getIn(state, ['signatureScore', cohort])
+			.map(f => [f.dsID, [f.field]]),
+		pruned = [labelTransfer, labelTransferProb, cellType, signature,
+			signatureScore].flat().reduce(dropFields, dropIgnored(features))) =>
 
 		flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
 			map(fields, (p, field) => ({host, name, field, type: type(p)})))));
@@ -146,6 +158,9 @@ export var hasCellType = (state, cohort = datasetCohort(state)) =>
 
 export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
 	state.labelTransferProb[cohort].length;
+
+export var hasSignatureScore = (state, cohort = datasetCohort(state)) =>
+	state.signatureScore[cohort].length;
 
 export var hasOther = (state, cohort = datasetCohort(state)) =>
 	state.other[cohort].length;
@@ -243,6 +258,12 @@ export var otherValue = state =>
 export var probValue = state =>
 	Let((dsID = toDsID(state.colorBy.field)) =>
 		state.labelTransferProb[datasetCohort(state)].find(t => t.dsID === dsID) || '');
+
+export var sigValue = state =>
+	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
+		cohort = datasetCohort(state)) =>
+			state.signatureScore[cohort]
+				.find(t => t.dsID === dsID && t.field === field) || '');
 
 var LetIf = (v, f) => v && f(v) ;
 

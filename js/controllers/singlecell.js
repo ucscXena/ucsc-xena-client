@@ -24,6 +24,7 @@ var fieldType = {
 	datasource: () => ['clinical', 'coded'],
 	type: () => ['clinical', 'coded'],
 	prob: () => ['clinical', 'float'],
+	sig: () => ['clinical', 'float'],
 	gene: () => ['probes', 'float'],
 	other: type => ['clinical', type]
 };

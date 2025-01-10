@@ -6,7 +6,7 @@ import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
 	hasDatasource, hasDonor, hasGene, hasOther, hasTransferProb, otherValue,
-	probValue} from '../models/map';
+	probValue, hasSignatureScore, sigValue} from '../models/map';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
@@ -18,7 +18,7 @@ var slider = el(Slider);
 var listSubheader = el(ListSubheader);
 var fragment = el(Fragment);
 
-var modes = ['datasource', 'donor', 'type', 'prob', 'gene', 'other'];
+var modes = ['datasource', 'donor', 'type', 'prob', 'sig', 'gene', 'other'];
 
 var alwaysFalse = () => false;
 
@@ -27,6 +27,7 @@ var hasMode = {
 	donor: hasDonor,
 	type: hasCellType,
 	prob: hasTransferProb,
+	sig: hasSignatureScore,
 	gene: hasGene,
 	other: hasOther
 };
@@ -56,6 +57,10 @@ var otherOpts = state => state.other[datasetCohort(state)]
 var probOpts = state =>
 	state.labelTransferProb[datasetCohort(state)]
 		.map(type => menuItem({value: type}, type.label));
+
+var sigOpts = state =>
+	state.signatureScore[datasetCohort(state)]
+		.map(value => menuItem({value}, value.label));
 
 var probCellOpts = prob =>
 	get(prob, 'category', []).map(c => menuItem({value: c}, c));
@@ -163,6 +168,14 @@ var modeOptions = {
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
 				colorData(state) ? distributionSlider(state, onScale) : null)),
+	sig: ({state, onSig, onScale}) =>
+		fragment(xSelect({
+					id: 'sig-cell',
+					label: 'Select a gene signature',
+					value: sigValue(state),
+					onChange: onSig
+				}, ...sigOpts(state)),
+			colorData(state) ? distributionSlider(state, onScale) : null),
 	gene: ({state, onGene, onScale}) =>
 		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:
@@ -177,6 +190,7 @@ var modeLabel = {
 	donor: 'Donor',
 	type: 'Cell types/clusters',
 	prob: 'Cell type/cluster scores',
+	sig: 'Gene signature scores',
 	gene: 'Gene/protein',
 	'': 'None',
 	other: 'More options'
@@ -242,6 +256,14 @@ class MapColor extends PureComponent {
 			field = ev.target.value,
 			newState = assoc(colorBy, 'field', field);
 
+		this.setState({colorBy: newState});
+		this.props.handlers.onColorBy(newState);
+	}
+	onSig = ev => {
+		var sig = ev.target.value,
+			{host, name} = JSON.parse(sig.dsID),
+			{field} = sig,
+			newState = {mode: 'sig', host, name, field};
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
 	}

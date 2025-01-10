@@ -265,6 +265,7 @@ var legendTitleMode = {
 	prob: state => getIn(state, ['colorBy', 'field', 'field']) ?
 		Let(({field} = state.colorBy.field) =>
 			`${probValue(state).label}: ${field}`) : '',
+	sig: state => getIn(state, ['colorBy', 'field', 'field'], ''),
 	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?
 		Let(({host, name, field} = state.colorBy.field) =>
 			`${field} - ${getDataSubType(state, host, name)}`) : '',
