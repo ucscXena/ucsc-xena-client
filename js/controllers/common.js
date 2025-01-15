@@ -10,6 +10,7 @@ var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
 var {servers: allServers, publicServers} = require('../defaultServers');
 var gaEvents = require('../gaEvents');
+import {userServers} from '../models/servers';
 import {hfc} from '../hfc';
 // pick up signature fetch
 require('../models/signatures');
@@ -166,8 +167,6 @@ var setWizardAndMode = state =>
 
 var setCohort = _.curry((cohort, width, state) =>
 		addSampleColumn(setWizardAndMode(setCohortRelatedFields(state, cohort)), width));
-
-var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
 var fetchCohortData = (serverBus, state) => {
 	let user = userServers(state);

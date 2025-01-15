@@ -2,15 +2,18 @@ import query from './query';
 import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
-var {allFieldMetadata, fetchDefaultStudy, datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
-var {assoc, assocIn, findIndex, get, getIn, identity, Let, merge, max: _max,
-	min: _min, object, pairs, pluck, pick, range, uniq,
+var {allCohorts: fetchAllCohorts, allFieldMetadata, fetchDefaultStudy,
+	datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
+var {assoc, assocIn, findIndex, get, getIn, identity, intersection, Let,
+	map, merge, max: _max, min: _min, object, pairs, pluck, pick, range, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
-var {ajax} = Rx.Observable;
-import {allCohorts, datasetCohort, dotRange, getSamples, hasColorBy, hasDataset,
-	hasImage, isLog, log2p1, pow2m1} from '../models/map';
+var {ajax, of} = Rx.Observable;
+var {asap} = Rx.Scheduler;
+import {allCohorts, allDefaultCohortNames, datasetCohort, dotRange, getSamples,
+	hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1, userServerCohorts}
+		from '../models/map';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -118,6 +121,11 @@ var imageMetadata = m => {
 var fetchMethods = {
 	defaultStudy: fetchDefaultStudy,
 	datasetMetadata: (host, dataset) => datasetMetadata(host, dataset).map(m => m[0]),
+	serverCohorts: (server, {studyList = []} = {}) =>
+		Let((cohorts = allDefaultCohortNames(studyList)) =>
+			cohorts.length ?
+				fetchAllCohorts(server, []).map(list => intersection(cohorts, list)) :
+				of([], asap)),
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]),
 	cohortFeatures: (cohort, server, dataset) =>
@@ -144,6 +152,7 @@ var cachePolicy = {
 	datasetMetadata: identity,
 	colorBy: identity, // always updates in-place
 	colorBy2: identity, // always updates in-place
+	serverCohorts: identity, // cache indefinitely
 	data: (state, dsID) =>
 		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
 	image: (state, img) =>
@@ -176,10 +185,13 @@ var singlecellData = state =>
 		// We need datasetMetadata to draw the integration list, and need
 		// cohortDatasets after the user has selected an integration.
 		getIn(state, ['singlecell', 'defaultStudy']) && allDatasets(state),
-		Let((cohorts = allCohorts(state.singlecell)) =>
-			userServers(state.spreadsheet)
-			.map(server =>
-				cohorts.map(({cohort}) =>
+		userServers(state.spreadsheet).map(server =>
+			['serverCohorts', server, ['singlecell', 'defaultStudy']]),
+		Let((cohorts = allCohorts(state.singlecell),
+			usc = userServerCohorts(state.spreadsheet.servers,
+				state.singlecell.serverCohorts, cohorts)) =>
+			map(usc, (cohorts, server) =>
+				cohorts.map(cohort =>
 					[['cohortDatasets', cohort, server],
 						['donorFields', cohort, server],
 					...getIn(state.singlecell, ['cohortDatasets', cohort, server], [])

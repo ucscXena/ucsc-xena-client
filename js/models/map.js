@@ -1,6 +1,8 @@
 var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn,
-	identity, Let, map, mapObject, merge, min, max, mmap, object, omit,
-	pairs, pick, updateIn, values} = require('../underscore_ext').default;
+	identity, intersection, Let, map, mapObject, memoize1, merge, min, max,
+	mmap, object, omit, pairs, pick, pluck, updateIn, uniq, values}
+		= require('../underscore_ext').default;
+var {userServers} = require('./servers');
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -81,19 +83,26 @@ export var curatedFields = (cohorts, cohortDatasets) =>
 					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds),
 					 signature(ds), signatureScore(ds)].map(d => ({[cohort]: d}))))));
 
-var studyById = (state, id) =>
-		getIn(state, ['defaultStudy', 'studyList'], [])
-			.find(s => s.study === id);
-
-var userStudy = state => studyById(state, get(state, 'integration'));
 
 var studyCohorts = study => get(study, 'cohortList', []);
-var subStudies = (state, study) => get(study, 'subStudy', []).map(ref =>
-	studyById(state, ref.studyID));
+
+var allCohorts1 = memoize1((studyList, id) =>
+	Let((byId = object(pluck(studyList, 'study'), studyList),
+			study = byId[id]) =>
+		studyCohorts(byId[id]).concat(...get(study, 'subStudy', [])
+			.map(sId => studyCohorts(byId(sId))))));
 
 export var allCohorts = state =>
-		Let((st = userStudy(state)) =>
-			studyCohorts(st).concat(...subStudies(state, st).map(studyCohorts)));
+	allCohorts1(getIn(state, ['defaultStudy', 'studyList'], []),
+		get(state, 'integration'));
+
+export var allDefaultCohortNames = memoize1(studyList =>
+		uniq(pluck(studyList.map(studyCohorts).flat(), 'cohort')));
+
+export var userServerCohorts = memoize1((servers, serverCohorts, cohorts) =>
+	Let((us = userServers({servers}),
+		cnames = pluck(cohorts, 'cohort')) =>
+		mapObject(pick(serverCohorts, us), sc => intersection(sc, cnames))));
 
 var ignore = ['_DONOR', '_SAMPLE', 'sampleID', '_DATASOURCE'];
 var dropIgnored = features =>
