@@ -28,7 +28,8 @@ var cellTypeCluster = datasets =>
 		.map(m => ({
 			dsID: ds.dsID,
 			field: m.feature,
-			label: m.label
+			label: m.label,
+			markers: m.markers
 		}))).flat();
 
 var signature = datasets =>
@@ -263,6 +264,10 @@ export var otherValue = state =>
 		state.other[cohort]
 			.find(other => other.name === name && other.host === host
 				&& other.field === field) || '');
+
+export var cellTypeMarkers = state =>
+	getIn(state, ['colorBy', 'field', 'mode']) === 'type' &&
+		get(cellTypeValue(state), 'markers');
 
 export var probValue = state =>
 	Let((dsID = toDsID(state.colorBy.field)) =>

@@ -72,5 +72,11 @@
 
 .showHideButton {
 	font-size: 70%;
-	margin-right: 5px;
+	margin-right: 2px;
+	min-width: unset;
+	height: 30px;
+}
+
+.showHideButton:nth-child(2) {
+	margin-right: 8px;
 }

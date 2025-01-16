@@ -16,9 +16,10 @@ import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
 import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
-import {allCohorts, cellTypeValue, cohortFields, datasetCohort, defaultColor,
-	dotRange, getData, getDataSubType, getRadius, getSamples, hasColor, hasImage,
-	isLog, log2p1, maps, otherValue, probValue, setRadius} from './models/map';
+import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
+	datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius,
+	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, probValue,
+	setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
@@ -28,6 +29,7 @@ import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
 import ImgControls from './views/ImgControls';
+import markers from './views/markers.js';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -235,11 +237,11 @@ var shButton = (onClick, txt) =>
 	        variant: 'outlined', size: 'small'}, txt);
 
 var showHideButtons = ({onHideAll, onShowAll}) =>
-	div(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
+	fragment(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
 
 var gray = '#F0F0F0';
 var fieldType = 'probes';
-var legend = (state, {onCode, onShowAll, onHideAll}) => {
+var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 	var codes = getIn(state, ['data', 'codes']),
 		valueType = codes ? 'coded' : 'float',
 		heatmap = [getIn(state, ['data', 'req', 'values', 0])],
@@ -251,7 +253,9 @@ var legend = (state, {onCode, onShowAll, onHideAll}) => {
 
 	return getIn(state, ['field', 'mode']) && heatmap[0] ?
 		fragment(
-			codes ? showHideButtons({onHideAll, onShowAll}) : null,
+			div(
+				codes ? showHideButtons({onHideAll, onShowAll}) : null,
+				markers ? shButton(onMarkers, 'Marker genes') : null),
 			widgets.legend({inline: true, max: Infinity, onClick: onCode,
 				column: {fieldType, valueType, heatmap, colors, codes,
 				         units: [unit]}})) :
@@ -292,14 +296,20 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 		h2(integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
 		div({className: styles.vizBody},
+			get(state.showMarkers, 'colorBy') ?
+				markers(handlers.onColorByHandlers[0].onMarkersClose,
+				        cellTypeValue(state)) :
+				null,
 			vizPanel({props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				legendTitle(state),
-				legend(state.colorBy, handlers.onColorByHandlers[0]),
+				legend(state.colorBy, cellTypeMarkers(state),
+				       handlers.onColorByHandlers[0]),
 				...Let((state2 = colorBy2State(state)) => [
 					legendTitle(state2),
-					legend(state2.colorBy, handlers.onColorByHandlers[1])]),
+					legend(state2.colorBy, false,
+					       handlers.onColorByHandlers[1])]),
 				tooltipView(tooltip))));
 
 var page = state =>
@@ -325,7 +335,11 @@ class SingleCellPage extends PureComponent {
 				onScale: (ev, params) => this.scaleKey(key, params),
 				onCode: ev => this.codeKey(key, ev),
 				onHideAll: ev => this.hideAllKey(key, ev),
-				onShowAll: ev => this.showAllKey(key, ev)
+				onShowAll: ev => this.showAllKey(key, ev),
+				// XXX currently only supporting 1st colorBy, but
+				// this creates handlers for both.
+				onMarkers: () => this.markersKey(key),
+				onMarkersClose: () => this.markersCloseKey(key)
 			}));
 
 		this.handlers = pick(this, (v, k) => k.startsWith('on'));
@@ -437,6 +451,12 @@ class SingleCellPage extends PureComponent {
 	}
 	onCancelLogin = origin => {
 		this.callback(['cancel-login', origin]);
+	}
+	markersKey = key => {
+		this.callback(['show-markers', key, true]);
+	}
+	markersCloseKey = key => {
+		this.callback(['show-markers', key, false]);
 	}
 
 	componentDidMount() {

@@ -268,6 +268,7 @@ var controls = actionPrefix({
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
+	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show)
 });
 
 var resetIntegration = (state = {}, params) =>
