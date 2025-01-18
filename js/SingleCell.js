@@ -191,6 +191,9 @@ var colorBy2State = state => assoc(state,
 var validDataset = (state, layout) =>
 	getIn(state, ['dataset', 'type']) === layout;
 
+var imgDisplay = (state, layout) =>
+	!validDataset(state, layout) || !hasImage(state) ? {style: {display: 'none'}} : {};
+
 class MapTabs extends PureComponent {
 	state = {value: 0}
 	onChange = (ev, value) => {
@@ -204,9 +207,8 @@ class MapTabs extends PureComponent {
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
-				tab({label: 'Image', disabled: !validDataset(state, layout) ||
-					!hasImage(state)}),
-				tab({label: 'Cell/dot', disabled: !validDataset(state, layout)}),
+				tab({label: 'Image', ...imgDisplay(state, layout)}),
+				tab({label: 'Data', disabled: !validDataset(state, layout)}),
 //				tab({label: 'Cells in View', disabled: true})
 			),
 			tabPanel({value, index: 0},
