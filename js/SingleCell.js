@@ -11,8 +11,9 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {br, div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Accordion, AccordionDetails, AccordionSummary, Button, Icon,
-	IconButton, ListSubheader, MenuItem, Slider, Tab, Tabs} from '@material-ui/core';
+import {Accordion, AccordionDetails, AccordionSummary, Button, createTheme, Icon,
+	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Slider, Tab,
+	Tabs, Tooltip} from '@material-ui/core';
 import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
@@ -27,7 +28,6 @@ import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
-import {MuiThemeProvider, createTheme} from '@material-ui/core';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers.js';
 var map = el(Map);
@@ -47,6 +47,7 @@ var listSubheader = el(ListSubheader);
 var slider = el(Slider);
 var muiThemeProvider = el(MuiThemeProvider);
 var imgControls = el(ImgControls);
+var tooltip = el(Tooltip);
 
 var firstMatch = (el, selector) =>
 	el.matches(selector) ? el :
@@ -191,25 +192,59 @@ var colorBy2State = state => assoc(state,
 var validDataset = (state, layout) =>
 	getIn(state, ['dataset', 'type']) === layout;
 
-var imgDisplay = (state, layout) =>
-	!validDataset(state, layout) || !hasImage(state) ? {style: {display: 'none'}} : {};
+var imgDisplay = showImg => showImg ? {} : {style: {display: 'none'}};
+
+var PopperProps = {
+	modifiers: {
+		preventOverflow: {
+			boundariesElement: "viewport", // Ensure Tooltip stays in the viewport
+		}
+	}
+};
+var tooltipTab = ({title, open, ...props}) =>
+	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
 class MapTabs extends PureComponent {
-	state = {value: 0}
+	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false}
+	componentWillUnmount() {
+		this.showNext && clearTimeout(this.showNext);
+		this.hideNext && clearTimeout(this.hideNext);
+	}
 	onChange = (ev, value) => {
 		this.setState({value});
+		if (value > 0) { // Disable tooltip hint if user finds other tabs.
+			this.setState({showedNext: true, showNext: false});
+			localStorage.showedNext = 'true';
+		}
+	}
+	onDataset = (...args) => {
+		if (!this.state.showedNext) {
+			// For tooltip, trigger when dataset is selected, first time, if user
+			// hasn't interacted with it.
+			this.showNext = setTimeout(() => {
+				if (!this.state.showedNext) {
+					this.setState({showNext: true, showedNext: true});
+				}
+			}, 20 * 1000);
+			this.hideNext =
+				setTimeout(() => this.setState({showNext: false}), 140 * 1000);
+		}
+		this.props.handlers.onDataset(...args);
 	}
 	render() {
-		var {onChange, state: {value}, props: {handlers: {onOpacity,
-			onVisible, onSegmentationVisible, onChannel, onBackgroundOpacity,
-			onBackgroundVisible, onAdvanced, onLayout, onDataset, onRadius,
-			onColorByHandlers}, state, layout}} = this;
+		var {onChange, onDataset, state: {value, showNext}, props:
+				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
+				onBackgroundOpacity, onBackgroundVisible, onAdvanced,
+				onLayout, onRadius, onColorByHandlers}, state, layout}} = this,
+			showData = validDataset(state, layout),
+			showImg = !!(showData && hasImage(state));
 		return div({className: styles.maptabs}, // XXX use a Box vs div?
 			tabs({value, onChange, className: styles.tabs},
 				tab({label: 'Layout'}),
-				tab({label: 'Image', ...imgDisplay(state, layout)}),
-				tab({label: 'Data', disabled: !validDataset(state, layout)}),
-//				tab({label: 'Cells in View', disabled: true})
+				tooltipTab({title: 'Next: explore image layers', open: showImg
+					&& showNext, label: 'Image', ...imgDisplay(showImg)}),
+				tooltipTab({title: 'Next: explore omics', label: 'Data',
+					open: !showImg && showData && showNext, disabled: !showData}),
 			),
 			tabPanel({value, index: 0},
 				layoutSelect({onLayout, layout, state}),
