@@ -63,9 +63,13 @@ var getLogScale = (color, {min: [min], max: [max]}) =>
 			['float-log', null, color, pow2m1(nMin + zone), pow2m1(nMax - zone / 2)] :
 		['float-log', null, color, pow2m1(nMin + zone / 2), pow2m1(nMax - zone)]);
 
-var getLinearScale = (color, {min: [min], max: [max]}) =>
-	Let((zone = (max - min) / 8) =>
-		['float-pos', null, color, min + zone, max - zone]);
+var high = (low, a, b, c) =>
+	low < a ? a :
+	low < b ? b :
+	c;
+
+var getLinearScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
+	['float-pos', null, color, p05, high(p05, p95, p99, max)];
 
 var getScale = (color, normalization, {codes, avg}) =>
 	codes ? ['ordinal', codes.length] :
