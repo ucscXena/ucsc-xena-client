@@ -282,14 +282,14 @@ export var sigValue = state =>
 var LetIf = (v, f) => v && f(v) ;
 
 export var defaultColor = (state, cohort) =>
-	LetIf(hasDonor(state, cohort), ([host, name]) =>
-		({mode: 'donor', host, name, field: '_DONOR'})) ||
-	LetIf(hasDatasource(state, cohort), ([host, name]) =>
-		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
 	hasCellType(state, cohort) &&
 		Let(({dsID, field} = first(state.cellType[cohort]) ||
 			first(state.labelTransfer[cohort]) || first(state.signature[cohort]),
 			{host, name} = JSON.parse(dsID)) => ({mode: 'type', host, name, field})) ||
+	LetIf(hasDonor(state, cohort), ([host, name]) =>
+		({mode: 'donor', host, name, field: '_DONOR'})) ||
+	LetIf(hasDatasource(state, cohort), ([host, name]) =>
+		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
 	{};
 
 export var layerColors = [
