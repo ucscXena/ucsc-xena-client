@@ -23,8 +23,8 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
+import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
-import widgets from './columnWidgets';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import {MuiThemeProvider, createTheme} from '@material-ui/core';
@@ -242,7 +242,6 @@ var showHideButtons = ({onHideAll, onShowAll}) =>
 	fragment(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
 
 var gray = '#F0F0F0';
-var fieldType = 'probes';
 var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 	var codes = getIn(state, ['data', 'codes']),
 		valueType = codes ? 'coded' : 'float',
@@ -250,17 +249,16 @@ var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
 		unit = getIn(state, ['field', 'unit']),
-		colors = [hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
-			: scale];
+		color = hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
+			: scale;
 
 	return getIn(state, ['field', 'mode']) && heatmap[0] ?
 		fragment(
 			div(
 				codes ? showHideButtons({onHideAll, onShowAll}) : null,
 				markers ? shButton(onMarkers, 'Marker genes') : null),
-			widgets.legend({inline: true, max: Infinity, onClick: onCode,
-				column: {fieldType, valueType, heatmap, colors, codes,
-				         units: [unit]}})) :
+			singlecellLegend({inline: true, max: Infinity, onClick: onCode,
+				column: {valueType, color, codes, units: [unit]}})) :
 		null;
 };
 
