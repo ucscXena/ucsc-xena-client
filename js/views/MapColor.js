@@ -277,14 +277,10 @@ class MapColor extends PureComponent {
 
 		if (/MuiSlider-markLabel/.exec(ev.target.className)) {
 			// Click on mark label: set slider to mark.
-			var oldParams = scaleValue(state),
+			var {index} = ev.target.dataset,
 				{scaleDefaults} = this.props.state.colorBy.data;
 
-			if (oldParams[0] !== params[0]) {
-				params[0] = scaleDefaults[0];
-			} else if (oldParams[1] !== params[1]) {
-				params[1] = scaleDefaults[1];
-			}
+			params = assoc(scaleValue(state), index, scaleDefaults[index]);
 		}
 		this.props.handlers.onScale(ev, params);
 	}
