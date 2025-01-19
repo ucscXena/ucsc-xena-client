@@ -90,15 +90,19 @@ var colorScale = state => getIn(state, ['colorBy', 'data', 'scale']);
 var scaleValue = state => Let((scale = colorScale(state)) =>
 	scale && scaleParams(scale));
 
-var sliderLinearOpts = state => ({
-	value: scaleValue(state),
-	step: getSteps(state.colorBy.data.scaleBounds),
-	...state.colorBy.data.scaleBounds
-});
+var sliderLinearOpts = state =>
+	Let(({scaleBounds, scaleDefaults} = state.colorBy.data) => ({
+		value: scaleValue(state),
+		marks: scaleDefaults.map(d => ({value: d, label: d.toPrecision(2)})),
+		step: getSteps(state.colorBy.data.scaleBounds),
+		...scaleBounds
+	}));
 
 var sliderLogOpts = state =>
-	Let((bounds = mapObject(state.colorBy.data.scaleBounds, log2p1)) => ({
+	Let(({scaleBounds, scaleDefaults} = state.colorBy.data,
+		bounds = mapObject(scaleBounds, log2p1)) => ({
 		value: scaleValue(state).map(log2p1),
+		marks: scaleDefaults.map(d => ({value: log2p1(d), label: d.toPrecision(2)})),
 		step: getSteps(bounds),
 		...bounds,
 		scale: pow2m1
@@ -268,8 +272,21 @@ class MapColor extends PureComponent {
 		this.props.handlers.onColorBy(newState);
 	}
 	onScale = (ev, params) => {
-		this.props.handlers.onScale(ev, isLog(colorScale(this.props.state)) ?
-			params.map(pow2m1) : params);
+		var {state} = this.props;
+		params = isLog(colorScale(state)) ? params.map(pow2m1) : params;
+
+		if (/MuiSlider-markLabel/.exec(ev.target.className)) {
+			// Click on mark label: set slider to mark.
+			var oldParams = scaleValue(state),
+				{scaleDefaults} = this.props.state.colorBy.data;
+
+			if (oldParams[0] !== params[0]) {
+				params[0] = scaleDefaults[0];
+			} else if (oldParams[1] !== params[1]) {
+				params[1] = scaleDefaults[1];
+			}
+		}
+		this.props.handlers.onScale(ev, params);
 	}
 	render() {
 		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,

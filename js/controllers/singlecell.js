@@ -99,6 +99,7 @@ var colorParams = (field, color) => colorData =>
 			scale = getScale(color, field.colnormalization, data)) =>
 		assoc(data,
 			'scale', scale,
+			'scaleDefaults', scaleParams(scale),
 			'scaleBounds', scaleBounds(data, scale)));
 
 var enableSegmentation = segmentation =>
