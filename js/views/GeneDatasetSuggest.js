@@ -1,7 +1,7 @@
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import PureComponent from '../PureComponent';
-var {isEqual, mmap} = require('../underscore_ext').default;
+var {identity, isEqual, memoize1, mmap} = require('../underscore_ext').default;
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {rxEvents} = require('../react-utils');
@@ -30,6 +30,11 @@ var getOptionLabel = ({field, dataSubType}) => `${field} - ${dataSubType}`;
 var filterOptions = (options, {inputValue}) =>
 	options.filter(({field}) =>
 		field.toLowerCase().startsWith(inputValue.trim().toLowerCase()));
+
+// The useEffect calls for prop.value in Autocomplete go sideways when
+// using an object as value, because of reference equality. This caches
+// prop.value by value instead of reference.
+var midentity = memoize1(identity);
 
 export class GeneDatasetSuggest extends PureComponent {
 	state = {suggestions: [], inputValue:
@@ -88,7 +93,7 @@ export class GeneDatasetSuggest extends PureComponent {
 			freeSolo: true,
 			clearOnBlur: false,
 			inputValue,
-			value
+			value: midentity(value)
 		});
 	}
 }
