@@ -167,12 +167,13 @@ function mapSelect(availableMaps, layout, selected, onChange) {
 var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
 	layout ? mapSelect(availableMaps, layout, selected, onChange) : div();
 
-var vizPanel = ({props: {state, ...handlers}}) =>
-	Let(({dataset, layout} = state) =>
+var vizText = (...children) => div({className: styles.vizText}, ...children);
+
+var vizPanel = ({layout, props: {state, ...handlers}}) =>
+	Let(({dataset} = state) =>
 		dataset ? map({state, ...handlers}) :
-		layout ? h2(`Select a ${layouts[layout]} layout`) :
-		div({style: {flexDirection: 'column'}},
-			h2('All Xena derived data is in beta'),
+		layout ? vizText(h2(`Select a ${layouts[layout]} layout`)) :
+		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout type')));
 
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
@@ -335,7 +336,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
-			vizPanel({props: {state, onTooltip, onViewState}}),
+			vizPanel({layout, props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				legendTitle(state),
