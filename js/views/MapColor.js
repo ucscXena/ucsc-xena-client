@@ -84,7 +84,8 @@ var setDataSubType = (state, datasets) =>
 			name,
 			dataSubType: getDataSubType(state, host, name)}));
 
-var colorData = state => getIn(state, ['colorBy', 'data', 'req', 'values', 0]);
+var colorData = state => getIn(state, ['colorBy', 'data', 'req', 'values', 0])
+	&& !getIn(state, ['colorBy', 'data', 'codes']);
 var getSteps = ({min, max}) => (max - min) / 200;
 
 var log2p1 = v => Math.log2(v + 1),
