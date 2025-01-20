@@ -56,10 +56,6 @@
 	margin-bottom: 40px;
 }
 
-.tabs button {
-	min-width: unset;
-}
-
 .tooltip {
 	font-size: 70%;
 	line-height: 100%;

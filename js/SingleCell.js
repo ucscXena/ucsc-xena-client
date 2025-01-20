@@ -239,8 +239,8 @@ class MapTabs extends PureComponent {
 				onLayout, onRadius, onColorByHandlers}, state, layout}} = this,
 			showData = validDataset(state, layout),
 			showImg = !!(showData && hasImage(state));
-		return div({className: styles.maptabs}, // XXX use a Box vs div?
-			tabs({value, onChange, className: styles.tabs},
+		return div({className: styles.maptabs},
+			tabs({value, onChange, variant: 'fullWidth'},
 				tab({label: 'Layout'}),
 				tooltipTab({title: 'Next: explore image layers', open: showImg
 					&& showNext, label: 'Image', ...imgDisplay(showImg)}),
@@ -599,6 +599,32 @@ var theme = outer => createTheme(outer, {
 			root: {
 				fontWeight: 600,
 				color: '#000000'
+			}
+		},
+		MuiTab: {
+			root: {
+				minHeight: 'unset',
+				minWidth: 'unset !important',
+				border: '1px solid #ccc',
+				backgroundColor: '#F0F0F0',
+				'&:first-child': {
+					borderTopLeftRadius: outer.shape.borderRadius,
+				},
+				'&:last-child': {
+					borderTopRightRadius: outer.shape.borderRadius,
+				},
+				'&.Mui-selected': {
+					backgroundColor: 'rgba(0,0,0,0)',
+					borderBottom: 'none',
+				}
+			}
+		},
+		MuiTabs: {
+			root: {
+				minHeight: 'unset'
+			},
+			indicator: {
+				display: 'none'
 			}
 		}
 	}
