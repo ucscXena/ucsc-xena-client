@@ -264,7 +264,7 @@ class MapTabs extends PureComponent {
 					accordionDetails({className: styles.advanced},
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
-								handlers: onColorByHandlers[1]}))))));
+								floatOnly: true, handlers: onColorByHandlers[1]}))))));
 	}
 }
 

@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, get, getIn, identity, Let, mapObject, max,
+var {assoc, assocIn, filter, get, getIn, identity, Let, mapObject, max,
 	pick} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
@@ -19,6 +19,7 @@ var listSubheader = el(ListSubheader);
 var fragment = el(Fragment);
 
 var modes = ['datasource', 'donor', 'type', 'prob', 'sig', 'gene', 'other'];
+var floatOnlyModes = ['prob', 'sig', 'gene', 'other'];
 
 var alwaysFalse = () => false;
 
@@ -32,8 +33,9 @@ var hasMode = {
 	other: hasOther
 };
 
-var availModes = state => !hasDataset(state) ? [] :
-	modes.filter(mode => (hasMode[mode] || alwaysFalse)(state));
+var availModes = (state, floatOnly) => !hasDataset(state) ? [] :
+	(floatOnly ? floatOnlyModes : modes)
+		.filter(mode => (hasMode[mode] || alwaysFalse)(state));
 
 var ident = a => a.map(identity);
 
@@ -50,9 +52,13 @@ var cellTypeOpts = state =>
 		signature.length && [listSubheader('Cell types by gene signatures'),
 			...signature.map(value => menuItem({value}, value.label))]]).flat());
 
+var filterOther = (list, floatOnly) =>
+	floatOnly ? filter(list, {type: 'float'}) : list;
+
 // XXX Use label
-var otherOpts = state => state.other[datasetCohort(state)]
-	.map(value => menuItem({value}, value.field));
+var otherOpts = (state, floatOnly) =>
+	filterOther(state.other[datasetCohort(state)], floatOnly)
+		.map(value => menuItem({value}, value.field));
 
 var probOpts = state =>
 	state.labelTransferProb[datasetCohort(state)]
@@ -149,12 +155,12 @@ var modeOptions = {
 				label: 'Select a cell types/clusters',
 				value: cellTypeValue(state), onChange
 			}, ...cellTypeOpts(state))),
-	other: ({state, onOther: onChange, onScale}) =>
+	other: ({state, floatOnly, onOther: onChange, onScale}) =>
 		fragment(xSelect({
 				id: 'other',
 				label: 'Select a phenotype',
 				value: otherValue(state), onChange
-			}, ...otherOpts(state)),
+			}, ...otherOpts(state, floatOnly)),
 			isFloat(state) && colorData(state) ?
 				distributionSlider(state, onScale) : null),
 	prob: ({state, onProb, onProbCell, onScale}) =>
@@ -286,7 +292,7 @@ class MapColor extends PureComponent {
 	}
 	render() {
 		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,
-			{state: appState} = this.props,
+			{state: appState, floatOnly} = this.props,
 			// overlay local state, for local control of the form
 			state = assocIn(appState, ['colorBy', 'field'], colorBy);
 		return fragment(xSelect({
@@ -294,8 +300,8 @@ class MapColor extends PureComponent {
 					label: 'Select how to color cells by',
 					value: modeValue(state),
 					onChange: onColorBy
-				}, modeOpt(''), ...availModes(state).map(modeOpt)),
-			modeOptions[modeValue(state)]({state, onScale, ...handlers}));
+				}, modeOpt(''), ...availModes(state, floatOnly).map(modeOpt)),
+			modeOptions[modeValue(state)]({state, floatOnly, onScale, ...handlers}));
 	}
 }
 
