@@ -11,7 +11,7 @@ var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
-import {allCohorts, allDefaultCohortNames, datasetCohort, dotRange, getSamples,
+import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
 	hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1, userServerCohorts}
 		from '../models/map';
 import {isAuthPending} from '../models/auth';
@@ -249,10 +249,7 @@ var controls = actionPrefix({
 	// Make the default radius "sticky". Unfortunately, also makes nearby
 	// points sticky if the drag operation starts there. Need to move this
 	// to the view so we can track mousedown.
-	radius: (state, r, rb) => Let(
-		(r0 = state.radius, {step} = dotRange(rb)) =>
-			(r - r0) * (r - rb) > 0 && Math.abs(r - rb) < step * 10 ? state :
-			assocIn(state, ['radius'], r)),
+	radius: (state, r) => assocIn(state, ['radius'], r),
 	channel: (state, i, channel) =>
 		Let(({path} = hasImage(state),
 				newC = findIndex(state.image[path].stats, s => s.name === channel)) =>

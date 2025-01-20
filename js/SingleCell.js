@@ -181,11 +181,16 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
+var labelFormat = v => v.toPrecision(2);
 var dotSize = (state, onChange) =>
 	!state.dataset || !state.radiusBase ? null :
 	div(
 		label('Dot size'),
-		slider({...dotRange(state.radiusBase), marks: [{value: state.radiusBase}], value: getRadius(state), onChange}));
+		slider({...dotRange(state.radiusBase),
+			valueLabelDisplay: 'auto',
+			valueLabelFormat: labelFormat,
+			marks: [{value: state.radiusBase, label: state.radiusBase.toPrecision(2)}],
+			value: getRadius(state), onChange}));
 
 var colorBy2State = state => assoc(state,
 	'colorBy', get(state, 'colorBy2'));
@@ -462,7 +467,8 @@ class SingleCellPage extends PureComponent {
 		this.callback(['hidden', key, []]);
 	}
 	onRadius = (ev, r) => {
-		this.callback(['radius', r, this.props.state.radiusBase]);
+		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
+		this.callback(['radius', isLabel ? this.props.state.radiusBase : r]);
 	}
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
