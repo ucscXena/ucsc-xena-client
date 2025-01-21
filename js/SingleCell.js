@@ -632,6 +632,16 @@ var theme = outer => createTheme(outer, {
 			indicator: {
 				display: 'none'
 			}
+		},
+		MuiSlider: {
+			markLabel: {
+				border: '1px solid rgba(48, 175, 166, 0.5)',
+				borderRadius: outer.shape.borderRadius,
+				padding: '0 4px'
+			},
+			markLabelActive: { // don't highlight 'active' marks
+				color: 'rgba(0, 0, 0, 0.54)'
+			}
 		}
 	}
 });
