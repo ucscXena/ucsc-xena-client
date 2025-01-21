@@ -44,7 +44,7 @@ var cvtColorScale = (colorColumn, colors) =>
 	: () => [0, 255, 0];
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
-                   onHover) =>
+                   radiusMin, onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -56,7 +56,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
 		getColor = cvtColorScale(colorColumn, colors),
 		getFilterValue = filterFn(colorColumn, hideColors)) => pointCloudLayer({
 
-	id: `scatter-${clampRadius}`,
+	id: `scatter-${clampRadius}-${radiusMin}`,
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	parameters: {depthTest: isOrdinal(colors)},
 	sizeUnits: 'common',
@@ -72,6 +72,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
 	clampRadius,
+	radiusMin,
 	// Our data is transposed vs. what deck expects, so we just pass the first
 	// coord & use accessors to return the other coords.
 	data: data[0],
@@ -121,7 +122,7 @@ var initialZoom = props => {
 var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
 
 class MapDrawing extends PureComponent {
-	state = {clampRadius: false, orthographic: false}
+	state = {clampRadius: false}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
@@ -130,9 +131,7 @@ class MapDrawing extends PureComponent {
 	componentDidMount() {
 		var clampRadius = hidden.create('clampRadius', 'radius in [2, 8]',
 			     {onChange: clampRadius => this.setState({clampRadius})});
-		var orthographic = hidden.create('orthographic', 'orthographic',
-			     {onChange: orthographic => this.setState({orthographic})});
-		this.setState({clampRadius, orthographic});
+		this.setState({clampRadius});
 
 		if (this.props.data.columns.length  !== 2) {
 			return;
@@ -147,10 +146,9 @@ class MapDrawing extends PureComponent {
 	}
 	componentWillUnmount() {
 		hidden.delete('clampRadius');
-		hidden.delete('orthographic');
 	}
 	render() {
-		var {props, state: {clampRadius, orthographic}} = this;
+		var {props, state: {clampRadius}} = this;
 		var twoD = props.data.columns.length === 2;
 		var mins = props.data.columns.map(min),
 			maxs = props.data.columns.map(max),
@@ -185,7 +183,7 @@ class MapDrawing extends PureComponent {
 				target: Let((c = cubeWidth / 2) => [c, c, 0])
 			};
 		} else {
-			views = new OrbitView(orthographic ? {orthographic, near: -10} : {});
+			views = new OrbitView({});
 			viewState = {
 				zoom: 5,
 				minZoom: 2,
@@ -196,7 +194,7 @@ class MapDrawing extends PureComponent {
 
 		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
 		                       get(props.data, 'color1'), radius * scale, clampRadius,
-		                       this.onHover);
+		                       twoD ? 1 : 2, this.onHover);
 
 		return deckGL({
 			ref: this.props.onDeck,

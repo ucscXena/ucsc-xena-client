@@ -51,9 +51,9 @@ class XenaPointCloudLayer extends Layer {
 	static defaultProps = defaultProps;
 
 	getShaders() {
-		var {decl, color, clampRadius} = this.props;
+		var {decl, color, clampRadius, radiusMin} = this.props;
 		return {
-			...super.getShaders({vs: vs(clampRadius), fs, modules: [scales, project32, picking]}),
+			...super.getShaders({vs: vs(clampRadius, radiusMin), fs, modules: [scales, project32, picking]}),
 			inject: {
 				'vs:#decl': decl,
 				'vs:DECKGL_FILTER_COLOR': color

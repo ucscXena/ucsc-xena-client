@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export default clamp => `\
+export default (clamp, min) => `\
 #define SHADER_NAME point-cloud-layer-vertex-shader
 
 attribute vec3 positions;
@@ -49,7 +49,7 @@ void main(void) {
   geometry.pickingColor = instancePickingColors;
 
   ${clamp ?
-   'float clampSize = clamp(project_size_to_pixel(radiusPixels, sizeUnits), 2.0, 8.0);' :
+   `float clampSize = clamp(project_size_to_pixel(radiusPixels, sizeUnits), ${min.toFixed(1)}, 8.0);` :
    'float clampSize = project_size_to_pixel(radiusPixels, sizeUnits);\n' }
 
   // Find the center of the point and add the current vertex
