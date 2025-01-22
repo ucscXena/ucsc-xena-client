@@ -52,21 +52,13 @@ var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
 
-var getLogScale = (color, {min: [min], max: [max]}) =>
-	Let((nMin = log2p1(min), nMax = log2p1(max),
-			zone = (nMax - nMin) / 4, absmax = Math.max(-nMin, nMax)) =>
-		nMin === 0 && nMax === 0 ?
-			['float-log', null, color, 0, 0] :
-		nMin < 0 && nMax > 0 ?
-			['float-log', null, color, pow2m1(-absmax / 2), pow2m1(absmax / 2)] :
-		nMin >= 0 && nMax >= 0 ?
-			['float-log', null, color, pow2m1(nMin + zone), pow2m1(nMax - zone / 2)] :
-		['float-log', null, color, pow2m1(nMin + zone / 2), pow2m1(nMax - zone)]);
-
 var high = (low, a, b, c) =>
 	low < a ? a :
 	low < b ? b :
 	c;
+
+var getLogScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
+	['float-log', null, color, p05, high(p05, p95, p99, max)];
 
 var getLinearScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
 	['float-pos', null, color, p05, high(p05, p95, p99, max)];
