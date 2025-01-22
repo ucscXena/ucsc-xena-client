@@ -90,6 +90,8 @@ var colorParams = (field, color) => colorData =>
 	Let((data = setAvg(colorData, fieldSpecMode(field)),
 			scale = getScale(color, field.colnormalization, data)) =>
 		assoc(data,
+			// keeping state here allows tracking loaded vs. selected data.
+			'field', field,
 			'scale', scale,
 			'scaleDefaults', scaleParams(scale),
 			'scaleBounds', scaleBounds(data, scale)));
@@ -236,14 +238,14 @@ var controls = actionPrefix({
 		Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
 			assocIn(next, [key, 'field'], colorBy,
 				[key, 'hidden'], null)),
-	colorScale: (state, key, scale) => assocIn(state, [key, 'data', 'scale'], scale),
+	colorScale: (state, key, scale) =>
+		Let(({field: {host, name, field}} = state[key]) =>
+			assocIn(state, ['settings', host, name, field, 'scale'], scale)),
 	customColor: (state, colors) =>
-		updateIn(state, ['colorBy', 'data'],
-			data => assoc(data, 'scale', ['ordinal', data.codes.length, colors])),
+		Let(({field: {host, name, field}, data: {codes}} = state.colorBy) =>
+			assocIn(state, ['settings', host, name, field, 'scale'],
+				['ordinal', codes.length, colors])),
 	hidden: (state, key, codes) => assocIn(state, [key, 'hidden'], codes),
-	// Make the default radius "sticky". Unfortunately, also makes nearby
-	// points sticky if the drag operation starts there. Need to move this
-	// to the view so we can track mousedown.
 	radius: (state, r) => assocIn(state, ['radius'], r),
 	channel: (state, i, channel) =>
 		Let(({path} = hasImage(state),
@@ -265,6 +267,7 @@ var controls = actionPrefix({
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
+	// XXX drop 'key', since we only do one.
 	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show)
 });
 

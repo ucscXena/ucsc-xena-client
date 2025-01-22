@@ -593,11 +593,23 @@ var radiusSelector = createSelector(
 	state => getData(state),
 	setRadius);
 
+var LetIf = (v, f) => v && f(v);
+
+var scaleSetting = (state, key) =>
+	LetIf(getIn(state, [key, 'data', 'field']), ({host, name, field}) =>
+		getIn(state, ['settings', host, name, field, 'scale']));
+
+var mergeScale = (state, key) =>
+	Let((scale = scaleSetting(state, key)) =>
+		scale ? assocIn(state, [key, 'data', 'scale'], scale) : state);
+
+var mergeScales = state =>
+	mergeScale(mergeScale(state, 'colorBy'), 'colorBy2');
+
 var selector = state => assoc(
-	merge(mergeDensity(state), cohortFieldsSelector(state)),
+	merge(mergeScales(mergeDensity(state)), cohortFieldsSelector(state)),
 	'radiusBase', radiusSelector(state),
-	'map', mapSelector(state)
-);
+	'map', mapSelector(state));
 
 // MuiThemeProvider does a shallow merge into the outer theme, which is not
 // useful. So, we explicitly merge it here by passing a function which will
