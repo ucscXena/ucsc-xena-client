@@ -22,14 +22,17 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, probValue,
 	setRadius} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, without} = require('./underscore_ext').default;
+var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn,
+	groupBy, isEqual, keys, Let, merge, object, pick, range, updateIn, without
+	} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
 import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
-import markers from './views/markers.js';
+import markers from './views/markers';
+import colorPicker from './views/colorPicker';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -282,18 +285,25 @@ var shButton = (onClick, txt) =>
 var showHideButtons = ({onHideAll, onShowAll}) =>
 	fragment(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
 
+var hasColorBy = state => getIn(state, ['field', 'mode']);
+var hasColorByData = state =>
+	hasColorBy(state) && getIn(state, ['data', 'req', 'values', 0]);
+var hasCodes = state => hasColorBy(state) && getIn(state, ['data', 'codes']);
+
 var gray = '#F0F0F0';
 var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 	var codes = getIn(state, ['data', 'codes']),
 		valueType = codes ? 'coded' : 'float',
-		heatmap = [getIn(state, ['data', 'req', 'values', 0])],
 		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
 		unit = getIn(state, ['field', 'unit']),
-		color = hidden ? assoc(scale, 2, object(hidden, hidden.map(constant(gray))))
+		// XXX the 2 here is pretty nasty. Index of custom colors in categorical
+		// scale variant.
+		color = hidden ? updateIn(scale, [2], custom =>
+				merge(custom, object(hidden, hidden.map(constant(gray)))))
 			: scale;
 
-	return getIn(state, ['field', 'mode']) && heatmap[0] ?
+	return hasColorByData(state) ?
 		fragment(
 			div(
 				codes ? showHideButtons({onHideAll, onShowAll}) : null,
@@ -320,23 +330,34 @@ var legendTitleMode = {
 
 var legendTitle = state =>
 	span({className: styles.legendTitle},
-		legendTitleMode[getIn(state, ['colorBy', 'field', 'mode']) || null](state));
+		legendTitleMode[hasColorBy(get(state, 'colorBy')) || null](state));
 
 var datasetLabel = state =>
 	state.dataset ? div(`${state.dataset.cohort} - ${state.dataset.label}`) : null;
+
+var colorPickerButton = ({state, onShowColorPicker}) =>
+	hasCodes(get(state, 'colorBy')) ?
+		iconButton({onClick: onShowColorPicker},
+			icon({style: {fontSize: '14px'}}, 'settings')) :
+		null;
 
 var tooltipView = tooltip =>
 	div({className: styles.tooltip},
 		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt0, br(), tooltip.valTxt1] :
 			['']));
 
-var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
-		tooltip, layout, props: {state}}) =>
+var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
+			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
+		tooltip, layout, showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
 		div({className: styles.vizBody},
+			showColorPicker ?
+				colorPicker({onClose: onCloseColorPicker, onClick: onColor,
+				            data: state.colorBy.data}) :
+				null,
 			get(state.showMarkers, 'colorBy') ?
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
@@ -344,7 +365,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, ...handlers},
 			vizPanel({layout, props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
-				legendTitle(state),
+				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
 				legend(state.colorBy, cellTypeMarkers(state),
 				       handlers.onColorByHandlers[0]),
 				...Let((state2 = colorBy2State(state)) => [
@@ -367,7 +388,7 @@ var getColorTxt = (state, i) =>
 class SingleCellPage extends PureComponent {
 	constructor(props) {
 		super();
-		this.state = {highlight: undefined, tooltip: null,
+		this.state = {highlight: undefined, tooltip: null, showColorPicker: false,
 			layout: getIn(props.state, ['dataset', 'type'])};
 
 		this.onColorByHandlers =
@@ -493,6 +514,15 @@ class SingleCellPage extends PureComponent {
 	}
 	onCancelLogin = origin => {
 		this.callback(['cancel-login', origin]);
+	}
+	onShowColorPicker = () => {
+		this.setState({showColorPicker: true});
+	}
+	onCloseColorPicker = () => {
+		this.setState({showColorPicker: false});
+	}
+	onColor = colors => {
+		this.callback(['customColor', colors]);
 	}
 	markersKey = key => {
 		this.callback(['show-markers', key, true]);

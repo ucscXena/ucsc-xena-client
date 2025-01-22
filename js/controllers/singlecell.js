@@ -237,6 +237,9 @@ var controls = actionPrefix({
 			assocIn(next, [key, 'field'], colorBy,
 				[key, 'hidden'], null)),
 	colorScale: (state, key, scale) => assocIn(state, [key, 'data', 'scale'], scale),
+	customColor: (state, colors) =>
+		updateIn(state, ['colorBy', 'data'],
+			data => assoc(data, 'scale', ['ordinal', data.codes.length, colors])),
 	hidden: (state, key, codes) => assocIn(state, [key, 'hidden'], codes),
 	// Make the default radius "sticky". Unfortunately, also makes nearby
 	// points sticky if the drag operation starts there. Need to move this

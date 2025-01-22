@@ -1,0 +1,35 @@
+.dialog {
+	margin-top: 40px;
+}
+
+.dialog h2 {
+	font-size: 100%;
+}
+
+.table table {
+	width: unset;
+}
+
+.table th, .table td {
+	padding: 1px 8px;
+}
+
+.table td:first-child, .table th:first-child {
+	border-right: 1px solid rgba(224, 224, 224, 1);
+}
+
+.table td span, .table th span {
+	display: block;
+	margin: auto;
+	width: 20px;
+	height: 20px;
+	border: 1px solid rgb(224, 224, 224);
+}
+
+.table td span {
+	cursor: pointer;
+}
+
+.table thead {
+	background-color: #F0F0F0;
+}
