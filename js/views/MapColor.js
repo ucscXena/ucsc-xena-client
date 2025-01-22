@@ -209,6 +209,7 @@ var modeLabel = {
 var modeOpt = mode => menuItem({value: mode}, modeLabel[mode]);
 
 var modeValue = state => getIn(state, ['colorBy', 'field', 'mode'], '');
+var defaultLabel = 'Select how to color cells by';
 
 class MapColor extends PureComponent {
 	constructor(props) {
@@ -293,12 +294,12 @@ class MapColor extends PureComponent {
 	}
 	render() {
 		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,
-			{state: appState, floatOnly} = this.props,
+			{state: appState, floatOnly, label = defaultLabel} = this.props,
 			// overlay local state, for local control of the form
 			state = assocIn(appState, ['colorBy', 'field'], colorBy);
 		return fragment(xSelect({
 					id: 'color-mode',
-					label: 'Select how to color cells by',
+					label,
 					value: modeValue(state),
 					onChange: onColorBy
 				}, modeOpt(''), ...availModes(state, floatOnly).map(modeOpt)),

@@ -264,7 +264,6 @@ class MapTabs extends PureComponent {
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
 			tabPanel({value, index: 2},
-				// XXX move scale lookup to MapColors?
 				mapColor({key: datasetCohort(state), state,
 					handlers: onColorByHandlers[0]}),
 				accordion({expanded: !!state.advanced, onChange: onAdvanced},
@@ -272,6 +271,7 @@ class MapTabs extends PureComponent {
 					accordionDetails({className: styles.advanced},
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
+								label: 'Select data to blend with',
 								floatOnly: true, handlers: onColorByHandlers[1]}))))));
 	}
 }
