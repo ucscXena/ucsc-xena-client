@@ -33,6 +33,6 @@ var colorTable = ({customColor, onClick, codes, scale}) =>
 export default ({onClick, onClose, data}) =>
   Let((scale = colorScale(data.scale), [, , customColor] = data.scale) =>
     dialog({open: true, fullWidth: true, maxWidth: 'md', className: styles.dialog},
-           dialogTitle('Pick colors'),
+           dialogTitle('Edit colors'),
       dialogContent(colorTable({customColor, onClick, codes: data.codes, scale})),
       dialogActions(button({onClick: onClose}, 'Close'))));
