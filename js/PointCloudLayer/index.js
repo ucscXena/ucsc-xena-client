@@ -42,7 +42,7 @@ const defaultProps = {
   getColor: {type: 'accessor', value: DEFAULT_COLOR},
 
   material: false,
-  clampRadius: false
+  radiusMin: 0
 };
 
 /** Render a point cloud with 3D positions, normals and colors. */
@@ -51,9 +51,9 @@ class XenaPointCloudLayer extends Layer {
 	static defaultProps = defaultProps;
 
 	getShaders() {
-		var {decl, color, clampRadius, radiusMin} = this.props;
+		var {decl, color, radiusMin} = this.props;
 		return {
-			...super.getShaders({vs: vs(clampRadius, radiusMin), fs, modules: [scales, project32, picking]}),
+			...super.getShaders({vs: vs(radiusMin), fs, modules: [scales, project32, picking]}),
 			inject: {
 				'vs:#decl': decl,
 				'vs:DECKGL_FILTER_COLOR': color

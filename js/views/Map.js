@@ -11,7 +11,6 @@ import {pointCloudLayer} from '../PointCloudLayer';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
 import {debounce} from '../rx';
-import {hidden} from '../nav';
 
 import AxesLayer from './axes-layer';
 
@@ -43,8 +42,8 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
-const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
-                   radiusMin, onHover) =>
+const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
+                   onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -56,7 +55,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
 		getColor = cvtColorScale(colorColumn, colors),
 		getFilterValue = filterFn(colorColumn, hideColors)) => pointCloudLayer({
 
-	id: `scatter-${clampRadius}-${radiusMin}`,
+	id: `scatter-${radiusMin}`,
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 	parameters: {depthTest: isOrdinal(colors)},
 	sizeUnits: 'common',
@@ -71,7 +70,6 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, clampRadius,
 		(d0, {index}) => [d0, data[1][index]] :
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
-	clampRadius,
 	radiusMin,
 	// Our data is transposed vs. what deck expects, so we just pass the first
 	// coord & use accessors to return the other coords.
@@ -122,17 +120,12 @@ var initialZoom = props => {
 var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
 
 class MapDrawing extends PureComponent {
-	state = {clampRadius: false}
 	onHover = ev => {
 		var i = ev.index;
 		this.props.onTooltip(i < 0 ? null : i);
 	}
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
-		var clampRadius = hidden.create('clampRadius', 'radius in [2, 8]',
-			     {onChange: clampRadius => this.setState({clampRadius})});
-		this.setState({clampRadius});
-
 		if (this.props.data.columns.length  !== 2) {
 			return;
 		}
@@ -144,11 +137,8 @@ class MapDrawing extends PureComponent {
 			scale = cubeWidth / Math.max(...bounds);
 		this.props.onViewState(null, currentScale(zoom, scale));
 	}
-	componentWillUnmount() {
-		hidden.delete('clampRadius');
-	}
 	render() {
-		var {props, state: {clampRadius}} = this;
+		var {props} = this;
 		var twoD = props.data.columns.length === 2;
 		var mins = props.data.columns.map(min),
 			maxs = props.data.columns.map(max),
@@ -193,7 +183,7 @@ class MapDrawing extends PureComponent {
 		}
 
 		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
-		                       get(props.data, 'color1'), radius * scale, clampRadius,
+		                       get(props.data, 'color1'), radius * scale,
 		                       twoD ? 1 : 2, this.onHover);
 
 		return deckGL({
