@@ -261,6 +261,12 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 
 var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
 
+var fvcOpts = [
+	{label: 'box plot', value: 'boxplot'},
+	{label: 'violin plot', value: 'violin'},
+	{label: 'dot plot', value: 'dot'}
+];
+
 var normalizationOptions = [{
 		"value": "none",
 		"label": "none",
@@ -290,12 +296,6 @@ var avgOptions = [
 	{label: 'none', value: 0},
 	{label: 'mean', value: 1},
 	{label: 'median', value: 2}
-];
-
-var chartTypeOpts = [
-	{label: 'box plot', value: 'boxplot'},
-	{label: 'violin plot', value: 'violin'},
-	{label: 'dot plot', value: 'dot'}
 ];
 
 var pctOptions = [
@@ -632,18 +632,23 @@ function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
 				data: medians});
 }
 
-var fvcOptions = violin => violin ?
-	highchartsHelper.violinOptions :
-	highchartsHelper.boxplotOptions;
+var fvcOptions = chartType => ({
+	boxplot: highchartsHelper.boxplotOptions,
+	dot: highchartsHelper.boxplotOptions,
+	violin: highchartsHelper.violinOptions
+}[chartType]);
 
-var fvcChart = violin => violin ?
-	violinplot : boxplot;
+var fvcChart = chartType => ({
+	boxplot,
+	dot: boxplot,
+	violin: violinplot
+}[chartType]);
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrViolin({groups, xCategories, colors, yfields, ydata,
-		xlabel, ylabel, violin}, chartOptions) {
-
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, setView, yfields, ydata,
+		xlabel, ylabel}, chartOptions) {
+	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
 
 	// sort by median of xCategories if yfields.length === 1
@@ -651,12 +656,12 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(violin)({chartOptions, series: xCategories.length,
+	chartOptions = fvcOptions(chartType)({chartOptions, series: xCategories.length,
 		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(violin)({xCategories, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, groups, matrices, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);
@@ -668,7 +673,7 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 }
 
 // compute group sample indices, codes, and colors, then draw
-// box or violin plot.
+// box, dot or violin plot.
 function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 		samplesMatched, //commnet out see below */ ...params}, chartOptions) {
 
@@ -695,7 +700,7 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 
 	var colors = values.map(scale);
 
-	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
 function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange, setView}, chartOptions) {
@@ -723,7 +728,7 @@ function summaryBoxplot(params, chartOptions) {
 		groups = [_.range(0, cohortSamples.length)],
 		colors = ['#0000FF80', 'blue'],
 		xCategories = [null];
-	return boxOrViolin({groups, colors, xCategories, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, colors, xCategories, ...params}, chartOptions);
 }
 
 function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
@@ -1158,7 +1163,7 @@ function callDrawChart(xenaState, params) {
 	var {ydata, xdata, doScatter, colorColumn} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
-		{violin} = chartState,
+		{chartType} = chartState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
@@ -1188,10 +1193,10 @@ function callDrawChart(xenaState, params) {
 
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
+		chartType,
 		cohort, cohortSamples, samplesLength, // why both cohortSamples an samplesLength??
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		violin,
 		xdata, ydata, // normalized
 		yavg,
 	}));
@@ -1313,7 +1318,7 @@ class Chart extends PureComponent {
 					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, chartType, colorColumn} = chartState,
+		var {xcolumn, ycolumn, colorColumn} = chartState,
 			{columns} = xenaState,
 			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1330,6 +1335,7 @@ class Chart extends PureComponent {
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].probes ||
 				columns[ycolumn].fieldList || columns[ycolumn].fields,
+			isFVC = ['boxplot', 'dot', 'violin'].includes(view),
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
@@ -1381,12 +1387,12 @@ class Chart extends PureComponent {
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var compareChartType = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
+		var fvcView = isFVC && ((xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1)) ?
 			buildDropdown({
 				label: 'View as',
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
-				opts: chartTypeOpts,
-				value: chartType}) : null;
+				opts: fvcOpts,
+				value: view}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
@@ -1430,7 +1436,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, compareChartType), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, fvcView), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
