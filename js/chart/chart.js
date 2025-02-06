@@ -292,6 +292,12 @@ var avgOptions = [
 	{label: 'median', value: 2}
 ];
 
+var chartTypeOpts = [
+	{label: 'box plot', value: 'boxplot'},
+	{label: 'violin plot', value: 'violin'},
+	{label: 'dot plot', value: 'dot'}
+];
+
 var pctOptions = [
 	{label: 'none', value: 0},
 	{label: '3 stdev', value: 1},
@@ -1264,8 +1270,8 @@ var gaSwap = fn => () => {
 	fn();
 };
 
-var gaViolin = fn => () => {
-	gaEvents('chart', 'toggleViolin');
+var gaChartType = fn => (v) => {
+	gaEvents('chart', `toggle${v.replace(/^./, (char) => char.toUpperCase())}`);
 	fn();
 };
 
@@ -1307,7 +1313,7 @@ class Chart extends PureComponent {
 					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
+		var {xcolumn, ycolumn, chartType, colorColumn} = chartState,
 			{columns} = xenaState,
 			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1375,11 +1381,12 @@ class Chart extends PureComponent {
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({color: 'secondary', disableElevation: true,
-				onClick: gaViolin(() => set(['violin'], !violin)), variant: 'contained'},
-				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
-			null;
+		var compareChartType = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
+			buildDropdown({
+				label: 'View as',
+				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
+				opts: chartTypeOpts,
+				value: chartType}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
@@ -1423,8 +1430,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes,
-						violinOpt && violinOpt), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, compareChartType), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
