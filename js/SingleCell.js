@@ -19,8 +19,8 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius,
-	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, probValue,
-	setRadius} from './models/map';
+	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, phenoValue,
+	probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn,
 	groupBy, isEqual, keys, Let, merge, object, pick, range, updateIn, without
@@ -325,6 +325,7 @@ var legendTitleMode = {
 		Let(({host, name, field} = state.colorBy.field) =>
 			`${field} - ${getDataSubType(state, host, name)}`) : '',
 	other: state => otherValue(state).field,
+	pheno: state => phenoValue(state).label,
 	null: () => ''
 };
 

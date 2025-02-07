@@ -1,8 +1,10 @@
-var {assoc, deepMerge, every, find, findValue, first, flatmap, get, getIn,
+var {assoc, deepMerge, every, find, filter, findValue, first, flatmap, get, getIn,
 	identity, intersection, Let, map, mapObject, memoize1, merge, min, max,
 	mmap, object, omit, pairs, pick, pluck, updateIn, uniq, values}
 		= require('../underscore_ext').default;
 var {userServers} = require('./servers');
+
+var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
 
 var getProps = (...arrs) => arrs.map(a => a || []).flat();
 
@@ -31,6 +33,16 @@ var cellTypeCluster = datasets =>
 			label: m.label,
 			markers: m.markers
 		}))).flat();
+
+var defaultPhenotype = (datasets, cohortFeatures) =>
+	datasets.map(ds => getProps(ds.defaultphenotype)
+		.map(m =>
+			Let(({host, name} = JSON.parse(ds.dsID)) => ({
+				dsID: ds.dsID,
+				field: m.feature,
+				label: m.label,
+				type: type(getIn(cohortFeatures, [host, name, m.feature]))
+			})))).flat();
 
 var signature = datasets =>
 	datasets.map(ds => getProps(ds.signatureassignment)
@@ -73,16 +85,18 @@ var empty = {
 };
 
 //{'cellType': {[cohort]: [cellType, ...], ...}, ...}}
-export var curatedFields = (cohorts, cohortDatasets) =>
+export var curatedFields = (cohorts, cohortDatasets, cohortFeatures) =>
 	!cohorts.length ? empty :
 	deepMerge(
 		...cohorts.map(({cohort}) =>
 			Let((ds = allCohortDatasets(cohort, cohortDatasets)) =>
 				object(
 					['cellType', 'labelTransfer', 'labelTransferProb', 'signature',
-						'signatureScore'],
+						'signatureScore', 'defaultPhenotype'],
 					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds),
-					 signature(ds), signatureScore(ds)].map(d => ({[cohort]: d}))))));
+					 signature(ds), signatureScore(ds),
+					 defaultPhenotype(ds, get(cohortFeatures, cohort, {}))]
+						.map(d => ({[cohort]: d}))))));
 
 
 var studyCohorts = study => get(study, 'cohortList', []);
@@ -114,28 +128,25 @@ var dropFields = (features, [dsID, fields]) =>
 	Let(({host, name} = JSON.parse(dsID)) =>
 		updateIn(features, [host, name], ds => omit(ds, fields)));
 
-var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
-var cohortOther = (cohort, state, features) =>
-	Let((labelTransfer = getIn(state, ['labelTransfer', cohort])
-			.map(f => [f.dsID, [f.field/*, f.prob*/]]),
-		labelTransferProb = getIn(state, ['labelTransferProb', cohort])
-			.map(f => [f.dsID, f.category]),
-		cellType = getIn(state, ['cellType', cohort]).map(f => [f.dsID, [f.field]]),
-		signature = getIn(state, ['signature', cohort]).map(f => [f.dsID, [f.field]]),
-		signatureScore = getIn(state, ['signatureScore', cohort])
-			.map(f => [f.dsID, [f.field]]),
-		pruned = [labelTransfer, labelTransferProb, cellType, signature,
-			signatureScore].flat().reduce(dropFields, dropIgnored(features))) =>
+// pull curated fields
+var getCohortFields = cohort => fields =>
+	fields[cohort].map(f => f.category ? [f.dsID, f.category] : [f.dsID, [f.field]]);
 
-		flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
-			map(fields, (p, field) => ({host, name, field, type: type(p)})))));
+var curatedFieldKeys = ['labelTransfer', 'labelTransferProb', 'cellType',
+	'signature', 'signatureScore', 'defaultPhenotype'];
+
+var cohortOther = (cohort, state, features) =>
+	Let((pruned = curatedFieldKeys.map(k => state[k]).map(getCohortFields(cohort))
+		.flat().reduce(dropFields, dropIgnored(features))) =>
+			flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
+				map(fields, (p, field) => ({host, name, field, type: type(p)})))));
 
 var otherFields = (cohorts, state, cohortFeatures) =>
 	deepMerge(...cohorts.map(({cohort}) =>
 		({[cohort]: cohortOther(cohort, state, get(cohortFeatures, cohort, []))})));
 
 export var cohortFields = (cohorts, cohortDatasets, cohortFeatures) =>
-	Let((fields = curatedFields(cohorts, cohortDatasets)) =>
+	Let((fields = curatedFields(cohorts, cohortDatasets, cohortFeatures)) =>
 		assoc(fields, 'other', otherFields(cohorts, fields, cohortFeatures)));
 
 
@@ -172,8 +183,8 @@ export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
 export var hasSignatureScore = (state, cohort = datasetCohort(state)) =>
 	state.signatureScore[cohort].length;
 
-export var hasOther = (state, cohort = datasetCohort(state)) =>
-	state.other[cohort].length;
+export var hasOther = (state, floatOnly, cohort = datasetCohort(state)) =>
+	(floatOnly ? identity : filter)(state.other[cohort], {type: 'float'}).length;
 
 export var hasGene = (state, cohort = datasetCohort(state)) =>
 	Let((datasets =
@@ -251,6 +262,8 @@ export var getDataSubType = (state, host, name) =>
 var toDsID = a => JSON.stringify(pick(a, 'host', 'name'));
 // select component requires reference equality, so we have to find
 // the matching option here.
+// XXX Will this behave badly if we recompute cellType in the selector
+// due to data coming in?
 export var cellTypeValue = state =>
 	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
 			cohort = datasetCohort(state)) =>
@@ -264,6 +277,13 @@ export var otherValue = state =>
 		state.other[cohort]
 			.find(other => other.name === name && other.host === host
 				&& other.field === field) || '');
+
+export var phenoValue = state =>
+	Let(({host, name, field} = state.colorBy.field,
+			dsID = JSON.stringify({host, name}),
+			cohort = datasetCohort(state)) =>
+		state.defaultPhenotype[cohort]
+			.find(f => f.dsID === dsID && f.field === field) || '');
 
 export var cellTypeMarkers = state =>
 	getIn(state, ['colorBy', 'field', 'mode']) === 'type' &&

@@ -29,6 +29,7 @@ var fieldType = {
 	prob: () => ['clinical', 'float'],
 	sig: () => ['clinical', 'float'],
 	gene: () => ['probes', 'float'],
+	pheno: type => ['clinical', type],
 	other: type => ['clinical', type]
 };
 
