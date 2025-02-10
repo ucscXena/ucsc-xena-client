@@ -676,7 +676,7 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, setView, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setView, yfields, ydata,
 		xlabel, ylabel}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
@@ -686,7 +686,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, s
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(chartType)({chartOptions, series: xCategories.length,
+	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
 		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel});
 
 	var chart = newChart(chartOptions);
@@ -1322,7 +1322,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, range: undefined, view: undefined};
+		this.state = {advanced: false, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1332,7 +1332,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, range, view} = this.state,
+			{advanced, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1370,6 +1370,7 @@ class Chart extends PureComponent {
 			yfields = columns[ycolumn].probes ||
 				columns[ycolumn].fieldList || columns[ycolumn].fields,
 			isFVC = ['boxplot', 'dot', 'violin'].includes(view),
+			isDot = view === 'dot',
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
@@ -1387,6 +1388,7 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			inverted,
 			setRange,
 			setView,
 		};
@@ -1397,8 +1399,10 @@ class Chart extends PureComponent {
 			!isFloat(columns, ycolumn);
 		var swapAxes = codedVCoded || doScatter ? button({color: 'secondary', disableElevation: true,
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
-				'Swap X and Y') :
-			null;
+				'Swap X and Y') : null;
+		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
+				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
+				'Swap X and Y') : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
@@ -1470,7 +1474,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, fvcView), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, fvcView), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }

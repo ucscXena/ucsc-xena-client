@@ -486,11 +486,12 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
-function dotOptions({ chartOptions, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
+function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
 	const opts = {
 		chart: {
+			inverted,
 			type: 'scatter',
-			zoomType: 'x',
+			zoomType: inverted ? 'y' : 'x',
 		},
 		legend: {enabled: false},
 		plotOptions: {
@@ -510,12 +511,17 @@ function dotOptions({ chartOptions, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
 		xAxis: {
 			categories: xAxis.categories,
 			gridLineWidth: 0,
-			labels: {rotation: -90},
+			labels: {rotation: inverted ? 0 : -90},
+			lineWidth: 1,
+			tickWidth: 0,
 			title: {text: xAxisTitle},
 		},
 		yAxis: {
 			categories: yAxis.categories,
 			gridLineWidth: 0,
+			labels: {rotation: inverted ? -90 : 0},
+			lineWidth: 1,
+			tickWidth: 0,
 			title: {text: yAxisTitle},
 		},
 	};
