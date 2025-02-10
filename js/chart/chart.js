@@ -1408,7 +1408,7 @@ class Chart extends PureComponent {
 			buildDropdown({
 				opts: yexpOpts,
 				index: chartState.expState[ycolumn],
-				label: isDensity ? 'Data unit' : 'Y unit',
+				label: isDot ? 'Continuous data unit' : isDensity ? 'Data unit' : 'Y unit',
 				onChange: i => set(['expState', ycolumn], i)});
 
 		var xExp = !v(xcolumn) || xcodemap ? null :
@@ -1421,7 +1421,7 @@ class Chart extends PureComponent {
 		var normalization = ycodemap ? null :
 			buildDropdown({
 				index: chartState.normalizationState[ycolumn],
-				label: isDensity ? 'Data linear transform' : 'Y data linear transform',
+				label: isDot ? 'Continuous data' : isDensity ? 'Data linear transform' : 'Y data linear transform',
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
