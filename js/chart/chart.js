@@ -513,6 +513,36 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
+function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
+	var minScale = 0,
+		maxScale = 10,
+		// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
+		meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
+		minMean = Math.min(...meanValues),
+		maxMean = Math.max(...meanValues);
+	xCategories.forEach((category, categoryIndex) => {
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			name: category,
+			data: yfields.map((feature, featureIndex) => {
+				var value = meanMatrix[categoryIndex][featureIndex],
+					normalizedValue = minMean !== maxMean ? (value - minMean) / (maxMean - minMean) : 0.5,
+					normalizedScale = Math.ceil(minScale + normalizedValue * (maxScale - minScale)),
+					opacity = normalizedScale / 10,
+					color = Highcharts.color('#3366CC').setOpacity(opacity).get();
+				return {
+					color,
+					marker: {radius: normalizedScale},
+					value,
+					x: featureIndex,
+					y: categoryIndex,
+				};
+			}),
+			type: 'scatter',
+		});
+	});
+}
+
 var violinSamples = 30;
 
 function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
@@ -634,13 +664,13 @@ function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
 
 var fvcOptions = chartType => ({
 	boxplot: highchartsHelper.boxplotOptions,
-	dot: highchartsHelper.boxplotOptions,
+	dot: highchartsHelper.dotOptions,
 	violin: highchartsHelper.violinOptions
 }[chartType]);
 
 var fvcChart = chartType => ({
 	boxplot,
-	dot: boxplot,
+	dot: dotplot,
 	violin: violinplot
 }[chartType]);
 
@@ -657,11 +687,15 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, s
 	}
 
 	chartOptions = fvcOptions(chartType)({chartOptions, series: xCategories.length,
-		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
+		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel});
 
 	var chart = newChart(chartOptions);
 
 	fvcChart(chartType)({xCategories, groups, matrices, yfields, ydata, colors, chart});
+
+	if (chartType === 'dot') {
+		return chart;
+	}
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);

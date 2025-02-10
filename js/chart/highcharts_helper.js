@@ -486,6 +486,43 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+function dotOptions({ chartOptions, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
+	const opts = {
+		chart: {
+			type: 'scatter',
+			zoomType: 'x',
+		},
+		legend: {enabled: false},
+		plotOptions: {
+			scatter: {marker: {symbol: 'circle'}},
+		},
+		title: {text: ''},
+		tooltip: {
+			formatter: function () {
+				return `<div>
+							<b>${this.series.xAxis.categories[this.point.x]}: ${this.series.yAxis.categories[this.point.y]}</b>
+							<div>mean: ${this.point.value.toPrecision(3)}</div>
+						</div>`;
+			},
+			hideDelay: 0,
+			useHTML: true,
+		},
+		xAxis: {
+			categories: xAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: -90},
+			title: {text: xAxisTitle},
+		},
+		yAxis: {
+			categories: yAxis.categories,
+			gridLineWidth: 0,
+			title: {text: yAxisTitle},
+		},
+	};
+
+	return _.deepMerge(chartOptions, opts);
+}
+
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
@@ -612,6 +649,7 @@ module.exports = {
 	average,
 	columnChartOptions,
 	boxplotOptions,
+	dotOptions,
 	violinOptions,
 	scatterChart,
 	addSeriesToColumn
