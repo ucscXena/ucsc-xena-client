@@ -119,6 +119,8 @@ var scatterCanDraw = appState => {
 
 var histCanDraw = appState => suitableColumns(appState, true).length > 0;
 
+export var adjustChartTypeForMode = ({chartType, mode}) => mode === 'histOrDist' && chartType === 'dot' ? undefined : chartType;
+
 export var boxOrDotOrViolinYDatasets = appState => suitableColumns(appState, true);
 
 export var boxOrDotOrViolinXDatasets = appState => suitableColumns(appState, false)

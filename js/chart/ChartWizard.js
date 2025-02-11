@@ -20,7 +20,7 @@ import {
 } from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns, canDraw, boxOrDotOrViolinXDatasets, boxOrDotOrViolinYDatasets,
-	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
+	isFloat, scatterYDatasets, scatterXDatasets, adjustChartTypeForMode} from './utils';
 import './icons.css';
 import {h2, i, span, el} from './react-hyper';
 import classNames from 'classnames';
@@ -242,7 +242,7 @@ export default class ChartWizard extends PureComponent {
 			_.assoc(appState.chartState,
 				'ycolumn', ycolumn,
 				'xcolumn', xcolumn,
-				'chartType', chartType,
+				'chartType', adjustChartTypeForMode({chartType, mode}),
 				'colorColumn', mode === 'scatter' ? colorColumn : undefined,
 				'setColumn', undefined,
 				'another', false)]);
