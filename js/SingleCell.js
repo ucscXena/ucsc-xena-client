@@ -22,8 +22,8 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, phenoValue,
 	probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, findIndexDefault, get, getIn,
-	groupBy, isEqual, keys, Let, merge, object, pick, range, updateIn, without
+var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get, getIn,
+	groupBy, isEqual, keys, Let, merge, object, pick, range, times, updateIn, without
 	} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
 import singlecellLegend from './views/singlecellLegend';
@@ -333,8 +333,13 @@ var legendTitle = state =>
 	span({className: styles.legendTitle},
 		legendTitleMode[hasColorBy(get(state, 'colorBy')) || null](state));
 
+var datasetCount = state =>
+	Let(({host, name} = JSON.parse(state.dataset.dsID)) =>
+		find(state.cohortDatasets[datasetCohort(state)][host], {name}).count);
+
+var space = n => times(n, () => '\u00a0').join('');
 var datasetLabel = state =>
-	state.dataset ? div(`${state.dataset.cohort} - ${state.dataset.label}`) : null;
+	state.dataset ? div(`${state.dataset.cohort} - ${state.dataset.label}${space(10)}${datasetCount(state)} cells/dots`) : null;
 
 var colorPickerButton = ({state, onShowColorPicker}) =>
 	hasCodes(get(state, 'colorBy')) ?
