@@ -236,7 +236,7 @@ export default class ChartWizard extends PureComponent {
 			{chartType, ycolumn, xcolumn, mode} = this.state;
 		gaEvents('chart', modeTxt[mode]);
 		if (mode === 'boxOrDotOrViolin') {
-			gaEvents('chart', chartType);
+			chartType && gaEvents('chart', chartType);
 		}
 		callback(['chart-set-state',
 			_.assoc(appState.chartState,
