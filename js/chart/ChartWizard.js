@@ -108,7 +108,7 @@ var boxOrDotOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 				select: true, value: state.xcolumn || ''}, selectOptions(boxOrDotOrViolinXDatasets(appState))),
 			needType(state, appState) ?
 				formControl(formLabel('I want a'),
-					box({component: RadioGroup, name: 'boxOrDotOrViolin', onChange: onChart, row: true, sx: sxRadioGroup, value: state.chartType},
+					box({component: RadioGroup, name: 'boxOrDotOrViolin', onChange: onChart, row: true, sx: sxRadioGroup, value: state.chartType || 'boxplot'},
 						...boxOrDotOrViolinModes.map(({label, value}) =>
 							formControlLabel({control: <Radio />, key: value, label, value})))) :
 				null)));
@@ -202,7 +202,7 @@ var page = {
 export default class ChartWizard extends PureComponent {
 	constructor(props) {
 	    super(props);
-		var {chartState: {chartType = 'boxplot', ycolumn, xcolumn} = {}} = this.props.appState;
+		var {chartState: {chartType, ycolumn, xcolumn} = {}} = this.props.appState;
 	    this.state = {
 			chartType,
 			mode: 'start',
