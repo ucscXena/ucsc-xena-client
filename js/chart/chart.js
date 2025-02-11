@@ -1427,7 +1427,7 @@ class Chart extends PureComponent {
 				opts: normalizationOptions});
 
 		var viewOpts = filterViewOptions(viewOptions, xfield),
-		switchView = view && ((xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1)) ?
+		switchView = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
 			buildDropdown({
 				label: 'View as',
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
