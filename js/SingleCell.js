@@ -185,15 +185,17 @@ var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
 var labelFormat = v => v.toPrecision(2);
-var dotSize = (state, onChange) =>
+var dotSize = (state, onChange, showDotSize, onShowDotSize) =>
 	!state.dataset || !state.radiusBase ? null :
-	div(
-		label('Dot size'),
-		slider({...dotRange(state.radiusBase),
-			valueLabelDisplay: 'auto',
-			valueLabelFormat: labelFormat,
-			marks: [{value: state.radiusBase, label: state.radiusBase.toPrecision(2)}],
-			value: getRadius(state), onChange}));
+	accordion({expanded: !!showDotSize, onChange: onShowDotSize},
+		accordionSummary({expandIcon: expandMore()}, 'Advanced'),
+		accordionDetails({className: styles.advanced},
+			label('Dot size'),
+			slider({...dotRange(state.radiusBase),
+				valueLabelDisplay: 'auto',
+				valueLabelFormat: labelFormat,
+				marks: [{value: state.radiusBase, label: state.radiusBase.toPrecision(2)}],
+				value: getRadius(state), onChange})));
 
 var colorBy2State = state => assoc(state,
 	'colorBy', get(state, 'colorBy2'));
@@ -214,7 +216,8 @@ var tooltipTab = ({title, open, ...props}) =>
 	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
 class MapTabs extends PureComponent {
-	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false}
+	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false,
+		showDotSize: false}
 	componentWillUnmount() {
 		this.showNext && clearTimeout(this.showNext);
 		this.hideNext && clearTimeout(this.hideNext);
@@ -225,6 +228,9 @@ class MapTabs extends PureComponent {
 			this.setState({showedNext: true, showNext: false});
 			localStorage.showedNext = 'true';
 		}
+	}
+	onShowDotSize = () => {
+		this.setState({showDotSize: !this.state.showDotSize});
 	}
 	onDataset = (...args) => {
 		if (!this.state.showedNext) {
@@ -241,10 +247,12 @@ class MapTabs extends PureComponent {
 		this.props.handlers.onDataset(...args);
 	}
 	render() {
-		var {onChange, onDataset, state: {value, showNext}, props:
+		var {onChange, onDataset, onShowDotSize,
+				state: {value, showDotSize, showNext}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible, onAdvanced,
-				onLayout, onRadius, onColorByHandlers}, state, layout}} = this,
+				onLayout, onRadius, onColorByHandlers}, state,
+				layout}} = this,
 			showData = validDataset(state, layout),
 			showImg = !!(showData && hasImage(state));
 		return div({className: styles.maptabs},
@@ -259,7 +267,7 @@ class MapTabs extends PureComponent {
 				layoutSelect({onLayout, layout, state}),
 				mapSelectIfLayout(available(state), layout,
 					state.dataset, onDataset),
-				dotSize(state, onRadius)),
+				dotSize(state, onRadius, showDotSize, onShowDotSize)),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
