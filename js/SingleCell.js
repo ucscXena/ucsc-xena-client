@@ -338,7 +338,7 @@ var datasetLabel = state =>
 
 var colorPickerButton = ({state, onShowColorPicker}) =>
 	hasCodes(get(state, 'colorBy')) ?
-		iconButton({onClick: onShowColorPicker},
+		iconButton({onClick: onShowColorPicker, color: 'secondary'},
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
