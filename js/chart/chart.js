@@ -261,11 +261,13 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 
 var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
 
-var fvcOpts = [
+var viewOptions = [
 	{label: 'box plot', value: 'boxplot'},
 	{label: 'violin plot', value: 'violin'},
 	{label: 'dot plot', value: 'dot'}
 ];
+
+var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
 
 var normalizationOptions = [{
 		"value": "none",
@@ -1369,7 +1371,6 @@ class Chart extends PureComponent {
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].probes ||
 				columns[ycolumn].fieldList || columns[ycolumn].fields,
-			isFVC = ['boxplot', 'dot', 'violin'].includes(view),
 			isDot = view === 'dot',
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
@@ -1425,11 +1426,12 @@ class Chart extends PureComponent {
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var fvcView = isFVC && ((xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1)) ?
+		var viewOpts = filterViewOptions(viewOptions, xfield),
+		switchView = view && ((xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1)) ?
 			buildDropdown({
 				label: 'View as',
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
-				opts: fvcOpts,
+				opts: viewOpts,
 				value: view}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
@@ -1474,7 +1476,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, invertAxes, fvcView), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, switchView), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
