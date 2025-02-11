@@ -41,7 +41,8 @@ var defaultPhenotype = (datasets, cohortFeatures) =>
 				dsID: ds.dsID,
 				field: m.feature,
 				label: m.label,
-				type: type(getIn(cohortFeatures, [host, name, m.feature]))
+				type: type(getIn(cohortFeatures, [host, name, m.feature],
+				                 {valueType: 'float'}))
 			})))).flat();
 
 var signature = datasets =>
