@@ -158,7 +158,7 @@ var initialZoom = props => {
 	var {width, height} = props.container.getBoundingClientRect(),
 		{data: {imageState: {size: [iwidth, iheight]}}} = props;
 
-	return Math.log2(Math.min(2 * width / iwidth, 2 * height / iheight));
+	return Math.log2(Math.min(0.8 * width / iwidth, 0.8 * height / iheight));
 };
 
 var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / scale;
