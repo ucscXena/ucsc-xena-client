@@ -98,9 +98,10 @@ export var floatOrdinalProps = {
 	key: 'floatordinal',
 	decl: ordinalDecl + value1Decl,
 	// XXX add opacity, from deckgl shader standards?
+	// scaling opacity in [0.1, 1.0]
 	color: `
 		color = instanceColors;
-		color.a = color_scale(log1, upper1, lower1, values1);`,
+		color.a = 0.1 + 0.9 * color_scale(log1, upper1, lower1, values1);`,
 	attributes: {...value1Attr, ...ordinalAttr},
 	uniforms: ['lower1', 'upper1', 'log1'],
 };
