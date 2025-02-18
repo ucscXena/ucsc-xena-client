@@ -229,10 +229,8 @@ var reset = state => assoc(state, 'dataset', null, 'data', {},
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
-	// We reset colorBy to {} because of the query selectors on colorBy.data
-	// that will throw if we delete the object.
-	dataset: (state, dataset, colorBy) => assoc(state, 'dataset', dataset,
-		'colorBy', colorBy, 'colorBy2', {}, 'radius', null, 'viewState', null),
+	dataset: (state, dataset, colorBy, colorBy2) => assoc(state, 'dataset', dataset,
+		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null),
 	reset,
 	advanced: state => updateIn(state, ['advanced'],  a => !a),
 	colorBy: (state, key, colorBy) =>
