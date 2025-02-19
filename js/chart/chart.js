@@ -521,14 +521,15 @@ function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
 		// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
 		meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
 		minMean = Math.min(...meanValues),
-		maxMean = Math.max(...meanValues);
+		maxMean = Math.max(...meanValues),
+		range = maxMean - minMean || 1;
 	xCategories.forEach((category, categoryIndex) => {
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			name: category,
 			data: yfields.map((feature, featureIndex) => {
 				var value = meanMatrix[categoryIndex][featureIndex],
-					normalizedValue = minMean !== maxMean ? (value - minMean) / (maxMean - minMean) : 0.5,
+					normalizedValue = (value - minMean) / range,
 					normalizedScale = Math.ceil(minScale + normalizedValue * (maxScale - minScale)),
 					opacity = normalizedScale / 10,
 					color = Highcharts.color('#3366CC').setOpacity(opacity).get();
