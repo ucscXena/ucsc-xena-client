@@ -33,6 +33,7 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
+import {hidden} from './nav';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -172,9 +173,9 @@ var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
 
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
-var vizPanel = ({layout, props: {state, ...handlers}}) =>
+var vizPanel = ({layout, minT, props: {state, ...handlers}}) =>
 	Let(({dataset} = state) =>
-		dataset ? map({state, ...handlers}) :
+		dataset ? map({state, minT, ...handlers}) :
 		layout ? vizText(h2(`Select a ${layouts[layout]} layout`)) :
 		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout type')));
@@ -362,7 +363,7 @@ var tooltipView = tooltip =>
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
-		tooltip, layout, showColorPicker, props: {state}}) =>
+		tooltip, layout, showColorPicker, minT, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -376,7 +377,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
-			vizPanel({layout, props: {state, onTooltip, onViewState}}),
+			vizPanel({layout, props: {state, minT, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
@@ -402,8 +403,26 @@ var getColorTxt = (state, i) =>
 class SingleCellPage extends PureComponent {
 	constructor(props) {
 		super();
+		var mins = times(5, i => {
+			var minT = 0.01 * (i + 1);
+			return hidden.create(`min${i}`, `transparency in [${minT.toFixed(2)}, 1.0]`,
+				{onChange: en => {
+					var sMinT = this.state.minT;
+					if (en) {
+						if (sMinT) {
+							setTimeout(() =>
+								hidden.update(`min${~~(sMinT / 0.01) - 1}`), 0);
+						}
+						this.setState({minT});
+					} else if (sMinT === minT) {
+						this.setState({minT: 0});
+					}
+				}});
+		});
+
+		var minT = Let((i = mins.findIndex(x => x)) => i === -1 ? 0 : (i + 1) * 0.01);
 		this.state = {highlight: undefined, tooltip: null, showColorPicker: false,
-			layout: getIn(props.state, ['dataset', 'type'])};
+			layout: getIn(props.state, ['dataset', 'type']), minT};
 
 		this.onColorByHandlers =
 			['colorBy', 'colorBy2'].map(key => ({

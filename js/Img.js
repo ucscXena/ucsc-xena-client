@@ -102,7 +102,7 @@ var filterFn = (colorColumn, hideColors) =>
 	: () => 1;
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2,
-		radius, onHover) =>
+		radius, minTransparent1, onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -132,6 +132,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2,
 	lower0: get(colors, 3),
 	upper0: get(colors, 4),
 	log0: get(colors, 0) === 'float-log',
+	minTransparent1,
 	lower1: get(colors2, 3),
 	upper1: get(colors2, 4),
 	log1: get(colors2, 0) === 'float-log',
@@ -189,7 +190,7 @@ class Img extends PureComponent {
 
 		var layer0 = data && hasColor(color0) &&
 			dataLayer(data, modelMatrix, color0,
-				color1, radius, this.onHover);
+				color1, radius, props.minT, this.onHover);
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, segmentation, levels, size: [iwidth, iheight],

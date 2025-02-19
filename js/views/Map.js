@@ -43,6 +43,7 @@ var cvtColorScale = (colorColumn, colors) =>
 	: () => [0, 255, 0];
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
+                   minTransparent1,
                    onHover) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
@@ -82,6 +83,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
 	lower0: get(colors, 3),
 	upper0: get(colors, 4),
 	log0: get(colors, 0) === 'float-log',
+	minTransparent1,
 	lower1: get(colors2, 3),
 	upper1: get(colors2, 4),
 	log1: get(colors2, 0) === 'float-log',
@@ -184,7 +186,7 @@ class MapDrawing extends PureComponent {
 
 		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
 		                       get(props.data, 'color1'), radius * scale,
-		                       twoD ? 1 : 2, this.onHover);
+		                       twoD ? 1 : 2, props.minT, this.onHover);
 
 		return deckGL({
 			ref: this.props.onDeck,
@@ -272,6 +274,7 @@ export class Map extends PureComponent {
 
 		var {onViewState, onDeck} = this,
 			mapState = this.props.state,
+			{minT} = this.props,
 			params = get(mapState, 'dataset', []),
 			mapData = getData(mapState),
 			color0 = get(mapState, 'colorBy'),
@@ -297,6 +300,6 @@ export class Map extends PureComponent {
 				div({className: styles.graphWrapper, ref: this.onRef},
 					...(unit ? [scale(this.state.scale)] : []),
 					getStatusView(loading, error, this.onReload),
-					drawing({...handlers, onViewState, onDeck, data, container})));
+					drawing({...handlers, minT, onViewState, onDeck, data, container})));
 	}
 }

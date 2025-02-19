@@ -44,6 +44,7 @@ var value1Attr =
 var value1Decl = `
 	attribute float values1;
 	uniform bool log1;
+	uniform float minTransparent1;
 	uniform float lower1;
 	uniform float upper1;`;
 
@@ -101,9 +102,9 @@ export var floatOrdinalProps = {
 	// scaling opacity in [0.05, 1.0]
 	color: `
 		color = instanceColors;
-		color.a = 0.05 + 0.95 * color_scale(log1, upper1, lower1, values1);`,
+		color.a = minTransparent1 + (1.0 - minTransparent1) * color_scale(log1, upper1, lower1, values1);`,
 	attributes: {...value1Attr, ...ordinalAttr},
-	uniforms: ['lower1', 'upper1', 'log1'],
+	uniforms: ['lower1', 'upper1', 'log1', 'minTransparent1'],
 };
 
 
