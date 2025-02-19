@@ -267,6 +267,11 @@ var viewOptions = [
 	{label: 'dot plot', value: 'dot'}
 ];
 
+var displayModeOptions = [
+	{label: 'bulk data', value: 'bulk'},
+	{label: 'single cell data', value: 'singleCell'}
+];
+
 var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
 
 var normalizationOptions = [{
@@ -515,7 +520,7 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
+function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCategories, yfields }) {
 	var minScale = 0,
 		maxScale = 10,
 		// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
@@ -524,15 +529,17 @@ function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
 	xCategories.forEach((category, categoryIndex) => {
+		var categoryColor = displayMode === 'singleCell' ? colors[categoryIndex] || '#CCCCCC' : '#3366CC';
 		highchartsHelper.addSeriesToColumn({
 			chart,
+			color: categoryColor,
 			name: category,
 			data: yfields.map((feature, featureIndex) => {
 				var value = meanMatrix[categoryIndex][featureIndex],
 					normalizedValue = (value - minMean) / range,
 					normalizedScale = Math.ceil(minScale + normalizedValue * (maxScale - minScale)),
 					opacity = normalizedScale / 10,
-					color = Highcharts.color('#3366CC').setOpacity(opacity).get();
+					color = Highcharts.color(categoryColor).setOpacity(opacity).get();
 				return {
 					color,
 					marker: {radius: normalizedScale},
@@ -680,7 +687,7 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setView, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, displayMode, inverted, setView, yfields, ydata,
 		xlabel, ylabel}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
@@ -695,7 +702,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, i
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(chartType)({xCategories, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, displayMode, groups, matrices, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);
@@ -1322,7 +1329,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, inverted: false, range: undefined, view: undefined};
+		this.state = {advanced: false, displayMode: undefined, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1332,7 +1339,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, inverted, range, view} = this.state,
+			{advanced, displayMode, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1387,6 +1394,7 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			displayMode,
 			inverted,
 			setRange,
 			setView,
@@ -1402,6 +1410,13 @@ class Chart extends PureComponent {
 		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
 				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
 				'Swap X and Y') : null;
+
+		var switchMode = isDot ?
+			buildDropdown({
+				label: 'Display as',
+				onChange: (_, v) => this.setState({displayMode: v}),
+				opts: displayModeOptions,
+				value: displayMode || 'bulk'}) : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
@@ -1474,7 +1489,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, invertAxes, switchView), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, switchView, switchMode), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
