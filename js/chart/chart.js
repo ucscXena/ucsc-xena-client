@@ -540,6 +540,7 @@ function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
 					y: categoryIndex,
 				};
 			}),
+			showInLegend: true,
 			type: 'scatter',
 		});
 	});
@@ -694,10 +695,6 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, i
 	var chart = newChart(chartOptions);
 
 	fvcChart(chartType)({xCategories, groups, matrices, yfields, ydata, colors, chart});
-
-	if (chartType === 'dot') {
-		return chart;
-	}
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);

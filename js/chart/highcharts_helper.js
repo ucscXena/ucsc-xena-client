@@ -493,7 +493,13 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			type: 'scatter',
 			zoomType: inverted ? 'y' : 'x',
 		},
-		legend: {enabled: false},
+		legend: {
+			align: 'right',
+			layout: 'vertical',
+			margin: 5,
+			title: {text: xAxisTitle},
+			verticalAlign: 'middle'
+		},
 		plotOptions: {
 			scatter: {marker: {symbol: 'circle'}},
 		},
