@@ -58,7 +58,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
 
 	id: `scatter-${radiusMin}`,
 	coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-	parameters: {depthTest: isOrdinal(colors)},
+	parameters: {depthTest: isOrdinal(colors) && !colors2},
 	sizeUnits: 'common',
 	modelMatrix,
 	material: false,
