@@ -486,6 +486,55 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
+	const opts = {
+		chart: {
+			inverted,
+			type: 'scatter',
+			zoomType: inverted ? 'y' : 'x',
+		},
+		legend: {
+			align: 'right',
+			layout: 'vertical',
+			margin: 5,
+			title: {text: xAxisTitle},
+			verticalAlign: 'middle'
+		},
+		plotOptions: {
+			scatter: {marker: {symbol: 'circle'}},
+		},
+		title: {text: ''},
+		tooltip: {
+			formatter: function () {
+				return `<div>
+							<b>${this.series.xAxis.categories[this.point.x]}: ${this.series.yAxis.categories[this.point.y]}</b>
+							<div>mean: ${this.point.value.toPrecision(3)}</div>
+						</div>`;
+			},
+			hideDelay: 0,
+			useHTML: true,
+		},
+		xAxis: {
+			categories: xAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? 0 : -90},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: xAxisTitle},
+		},
+		yAxis: {
+			categories: yAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? -90 : 0},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: yAxisTitle},
+		},
+	};
+
+	return _.deepMerge(chartOptions, opts);
+}
+
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
@@ -612,6 +661,7 @@ module.exports = {
 	average,
 	columnChartOptions,
 	boxplotOptions,
+	dotOptions,
 	violinOptions,
 	scatterChart,
 	addSeriesToColumn

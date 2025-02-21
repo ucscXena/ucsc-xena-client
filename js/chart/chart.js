@@ -261,6 +261,14 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 
 var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
 
+var viewOptions = [
+	{label: 'box plot', value: 'boxplot'},
+	{label: 'violin plot', value: 'violin'},
+	{label: 'dot plot', value: 'dot'}
+];
+
+var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
+
 var normalizationOptions = [{
 		"value": "none",
 		"label": "none",
@@ -507,6 +515,38 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
+function dotplot({ chart, matrices: { meanMatrix }, xCategories, yfields }) {
+	var minScale = 0,
+		maxScale = 10,
+		// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
+		meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
+		minMean = Math.min(...meanValues),
+		maxMean = Math.max(...meanValues),
+		range = maxMean - minMean || 1;
+	xCategories.forEach((category, categoryIndex) => {
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			name: category,
+			data: yfields.map((feature, featureIndex) => {
+				var value = meanMatrix[categoryIndex][featureIndex],
+					normalizedValue = (value - minMean) / range,
+					normalizedScale = Math.ceil(minScale + normalizedValue * (maxScale - minScale)),
+					opacity = normalizedScale / 10,
+					color = Highcharts.color('#3366CC').setOpacity(opacity).get();
+				return {
+					color,
+					marker: {radius: normalizedScale},
+					value,
+					x: featureIndex,
+					y: categoryIndex,
+				};
+			}),
+			showInLegend: true,
+			type: 'scatter',
+		});
+	});
+}
+
 var violinSamples = 30;
 
 function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
@@ -626,18 +666,23 @@ function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
 				data: medians});
 }
 
-var fvcOptions = violin => violin ?
-	highchartsHelper.violinOptions :
-	highchartsHelper.boxplotOptions;
+var fvcOptions = chartType => ({
+	boxplot: highchartsHelper.boxplotOptions,
+	dot: highchartsHelper.dotOptions,
+	violin: highchartsHelper.violinOptions
+}[chartType]);
 
-var fvcChart = violin => violin ?
-	violinplot : boxplot;
+var fvcChart = chartType => ({
+	boxplot,
+	dot: dotplot,
+	violin: violinplot
+}[chartType]);
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrViolin({groups, xCategories, colors, yfields, ydata,
-		xlabel, ylabel, violin}, chartOptions) {
-
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setView, yfields, ydata,
+		xlabel, ylabel}, chartOptions) {
+	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
 
 	// sort by median of xCategories if yfields.length === 1
@@ -645,12 +690,12 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(violin)({chartOptions, series: xCategories.length,
-		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
+	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
+		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel});
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(violin)({xCategories, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, groups, matrices, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);
@@ -662,7 +707,7 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 }
 
 // compute group sample indices, codes, and colors, then draw
-// box or violin plot.
+// box, dot or violin plot.
 function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 		samplesMatched, //commnet out see below */ ...params}, chartOptions) {
 
@@ -689,7 +734,7 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 
 	var colors = values.map(scale);
 
-	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
 function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange, setView}, chartOptions) {
@@ -717,7 +762,7 @@ function summaryBoxplot(params, chartOptions) {
 		groups = [_.range(0, cohortSamples.length)],
 		colors = ['#0000FF80', 'blue'],
 		xCategories = [null];
-	return boxOrViolin({groups, colors, xCategories, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, colors, xCategories, ...params}, chartOptions);
 }
 
 function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
@@ -1152,7 +1197,7 @@ function callDrawChart(xenaState, params) {
 	var {ydata, xdata, doScatter, colorColumn} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
-		{violin} = chartState,
+		{chartType} = chartState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
@@ -1182,10 +1227,10 @@ function callDrawChart(xenaState, params) {
 
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
+		chartType,
 		cohort, cohortSamples, samplesLength, // why both cohortSamples an samplesLength??
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		violin,
 		xdata, ydata, // normalized
 		yavg,
 	}));
@@ -1264,8 +1309,8 @@ var gaSwap = fn => () => {
 	fn();
 };
 
-var gaViolin = fn => () => {
-	gaEvents('chart', 'toggleViolin');
+var gaChartType = fn => (v) => {
+	gaEvents('chart', `toggle${v.replace(/^./, (char) => char.toUpperCase())}`);
 	fn();
 };
 
@@ -1277,7 +1322,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, range: undefined, view: undefined};
+		this.state = {advanced: false, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1287,7 +1332,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, range, view} = this.state,
+			{advanced, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1307,7 +1352,7 @@ class Chart extends PureComponent {
 					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
+		var {xcolumn, ycolumn, colorColumn} = chartState,
 			{columns} = xenaState,
 			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1324,6 +1369,7 @@ class Chart extends PureComponent {
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].probes ||
 				columns[ycolumn].fieldList || columns[ycolumn].fields,
+			isDot = view === 'dot',
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
@@ -1341,6 +1387,7 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			inverted,
 			setRange,
 			setView,
 		};
@@ -1351,14 +1398,16 @@ class Chart extends PureComponent {
 			!isFloat(columns, ycolumn);
 		var swapAxes = codedVCoded || doScatter ? button({color: 'secondary', disableElevation: true,
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
-				'Swap X and Y') :
-			null;
+				'Swap X and Y') : null;
+		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
+				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
+				'Swap X and Y') : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
 				opts: yexpOpts,
 				index: chartState.expState[ycolumn],
-				label: isDensity ? 'Data unit' : 'Y unit',
+				label: isDot ? 'Continuous data unit' : isDensity ? 'Data unit' : 'Y unit',
 				onChange: i => set(['expState', ycolumn], i)});
 
 		var xExp = !v(xcolumn) || xcodemap ? null :
@@ -1371,15 +1420,17 @@ class Chart extends PureComponent {
 		var normalization = ycodemap ? null :
 			buildDropdown({
 				index: chartState.normalizationState[ycolumn],
-				label: isDensity ? 'Data linear transform' : 'Y data linear transform',
+				label: isDot ? 'Continuous data' : isDensity ? 'Data linear transform' : 'Y data linear transform',
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({color: 'secondary', disableElevation: true,
-				onClick: gaViolin(() => set(['violin'], !violin)), variant: 'contained'},
-				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
-			null;
+		var viewOpts = filterViewOptions(viewOptions, xfield),
+		switchView = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
+			buildDropdown({
+				label: 'View as',
+				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
+				opts: viewOpts,
+				value: view}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
@@ -1423,8 +1474,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes,
-						violinOpt && violinOpt), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, switchView), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }

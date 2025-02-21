@@ -1,8 +1,8 @@
 @font-face {
     font-family: "icons";
-    src: url("icons.eot?2ca57feebc315eb2e85668058cbb592b#iefix") format("embedded-opentype"),
-url("icons.woff2?2ca57feebc315eb2e85668058cbb592b") format("woff2"),
-url("icons.woff?2ca57feebc315eb2e85668058cbb592b") format("woff");
+    src: url("./icons.eot?8b09244544e56434aec38655ffef2fbb#iefix") format("embedded-opentype"),
+url("./icons.woff2?8b09244544e56434aec38655ffef2fbb") format("woff2"),
+url("./icons.woff?8b09244544e56434aec38655ffef2fbb") format("woff");
 }
 
 i[class^="icon-"]:before, i[class*=" icon-"]:before {
@@ -16,15 +16,18 @@ i[class^="icon-"]:before, i[class*=" icon-"]:before {
     -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-bar:before {
+.icon-violin:before {
     content: "\f101";
 }
-.icon-box:before {
+.icon-scatter:before {
     content: "\f102";
 }
-.icon-scatter:before {
+.icon-dot:before {
     content: "\f103";
 }
-.icon-violin:before {
+.icon-box:before {
     content: "\f104";
+}
+.icon-bar:before {
+    content: "\f105";
 }
