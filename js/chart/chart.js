@@ -1413,7 +1413,7 @@ class Chart extends PureComponent {
 
 		var switchMode = isDot ?
 			buildDropdown({
-				label: 'Display as',
+				label: 'Data type',
 				onChange: (_, v) => this.setState({displayMode: v}),
 				opts: displayModeOptions,
 				value: displayMode || 'bulk'}) : null;
@@ -1442,7 +1442,7 @@ class Chart extends PureComponent {
 		var viewOpts = filterViewOptions(viewOptions, xfield),
 		switchView = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
 			buildDropdown({
-				label: 'View as',
+				label: 'Chart type',
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
 				opts: viewOpts,
 				value: view}) : null;
