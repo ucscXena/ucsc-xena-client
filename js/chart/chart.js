@@ -30,6 +30,7 @@ var sc = require('science');
 import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
+import {xenaColor} from '../xenaColor';
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
 
@@ -529,7 +530,7 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
 	xCategories.forEach((category, categoryIndex) => {
-		var categoryColor = displayMode === 'singleCell' ? colors[categoryIndex] || '#CCCCCC' : '#3366CC';
+		var categoryColor = displayMode === 'singleCell' ? colors[categoryIndex] || xenaColor.GRAY_400 : xenaColor.BLUE_PRIMARY;
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			color: categoryColor,
@@ -758,6 +759,7 @@ function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
 		chart,
+		color: xenaColor.BLUE_PRIMARY,
 		type: 'areaspline',
 		data: density,
 		marker: {enabled: false}});
@@ -793,7 +795,7 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 		yIsCategorical: true,
 		showDataLabel: categories.length < 30,
 		showInLegend: false,
-		color: 0,
+		color: xenaColor.BLUE_PRIMARY,
 		description: nNumberSeries});
 	return chart;
 }
