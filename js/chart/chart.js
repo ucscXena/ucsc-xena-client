@@ -4,6 +4,7 @@ var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
+require('highcharts/modules/heatmap')(Highcharts);
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 var jStat = require('../jStatShim');
@@ -521,11 +522,16 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
+// Define a min and max radius (in pixels) for the dot plot symbol.
+var minRadius = 2,
+	maxRadius = 10;
+// Define a min and max opacity for the dot plot color.
+var minOpacity = 0.2,
+	maxOpacity = 1;
+
 function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCategories, yfields }) {
-	var minScale = 0,
-		maxScale = 10,
-		// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
-		meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
+	// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
+	var meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
 		minMean = Math.min(...meanValues),
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
@@ -538,18 +544,18 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 			data: yfields.map((feature, featureIndex) => {
 				var value = meanMatrix[categoryIndex][featureIndex],
 					normalizedValue = (value - minMean) / range,
-					normalizedScale = Math.ceil(minScale + normalizedValue * (maxScale - minScale)),
-					opacity = normalizedScale / 10,
-					color = Highcharts.color(categoryColor).setOpacity(opacity).get();
+					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity, // opacity between 0.2 and 1 (from colorAxis range).
+					color = displayMode === 'singleCell' ? undefined : Highcharts.color(categoryColor).setOpacity(opacity).get(),
+					radius = normalizedValue * (maxRadius - minRadius) + minRadius; // radius of dot scaled between 2 and 10px.
 				return {
 					color,
-					marker: {radius: normalizedScale},
+					marker: {radius},
 					value,
 					x: featureIndex,
 					y: categoryIndex,
 				};
 			}),
-			showInLegend: true,
+			showInLegend: false,
 			type: 'scatter',
 		});
 	});

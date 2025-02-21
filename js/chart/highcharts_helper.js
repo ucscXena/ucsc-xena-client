@@ -2,6 +2,7 @@ var _ = require('../underscore_ext').default;
 var styles = require('./chart.module.css');
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';
+import {xenaColor} from '../xenaColor';
 
 function hcLabelRender() {
 	var s = this.name;
@@ -493,12 +494,19 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			type: 'scatter',
 			zoomType: inverted ? 'y' : 'x',
 		},
+		colorAxis: {
+			min: 0,
+			max: 100,
+			stops: [
+				[0, xenaColor.BLUE_PRIMARY_2],
+				[1, xenaColor.BLUE_PRIMARY]
+			],
+			showInLegend: true
+		},
 		legend: {
 			align: 'right',
-			layout: 'vertical',
-			margin: 5,
-			title: {text: xAxisTitle},
-			verticalAlign: 'middle'
+			layout: 'horizontal',
+			verticalAlign: 'bottom'
 		},
 		plotOptions: {
 			scatter: {marker: {symbol: 'circle'}},
