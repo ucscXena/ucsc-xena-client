@@ -495,18 +495,27 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			zoomType: inverted ? 'y' : 'x',
 		},
 		colorAxis: {
+			labels: {
+				formatter: function () {
+					if (this.value === 0 || this.value === 1) {
+						return this.value.toFixed(1);
+					}
+				}
+			},
 			min: 0,
-			max: 100,
+			max: 1,
 			stops: [
 				[0, xenaColor.BLUE_PRIMARY_2],
 				[1, xenaColor.BLUE_PRIMARY]
 			],
-			showInLegend: true
+			showInLegend: true,
+			tickPositions: [0, 0.25, 0.5, 0.75, 1],
 		},
 		legend: {
 			align: 'right',
 			layout: 'horizontal',
-			verticalAlign: 'bottom'
+			title: {align: 'middle', text: 'Mean value'},
+			verticalAlign: 'bottom',
 		},
 		plotOptions: {
 			scatter: {marker: {symbol: 'circle'}},

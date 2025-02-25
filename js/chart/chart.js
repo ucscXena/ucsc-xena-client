@@ -535,17 +535,17 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 		minMean = Math.min(...meanValues),
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
+	// determine whether the data type is single cell.
+	var isSingleCellData = displayMode === 'singleCell';
 	xCategories.forEach((category, categoryIndex) => {
-		var categoryColor = displayMode === 'singleCell' ? colors[categoryIndex] || xenaColor.GRAY_400 : xenaColor.BLUE_PRIMARY;
 		highchartsHelper.addSeriesToColumn({
 			chart,
-			color: categoryColor,
 			name: category,
 			data: yfields.map((feature, featureIndex) => {
 				var value = meanMatrix[categoryIndex][featureIndex],
 					normalizedValue = (value - minMean) / range,
 					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity, // opacity between 0.2 and 1 (from colorAxis range).
-					color = displayMode === 'singleCell' ? undefined : Highcharts.color(categoryColor).setOpacity(opacity).get(),
+					color = isSingleCellData ? colors[categoryIndex] : Highcharts.color(xenaColor.BLUE_PRIMARY).setOpacity(opacity).get(),
 					radius = normalizedValue * (maxRadius - minRadius) + minRadius; // radius of dot scaled between 2 and 10px.
 				return {
 					color,
