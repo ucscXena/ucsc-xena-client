@@ -271,7 +271,7 @@ var viewOptions = [
 	{label: 'dot plot', value: 'dot'}
 ];
 
-var displayModeOptions = [
+var dataTypeOptions = [
 	{label: 'bulk data', value: 'bulk'},
 	{label: 'single cell data', value: 'singleCell'}
 ];
@@ -524,7 +524,7 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, colors, displayMode, matrices: { meanMatrix, nNumberMatrix }, xCategories, yfields }) {
+function dotplot({ chart, colors, dataType, matrices: { meanMatrix, nNumberMatrix }, xCategories, yfields }) {
 	// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
 	var meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
 		minMean = Math.min(...meanValues),
@@ -535,7 +535,7 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix, nNumberMa
 		radius: { max: maxRadius = 10, min: minRadius = 2 } = {}
 	} = chart.markerScale || {};
 	// determine whether the data type is single cell.
-	var isSingleCellData = displayMode === 'singleCell';
+	var isSingleCellData = dataType === 'singleCell';
 	xCategories.forEach((category, categoryIndex) => {
 		var nNumberSeries = nNumberMatrix[categoryIndex];
 		highchartsHelper.addSeriesToColumn({
@@ -695,7 +695,7 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, displayMode, inverted, setView, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, dataType, inverted, setView, yfields, ydata,
 		xlabel, ylabel, ynorm}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
@@ -710,7 +710,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, d
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(chartType)({xCategories, displayMode, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, dataType, groups, matrices, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields);
@@ -1338,7 +1338,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, displayMode: undefined, inverted: false, range: undefined, view: undefined};
+		this.state = {advanced: false, dataType: undefined, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1348,7 +1348,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, displayMode, inverted, range, view} = this.state,
+			{advanced, dataType, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1404,7 +1404,7 @@ class Chart extends PureComponent {
 			yexp,
 			xexp,
 			ynorm,
-			displayMode,
+			dataType,
 			inverted,
 			setRange,
 			setView,
@@ -1421,12 +1421,12 @@ class Chart extends PureComponent {
 				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var switchMode = isDot ?
+		var switchDataType = isDot ?
 			buildDropdown({
 				label: 'Data type',
-				onChange: (_, v) => this.setState({displayMode: v}),
-				opts: displayModeOptions,
-				value: displayMode || 'bulk'}) : null;
+				onChange: (_, v) => this.setState({dataType: v}),
+				opts: dataTypeOptions,
+				value: dataType || 'bulk'}) : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
@@ -1499,7 +1499,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, invertAxes, switchView, switchMode), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, switchView, switchDataType), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt));
 	};
 }
