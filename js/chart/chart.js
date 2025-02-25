@@ -1066,7 +1066,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 				}
 
 			} else {
-				color = null;
+				color = xenaColor.BLUE_PRIMARY;
 				colorLabel = "sample";
 				showInLegend = true;
 			}
