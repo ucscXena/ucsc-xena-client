@@ -692,7 +692,7 @@ var fvcChart = chartType => ({
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
 function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, displayMode, inverted, setView, yfields, ydata,
-		xlabel, ylabel}, chartOptions) {
+		xlabel, ylabel, ynorm}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
 
@@ -702,7 +702,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, d
 	}
 
 	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
-		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel});
+		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel, ynorm});
 
 	var chart = newChart(chartOptions);
 
@@ -1399,6 +1399,7 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			ynorm,
 			displayMode,
 			inverted,
 			setRange,

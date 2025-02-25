@@ -487,11 +487,18 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+// Map of ynorm values to corresponding dot plot legend title.
+var legendTitle = {
+	'none': 'Mean value',
+	'subset': 'Mean\u00A0normalized\u00A0value',
+	'subset_stdev': 'Mean z-score',
+};
+
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
-	const opts = {
+function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
+	var opts = {
 		chart: {
 			events: {
 				load: function () {
@@ -523,8 +530,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 		legend: {
 			align: 'right',
 			layout: 'horizontal',
-			title: {align: 'middle', text: 'Mean value'},
-			verticalAlign: 'bottom',
+			title: {text: legendTitle[ynorm]},
 		},
 		plotOptions: {
 			scatter: {marker: {symbol: 'circle'}},
