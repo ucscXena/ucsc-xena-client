@@ -1443,7 +1443,7 @@ class Chart extends PureComponent {
 		var normalization = ycodemap ? null :
 			buildDropdown({
 				index: chartState.normalizationState[ycolumn],
-				label: isDot ? 'Continuous data' : isDensity ? 'Data linear transform' : 'Y data linear transform',
+				label: isDot ? 'Continuous data linear transform' : isDensity ? 'Data linear transform' : 'Y data linear transform',
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
