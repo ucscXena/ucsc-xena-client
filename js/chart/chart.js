@@ -67,6 +67,8 @@ var menuItem = el(MenuItem);
 var textField = el(TextField);
 var typography = el(Typography);
 
+var defaultColor = xenaColor.BLUE_PRIMARY;
+
 var selectProps = {
 	className: compStyles.formControl,
 	select: true,
@@ -542,7 +544,7 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 				var value = meanMatrix[categoryIndex][featureIndex],
 					normalizedValue = (value - minMean) / range,
 					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity, // opacity between 0.2 and 1 (from colorAxis range).
-					color = isSingleCellData ? colors[categoryIndex] : Highcharts.color(xenaColor.BLUE_PRIMARY).setOpacity(opacity).get(),
+					color = isSingleCellData ? colors[categoryIndex] : Highcharts.color(defaultColor).setOpacity(opacity).get(),
 					radius = normalizedValue * (maxRadius - minRadius) + minRadius; // radius of dot scaled between 2 and 10px.
 				return {
 					color,
@@ -762,7 +764,7 @@ function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
 		chart,
-		color: xenaColor.BLUE_PRIMARY,
+		color: defaultColor,
 		type: 'areaspline',
 		data: density,
 		marker: {enabled: false}});
@@ -798,7 +800,7 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 		yIsCategorical: true,
 		showDataLabel: categories.length < 30,
 		showInLegend: false,
-		color: xenaColor.BLUE_PRIMARY,
+		color: defaultColor,
 		description: nNumberSeries});
 	return chart;
 }
@@ -1066,7 +1068,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 				}
 
 			} else {
-				color = xenaColor.BLUE_PRIMARY;
+				color = defaultColor;
 				colorLabel = "sample";
 				showInLegend = true;
 			}
