@@ -42,6 +42,11 @@ var cvtColorScale = (colorColumn, colors) =>
 			(coords, {index}) => scale.rgb(colorColumn[index]))
 	: () => [0, 255, 0];
 
+// Adding a small random z coordinate for 2d prevents data occlusion
+// due to rendering order, i.e. last rendered wins, so if one category
+// is clustered at the end, it dominates the view.
+var randZ = () => Math.random() * 0.0001;
+
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
                    minTransparent1,
                    onHover) =>
@@ -68,7 +73,7 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
 	// XXX optimize this, either passing in the typed array, or using
 	// deckgl's transient return buffer. See deckgl optimization docs.
 	getPosition: data.length === 2 ?
-		(d0, {index}) => [d0, data[1][index]] :
+		(d0, {index}) => [d0, data[1][index], randZ()] :
 		(d0, {index}) => [d0, data[1][index], data[2][index]],
 	pointSize: radius,
 	radiusMin,
