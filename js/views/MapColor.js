@@ -6,7 +6,7 @@ import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
 	hasDatasource, hasDonor, hasGene, hasSignatureScore, hasOther,
-	hasTransferProb, otherValue, probValue, sigValue} from '../models/map';
+	hasTransferProb, otherValue, phenoValue, probValue, sigValue} from '../models/map';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
@@ -134,7 +134,7 @@ var sliderOpts = (state, onScale) => ({
 	...sliderScaleOpts(state)
 });
 
-var isFloat = state => get(otherValue(state), 'type') === 'float';
+var isFloat = (state, method) => get(method(state), 'type') === 'float';
 
 var logTransformBounds = ({min, max}, log) =>
 	log ? {min: log2p1(min), max: log2p1(max)} : {min, max};
@@ -158,7 +158,8 @@ var modeOptions = {
 	'': () => null,
 	datasource: () => null,
 	donor: () => null,
-	pheno: () => null,
+	pheno: ({state, onScale}) => isFloat(state, phenoValue) ?
+		distributionSlider(state, onScale) : null,
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
 				id: 'celltype',
@@ -171,7 +172,7 @@ var modeOptions = {
 				label: 'Select a phenotype',
 				value: otherValue(state), onChange
 			}, ...otherOpts(state, floatOnly)),
-			isFloat(state) && colorData(state) ?
+			isFloat(state, otherValue) && colorData(state) ?
 				distributionSlider(state, onScale) : null),
 	prob: ({state, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
