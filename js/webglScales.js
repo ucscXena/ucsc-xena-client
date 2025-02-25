@@ -35,7 +35,6 @@ var value0Attr =
 var value0Decl = `
 	attribute float values0;
 	uniform bool log0;
-	uniform float minTransparent1;
 	uniform float lower0;
 	uniform float upper0;`;
 
@@ -45,9 +44,10 @@ var value1Attr =
 var value1Decl = `
 	attribute float values1;
 	uniform bool log1;
-	uniform float minTransparent1;
 	uniform float lower1;
 	uniform float upper1;`;
+
+var minTransparentDecl = 'uniform float minTransparent1;';
 
 var ordinalDecl = `
 	attribute vec4 instanceColors;`;
@@ -62,7 +62,7 @@ var ordinalAttr =
 
 export var floatProps = {
 	key: 'float',
-	decl: value0Decl,
+	decl: value0Decl + minTransparentDecl,
 	// XXX add opacity, from deckgl shader standards?
 	color: `
 		color.a = minTransparent1 + (1.0 - minTransparent1) * color_scale(log0, upper0, lower0, values0);
@@ -98,7 +98,7 @@ export var floatFloatProps = {
 
 export var floatOrdinalProps = {
 	key: 'floatordinal',
-	decl: ordinalDecl + value1Decl,
+	decl: ordinalDecl + value1Decl + minTransparentDecl,
 	// XXX add opacity, from deckgl shader standards?
 	// scaling opacity in [0.05, 1.0]
 	color: `
