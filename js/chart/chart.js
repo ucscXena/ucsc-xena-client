@@ -263,7 +263,7 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 	statsDiv.classList.toggle(compStyles.visible);
 }
 
-var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
+var getOpt = opt => menuItem({key: opt.value, dense: true, disabled: opt.disabled, value: opt.value}, opt.label);
 
 var viewOptions = [
 	{label: 'box plot', value: 'boxplot'},
@@ -273,7 +273,7 @@ var viewOptions = [
 
 var dataTypeOptions = [
 	{label: 'bulk data', value: 'bulk'},
-	{label: 'single cell data', value: 'singleCell'}
+	{disabled: true, label: 'single cell data', value: 'singleCell'}
 ];
 
 var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
