@@ -538,9 +538,12 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 		title: {text: ''},
 		tooltip: {
 			formatter: function () {
+				var {xAxis, yAxis} = this.series,
+					{custom, value, x, y} = this.point;
 				return `<div>
-							<b>${this.series.xAxis.categories[this.point.x]}: ${this.series.yAxis.categories[this.point.y]}</b>
-							<div>mean: ${this.point.value.toPrecision(3)}</div>
+							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+							<div>mean: ${value.toPrecision(3)}</div>
+							<div>N: ${custom?.n || '--'}</div>
 						</div>`;
 			},
 			hideDelay: 0,

@@ -524,7 +524,7 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCategories, yfields }) {
+function dotplot({ chart, colors, displayMode, matrices: { meanMatrix, nNumberMatrix }, xCategories, yfields }) {
 	// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
 	var meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
 		minMean = Math.min(...meanValues),
@@ -537,6 +537,7 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 	// determine whether the data type is single cell.
 	var isSingleCellData = displayMode === 'singleCell';
 	xCategories.forEach((category, categoryIndex) => {
+		var nNumberSeries = nNumberMatrix[categoryIndex];
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			name: category,
@@ -548,6 +549,7 @@ function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCatego
 					radius = normalizedValue * (maxRadius - minRadius) + minRadius; // radius of dot scaled between 2 and 10px.
 				return {
 					color,
+					custom: {n: nNumberSeries[0]},
 					marker: {radius},
 					value,
 					x: featureIndex,
