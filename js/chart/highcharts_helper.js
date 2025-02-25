@@ -487,9 +487,18 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+// Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
+var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
+
 function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle }) {
 	const opts = {
 		chart: {
+			events: {
+				load: function () {
+					var chart = this;
+					chart.markerScale = markerScale;
+				},
+			},
 			inverted,
 			type: 'scatter',
 			zoomType: inverted ? 'y' : 'x',
@@ -537,7 +546,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			labels: {rotation: inverted ? 0 : -90},
 			lineWidth: 1,
 			tickWidth: 0,
-			title: {text: xAxisTitle},
+			title: {text: yAxisTitle},
 		},
 		yAxis: {
 			categories: yAxis.categories,
@@ -545,7 +554,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			labels: {rotation: inverted ? -90 : 0},
 			lineWidth: 1,
 			tickWidth: 0,
-			title: {text: yAxisTitle},
+			title: {text: xAxisTitle},
 		},
 	};
 

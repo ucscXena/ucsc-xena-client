@@ -522,19 +522,16 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-// Define a min and max radius (in pixels) for the dot plot symbol.
-var minRadius = 2,
-	maxRadius = 10;
-// Define a min and max opacity for the dot plot color.
-var minOpacity = 0.2,
-	maxOpacity = 1;
-
 function dotplot({ chart, colors, displayMode, matrices: { meanMatrix }, xCategories, yfields }) {
 	// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
 	var meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
 		minMean = Math.min(...meanValues),
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
+	var {
+		opacity: { max: maxOpacity = 1, min: minOpacity = 0.2 } = {},
+		radius: { max: maxRadius = 10, min: minRadius = 2 } = {}
+	} = chart.markerScale || {};
 	// determine whether the data type is single cell.
 	var isSingleCellData = displayMode === 'singleCell';
 	xCategories.forEach((category, categoryIndex) => {
