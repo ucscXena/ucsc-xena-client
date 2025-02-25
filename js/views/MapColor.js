@@ -158,7 +158,7 @@ var modeOptions = {
 	'': () => null,
 	datasource: () => null,
 	donor: () => null,
-	pheno: ({state, onScale}) => isFloat(state, phenoValue) ?
+	pheno: ({state, onScale}) => isFloat(state, phenoValue) && colorData(state) ?
 		distributionSlider(state, onScale) : null,
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
