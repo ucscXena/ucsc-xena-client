@@ -244,7 +244,7 @@ class MapColor extends PureComponent {
 			        [[value.host, value.name], value.field, value.type] :
 			    [],
 			// Re-populate form if user selects the active mode
-			newState = mode === get(colorBy, 'mode') ? colorBy :
+			newState = mode !== 'pheno' && mode === get(colorBy, 'mode') ? colorBy :
 				{mode, host, name, field, type};
 		this.setState({colorBy: newState});
 		if (field || !mode) {
