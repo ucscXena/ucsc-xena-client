@@ -87,8 +87,13 @@ var sxAccordion = {
 		'&::before': {
 			opacity: 1,
 		},
+		'& .MuiCollapse-entered': {
+			height: '100% !important',
+			overflow: 'auto',
+		},
 	},
 };
+
 var sxAccordionSummary = {
 	'&.Mui-expanded': {
 		margin: 0,
@@ -174,7 +179,7 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 
 // p value when there is only 2 group comparison student t-test
 // https://en.wikipedia.org/wiki/Welch%27s_t-test
-function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
+function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields, setHasStats) {
 	var statsDiv = document.getElementById('stats');
 	statsDiv.innerHTML = 'Welch\'s t-test<br>';
 	_.range(yfields.length).map(k => {
@@ -202,13 +207,13 @@ function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
 			);
 		}
 	});
-	statsDiv.classList.toggle(compStyles.visible);
+	setHasStats(true);
 }
 
 // p value for >2 groups one-way ANOVA
 // https://en.wikipedia.org/wiki/One-way_analysis_of_variance
 function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
-		yfields, ydata, groups}) {
+		yfields, ydata, groups}, setHasStats) {
 	var statsDiv = document.getElementById('stats');
 	statsDiv.innerHTML = 'One-way Anova<br>';
 	_.range(yfields.length).map(k => {
@@ -260,7 +265,7 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 			'(f = ' + fScore.toPrecision(4) + ')<br>'
 		);
 	});
-	statsDiv.classList.toggle(compStyles.visible);
+	setHasStats(true);
 }
 
 var getOpt = opt => menuItem({key: opt.value, dense: true, disabled: opt.disabled, value: opt.value}, opt.label);
@@ -739,7 +744,7 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, dataType, inverted, setView, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, dataType, inverted, setHasStats, setView, yfields, ydata,
 		xlabel, ylabel, ynorm}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
@@ -757,9 +762,9 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, d
 	fvcChart(chartType)({xCategories, dataType, groups, matrices, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
-		welch(matrices, yfields);
+		welch(matrices, yfields, setHasStats);
 	} else if (xCategories.length > 2) {
-		anova({matrices, yfields, ydata, groups});
+		anova({matrices, yfields, ydata, groups}, setHasStats);
 	}
 
 	return chart;
@@ -860,7 +865,7 @@ summary.add('column', summaryColumn);
 summary.add('boxplot', summaryBoxplot);
 summary.add('density', densityplot);
 
-function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
+function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		columns, ycolumn}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
@@ -965,7 +970,7 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
 				'p = ' + pValue.toPrecision(4) + ' ' +
 				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
-		statsDiv.classList.toggle(compStyles.visible);
+		setHasStats(true);
 	}
 
 	return chart;
@@ -978,6 +983,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 		xlabel, ylabel,
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
+		setHasStats,
 		columns, colorColumn, cohortSamples}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
@@ -1156,21 +1162,21 @@ function floatVFloat({samplesLength, xfield, xdata,
 			printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
 		}
 
-		statsDiv.classList.toggle(compStyles.visible);
+		setHasStats(true);
 	}
 
 	return chart;
 }
 
 function drawChart(params) {
-	var {cohort, samplesLength, xfield, xcodemap, ycodemap} = params,
+	var {cohort, samplesLength, setHasStats, xfield, xcodemap, ycodemap} = params,
 		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${samplesLength})`,
 		chartOptions = _.assoc(highchartsHelper.chartOptions,
 			'subtitle', {text: subtitle}),
 		statsDiv = document.getElementById('stats');
 
 	statsDiv.innerHTML = "";
-	statsDiv.classList.toggle(compStyles.visible, false);
+	setHasStats(false);
 
 	if (xcodemap && !ycodemap) {
 		return floatVCoded(params, chartOptions);
@@ -1382,7 +1388,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, dataType: undefined, inverted: false, range: undefined, view: undefined};
+		this.state = {advanced: false, dataType: undefined, hasStats: false, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1392,12 +1398,13 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, dataType, inverted, range, view} = this.state,
+			{advanced, dataType, hasStats, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
 			},
+			setHasStats = (hasStats) => this.setState({hasStats}),
 			setRange = (range) => this.setState({range}),
 			setView = (view) => this.setState({view});
 
@@ -1450,6 +1457,7 @@ class Chart extends PureComponent {
 			ynorm,
 			dataType,
 			inverted,
+			setHasStats,
 			setRange,
 			setView,
 		};
@@ -1527,6 +1535,12 @@ class Chart extends PureComponent {
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp)));
 
+		var chartStats = fragment(box(
+			{className: compStyles.chartActionsSecondary, component: Accordion, square: true, sx: {...sxAccordion, display: hasStats ? 'block' : 'none'}},
+			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
+				typography({color: 'secondary', component: 'span', variant: 'inherit'}, 'Statistics')),
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, typography({id: 'stats', component: 'div', variant: 'caption'}))));
+
 		var HCV = highchartView({xenaState, drawProps});
 
 		// statistics XXX note that we scribble over stats. Should either render
@@ -1536,15 +1550,13 @@ class Chart extends PureComponent {
 		return box({className: compStyles.chartView, id: 'chartView'},
 				card({className: compStyles.card},
 					div({className: compStyles.chartRender},
-						closeButton(this.onClose),
-						HCV,
-						typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))),
+						closeButton(this.onClose), HCV)),
 				card({className: classNames(compStyles.card, compStyles.chartActions)},
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
 							swapAxes, invertAxes, switchView, switchDataType), avg, pct, colorAxisDiv && colorAxisDiv),
-						yExp && advOpt));
+						yExp && advOpt, chartStats));
 	};
 }
 
