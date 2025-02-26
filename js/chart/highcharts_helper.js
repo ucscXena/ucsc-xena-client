@@ -494,15 +494,22 @@ function formatPercentage(value) {
 
 // Map of ynorm values to corresponding dot plot legend title.
 var legendTitle = {
-	'none': 'Mean value',
-	'subset': 'Mean\u00A0normalized\u00A0value',
-	'subset_stdev': 'Mean z-score',
+	singleCell: {
+		'none': 'Average\u00A0expression',
+		'subset': 'Average\u00A0normalized\u00A0expression',
+		'subset_stdev': 'Average\u00A0expression\u00A0z‑score',
+	},
+	bulk: {
+		'none': 'Mean value',
+		'subset': 'Mean\u00A0normalized\u00A0value',
+		'subset_stdev': 'Mean z-score',
+	}
 };
 
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function dotOptions({ chartOptions, dataType, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
+function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
 	var isSingleCell = dataType === 'singleCell',
 		opts = {
 			chart: {
@@ -536,7 +543,7 @@ function dotOptions({ chartOptions, dataType, inverted, xAxis, xAxisTitle, yAxis
 			legend: {
 				align: 'right',
 				layout: 'horizontal',
-				title: {text: legendTitle[ynorm]},
+				title: {text: legendTitle[dataType][ynorm]},
 			},
 			plotOptions: {
 				scatter: {marker: {symbol: 'circle'}},
