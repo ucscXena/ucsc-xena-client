@@ -273,7 +273,7 @@ var viewOptions = [
 
 var dataTypeOptions = [
 	{label: 'bulk data', value: 'bulk'},
-	{disabled: true, label: 'single cell data', value: 'singleCell'}
+	{label: 'single cell data', value: 'singleCell'}
 ];
 
 var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
@@ -524,32 +524,76 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, colors, dataType, matrices: { meanMatrix, nNumberMatrix }, xCategories, yfields }) {
-	// filter out NaN values from the meanMatrix, flatten it and calculate the min and max
-	var meanValues = meanMatrix.flat().filter(m => !Number.isNaN(m)),
+function computeExpressionMatrices({dataType, groups, meanMatrix, xCategories, ydata, yfields}) {
+	if (dataType === 'singleCell') {
+		// for single cell data, compute the average expression (only among cells with expression > 0)
+		// and the detection rate (percentage of cells expressing the gene)
+		var expressionMatrix = [],
+			detectionMatrix = [],
+			// group the data per feature
+			groupDataPerFeature = yfields.map((feature, featureIndex) => {
+				return groupValues(ydata[featureIndex], groups);
+			});
+		xCategories.forEach((category, categoryIndex) => {
+			expressionMatrix[categoryIndex] = [];
+			detectionMatrix[categoryIndex] = [];
+			yfields.forEach((feature, featureIndex) => {
+				var groupData = groupDataPerFeature[featureIndex][categoryIndex] || [],
+					// filter values > 0 for expression calculation
+					expressing = groupData.filter(v => v > 0),
+					// compute the average expression from non-zero values
+					avgExpr = expressing.length ? expressing.reduce((sum, v) => sum + v, 0) / expressing.length : 0,
+					// compute the detection rate as a fraction
+					pctExpr = groupData.length ? expressing.length / groupData.length : 0;
+				expressionMatrix[categoryIndex][featureIndex] = avgExpr;
+				detectionMatrix[categoryIndex][featureIndex] = pctExpr;
+			});
+		});
+		return {expressionMatrix, detectionMatrix};
+	}
+	// for non-single cell data, return the meanMatrix
+	return {expressionMatrix: meanMatrix};
+}
+
+function dotplot({ chart, dataType, groups, matrices: { meanMatrix, nNumberMatrix }, xCategories, ydata, yfields }) {
+	// determine whether the data type is single cell.
+	var isSingleCellData = dataType === 'singleCell';
+
+	// compute the expression matrices
+	var {expressionMatrix, detectionMatrix} = computeExpressionMatrices({dataType, groups, meanMatrix, nNumberMatrix, xCategories, ydata, yfields});
+
+	// flatten the expression matrix, filter out NaN values, and determine min and max values for scaling
+	var meanValues = expressionMatrix.flat().filter(v => !Number.isNaN(v)),
 		minMean = Math.min(...meanValues),
 		maxMean = Math.max(...meanValues),
 		range = maxMean - minMean || 1;
+
+	// retrieve marker scale settings from the chart configuration with default values
 	var {
 		opacity: { max: maxOpacity = 1, min: minOpacity = 0.2 } = {},
 		radius: { max: maxRadius = 10, min: minRadius = 2 } = {}
 	} = chart.markerScale || {};
-	// determine whether the data type is single cell.
-	var isSingleCellData = dataType === 'singleCell';
+
+	// add the series to the chart
 	xCategories.forEach((category, categoryIndex) => {
 		var nNumberSeries = nNumberMatrix[categoryIndex];
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			name: category,
 			data: yfields.map((feature, featureIndex) => {
-				var value = meanMatrix[categoryIndex][featureIndex],
+				// retrieve the expression value for the current category and feature
+				var value = expressionMatrix[categoryIndex][featureIndex],
+					// for single cell data, get the detection rate; default to 0 if not available
+					detectionValue = detectionMatrix?.[categoryIndex]?.[featureIndex] || 0,
 					normalizedValue = (value - minMean) / range,
-					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity, // opacity between 0.2 and 1 (from colorAxis range).
-					color = isSingleCellData ? colors[categoryIndex] : Highcharts.color(defaultColor).setOpacity(opacity).get(),
-					radius = normalizedValue * (maxRadius - minRadius) + minRadius; // radius of dot scaled between 2 and 10px.
+					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity,
+					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
+					// choose the metric for radius: detection rate for single cell data or normalized expression for bulk data
+					radiusMetric = isSingleCellData ? detectionValue : normalizedValue,
+					radius = radiusMetric * (maxRadius - minRadius) + minRadius;
 				return {
 					color,
-					custom: {n: nNumberSeries[0]},
+					custom: {expressedInCells: detectionValue, n: nNumberSeries[0]},
 					marker: {radius},
 					value,
 					x: featureIndex,
@@ -705,7 +749,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, d
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
+	chartOptions = fvcOptions(chartType)({chartOptions, dataType, inverted, series: xCategories.length,
 		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel, ynorm});
 
 	var chart = newChart(chartOptions);

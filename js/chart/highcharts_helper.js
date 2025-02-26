@@ -487,6 +487,11 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+function formatPercentage(value) {
+	if (!value) {return "--";}
+	return `${Math.round(value * 10000) / 100}%`;
+}
+
 // Map of ynorm values to corresponding dot plot legend title.
 var legendTitle = {
 	'none': 'Mean value',
@@ -497,74 +502,76 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
-	var opts = {
-		chart: {
-			events: {
-				load: function () {
-					var chart = this;
-					chart.markerScale = markerScale;
+function dotOptions({ chartOptions, dataType, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
+	var isSingleCell = dataType === 'singleCell',
+		opts = {
+			chart: {
+				events: {
+					load: function () {
+						var chart = this;
+						chart.markerScale = markerScale;
+					},
 				},
+				inverted,
+				type: 'scatter',
+				zoomType: inverted ? 'y' : 'x',
 			},
-			inverted,
-			type: 'scatter',
-			zoomType: inverted ? 'y' : 'x',
-		},
-		colorAxis: {
-			labels: {
-				formatter: function () {
-					if (this.value === 0 || this.value === 1) {
-						return this.value.toFixed(1);
+			colorAxis: {
+				labels: {
+					formatter: function () {
+						if (this.value === 0 || this.value === 1) {
+							return this.value.toFixed(1);
+						}
 					}
-				}
+				},
+				min: 0,
+				max: 1,
+				stops: [
+					[0, xenaColor.BLUE_PRIMARY_2],
+					[1, xenaColor.BLUE_PRIMARY]
+				],
+				showInLegend: true,
+				tickPositions: [0, 0.25, 0.5, 0.75, 1],
 			},
-			min: 0,
-			max: 1,
-			stops: [
-				[0, xenaColor.BLUE_PRIMARY_2],
-				[1, xenaColor.BLUE_PRIMARY]
-			],
-			showInLegend: true,
-			tickPositions: [0, 0.25, 0.5, 0.75, 1],
-		},
-		legend: {
-			align: 'right',
-			layout: 'horizontal',
-			title: {text: legendTitle[ynorm]},
-		},
-		plotOptions: {
-			scatter: {marker: {symbol: 'circle'}},
-		},
-		title: {text: ''},
-		tooltip: {
-			formatter: function () {
-				var {xAxis, yAxis} = this.series,
-					{custom, value, x, y} = this.point;
-				return `<div>
-							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
-							<div>mean: ${value.toPrecision(3)}</div>
-							<div>N: ${custom?.n || '--'}</div>
-						</div>`;
+			legend: {
+				align: 'right',
+				layout: 'horizontal',
+				title: {text: legendTitle[ynorm]},
 			},
-			hideDelay: 0,
-			useHTML: true,
-		},
-		xAxis: {
-			categories: xAxis.categories,
-			gridLineWidth: 0,
-			labels: {rotation: inverted ? 0 : -90},
-			lineWidth: 1,
-			tickWidth: 0,
-			title: {text: yAxisTitle},
-		},
-		yAxis: {
-			categories: yAxis.categories,
-			gridLineWidth: 0,
-			labels: {rotation: inverted ? -90 : 0},
-			lineWidth: 1,
-			tickWidth: 0,
-			title: {text: xAxisTitle},
-		},
+			plotOptions: {
+				scatter: {marker: {symbol: 'circle'}},
+			},
+			title: {text: ''},
+			tooltip: {
+				formatter: function () {
+					var {xAxis, yAxis} = this.series,
+						{custom, value, x, y} = this.point;
+					return `<div>
+								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+								<div>${isSingleCell ? 'average expression' : 'mean'}: ${value.toPrecision(3)}</div>
+								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
+								<div>N: ${custom?.n || '--'}</div>
+							</div>`;
+				},
+				hideDelay: 0,
+				useHTML: true,
+			},
+			xAxis: {
+				categories: xAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? 0 : -90},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: yAxisTitle},
+			},
+			yAxis: {
+				categories: yAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? -90 : 0},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: xAxisTitle},
+			},
 	};
 
 	return _.deepMerge(chartOptions, opts);
