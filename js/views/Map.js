@@ -246,11 +246,12 @@ var getColorTxt = (state, i) =>
 			getIn(state, ['data', 'codes', value], String(value))) :
 		'';
 
-var tooltipView = (state, i) =>
+var tooltipView = (state, i, onClick) =>
 	Let((sampleID = getSamples(state)[i],
 		valTxt0 = getColorTxt(get(state, 'colorBy'), i),
 		valTxt1 = getColorTxt(get(state, 'colorBy2'), i)) =>
-	div({className: styles.tooltip}, sampleID, br(), valTxt0, br(), valTxt1));
+	div({className: styles.tooltip},
+	    span(sampleID, icon({onClick}, 'close')), br(), valTxt0, br(), valTxt1));
 
 export class Map extends PureComponent {
 	state = {
@@ -293,10 +294,13 @@ export class Map extends PureComponent {
 	onTooltip = tooltip => {
 		this.setState({tooltip});
 	}
+	onClose = () => {
+		this.setState({tooltip: -1});
+	}
 	render() {
 		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
 
-		var {onViewState, onTooltip, onDeck, onReload} = this,
+		var {onViewState, onTooltip, onClose, onDeck, onReload} = this,
 			mapState = this.props.state,
 			{minT} = this.props,
 			params = get(mapState, 'dataset', []),
@@ -323,7 +327,7 @@ export class Map extends PureComponent {
 				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
 					...(unit ? [scale(this.state.scale)] : []),
-					...(tooltip >= 0 ? [tooltipView(mapState, tooltip)] : []),
+					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] : []),
 					getStatusView({loading, error, onReload, key: 'status'}),
 					drawing({...handlers, minT, onViewState, onDeck, onTooltip,
 					        tooltip, data, container, key: 'drawing'})));

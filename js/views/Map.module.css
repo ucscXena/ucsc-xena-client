@@ -45,6 +45,11 @@
 	opacity: .6;
 }
 
+.tooltip :nth-child(1) span {
+    float: right;
+    cursor: pointer;
+}
+
 .scale {
 	position: absolute;
 	right: 0;
