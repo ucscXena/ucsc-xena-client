@@ -2,6 +2,7 @@ var _ = require('../underscore_ext').default;
 var styles = require('./chart.module.css');
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';
+import {xenaColor} from '../xenaColor';
 
 function hcLabelRender() {
 	var s = this.name;
@@ -486,6 +487,104 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+function formatPercentage(value) {
+	if (!value) {return "--";}
+	return `${Math.round(value * 10000) / 100}%`;
+}
+
+// Map of dataType.ynorm values to corresponding dot plot legend title.
+var legendTitle = {
+	singleCell: {
+		'none': 'Average\u00A0expression',
+		'subset': 'Average\u00A0normalized\u00A0expression',
+		'subset_stdev': 'Average\u00A0expression\u00A0z‑score',
+	},
+	bulk: {
+		'none': 'Mean value',
+		'subset': 'Mean\u00A0normalized\u00A0value',
+		'subset_stdev': 'Mean z-score',
+	}
+};
+
+// Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
+var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
+
+function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
+	var isSingleCell = dataType === 'singleCell',
+		opts = {
+			chart: {
+				events: {
+					load: function () {
+						var chart = this;
+						chart.markerScale = markerScale;
+					},
+				},
+				inverted,
+				type: 'scatter',
+				zoomType: inverted ? 'y' : 'x',
+			},
+			colorAxis: {
+				labels: {
+					formatter: function () {
+						if (this.value === 0 || this.value === 1) {
+							return this.value.toFixed(1);
+						}
+					}
+				},
+				min: 0,
+				max: 1,
+				stops: [
+					[0, xenaColor.BLUE_PRIMARY_2],
+					[1, xenaColor.BLUE_PRIMARY]
+				],
+				showInLegend: true,
+				tickPositions: [0, 0.25, 0.5, 0.75, 1],
+			},
+			legend: {
+				align: 'right',
+				layout: 'horizontal',
+				symbolHeight: markerScale.radius.max * 2,
+				title: {text: legendTitle[dataType][ynorm]},
+			},
+			plotOptions: {
+				scatter: {marker: {symbol: 'circle'}},
+			},
+			title: {text: ''},
+			tooltip: {
+				formatter: function () {
+					var {xAxis, yAxis} = this.series,
+						{custom, value, x, y} = this.point;
+					return `<div>
+								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+								<div>${isSingleCell ? 'average expression' : 'mean'}: ${value.toPrecision(3)}</div>
+								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
+								<div>N: ${custom?.n || '--'}</div>
+							</div>`;
+				},
+				hideDelay: 0,
+				useHTML: true,
+			},
+			xAxis: {
+				categories: xAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? 0 : -90},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: yAxisTitle},
+			},
+			yAxis: {
+				categories: yAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? -90 : 0},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: xAxisTitle},
+			},
+	};
+
+	return _.deepMerge(chartOptions, opts);
+}
+
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
@@ -612,6 +711,7 @@ module.exports = {
 	average,
 	columnChartOptions,
 	boxplotOptions,
+	dotOptions,
 	violinOptions,
 	scatterChart,
 	addSeriesToColumn
