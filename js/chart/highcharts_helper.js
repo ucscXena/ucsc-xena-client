@@ -492,7 +492,7 @@ function formatPercentage(value) {
 	return `${Math.round(value * 10000) / 100}%`;
 }
 
-// Map of ynorm values to corresponding dot plot legend title.
+// Map of dataType.ynorm values to corresponding dot plot legend title.
 var legendTitle = {
 	singleCell: {
 		'none': 'Average\u00A0expression',
@@ -543,6 +543,7 @@ function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTit
 			legend: {
 				align: 'right',
 				layout: 'horizontal',
+				symbolHeight: markerScale.radius.max * 2,
 				title: {text: legendTitle[dataType][ynorm]},
 			},
 			plotOptions: {
