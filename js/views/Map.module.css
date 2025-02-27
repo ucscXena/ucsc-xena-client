@@ -36,6 +36,15 @@
 	left: 50%;
 }
 
+.tooltip {
+	position: absolute;
+	right: 0;
+	top: 28px;
+	background-color: #FFFFFF;
+	z-index: 10;
+	opacity: .6;
+}
+
 .scale {
 	position: absolute;
 	right: 0;

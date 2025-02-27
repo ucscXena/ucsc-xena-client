@@ -9,7 +9,8 @@ import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
 import {hasColor, isOrdinal, layerColors, segmentedColor} from './models/map';
 import {debounce} from './rx';
-var {get, getIn, identity, Let} = require('./underscore_ext').default;
+var {get, getIn, identity, Let, pluck} = require('./underscore_ext').default;
+import highlightLayer from './views/highlightLayer';
 
 var deckGL = el(DeckGL);
 
@@ -102,7 +103,7 @@ var filterFn = (colorColumn, hideColors) =>
 	: () => 1;
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2,
-		radius, minTransparent1, onHover) =>
+		radius, minTransparent1) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -120,7 +121,6 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2,
 	getLineWidth: 50,
 	pickable: true,
 	antialiasing: false,
-	onHover,
 	getPosition: (d0, {index}) => [d0, data[1][index]],
 	lineWidthMinPixels: 8,
 	lineWidthMaxPixels: 8,
@@ -165,9 +165,8 @@ var initialZoom = props => {
 var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / scale;
 
 class Img extends PureComponent {
-	onHover = ev => {
-		var i = ev.index;
-		this.props.onTooltip(i < 0 ? null : i);
+	onTooltip = ev => {
+		this.props.onTooltip(ev.index);
 	}
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
@@ -177,6 +176,7 @@ class Img extends PureComponent {
 	}
 	render() {
 		var {props} = this,
+			{tooltip} = props,
 			{columns: data, color0, color1, image, imageState, radius} = props.data,
 			{image_scalef: scale, offset} = image,
 			// TileLayer operates on the scale of the smallest downsample.
@@ -190,7 +190,7 @@ class Img extends PureComponent {
 
 		var layer0 = data && hasColor(color0) &&
 			dataLayer(data, modelMatrix, color0,
-				color1, radius, props.minT, this.onHover);
+				color1, radius, props.minT);
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, segmentation, levels, size: [iwidth, iheight],
@@ -243,13 +243,17 @@ class Img extends PureComponent {
 						size: imageState.size,
 						tileSize: imageState.tileSize,
 						visible: c.visible})),
-				layer0
+				layer0,
+				tooltip < 0 ? null :
+					highlightLayer({data: [pluck(data, tooltip)], modelMatrix,
+					                radius: radius * scale})
 			]),
 			views,
 			controller: true,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 			getCursor: () => 'inherit',
 			initialViewState: props.data.viewState || viewState,
+			onClick: this.onTooltip,
 			style: {backgroundColor: '#000000'}
 		});
 	}

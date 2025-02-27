@@ -1,9 +1,9 @@
 import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {div, el, img, span} from '../chart/react-hyper.js';
+import {br, div, el, img, span} from '../chart/react-hyper.js';
 var {get, getIn, identity, Let, max, min,
-	pick} = require('../underscore_ext').default;
+	pick, pluck} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
 import {OrbitView, OrthographicView} from 'deck.gl';
@@ -11,12 +11,13 @@ import {pointCloudLayer} from '../PointCloudLayer';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
 import {debounce} from '../rx';
+import highlightLayer from './highlightLayer';
 
 import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, getData,
-	getRadius, hasImage, isOrdinal} from '../models/map';
+	getRadius, getSamples, hasColor, hasImage, isOrdinal} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
@@ -48,8 +49,7 @@ var cvtColorScale = (colorColumn, colors) =>
 var randZ = () => Math.random() * 0.0001;
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
-                   minTransparent1,
-                   onHover) =>
+                   minTransparent1) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -69,7 +69,6 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
 	material: false,
 	getNormal: [1, 1, 1], // XXX deprecated?
 	pickable: true,
-	onHover,
 	// XXX optimize this, either passing in the typed array, or using
 	// deckgl's transient return buffer. See deckgl optimization docs.
 	getPosition: data.length === 2 ?
@@ -101,7 +100,6 @@ const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
 	extensions: [new DataFilterExtension({filterSize: 1})]
 }));
 
-
 var cubeWidth = 20; // fit data to cube of this dimension
 
 // scale and offset
@@ -127,9 +125,8 @@ var initialZoom = props => {
 var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
 
 class MapDrawing extends PureComponent {
-	onHover = ev => {
-		var i = ev.index;
-		this.props.onTooltip(i < 0 ? null : i);
+	onTooltip = ev => {
+		this.props.onTooltip(ev.index);
 	}
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
@@ -146,6 +143,7 @@ class MapDrawing extends PureComponent {
 	}
 	render() {
 		var {props} = this;
+		var {tooltip} = props;
 		var twoD = props.data.columns.length === 2;
 		var mins = props.data.columns.map(min),
 			maxs = props.data.columns.map(max),
@@ -191,11 +189,16 @@ class MapDrawing extends PureComponent {
 
 		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
 		                       get(props.data, 'color1'), radius * scale,
-		                       twoD ? 1 : 2, props.minT, this.onHover);
+		                       twoD ? 1 : 2, props.minT);
 
 		return deckGL({
 			ref: this.props.onDeck,
-			layers: id([!twoD && axesLayer(), layer0]),
+			layers: id([!twoD && axesLayer(),
+				layer0,
+				tooltip < 0 ? null :
+					highlightLayer({data: [pluck(data, tooltip)], modelMatrix,
+					                radius: radius * scale})
+			]),
 			onViewStateChange: ({viewState}) => {
 				this.onViewState(viewState,
 					twoD && currentScale(viewState.zoom, scale));
@@ -209,6 +212,7 @@ class MapDrawing extends PureComponent {
 				rotationOrbit: 45,
 				...viewState
 			},
+			onClick: this.onTooltip,
 			style: {backgroundColor: '#FFFFFF'}
 		});
 	}
@@ -220,7 +224,7 @@ var mapDrawing = props =>
 
 var imgDrawing = el(Img);
 
-var getStatusView = (loading, error, onReload) =>
+var getStatusView = el(({loading, error, onReload}) =>
 	loading ? div({className: styles.status},
 				img({style: {textAlign: 'center'}, src: spinner})) :
 		// XXX this is broken
@@ -230,15 +234,27 @@ var getStatusView = (loading, error, onReload) =>
 						title: 'Error loading data. Click to reload.',
 						ariaHidden: 'true'},
 					icon('warning'))) :
-	null;
+	null);
 
 var scale = um =>
 	div({className: styles.scale},
 		span(), span(), span(), span(`${um == null ? '-' : um.toFixed()} \u03BCm`));
 
+var getColorTxt = (state, i) =>
+	hasColor(state) ?
+		Let((value = getIn(state, ['data', 'req', 'values', 0, i])) =>
+			getIn(state, ['data', 'codes', value], String(value))) :
+		'';
+
+var tooltipView = (state, i) =>
+	Let((sampleID = getSamples(state)[i],
+		valTxt0 = getColorTxt(get(state, 'colorBy'), i),
+		valTxt1 = getColorTxt(get(state, 'colorBy2'), i)) =>
+	div({className: styles.tooltip}, sampleID, br(), valTxt0, br(), valTxt1));
+
 export class Map extends PureComponent {
 	state = {
-		tooltip: null,
+		tooltip: -1,
 		scale: null
 	}
 	//	For displaying FPS
@@ -274,10 +290,13 @@ export class Map extends PureComponent {
 			this.props.onViewState(viewState);
 		}
 	}
+	onTooltip = tooltip => {
+		this.setState({tooltip});
+	}
 	render() {
 		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
 
-		var {onViewState, onDeck} = this,
+		var {onViewState, onTooltip, onDeck, onReload} = this,
 			mapState = this.props.state,
 			{minT} = this.props,
 			params = get(mapState, 'dataset', []),
@@ -298,13 +317,15 @@ export class Map extends PureComponent {
 				labels, viewState, image, imageState},
 			unit = get(params, 'micrometer_per_unit'),
 			drawing = image ? imgDrawing : mapDrawing,
-			{container} = this.state;
+			{container, tooltip} = this.state;
 
 		return div({className: styles.content},
 				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
 					...(unit ? [scale(this.state.scale)] : []),
-					getStatusView(loading, error, this.onReload),
-					drawing({...handlers, minT, onViewState, onDeck, data, container})));
+					...(tooltip >= 0 ? [tooltipView(mapState, tooltip)] : []),
+					getStatusView({loading, error, onReload, key: 'status'}),
+					drawing({...handlers, minT, onViewState, onDeck, onTooltip,
+					        tooltip, data, container, key: 'drawing'})));
 	}
 }

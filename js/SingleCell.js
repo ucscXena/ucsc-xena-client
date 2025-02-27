@@ -9,7 +9,7 @@
 
 import PureComponent from './PureComponent';
 import nav from './nav';
-import {br, div, el, fragment, h2, label, span} from './chart/react-hyper';
+import {div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
 import {Accordion, AccordionDetails, AccordionSummary, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Slider, Tab,
@@ -19,7 +19,7 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius,
-	getSamples, hasColor, hasImage, isLog, log2p1, maps, otherValue, phenoValue,
+	hasImage, isLog, log2p1, maps, otherValue, phenoValue,
 	probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get, getIn,
@@ -356,14 +356,9 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
-var tooltipView = tooltip =>
-	div({className: styles.tooltip},
-		...(tooltip ? [tooltip.sampleID, br(), tooltip.valTxt0, br(), tooltip.valTxt1] :
-			['']));
-
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
-		tooltip, layout, showColorPicker, minT, props: {state}}) =>
+		layout, showColorPicker, minT, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -386,19 +381,12 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 				...Let((state2 = colorBy2State(state)) => [
 					legendTitle(state2),
 					legend(state2.colorBy, false,
-					       handlers.onColorByHandlers[1])]),
-				tooltipView(tooltip))));
+					       handlers.onColorByHandlers[1])]))));
 
 var page = state =>
 	get(state, 'integration') ? viz :
 	get(state, 'enter') ? integration :
 	welcome;
-
-var getColorTxt = (state, i) =>
-	hasColor(state) ?
-		Let((value = getIn(state, ['data', 'req', 'values', 0, i])) =>
-			getIn(state, ['data', 'codes', value], String(value))) :
-		'';
 
 class SingleCellPage extends PureComponent {
 	constructor(props) {
@@ -421,7 +409,7 @@ class SingleCellPage extends PureComponent {
 		});
 
 		var minT = Let((i = mins.findIndex(x => x)) => i === -1 ? 0 : (i + 1) * 0.01);
-		this.state = {highlight: undefined, tooltip: null, showColorPicker: false,
+		this.state = {highlight: undefined, showColorPicker: false,
 			layout: getIn(props.state, ['dataset', 'type']), minT};
 
 		this.onColorByHandlers =
@@ -448,18 +436,6 @@ class SingleCellPage extends PureComponent {
 	}
 	onAdvanced = () => {
 		this.callback(['advanced']);
-	}
-	onTooltip = i => {
-		if (i === null) {
-			this.setState({tooltip: null});
-			return;
-		}
-		var {state} = this.props,
-			sampleID = getSamples(state)[i],
-			valTxt0 = getColorTxt(get(state, 'colorBy'), i),
-			valTxt1 = getColorTxt(get(state, 'colorBy2'), i);
-
-		this.setState({tooltip: {sampleID, valTxt0, valTxt1}});
 	}
 	onEnter = () => {
 		this.callback(['enter']);
