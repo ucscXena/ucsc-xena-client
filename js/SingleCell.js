@@ -175,7 +175,7 @@ var vizText = (...children) => div({className: styles.vizText}, ...children);
 
 var vizPanel = ({layout, minT, props: {state, ...handlers}}) =>
 	Let(({dataset} = state) =>
-		dataset ? map({state, minT, ...handlers}) :
+		dataset ? map({state, minT, key: datasetCohort(state), ...handlers}) :
 		layout ? vizText(h2(`Select a ${layouts[layout]} layout`)) :
 		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout type')));
