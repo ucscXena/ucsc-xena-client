@@ -450,6 +450,22 @@ function boxplotPoint(data) {
 	return [lowerwhisker, lower, median, upper, upperwhisker];
 }
 
+function computeAvgExpr(data) {
+	// filter values > 0 for expression calculation
+	var expressing = data.filter(v => v > 0);
+	if (expressing.length === 0) {return 0;}
+	// compute the average expression from non-zero values
+	return expressing.reduce((sum, v) => sum + v, 0) / expressing.length;
+}
+
+function computePctExpr(data) {
+	if (data.length === 0) {return 0;}
+	// filter values > 0 for expression calculation
+	var expressing = data.filter(v => v > 0);
+	// compute % of cells with expression levels greater than zero
+	return expressing.length / data.length;
+}
+
 // poor man's lazy seq
 function* constantly (fn) {
 	while (true) {
@@ -471,7 +487,7 @@ function initFVCMatrices({ydata, groups}) {
 	// nNumber -- number of data points (real data points) for dataMatrix
 
 	// init average matrix std matrix // row is x by column y
-	var [meanMatrix, stdMatrix, nNumberMatrix] =
+	var [meanMatrix, stdMatrix, nNumberMatrix, expressionMatrix, detectionMatrix] =
 			constantly(() =>
 				_.times(groups.length, () => new Array(ydata.length).fill(NaN))),
 		boxes = _.times(groups.length, () => new Array(ydata.length));
@@ -491,10 +507,12 @@ function initFVCMatrices({ydata, groups}) {
 				let average =  highchartsHelper.average(data);
 				meanMatrix[i][k] = average;
 				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
+				detectionMatrix[i][k] = computePctExpr(data);
+				expressionMatrix[i][k] = computeAvgExpr(data);
 			}
 		});
 	});
-	return {meanMatrix, boxes, stdMatrix, nNumberMatrix};
+	return {detectionMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
 function sortMatrices(xCategories, groups, colors, matrices) {
@@ -532,43 +550,10 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function computeExpressionMatrices({dataType, groups, meanMatrix, xCategories, ydata, yfields}) {
-	if (dataType === 'singleCell') {
-		// for single cell data, compute the average expression (only among cells with expression > 0)
-		// and the detection rate (percentage of cells expressing the gene)
-		var expressionMatrix = [],
-			detectionMatrix = [],
-			// group the data per feature
-			groupDataPerFeature = yfields.map((feature, featureIndex) => {
-				return groupValues(ydata[featureIndex], groups);
-			});
-		xCategories.forEach((category, categoryIndex) => {
-			expressionMatrix[categoryIndex] = [];
-			detectionMatrix[categoryIndex] = [];
-			yfields.forEach((feature, featureIndex) => {
-				var groupData = groupDataPerFeature[featureIndex][categoryIndex] || [],
-					// filter values > 0 for expression calculation
-					expressing = groupData.filter(v => v > 0),
-					// compute the average expression from non-zero values
-					avgExpr = expressing.length ? expressing.reduce((sum, v) => sum + v, 0) / expressing.length : 0,
-					// compute the detection rate as a fraction
-					pctExpr = groupData.length ? expressing.length / groupData.length : 0;
-				expressionMatrix[categoryIndex][featureIndex] = avgExpr;
-				detectionMatrix[categoryIndex][featureIndex] = pctExpr;
-			});
-		});
-		return {expressionMatrix, detectionMatrix};
-	}
-	// for non-single cell data, return the meanMatrix
-	return {expressionMatrix: meanMatrix};
-}
-
-function dotplot({ chart, dataType, groups, matrices: { meanMatrix, nNumberMatrix }, xCategories, ydata, yfields }) {
-	// determine whether the data type is single cell.
-	var isSingleCellData = dataType === 'singleCell';
-
-	// compute the expression matrices
-	var {expressionMatrix, detectionMatrix} = computeExpressionMatrices({dataType, groups, meanMatrix, nNumberMatrix, xCategories, ydata, yfields});
+function dotplot({ chart, dataType, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, detectionMatrix }, xCategories, yfields }) {
+	// determine the appropriate matrix for the selected data type
+	var isSingleCellData = dataType === 'singleCell',
+		expressionMatrix = isSingleCellData ? exprMatrix : meanMatrix;
 
 	// flatten the expression matrix, filter out NaN values, and determine min and max values for scaling
 	var meanValues = expressionMatrix.flat().filter(v => !Number.isNaN(v)),
@@ -591,8 +576,8 @@ function dotplot({ chart, dataType, groups, matrices: { meanMatrix, nNumberMatri
 			data: yfields.map((feature, featureIndex) => {
 				// retrieve the expression value for the current category and feature
 				var value = expressionMatrix[categoryIndex][featureIndex],
-					// for single cell data, get the detection rate; default to 0 if not available
-					detectionValue = detectionMatrix?.[categoryIndex]?.[featureIndex] || 0,
+					// for single cell data, get the detection rate
+					detectionValue = detectionMatrix?.[categoryIndex]?.[featureIndex],
 					normalizedValue = (value - minMean) / range,
 					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity,
 					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
