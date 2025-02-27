@@ -82,6 +82,9 @@ var selectProps = {
 };
 
 var sxAccordion = {
+	'&.MuiAccordion-root + .MuiAccordion-root:before': {
+		display: 'block', // persist border between accordions
+	},
 	'&.Mui-expanded': {
 		margin: 0,
 		'&::before': {
