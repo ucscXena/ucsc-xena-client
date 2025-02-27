@@ -5,7 +5,7 @@ var {samplesQuery} = require('./common');
 var {allCohorts: fetchAllCohorts, allFieldMetadata, fetchDefaultStudy,
 	datasetList, datasetMetadata, donorFields} = require('../xenaQuery');
 var {assoc, assocIn, findIndex, get, getIn, identity, intersection, Let,
-	map, merge, max: _max, min: _min, object, pairs, pluck, pick, range, uniq,
+	map, merge, max: _max, min: _min, object, pairs, pluck, pick, range, reject, uniq,
 	updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
@@ -85,7 +85,15 @@ var scaleBounds = (data, scale) =>
 			[min, max] = (isLog(scale) ?
 				applyLog : applyLinear)(extendScale, minIn, maxIn)) => ({min, max}));
 
-var setAvg = (data, field) => merge(data, widgets.avg(field, data));
+var uniqCodes = values =>
+	reject(uniq(values), x => isNaN(x)).sort((v1, v2) =>  v1 - v2);
+
+var codesInView = data =>
+	data.codes ? {
+		codesInView: uniqCodes(data.req.values[0]),
+	} : {};
+
+var setAvg = (data, field) => merge(data, widgets.avg(field, data), codesInView(data));
 
 var colorParams = (field, color) => colorData =>
 	Let((data = setAvg(colorData, fieldSpecMode(field)),

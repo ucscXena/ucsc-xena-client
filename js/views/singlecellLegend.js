@@ -3,8 +3,8 @@
 var Legend = require('./Legend');
 var BandLegend = require('./BandLegend');
 import {el, span} from '../chart/react-hyper';
-import {colorScale, scaleParams} from '../colorScales';
-var {first, get, last, Let, range} = require('../underscore_ext').default;
+import {colorScale} from '../colorScales';
+var {first, get, last, Let} = require('../underscore_ext').default;
 
 var legend = el(Legend);
 var bandLegend = el(BandLegend); //eslint-disable-line no-unused-vars
@@ -18,9 +18,9 @@ export var cmp = codes => (i, j) =>
 		isNaN(cj) ? -1 :
 		+cj - +ci);
 
-function codedLegend({column: {color, codes}, onClick}) {
+function codedLegend({column: {color, codes, codesInView}, onClick}) {
 	var colorFn = colorScale(color),
-		data = range(scaleParams(color)[0]).sort(cmp(codes)),
+		data = codesInView.sort(cmp(codes)),
 		colors = data.map(colorFn),
 		labels = data.map(d => codes[d]);
 

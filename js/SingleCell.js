@@ -302,6 +302,7 @@ var hasCodes = state => hasColorBy(state) && getIn(state, ['data', 'codes']);
 var gray = '#F0F0F0';
 var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 	var codes = getIn(state, ['data', 'codes']),
+		codesInView = getIn(state, ['data', 'codesInView']),
 		valueType = codes ? 'coded' : 'float',
 		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
@@ -318,7 +319,7 @@ var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 				codes ? showHideButtons({onHideAll, onShowAll}) : null,
 				markers ? shButton(onMarkers, 'Marker genes') : null),
 			singlecellLegend({inline: true, max: Infinity, onClick: onCode,
-				column: {valueType, color, codes, units: [unit]}})) :
+				column: {valueType, color, codes, codesInView, units: [unit]}})) :
 		null;
 };
 
