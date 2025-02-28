@@ -279,7 +279,7 @@ var viewOptions = [
 	{label: 'dot plot', value: 'dot'}
 ];
 
-var dataTypeOptions = [
+var expressionOptions = [
 	{label: 'bulk data', value: 'bulk'},
 	{label: 'single cell data', value: 'singleCell'}
 ];
@@ -550,9 +550,9 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, dataType, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, detectionMatrix }, xCategories, yfields }) {
+function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, detectionMatrix }, xCategories, yexpression, yfields }) {
 	// determine the appropriate matrix for the selected data type
-	var isSingleCellData = dataType === 'singleCell',
+	var isSingleCellData = yexpression === 'singleCell',
 		expressionMatrix = isSingleCellData ? exprMatrix : meanMatrix;
 
 	// flatten the expression matrix, filter out NaN values, and determine min and max values for scaling
@@ -735,7 +735,7 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, dataType, inverted, setHasStats, setView, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setHasStats, setView, yexpression, yfields, ydata,
 		xlabel, ylabel, ynorm}, chartOptions) {
 	setView(chartType);
 	var matrices = initFVCMatrices({ydata, groups});
@@ -745,12 +745,12 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, d
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(chartType)({chartOptions, dataType, inverted, series: xCategories.length,
-		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel, ynorm});
+	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
+		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel, yexpression, ynorm});
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(chartType)({xCategories, dataType, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, groups, matrices, yexpression, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
 		welch(matrices, yfields, setHasStats);
@@ -1379,7 +1379,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, dataType: undefined, hasStats: false, inverted: false, range: undefined, view: undefined};
+		this.state = {advanced: false, hasStats: false, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1389,7 +1389,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, dataType, hasStats, inverted, range, view} = this.state,
+			{advanced, hasStats, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1420,6 +1420,7 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata0),
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
+			yexpression = _.get(expressionOptions[chartState.expressionState[ycolumn]], 'value'),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
@@ -1445,8 +1446,8 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			yexpression,
 			ynorm,
-			dataType,
 			inverted,
 			setHasStats,
 			setRange,
@@ -1464,12 +1465,12 @@ class Chart extends PureComponent {
 				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var switchDataType = isDot ?
+		var yExpression = isDot ?
 			buildDropdown({
+				index: chartState.expressionState[ycolumn],
 				label: 'Data type',
-				onChange: (_, v) => this.setState({dataType: v}),
-				opts: dataTypeOptions,
-				value: dataType || 'bulk'}) : null;
+				onChange: i => set(['expressionState', chartState.ycolumn], i),
+				opts: expressionOptions}) : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
@@ -1546,7 +1547,7 @@ class Chart extends PureComponent {
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes, invertAxes, switchView, switchDataType), avg, pct, colorAxisDiv && colorAxisDiv),
+							swapAxes, invertAxes, switchView, yExpression), avg, pct, colorAxisDiv && colorAxisDiv),
 						yExp && advOpt, chartStats));
 	};
 }

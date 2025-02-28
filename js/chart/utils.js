@@ -52,6 +52,7 @@ var setIfNot = (state, path, value) =>
 var initSettings = chartState => {
 	var ycolumn = chartState.ycolumn;
 	if (v(ycolumn)) {
+		chartState = setIfNot(chartState, ['expressionState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['normalizationState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['expState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['avgState', ycolumn], 0);
