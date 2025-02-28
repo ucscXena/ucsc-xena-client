@@ -597,6 +597,9 @@ function dotplot({ chart, dataType, matrices: { meanMatrix, nNumberMatrix, expre
 			type: 'scatter',
 		});
 	});
+
+	// update the x-axis scale to match the min and max expression values
+	chart.colorAxis[0].update({min: minMean, max: maxMean, tickPositions: [minMean, maxMean]});
 }
 
 var violinSamples = 30;

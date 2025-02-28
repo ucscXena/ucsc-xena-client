@@ -524,21 +524,19 @@ function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTit
 				zoomType: inverted ? 'y' : 'x',
 			},
 			colorAxis: {
+				max: null,
+				maxColor: xenaColor.BLUE_PRIMARY,
+				min: null,
+				minColor: xenaColor.BLUE_PRIMARY_2,
 				labels: {
 					formatter: function () {
-						if (this.value === 0 || this.value === 1) {
-							return this.value.toFixed(1);
-						}
+						var value = this.value,
+							isFirst = this.isFirst,
+							isLast = this.isLast;
+						if (isFirst || isLast) {return value.toFixed(2);}
 					}
 				},
-				min: 0,
-				max: 1,
-				stops: [
-					[0, xenaColor.BLUE_PRIMARY_2],
-					[1, xenaColor.BLUE_PRIMARY]
-				],
 				showInLegend: true,
-				tickPositions: [0, 0.25, 0.5, 0.75, 1],
 			},
 			legend: {
 				align: 'right',
