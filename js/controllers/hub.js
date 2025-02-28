@@ -13,6 +13,7 @@ import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import {isAuthPending} from '../models/auth';
 import query from './query';
+import {hfc} from '../hfc';
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -193,7 +194,8 @@ var sectionData = state =>
 		method ? method(state) : []);
 
 var fetchMethods = {
-	samples: (host, dataset) => datasetSamples(host, dataset, null),
+	samples: (host, dataset) => datasetSamples(host, dataset)
+		.flatMap(s => hfc([[s]], [])),
 	identifiers: datasetField,
 	dataset: datasetMetaAndLinks,
 	datasetDescription,

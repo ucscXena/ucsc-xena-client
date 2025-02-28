@@ -310,6 +310,7 @@ function xenaCallBPJ(queryFn, ...params) {
 
 var BPJAlts = {
 	cohortSamples: 'cohortSamplesHFC',
+	datasetSamples: 'datasetSamplesHFC',
 	datasetSamplesExamples: 'datasetSamplesHFCExamples',
 	datasetMetadata: 'datasetMetadataHFC',
 	datasetList: 'datasetListHFC'
@@ -487,7 +488,9 @@ function transformPOSTMethods(postMethods) {
 			.map(filterByPrefix(prefix)),
 		// XXX review 'max' parameter, for singlecell branch
 		cohortSamples: postFn => (host, cohort, max) =>
-			postFn(host, cohort, max).flatMap(encodeSamples)
+			postFn(host, cohort, max).flatMap(encodeSamples),
+		datasetSamples: postFn => (host, dataset) =>
+			postFn(host, dataset).flatMap(encodeSamples)
 	};
 
 	var mapPostFn = (transform, name) => transform(postMethods[name]),
