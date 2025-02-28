@@ -1243,8 +1243,8 @@ function getMeasures({avgState, pctState, ycolumn}, yavg) {
 
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
-		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
-		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
 }
 
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
