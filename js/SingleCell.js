@@ -657,6 +657,7 @@ var theme = outer => createTheme(outer, {
 		},
 		MuiListSubheader: {
 			root: {
+				position: 'static !important',
 				fontWeight: 600,
 				color: '#000000'
 			}
