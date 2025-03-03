@@ -488,7 +488,7 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 }
 
 function formatPercentage(value) {
-	if (!value) {return "--";}
+	if (isNaN(value)) {return value;}
 	return `${Math.round(value * 10000) / 100}%`;
 }
 
