@@ -450,20 +450,16 @@ function boxplotPoint(data) {
 	return [lowerwhisker, lower, median, upper, upperwhisker];
 }
 
-function computeAvgExpr(data) {
-	// filter values > 0 for expression calculation
-	var expressing = data.filter(v => v > 0);
-	if (expressing.length === 0) {return 0;}
+function computeAvgExpr(expressedData) {
+	if (expressedData.length === 0) {return 0;}
 	// compute the average expression from non-zero values
-	return expressing.reduce((sum, v) => sum + v, 0) / expressing.length;
+	return expressedData.reduce((sum, v) => sum + v, 0) / expressedData.length;
 }
 
-function computePctExpr(data) {
-	if (data.length === 0) {return 0;}
-	// filter values > 0 for expression calculation
-	var expressing = data.filter(v => v > 0);
+function computePctExpr(expressedCount, totalCount) {
+	if (totalCount === 0) {return 0;}
 	// compute % of cells with expression levels greater than zero
-	return expressing.length / data.length;
+	return expressedCount / totalCount;
 }
 
 // poor man's lazy seq
@@ -475,7 +471,7 @@ function* constantly (fn) {
 
 var nobox = new Array(BOXLEN).fill(NaN);
 
-function initFVCMatrices({ydata, groups}) {
+function initFVCMatrices({ydata, groups, yexpression, ynonexpressed}) {
 	// matrices, row is x and column is y:
 	// mean
 	// median
@@ -492,10 +488,14 @@ function initFVCMatrices({ydata, groups}) {
 				_.times(groups.length, () => new Array(ydata.length).fill(NaN))),
 		boxes = _.times(groups.length, () => new Array(ydata.length));
 
+	var isSingleCell = yexpression === 'singleCell';
 
 	// Y data and fill in the matrix
 	ydata.forEach((ydataElement, k) => {
-		let ybinnedSample = groupValues(ydataElement, groups);
+		let nonExpressedSet = ynonexpressed.get(k), // set of indices for non-expressed y data (single cell mode only)
+			// prior to computing the group values, remove the non-expressed indices from the groups (single cell mode only)
+			expressedGroupsOrGroups = isSingleCell ? _.map(groups, indices => _.filter(indices, i => !nonExpressedSet.has(i))) : groups,
+			ybinnedSample = groupValues(ydataElement, expressedGroupsOrGroups);
 
 		// Note that xCategories has already been null filtered on x, so it's not
 		// the same as xcodemap.
@@ -507,8 +507,12 @@ function initFVCMatrices({ydata, groups}) {
 				let average =  highchartsHelper.average(data);
 				meanMatrix[i][k] = average;
 				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
-				detectionMatrix[i][k] = computePctExpr(data);
-				expressionMatrix[i][k] = computeAvgExpr(data);
+				if (isSingleCell) {
+					let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
+						totalCount = m + nonExpressedCount;
+					detectionMatrix[i][k] = computePctExpr(m, totalCount);
+					expressionMatrix[i][k] = computeAvgExpr(data);
+				}
 			}
 		});
 	});
@@ -557,8 +561,8 @@ function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatri
 
 	// flatten the expression matrix, filter out NaN values, and determine min and max values for scaling
 	var meanValues = expressionMatrix.flat().filter(v => !Number.isNaN(v)),
-		minMean = Math.min(...meanValues),
-		maxMean = Math.max(...meanValues),
+		minMean = _.min(meanValues),
+		maxMean = _.max(meanValues),
 		range = maxMean - minMean || 1;
 
 	// retrieve marker scale settings from the chart configuration with default values
@@ -736,9 +740,9 @@ var fvcChart = chartType => ({
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
 function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setHasStats, setView, yexpression, yfields, ydata,
-		xlabel, ylabel, ynorm}, chartOptions) {
+		xlabel, ylabel, ynonexpressed, ynorm}, chartOptions) {
 	setView(chartType);
-	var matrices = initFVCMatrices({ydata, groups});
+	var matrices = initFVCMatrices({ydata, groups, yexpression, ynonexpressed});
 
 	// sort by median of xCategories if yfields.length === 1
 	if (xCategories.length > 0 && yfields.length === 1) {
@@ -1357,6 +1361,11 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
+function findNonExpressedIndices(ydata, yexpression) {
+	if (yexpression !== 'singleCell') {return new Map(_.map(ydata, (d, i) => [i, new Set()]));}
+	return new Map(_.map(ydata, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))]));
+}
+
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
 
@@ -1434,7 +1443,8 @@ class Chart extends PureComponent {
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
-		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
+		var {ydata, xdata, yavg} = applyTransforms(ydata0,  yexp, ynorm, xdata0, xexp),
+			ynonexpressed = findNonExpressedIndices(ydata0, yexpression), // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
 			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
 			// we only do for density plots.
 			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
@@ -1447,6 +1457,7 @@ class Chart extends PureComponent {
 			yexp,
 			xexp,
 			yexpression,
+			ynonexpressed,
 			ynorm,
 			inverted,
 			setHasStats,
