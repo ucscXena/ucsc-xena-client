@@ -556,7 +556,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
 								<div>${isSingleCell ? 'average expression' : 'mean'}: ${value.toPrecision(3)}</div>
 								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
-								<div>N: ${custom?.n || '--'}</div>
+								<div>N: ${custom?.n || 'NaN'}</div>
 							</div>`;
 				},
 				hideDelay: 0,
