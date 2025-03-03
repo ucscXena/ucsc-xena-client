@@ -1361,10 +1361,12 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
-function findNonExpressedIndices(ydata, yexpression) {
-	if (yexpression !== 'singleCell') {return new Map(_.map(ydata, (d, i) => [i, new Set()]));}
-	return new Map(_.map(ydata, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))]));
-}
+var expressionMethods = {
+	bulk: data => new Map(_.map(data, (d, i) => [i, new Set()])),
+	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
+};
+
+var applyExpression = (data, expression) => expressionMethods[expression](data);
 
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
@@ -1444,7 +1446,7 @@ class Chart extends PureComponent {
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
 		var {ydata, xdata, yavg} = applyTransforms(ydata0,  yexp, ynorm, xdata0, xexp),
-			ynonexpressed = findNonExpressedIndices(ydata0, yexpression), // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
+			ynonexpressed = applyExpression(ydata0, yexpression), // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
 			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
 			// we only do for density plots.
 			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
