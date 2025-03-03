@@ -492,7 +492,7 @@ function formatPercentage(value) {
 	return `${Math.round(value * 10000) / 100}%`;
 }
 
-// Map of dataType.ynorm values to corresponding dot plot legend title.
+// Map of yexpression.ynorm values to corresponding dot plot legend title.
 var legendTitle = {
 	singleCell: {
 		'none': 'Average\u00A0expression',
@@ -509,8 +509,8 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, ynorm }) {
-	var isSingleCell = dataType === 'singleCell',
+function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
+	var isSingleCell = yexpression === 'singleCell',
 		opts = {
 			chart: {
 				events: {
@@ -542,7 +542,7 @@ function dotOptions({ chartOptions, dataType = 'bulk', inverted, xAxis, xAxisTit
 				align: 'right',
 				layout: 'horizontal',
 				symbolHeight: markerScale.radius.max * 2,
-				title: {text: legendTitle[dataType][ynorm]},
+				title: {text: legendTitle[yexpression][ynorm]},
 			},
 			plotOptions: {
 				scatter: {marker: {symbol: 'circle'}},
