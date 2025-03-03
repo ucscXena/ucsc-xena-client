@@ -545,7 +545,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 				title: {text: legendTitle[yexpression][ynorm]},
 			},
 			plotOptions: {
-				scatter: {marker: {symbol: 'circle'}},
+				scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
 			},
 			title: {text: ''},
 			tooltip: {
