@@ -421,6 +421,12 @@ var push = (arr, v) => (arr.push(v), arr);
 
 var sorted = (arr, ...args) => arr.slice(0).sort(...args);
 
+// case-insensitive sortBy
+function sortByI(arr, it, ctx) {
+	var i = _.iteratee(it, ctx);
+	return _.sortBy(arr, (value, key, list) => i(value, key, list).toLowerCase());
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -531,6 +537,7 @@ _.mixin({
 	pluckPathsArray,
 	push,
 	reverse,
+	sortByI,
 	scan,
 	splice,
 	sorted,
