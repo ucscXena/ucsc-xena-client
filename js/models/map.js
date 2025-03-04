@@ -312,7 +312,7 @@ export var defaultColor = (state, cohort) =>
 		({mode: 'donor', host, name, field: '_DONOR'})) ||
 	LetIf(hasDatasource(state, cohort), ([host, name]) =>
 		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
-	{};
+	null;
 
 export var layerColors = [
 	[0.0, 0.0, 1.0],

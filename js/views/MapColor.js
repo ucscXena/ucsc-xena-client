@@ -218,7 +218,7 @@ var modeLabel = {
 };
 var modeOpt = mode => menuItem({value: {mode}}, modeLabel[mode]);
 
-var modeValue = state => getIn(state, ['colorBy', 'field'], {mode: ''});
+var modeValue = state => getIn(state, ['colorBy', 'field']) || {mode: ''};
 var defaultLabel = 'Select how to color cells by';
 
 var modeOpts = (state, floatOnly) =>
