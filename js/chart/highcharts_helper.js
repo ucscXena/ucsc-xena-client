@@ -500,9 +500,9 @@ var legendTitle = {
 		'subset_stdev': 'Average\u00A0expression\u00A0z‑score',
 	},
 	bulk: {
-		'none': 'Mean value',
-		'subset': 'Mean\u00A0normalized\u00A0value',
-		'subset_stdev': 'Mean z-score',
+		'none': 'Average\u00A0value',
+		'subset': 'Average\u00A0normalized\u00A0value',
+		'subset_stdev': 'Average\u00A0z‑score',
 	}
 };
 
@@ -554,9 +554,9 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 						{custom, value, x, y} = this.point;
 					return `<div>
 								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
-								<div>${isSingleCell ? 'average expression' : 'mean'}: ${value.toPrecision(3)}</div>
+								<div>${isSingleCell ? 'average expression' : 'average'}: ${value.toPrecision(3)}</div>
 								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
-								<div>N: ${custom?.n || 'NaN'}</div>
+								<div>n = ${custom?.n || 'NaN'}</div>
 							</div>`;
 				},
 				hideDelay: 0,

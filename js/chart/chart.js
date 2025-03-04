@@ -280,8 +280,8 @@ var viewOptions = [
 ];
 
 var expressionOptions = [
-	{label: 'bulk data', value: 'bulk'},
-	{label: 'single cell data', value: 'singleCell'}
+	{label: 'continuous value data', value: 'bulk'},
+	{label: 'single cell count data', value: 'singleCell'}
 ];
 
 var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
@@ -492,9 +492,23 @@ function initFVCMatrices({ydata, groups, yexpression, ynonexpressed}) {
 
 	// Y data and fill in the matrix
 	ydata.forEach((ydataElement, k) => {
-		let nonExpressedSet = ynonexpressed.get(k), // set of indices for non-expressed y data (single cell mode only)
-			// prior to computing the group values, remove the non-expressed indices from the groups (single cell mode only)
-			expressedGroupsOrGroups = isSingleCell ? _.map(groups, indices => _.filter(indices, i => !nonExpressedSet.has(i))) : groups,
+		// Single cell mode:
+		// Retrieve non-expressed indices for the ydata element, and filter those indices from groups, then compute the binned values.
+		// Track how many non-expressed samples were removed from each group.
+		// Bulk mode:
+		// Just compute the binned values.
+		let nonExpressedSet = ynonexpressed.get(k),
+			nonExpressedCountByGroup = new Map(),
+			expressedGroupsOrGroups = isSingleCell ? _.map(groups, (group, g) => {
+				nonExpressedCountByGroup.set(g, 0);
+				return _.filter(group, i => {
+					if (nonExpressedSet.has(i)) {
+						nonExpressedCountByGroup.set(g, nonExpressedCountByGroup.get(g) + 1);
+						return false;
+					}
+					return true;
+				});
+			}) : groups,
 			ybinnedSample = groupValues(ydataElement, expressedGroupsOrGroups);
 
 		// Note that xCategories has already been null filtered on x, so it's not
@@ -508,7 +522,7 @@ function initFVCMatrices({ydata, groups, yexpression, ynonexpressed}) {
 				meanMatrix[i][k] = average;
 				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
 				if (isSingleCell) {
-					let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
+					let nonExpressedCount = nonExpressedCountByGroup.get(i) || 0,
 						totalCount = m + nonExpressedCount;
 					detectionMatrix[i][k] = computePctExpr(m, totalCount);
 					expressionMatrix[i][k] = computeAvgExpr(data);
@@ -1481,7 +1495,7 @@ class Chart extends PureComponent {
 		var yExpression = isDot ?
 			buildDropdown({
 				index: chartState.expressionState[ycolumn],
-				label: 'Data type',
+				label: 'View as',
 				onChange: i => set(['expressionState', chartState.ycolumn], i),
 				opts: expressionOptions}) : null;
 
