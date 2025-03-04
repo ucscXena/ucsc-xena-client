@@ -492,7 +492,7 @@ function initFVCMatrices({ydata, groups, yexpression, ynonexpressed}) {
 
 	// Y data and fill in the matrix
 	ydata.forEach((ydataElement, k) => {
-		// Single cell mode:
+		// Single cell mode (dot plot only):
 		// Retrieve non-expressed indices for the ydata element, and filter those indices from groups, then compute the binned values.
 		// Track how many non-expressed samples were removed from each group.
 		// Bulk mode:
@@ -1375,6 +1375,13 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
+function expressionMode(chartState) {
+	var {chartType, expressionState, ycolumn} = chartState;
+	if (chartType !== 'dot') {return 'bulk';}
+	// expression mode 'bulk' or 'singleCell' is available for dot plot only
+	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
+}
+
 var expressionMethods = {
 	bulk: data => new Map(_.map(data, (d, i) => [i, new Set()])),
 	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
@@ -1445,7 +1452,7 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata0),
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
-			yexpression = _.get(expressionOptions[chartState.expressionState[ycolumn]], 'value'),
+			yexpression = expressionMode(chartState),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
