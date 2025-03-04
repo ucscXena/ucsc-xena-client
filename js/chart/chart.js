@@ -1458,6 +1458,7 @@ class Chart extends PureComponent {
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
 			ymin = yMin(ydata0),
+			// 'singleCell' expression mode only for dot plots with positive ydata
 			yexpression = expressionMode(chartState, ymin),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
