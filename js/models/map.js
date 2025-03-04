@@ -1,6 +1,6 @@
 var {assoc, deepMerge, every, find, filter, findValue, first, flatmap, get, getIn,
 	identity, intersection, Let, map, mapObject, memoize1, merge, min, max,
-	mmap, object, omit, pairs, pick, pluck, updateIn, uniq, values}
+	mmap, object, omit, pairs, pick, pluck, sortByI, updateIn, uniq, values}
 		= require('../underscore_ext').default;
 var {userServers} = require('./servers');
 
@@ -303,10 +303,12 @@ export var sigValue = state =>
 
 var LetIf = (v, f) => v && f(v) ;
 
+var firstOpt = list => first(sortByI(list, 'label'));
+
 export var defaultColor = (state, cohort) =>
 	hasCellType(state, cohort) &&
-		Let(({dsID, field} = first(state.cellType[cohort]) ||
-			first(state.labelTransfer[cohort]) || first(state.signature[cohort]),
+		Let(({dsID, field} = firstOpt(state.cellType[cohort]) ||
+			firstOpt(state.labelTransfer[cohort]) || firstOpt(state.signature[cohort]),
 			{host, name} = JSON.parse(dsID)) => ({mode: 'type', host, name, field})) ||
 	LetIf(hasDonor(state, cohort), ([host, name]) =>
 		({mode: 'donor', host, name, field: '_DONOR'})) ||
