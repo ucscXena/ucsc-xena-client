@@ -22,9 +22,9 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	hasImage, isLog, log2p1, maps, otherValue, phenoValue,
 	probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get, getIn,
-	groupBy, isEqual, keys, Let, merge, object, pick, range, times, updateIn, without
-	} = require('./underscore_ext').default;
+var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
+	getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, sortBy,
+	times, updateIn, without } = require('./underscore_ext').default;
 import {kde} from './chart/chart';
 import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
@@ -165,7 +165,7 @@ function mapSelect(availableMaps, layout, selected, onChange) {
 		id: 'map-select',
 		label: `Select a ${layouts[layout]} layout`,
 		value: mapValue(availableMaps[layout], selected),
-		onChange}, ...mapOpts(opts));
+		onChange}, ...mapOpts(sortBy(opts, 'label')));
 }
 
 var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>

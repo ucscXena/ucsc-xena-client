@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
 var {assoc, assocIn, filter, find, get, getIn, identity, isMatch, Let, mapObject,
-	max, pick, pluck} = require('../underscore_ext').default;
+	max, pick, pluck, sortBy} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
@@ -46,18 +46,18 @@ var cellTypeOpts = state =>
 			 signature: {[cohort]: signature},
 			 labelTransfer: {[cohort]: labelTransfer}} = state) => ident([
 		cellType.length && [listSubheader('Cell types / clusters'),
-			...cellType.map(value => menuItem({value}, value.label))],
+			...sortBy(cellType, 'label').map(value => menuItem({value}, value.label))],
 		labelTransfer.length && [listSubheader('Transferred cell types / clusters'),
-			...labelTransfer.map(value => menuItem({value}, value.label))],
+			...sortBy(labelTransfer, 'label').map(value => menuItem({value}, value.label))],
 		signature.length && [listSubheader('Cell types by gene signatures'),
-			...signature.map(value => menuItem({value}, value.label))]]).flat());
+			...sortBy(signature, 'label').map(value => menuItem({value}, value.label))]]).flat());
 
 var filterFloat = (list, floatOnly) =>
 	floatOnly ? filter(list, {type: 'float'}) : list;
 
 // XXX Use label
 var otherOpts = (state, floatOnly) =>
-	filterFloat(state.other[datasetCohort(state)], floatOnly)
+	sortBy(filterFloat(state.other[datasetCohort(state)], floatOnly), 'field')
 		.map(value => menuItem({value}, value.field));
 
 var phenoItem = ({label, dsID, field, type}) =>
@@ -73,7 +73,7 @@ var probOpts = state =>
 		.map(type => menuItem({value: type}, type.label));
 
 var sigOpts = state =>
-	state.signatureScore[datasetCohort(state)]
+	sortBy(state.signatureScore[datasetCohort(state)], 'label')
 		.map(value => menuItem({value}, value.label));
 
 var probCellOpts = prob =>
