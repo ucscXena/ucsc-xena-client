@@ -106,7 +106,7 @@ var allCohorts1 = memoize1((studyList, id) =>
 	Let((byId = object(pluck(studyList, 'study'), studyList),
 			study = byId[id]) =>
 		studyCohorts(byId[id]).concat(...get(study, 'subStudy', [])
-			.map(sId => studyCohorts(byId[sId])))));
+			.map(({studyID}) => studyCohorts(byId[studyID])))));
 
 export var allCohorts = state =>
 	allCohorts1(getIn(state, ['defaultStudy', 'studyList'], []),
