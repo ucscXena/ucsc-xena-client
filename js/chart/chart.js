@@ -1225,6 +1225,8 @@ function addSDs({mean, sd, ...yavg}) {
 
 var inRange = (number, {max, min}) => number >= min && number <= max;
 
+var yMin = ydata => _.min(_.map(ydata, d => _.min(d)));
+
 function pickMetrics(yavg, range) {
 	if (!range) {return yavg;}
 	return Object.entries(yavg).reduce((acc,  [key, value]) => {
@@ -1375,10 +1377,13 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
-function expressionMode(chartState) {
+function expressionMode(chartState, ymin) {
 	var {chartType, expressionState, ycolumn} = chartState;
+	// 'bulk' expression mode only for chart types other than dot plot
 	if (chartType !== 'dot') {return 'bulk';}
-	// expression mode 'bulk' or 'singleCell' is available for dot plot only
+	// 'bulk' expression mode only for negative values
+	if (ymin < 0) {return 'bulk';}
+	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
 	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
 }
 
@@ -1452,7 +1457,8 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata0),
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
-			yexpression = expressionMode(chartState),
+			ymin = yMin(ydata0),
+			yexpression = expressionMode(chartState, ymin),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
@@ -1499,7 +1505,7 @@ class Chart extends PureComponent {
 				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var yExpression = isDot ?
+		var yExpression = ymin < 0 ? null : isDot ?
 			buildDropdown({
 				index: chartState.expressionState[ycolumn],
 				label: 'View as',
