@@ -195,10 +195,11 @@ class Img extends PureComponent {
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, segmentation, levels, size: [iwidth, iheight],
 				fileformat = 'png'} = imageState,
+			zoom = initialZoom(props),
 			viewState = {
-				zoom: initialZoom(props),
-				minZoom: 0,
-				maxZoom: levels + 1,
+				zoom,
+				minZoom: zoom,
+				maxZoom: levels,
 				target: [iwidth / 2, iheight / 2]
 			};
 

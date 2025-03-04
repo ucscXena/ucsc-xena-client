@@ -112,7 +112,7 @@ var getM = (s, [x, y, z = 0]) => [
 
 // Target dot radius for max zoom, assuming a roughly uniform
 // spatial distribution of data.
-var maxDotRadius = 100;
+var maxDotRadius = 10;
 
 var id = arr => arr.filter(identity);
 
@@ -168,12 +168,13 @@ class MapDrawing extends PureComponent {
 		var views, viewState;
 		if (twoD) {
 			var maxZoom =
-				Math.log2(maxDotRadius / cubeWidth * Math.sqrt(data[0].length));
+				Math.log2(maxDotRadius / cubeWidth * Math.sqrt(data[0].length)),
+				zoom = initialZoom(props);
 			// z is zero, so set far and near around it.
 			views = new OrthographicView({far: -1, near: 1});
 			viewState = {
-				zoom: initialZoom(props),
-				minZoom: 2,
+				zoom,
+				minZoom: zoom,
 				maxZoom,
 				target: Let((c = cubeWidth / 2) => [c, c, 0])
 			};
@@ -181,8 +182,8 @@ class MapDrawing extends PureComponent {
 			views = new OrbitView({});
 			viewState = {
 				zoom: 5,
-				minZoom: 2,
-				maxZoom: 12,
+				minZoom: 5,
+				maxZoom: 8,
 				target: Let((c = cubeWidth / 2) => [c, c, c])
 			};
 		}
