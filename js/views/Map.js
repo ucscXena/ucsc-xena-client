@@ -2,7 +2,7 @@ import {Icon, IconButton} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {br, div, el, img, span} from '../chart/react-hyper.js';
-var {get, getIn, identity, Let, max, min,
+var {get, getIn, identity, indexOf, Let, max, memoize1, min,
 	pick, pluck} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
@@ -256,7 +256,7 @@ var tooltipView = (state, i, onClick) =>
 
 export class Map extends PureComponent {
 	state = {
-		tooltip: -1,
+		tooltipID: undefined,
 		scale: null
 	}
 	//	For displaying FPS
@@ -292,11 +292,12 @@ export class Map extends PureComponent {
 			this.props.onViewState(viewState);
 		}
 	}
-	onTooltip = tooltip => {
-		this.setState({tooltip});
+	findSample = memoize1((samples, id) => indexOf(samples, id, true));
+	onTooltip = i => {
+		this.setState({tooltipID: getSamples(this.props.state)[i]});
 	}
 	onClose = () => {
-		this.setState({tooltip: -1});
+		this.setState({tooltipID: undefined});
 	}
 	render() {
 		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
@@ -322,13 +323,16 @@ export class Map extends PureComponent {
 				labels, viewState, image, imageState},
 			unit = get(params, 'micrometer_per_unit'),
 			drawing = image ? imgDrawing : mapDrawing,
-			{container, tooltip} = this.state;
+			{container, tooltipID} = this.state,
+			tooltip = tooltipID ?
+				this.findSample(getSamples(mapState), tooltipID) : -1;
 
 		return div({className: styles.content},
 				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
 					...(unit ? [scale(this.state.scale)] : []),
-					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] : []),
+					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] :
+						[]),
 					getStatusView({loading, error, onReload, key: 'status'}),
 					drawing({...handlers, shadow, onViewState, onDeck, onTooltip,
 					        tooltip, data, container, key: 'drawing'})));
