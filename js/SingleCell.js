@@ -607,9 +607,16 @@ var scaleSetting = (state, key) =>
 	LetIf(getIn(state, [key, 'data', 'field']), ({host, name, field}) =>
 		getIn(state, ['settings', host, name, field, 'scale']));
 
+// This is required to restore the correct color for stored float scales.
+var colorIndex = 2;
+var mergeScaleType = b => a =>
+	a[0] === 'ordinal' ? b :
+	assoc(b, colorIndex, a[colorIndex]);
+
 var mergeScale = (state, key) =>
 	Let((scale = scaleSetting(state, key)) =>
-		scale ? assocIn(state, [key, 'data', 'scale'], scale) : state);
+		scale ? updateIn(state, [key, 'data', 'scale'], mergeScaleType(scale)) :
+		state);
 
 var mergeScales = state =>
 	mergeScale(mergeScale(state, 'colorBy'), 'colorBy2');
