@@ -75,3 +75,7 @@
 .showHideButton:nth-child(2) {
 	margin-right: 8px;
 }
+
+.shadow {
+	font-size: 90%;
+}
