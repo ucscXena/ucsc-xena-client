@@ -1,25 +1,29 @@
 export type IconsId =
-  | "bar"
-  | "box"
+  | "violin"
   | "scatter"
-  | "violin";
+  | "dot"
+  | "box"
+  | "bar";
 
 export type IconsKey =
-  | "Bar"
-  | "Box"
+  | "Violin"
   | "Scatter"
-  | "Violin";
+  | "Dot"
+  | "Box"
+  | "Bar";
 
 export enum Icons {
-  Bar = "bar",
-  Box = "box",
-  Scatter = "scatter",
   Violin = "violin",
+  Scatter = "scatter",
+  Dot = "dot",
+  Box = "box",
+  Bar = "bar",
 }
 
 export const ICONS_CODEPOINTS: { [key in Icons]: string } = {
-  [Icons.Bar]: "61697",
-  [Icons.Box]: "61698",
-  [Icons.Scatter]: "61699",
-  [Icons.Violin]: "61700",
+  [Icons.Violin]: "61697",
+  [Icons.Scatter]: "61698",
+  [Icons.Dot]: "61699",
+  [Icons.Box]: "61700",
+  [Icons.Bar]: "61701",
 };

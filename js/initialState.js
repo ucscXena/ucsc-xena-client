@@ -6,7 +6,7 @@ var defaultServerState = _.object(defaultServers,
 	defaultServers.map(s => ({user: _.contains(enabledServers, s)})));
 
 const initialState = {
-	version: 4, // XXX duplicated in migrateState.js?
+	version: 5, // XXX duplicated in migrateState.js?
 	spreadsheet: {
 		columnOrder: [],
 		columns: {},
