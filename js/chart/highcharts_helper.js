@@ -498,15 +498,16 @@ var yAttribute = (element) => parseFloat(element.getAttribute('y')) || 0;
 
 var titleCSS = { fontStyle: 'italic', fontWeight: 'bold' };
 
-function renderLegendTitle({chart, exprGroup}) {
+function renderLegendTitle({chart, exprGroup, isSingleCell}) {
 	var {legend: {group, padding, title}, renderer} = chart,
 		colorAxisTitleEl = title.element.querySelector('text'), // get the color axis title element, for matrix and y attribute
 		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
 		y = yAttribute(colorAxisTitleEl),
+		titleValue = isSingleCell ? 'Expressed in Cells (%)' : title.text.textStr,
 	// create group for the legend title
 	titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
 	// render title
-	renderer.text('Expressed in Cells (%)', 0, y)
+	renderer.text(titleValue, 0, y)
 		.css(titleCSS)
 		.add(titleGroup);
 }
@@ -546,8 +547,8 @@ function renderLegendLabel({chart, exprItemGroup, isSingleCell}) {
 	var {legend: {group}, renderer} = chart,
 		colorAxis = chart.colorAxis[0],
 		{labelGroup} = colorAxis,
-		min = isSingleCell ? 0 : colorAxis.min.toFixed(2),
-		max = isSingleCell ? 100 : colorAxis.max.toFixed(2),
+		minValue = isSingleCell ? 0 : colorAxis.min.toFixed(2),
+		maxValue = isSingleCell ? 100 : colorAxis.max.toFixed(2),
 		colorAxisLabelEl = labelGroup.element.querySelector('text'), // get the color axis label element, for matrix and y attribute.
 		relMatrix = relativeMatrix(group.element, colorAxisLabelEl),
 		y = yAttribute(colorAxisLabelEl),
@@ -555,10 +556,10 @@ function renderLegendLabel({chart, exprItemGroup, isSingleCell}) {
 		// create group for the legend labels
 		labelsGroup = renderer.g('metrics-labels').translate(0, relMatrix.f).add(exprItemGroup);
 	// render legend labels
-	renderer.text(min, 0, y)
+	renderer.text(minValue, 0, y)
 		.css(labelCSS)
 		.add(labelsGroup);
-	renderer.text(max, x + width, y)
+	renderer.text(maxValue, x + width, y)
 		.attr({ align: 'right' })
 		.css({ ...labelCSS, textAlign: 'right' })
 		.add(labelsGroup);
@@ -594,9 +595,7 @@ function renderExpressionMetricsLegend({chart, isSingleCell}) {
 	chart.legend.exprGroup = exprGroup;
 
 	// render legend title
-	if (isSingleCell) {
-		renderLegendTitle({chart, exprGroup});
-	}
+	renderLegendTitle({chart, exprGroup, isSingleCell});
 
 	// render legend metrics
 	renderLegendMetrics({chart, exprItemGroup});
