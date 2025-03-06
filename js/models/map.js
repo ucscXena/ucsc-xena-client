@@ -242,6 +242,12 @@ export var hasColorBy = colorBy => getIn(colorBy, ['field', 'field']);
 export var hasColor = colorBy =>
 	hasColorBy(colorBy) && getIn(colorBy, ['data', 'req', 'values', 0]);
 
+export var hasShadow = state =>
+	hasColorBy(state.colorBy) && !hasColorBy(state.colorBy2) &&
+		!getIn(state.colorBy, ['data', 'codes']) ||
+	hasColorBy(state.colorBy) && hasColorBy(state.colorBy2) &&
+		getIn(state.colorBy, ['data', 'codes']);
+
 var colorLoadingField = (state, field) =>
 	Let((f = get(state, field)) =>
 		hasColorBy(f) &&

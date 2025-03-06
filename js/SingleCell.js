@@ -19,7 +19,7 @@ var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, defaultShadow, dotRange, getData,
-	getDataSubType, getRadius, hasImage, isLog, log2p1, maps, otherValue,
+	getDataSubType, getRadius, hasImage, hasShadow, isLog, log2p1, maps, otherValue,
 	phenoValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
@@ -215,7 +215,8 @@ var PopperProps = {
 var tooltipTab = ({title, open, ...props}) =>
 	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
-var shadowSlider = (shadow = defaultShadow, onChange) =>
+var shadowSlider = (show, shadow = defaultShadow, onChange) =>
+	!show ? null :
 	div({className: styles.shadow}, label('Cell shadow'),
 		slider({min: 0, max: 0.05, step: 0.001,
 			valueLabelDisplay: 'auto',
@@ -289,7 +290,7 @@ class MapTabs extends PureComponent {
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
 								floatOnly: true, handlers: onColorByHandlers[1]})))),
-				shadowSlider(state.shadow, onShadow)));
+				shadowSlider(hasShadow(state), state.shadow, onShadow)));
 	}
 }
 
