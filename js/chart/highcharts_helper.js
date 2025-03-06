@@ -492,6 +492,122 @@ function formatPercentage(value) {
 	return `${Math.round(value * 10000) / 100}%`;
 }
 
+var relativeMatrix = (element1, element2) => element1.getCTM().inverse().multiply(element2.getCTM());
+
+var yAttribute = (element) => parseFloat(element.getAttribute('y')) || 0;
+
+var titleCSS = { fontStyle: 'italic', fontWeight: 'bold' };
+
+function renderLegendTitle({chart, exprGroup}) {
+	var {legend: {group, padding, title}, renderer} = chart,
+		colorAxisTitleEl = title.element.querySelector('text'), // get the color axis title element, for matrix and y attribute
+		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
+		y = yAttribute(colorAxisTitleEl),
+	// create group for the legend title
+	titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
+	// render title
+	renderer.text('Expressed in Cells (%)', 0, y)
+		.css(titleCSS)
+		.add(titleGroup);
+}
+
+var metricColumnGap = 24;
+
+function renderLegendMetrics({chart, exprItemGroup}) {
+	var {legend: {group}, markerScale: {radius: {max: maxR, min: minR}}, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		{legendGroup} = colorAxis,
+		colorAxisMetricEl = legendGroup.element.querySelector('rect'), // get the color axis legend metric element, for matrix and y attribute.
+		relMatrix = relativeMatrix(group.element, colorAxisMetricEl),
+		y = yAttribute(colorAxisMetricEl),
+		// create group for the legend metrics
+		metricsGroup = renderer.g('metrics').translate(0, relMatrix.f).add(exprItemGroup),
+		// render legend metrics
+		// calculate the step (increment) between radii
+		nCircles = 5,
+		rStep = (maxR - minR) / (nCircles - 1);
+	let rXPos = minR;
+	for (let i = 0; i < nCircles; i++) {
+		// calculate the current metric's radius
+		var r = minR + rStep * i,
+			d = r * 2;
+		// render the metric symbol
+		renderer.circle(0, 0, r)
+			.attr({ fill: xenaColor.GRAY_DARK })
+			.translate(rXPos, maxR + y)
+			.add(metricsGroup);
+		rXPos += d + metricColumnGap; // increment the x position for the next symbol
+	}
+}
+
+var labelCSS = {color: '#666666', fill: '#666666', fontSize: '11px'};
+
+function renderLegendLabel({chart, exprItemGroup, isSingleCell}) {
+	var {legend: {group}, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		{labelGroup} = colorAxis,
+		min = isSingleCell ? 0 : colorAxis.min.toFixed(2),
+		max = isSingleCell ? 100 : colorAxis.max.toFixed(2),
+		colorAxisLabelEl = labelGroup.element.querySelector('text'), // get the color axis label element, for matrix and y attribute.
+		relMatrix = relativeMatrix(group.element, colorAxisLabelEl),
+		y = yAttribute(colorAxisLabelEl),
+		{x, width} = exprItemGroup.getBBox(),
+		// create group for the legend labels
+		labelsGroup = renderer.g('metrics-labels').translate(0, relMatrix.f).add(exprItemGroup);
+	// render legend labels
+	renderer.text(min, 0, y)
+		.css(labelCSS)
+		.add(labelsGroup);
+	renderer.text(max, x + width, y)
+		.attr({ align: 'right' })
+		.css({ ...labelCSS, textAlign: 'right' })
+		.add(labelsGroup);
+}
+
+function repositionLegend({chart}) {
+	var {chartWidth, legend: {group}} = chart,
+		{e} = group.element.getCTM(),
+		{width} = group.getBBox(),
+		e2 = e + width; // end 'x' position of group
+	if (e2 < chartWidth) {return;} // legend is positioned within chart area
+	var translateX = chartWidth - width;
+	group.attr({translateX});
+}
+
+function renderExpressionMetricsLegend({chart, isSingleCell}) {
+	var {legend: {group, legendWidth, padding}, markerScale, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		radius = markerScale?.radius;
+	if (!group || !markerScale || !radius) {return;}
+	if (!colorAxis.min || !colorAxis.max) {return;}
+
+	// Destroy the expression metrics legend group, if it exists
+	if (chart.legend.exprGroup) {
+		chart.legend.exprGroup.destroy();
+	}
+
+	// create groups for the legend, and position to the right of the color axis legend
+	var exprGroup = renderer.g('legend-metrics').translate(legendWidth + 16, 0).add(group),
+		exprItemGroup = renderer.g('legend-item').translate(padding, 0).add(exprGroup);
+
+	// store the expression metrics legend group
+	chart.legend.exprGroup = exprGroup;
+
+	// render legend title
+	if (isSingleCell) {
+		renderLegendTitle({chart, exprGroup});
+	}
+
+	// render legend metrics
+	renderLegendMetrics({chart, exprItemGroup});
+
+	// render legend label
+	renderLegendLabel({chart, exprItemGroup, isSingleCell});
+
+	// reposition the chart legend
+	repositionLegend({chart});
+}
+
 // Map of yexpression.ynorm values to corresponding dot plot legend title.
 var legendTitle = {
 	singleCell: {
@@ -518,6 +634,10 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 						var chart = this;
 						chart.markerScale = markerScale;
 					},
+					render: function () {
+						var chart = this;
+						renderExpressionMetricsLegend({chart, isSingleCell});
+					},
 				},
 				inverted,
 				type: 'scatter',
@@ -541,6 +661,7 @@ function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTit
 			legend: {
 				align: 'right',
 				layout: 'horizontal',
+				padding: 8,
 				symbolHeight: markerScale.radius.max * 2,
 				title: {text: legendTitle[yexpression][ynorm]},
 			},
