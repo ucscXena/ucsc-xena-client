@@ -420,6 +420,7 @@ function newChart(opts) {
 
 function sizeChartView() {
 	var chartViewEl = document.getElementById('chartView');
+	if (!chartViewEl) {return;}
 	var chartViewRect = chartViewEl.getBoundingClientRect();
 	var height = window.innerHeight - chartViewRect.top;
 	chartViewEl.style.setProperty('height', `${height}px`);

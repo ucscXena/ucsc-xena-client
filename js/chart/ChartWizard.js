@@ -20,7 +20,7 @@ import {
 } from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns, canDraw, boxOrDotOrViolinXDatasets, boxOrDotOrViolinYDatasets,
-	isFloat, scatterYDatasets, scatterXDatasets, adjustChartTypeForMode} from './utils';
+	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';
 import {h2, i, span, el} from './react-hyper';
 import classNames from 'classnames';
@@ -118,8 +118,12 @@ var boxOrDotOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 // can also draw boxplot, for multi-valued columns
 //
 
+var histOrDistChartType = {
+	dot: 'boxplot',
+};
 var histDatasets = appState => suitableColumns(appState, true);
-var histInit = ({chartState: {ycolumn, setColumn}}) => ({
+var histInit = ({chartState: {chartType, ycolumn, setColumn}}) => ({
+	chartType: histOrDistChartType[chartType] || chartType,
 	ycolumn: setColumn || v(ycolumn),
 	xcolumn: undefined
 });
@@ -199,22 +203,46 @@ var page = {
 	scatter: scatterPage,
 };
 
+var chartTypeThreshold = 70;
+
 export default class ChartWizard extends PureComponent {
 	constructor(props) {
 	    super(props);
-		var {chartState: {chartType, ycolumn, xcolumn} = {}} = this.props.appState;
+		var {chartState: {ycolumn, xcolumn} = {}} = this.props.appState;
 	    this.state = {
-			chartType,
+			chartType: undefined,
 			mode: 'start',
 			ycolumn,
 			xcolumn,
 		};
 	}
 
+	getChartType = ({mode, xcolumn, ycolumn}) => {
+		if (!xcolumn || !ycolumn) {return;}
+		if (mode === 'boxOrDotOrViolin') {
+			var {appState: {columns}} = this.props,
+				{chartType} = this.state;
+			if (!isFloat(columns, ycolumn)) {return;}
+			var {fieldList, fields, probes} = columns[ycolumn],
+				xcodemap = _.getIn(columns, [xcolumn, 'codes']),
+				yfields = probes || fieldList || fields;
+			if (xcodemap.length * yfields.length > chartTypeThreshold) {
+				if (chartType === 'dot') {return;}
+				this.setState({chartType: 'dot'});
+			} else {
+				if (chartType === 'boxplot') {return;}
+				this.setState({chartType: 'boxplot'});
+			}
+		}
+	}
 	onMode = ev => {
 		var {appState} = this.props,
-			mode = ev.currentTarget.dataset.mode;
-		this.setState({mode, ...init[mode](appState)});
+			mode = ev.currentTarget.dataset.mode,
+			nextState = init[mode](appState),
+			xcolumn = nextState?.xcolumn,
+			ycolumn = nextState?.ycolumn;
+		this.setState({mode, ...nextState});
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	onClose = () => {
 		var {callback, appState: {chartState = {}}} = this.props;
@@ -242,26 +270,30 @@ export default class ChartWizard extends PureComponent {
 			_.assoc(appState.chartState,
 				'ycolumn', ycolumn,
 				'xcolumn', xcolumn,
-				'chartType', adjustChartTypeForMode({chartType, mode}),
+				'chartType', chartType,
 				'colorColumn', mode === 'scatter' ? colorColumn : undefined,
 				'setColumn', undefined,
 				'another', false)]);
 	}
 	onX = event => {
 		var xcolumn = event.target.value;
-		var {ycolumn} = this.state;
+		var {mode, ycolumn} = this.state;
 		this.setState({xcolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
 			this.setState({ycolumn: undefined});
+			return;
 		}
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	onY = event => {
 		var ycolumn = event.target.value;
-		var {xcolumn} = this.state;
+		var {mode, xcolumn} = this.state;
 		this.setState({ycolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
 			this.setState({xcolumn: undefined});
+			return;
 		}
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	render() {
 		return page[this.state.mode](this);
