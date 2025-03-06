@@ -286,7 +286,8 @@ var controls = actionPrefix({
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
 	// XXX drop 'key', since we only do one.
-	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show)
+	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show),
+	'shadow': (state, shadow) => assoc(state, 'shadow', shadow)
 });
 
 var resetIntegration = (state = {}, params) =>

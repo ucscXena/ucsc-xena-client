@@ -332,3 +332,5 @@ export var isOrdinal = colors => colors && colors[0] === 'ordinal';
 export var log2p1 = v => Math.log2(v + 1);
 export var pow2m1 = v => Math.pow(2, v) - 1;
 export var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
+
+export var defaultShadow = 0.01;

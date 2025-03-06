@@ -18,9 +18,9 @@ import {ExpandMore} from '@material-ui/icons';
 var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
-	datasetCohort, defaultColor, dotRange, getData, getDataSubType, getRadius,
-	hasImage, isLog, log2p1, maps, otherValue, phenoValue,
-	probValue, setRadius} from './models/map';
+	datasetCohort, defaultColor, defaultShadow, dotRange, getData,
+	getDataSubType, getRadius, hasImage, isLog, log2p1, maps, otherValue,
+	phenoValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
 	getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, sortByI,
@@ -33,7 +33,6 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-import {hidden} from './nav';
 var map = el(Map);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -173,9 +172,9 @@ var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
 
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
-var vizPanel = ({layout, minT, props: {state, ...handlers}}) =>
+var vizPanel = ({layout, props: {state, ...handlers}}) =>
 	Let(({dataset} = state) =>
-		dataset ? map({state, minT, key: datasetCohort(state), ...handlers}) :
+		dataset ? map({state, key: datasetCohort(state), ...handlers}) :
 		layout ? vizText(h2(`Select a ${layouts[layout]} layout`)) :
 		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout type')));
@@ -216,6 +215,14 @@ var PopperProps = {
 var tooltipTab = ({title, open, ...props}) =>
 	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
+var shadowSlider = (shadow = defaultShadow, onChange) =>
+	div(label('Cell shadow'),
+		slider({min: 0, max: 0.05, step: 0.001,
+			valueLabelDisplay: 'auto',
+			valueLabelFormat: v => (v * 100).toPrecision(2),
+			marks: [{value: 0.01, label: 1}],
+			value: shadow, onChange}));
+
 class MapTabs extends PureComponent {
 	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false,
 		showDotSize: false}
@@ -252,7 +259,7 @@ class MapTabs extends PureComponent {
 				state: {value, showDotSize, showNext}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible, onAdvanced,
-				onLayout, onRadius, onColorByHandlers}, state,
+				onLayout, onRadius, onShadow, onColorByHandlers}, state,
 				layout}} = this,
 			showData = validDataset(state, layout),
 			showImg = !!(showData && hasImage(state));
@@ -281,7 +288,8 @@ class MapTabs extends PureComponent {
 						Let((state2 = colorBy2State(state)) =>
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
-								floatOnly: true, handlers: onColorByHandlers[1]}))))));
+								floatOnly: true, handlers: onColorByHandlers[1]})))),
+				shadowSlider(state.shadow, onShadow)));
 	}
 }
 
@@ -359,7 +367,7 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
-		layout, showColorPicker, minT, props: {state}}) =>
+		layout, showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -373,7 +381,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
-			vizPanel({layout, props: {state, minT, onTooltip, onViewState}}),
+			vizPanel({layout, props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers, layout}),
 				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
@@ -392,26 +400,9 @@ var page = state =>
 class SingleCellPage extends PureComponent {
 	constructor(props) {
 		super();
-		var mins = times(5, i => {
-			var minT = 0.01 * (i + 1);
-			return hidden.create(`min${i}`, `transparency in [${minT.toFixed(2)}, 1.0]`,
-				{onChange: en => {
-					var sMinT = this.state.minT;
-					if (en) {
-						if (sMinT) {
-							setTimeout(() =>
-								hidden.update(`min${~~(sMinT / 0.01) - 1}`), 0);
-						}
-						this.setState({minT});
-					} else if (sMinT === minT) {
-						this.setState({minT: 0});
-					}
-				}});
-		});
 
-		var minT = Let((i = mins.findIndex(x => x)) => i === -1 ? 0 : (i + 1) * 0.01);
 		this.state = {highlight: undefined, showColorPicker: false,
-			layout: getIn(props.state, ['dataset', 'type']), minT};
+			layout: getIn(props.state, ['dataset', 'type'])};
 
 		this.onColorByHandlers =
 			['colorBy', 'colorBy2'].map(key => ({
@@ -535,6 +526,10 @@ class SingleCellPage extends PureComponent {
 	}
 	onColor = colors => {
 		this.callback(['customColor', colors]);
+	}
+	onShadow = (ev, shadow) => {
+		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
+		this.callback(['shadow', isLabel ? defaultShadow : shadow]);
 	}
 	markersKey = key => {
 		this.callback(['show-markers', key, true]);

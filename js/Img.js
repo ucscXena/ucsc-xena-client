@@ -7,7 +7,8 @@ import {scatterplotLayer} from './ScatterplotLayer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
 import * as colorScales from './colorScales';
-import {hasColor, isOrdinal, layerColors, segmentedColor} from './models/map';
+import {defaultShadow, hasColor, isOrdinal, layerColors, segmentedColor} from
+	'./models/map';
 import {debounce} from './rx';
 var {get, getIn, identity, Let, pluck} = require('./underscore_ext').default;
 import highlightLayer from './views/highlightLayer';
@@ -103,7 +104,7 @@ var filterFn = (colorColumn, hideColors) =>
 	: () => 1;
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2,
-		radius, minTransparent1) =>
+		radius, minTransparent1 = defaultShadow) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -190,7 +191,7 @@ class Img extends PureComponent {
 
 		var layer0 = data && hasColor(color0) &&
 			dataLayer(data, modelMatrix, color0,
-				color1, radius, props.minT);
+				color1, radius, props.shadow);
 
 		var views = new OrthographicView({far: -1, near: 1}),
 			{inView, segmentation, levels, size: [iwidth, iheight],

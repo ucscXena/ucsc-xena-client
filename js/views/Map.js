@@ -16,7 +16,7 @@ import highlightLayer from './highlightLayer';
 import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
-import {colorError, colorLoading, dataError, dataLoading, getData,
+import {colorError, colorLoading, dataError, dataLoading, defaultShadow, getData,
 	getRadius, getSamples, hasColor, hasImage, isOrdinal} from '../models/map';
 import Img from '../Img';
 
@@ -49,7 +49,7 @@ var cvtColorScale = (colorColumn, colors) =>
 var randZ = () => Math.random() * 0.0001;
 
 const dataLayer = (data, modelMatrix, colorBy, colorBy2, radius, radiusMin,
-                   minTransparent1) =>
+                   minTransparent1 = defaultShadow) =>
 	Let((
 		colorColumn = getIn(colorBy, ['field', 'mode']) &&
 			getIn(colorBy, ['data', 'req', 'values', 0]),
@@ -190,7 +190,7 @@ class MapDrawing extends PureComponent {
 
 		var layer0 = dataLayer(data, modelMatrix, get(props.data, 'color0'),
 		                       get(props.data, 'color1'), radius * scale,
-		                       twoD ? 1 : 2, props.minT);
+		                       twoD ? 1 : 2, props.shadow);
 
 		return deckGL({
 			ref: this.props.onDeck,
@@ -303,7 +303,7 @@ export class Map extends PureComponent {
 
 		var {onViewState, onTooltip, onClose, onDeck, onReload} = this,
 			mapState = this.props.state,
-			{minT} = this.props,
+			{shadow} = mapState,
 			params = get(mapState, 'dataset', []),
 			mapData = getData(mapState),
 			color0 = get(mapState, 'colorBy'),
@@ -330,7 +330,7 @@ export class Map extends PureComponent {
 					...(unit ? [scale(this.state.scale)] : []),
 					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] : []),
 					getStatusView({loading, error, onReload, key: 'status'}),
-					drawing({...handlers, minT, onViewState, onDeck, onTooltip,
+					drawing({...handlers, shadow, onViewState, onDeck, onTooltip,
 					        tooltip, data, container, key: 'drawing'})));
 	}
 }
