@@ -19,7 +19,7 @@ import {
 	TextField
 } from '@material-ui/core';
 var _ = require('../underscore_ext').default;
-import {v, suitableColumns, canDraw, boxOrViolinXDatasets, boxOrViolinYDatasets,
+import {v, suitableColumns, canDraw, boxOrDotOrViolinXDatasets, boxOrDotOrViolinYDatasets,
 	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';
 import {h2, i, span, el} from './react-hyper';
@@ -37,7 +37,6 @@ var formLabel = el(FormLabel);
 var icon = el(Icon);
 var iconButton = el(IconButton);
 var menuItem = el(MenuItem);
-var radioGroup = el(RadioGroup);
 var select = el(TextField);
 
 var styles = require('./ChartWizard.module.css');
@@ -45,6 +44,7 @@ var sxFormControl = {'& .MuiFormControl-root': {width: 392}};
 var sxModeLabel = {alignItems: 'center', display: 'grid', gridTemplateColumns: '100px auto'};
 var sxModes = {display: 'flex', flexDirection: 'column'};
 var sxModesContainer = {display: 'flex', justifyContent: 'center'};
+var sxRadioGroup = {'&.MuiFormGroup-root': {display: 'grid', gridTemplateColumns: '1fr 1fr'}};
 
 var closeButton = onClose =>
 	iconButton({edge: 'end', onClick: onClose}, icon('close'));
@@ -67,9 +67,10 @@ var iconI = icon => i({className: classNames('icon', 'icon-' + icon), style: {fo
 // compare subgroups selections
 //
 
-var boxOrViolinModes = [
+var boxOrDotOrViolinModes = [
 	{label: box({component: 'span', sx: sxModeLabel}, span('Box plot'), iconI('box')), value: 'boxplot'},
-	{label: box({component: 'span', sx: sxModeLabel}, span('Violin plot'), iconI('violin')), value: 'violin'}
+	{label: box({component: 'span', sx: sxModeLabel}, span('Dot plot'), iconI('dot')), value: 'dot'},
+	{label: box({component: 'span', sx: sxModeLabel}, span('Violin plot'), iconI('violin')), value: 'violin'},
 ];
 
 var yIsSet = ({ycolumn}) => v(ycolumn);
@@ -79,7 +80,7 @@ var xyIsSet = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 var getX = (columns, y, id) =>
 	v(id) && id !== y && !isFloat(columns, id) ? id : undefined;
 
-var boxOrViolinInit = appState => {
+var boxOrDotOrViolinInit = appState => {
 	var {columns, chartState: {xcolumn, ycolumn, setColumn}} = appState,
 		y = v(setColumn) || v(ycolumn), // column selection, or previous view
 		x = getX(columns, y, xcolumn);
@@ -95,20 +96,20 @@ var isValid = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 var needType = (state, appState) =>
 	isValid(state) && isFloat(appState.columns, state.ycolumn);
 
-var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
+var boxOrDotOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Compare subgroups", onClose,
 			left: box({sx: {flex: 1}}, button({color: 'default', onClick: onMode, 'data-mode': 'start'}, 'Back')),
 			right: doneButton(isValid(state) && onDone)},
 		box({sx: sxModesContainer}, box({sx: {...sxModes, ...sxFormControl, gap: 8}},
 			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Show data from', onChange: onY,
-					select: true, value: state.ycolumn || ''}, selectOptions(boxOrViolinYDatasets(appState))),
+					select: true, value: state.ycolumn || ''}, selectOptions(boxOrDotOrViolinYDatasets(appState))),
 			select({SelectProps: {MenuProps: {style: {width: 392}}}, label: 'Subgroup samples by', onChange: onX,
-				select: true, value: state.xcolumn || ''}, selectOptions(boxOrViolinXDatasets(appState))),
+				select: true, value: state.xcolumn || ''}, selectOptions(boxOrDotOrViolinXDatasets(appState))),
 			needType(state, appState) ?
 				formControl(formLabel('I want a'),
-					radioGroup({name: 'boxOrViolin', onChange: onChart, value: state.violin ? 'violin' : 'boxplot'},
-						...boxOrViolinModes.map(({label, value}) =>
+					box({component: RadioGroup, name: 'boxOrDotOrViolin', onChange: onChart, row: true, sx: sxRadioGroup, value: state.chartType || 'boxplot'},
+						...boxOrDotOrViolinModes.map(({label, value}) =>
 							formControlLabel({control: <Radio />, key: value, label, value})))) :
 				null)));
 
@@ -117,8 +118,12 @@ var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 // can also draw boxplot, for multi-valued columns
 //
 
+var histOrDistChartType = {
+	dot: 'boxplot',
+};
 var histDatasets = appState => suitableColumns(appState, true);
-var histInit = ({chartState: {ycolumn, setColumn}}) => ({
+var histInit = ({chartState: {chartType, ycolumn, setColumn}}) => ({
+	chartType: histOrDistChartType[chartType] || chartType,
 	ycolumn: setColumn || v(ycolumn),
 	xcolumn: undefined
 });
@@ -154,25 +159,25 @@ var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}
 var noop = () => {};
 var init = {
 	start: noop,
-	boxOrViolin: boxOrViolinInit,
+	boxOrDotOrViolin: boxOrDotOrViolinInit,
 	histOrDist: histInit,
 	scatter: scatterInit,
 };
 
 var modeTxt = {
-	boxOrViolin: 'compare',
+	boxOrDotOrViolin: 'compare',
 	histOrDist: 'distribution',
 	scatter: 'scatter'
 };
 
 var startModes = [
-	{'data-mode': 'boxOrViolin', label: 'Compare subgroups'},
+	{'data-mode': 'boxOrDotOrViolin', label: 'Compare subgroups'},
 	{'data-mode': 'histOrDist', label: 'See a column distribution'},
 	{'data-mode': 'scatter', label: 'Make a scatter plot'}
 ];
 
 var icons = {
-	boxOrViolin: iconI('box'),
+	boxOrDotOrViolin: iconI('box'),
 	histOrDist: iconI('bar'),
 	scatter: iconI('scatter')
 };
@@ -193,27 +198,51 @@ var startPage = ({onMode, onClose, props: {appState}}) =>
 
 var page = {
 	start: startPage,
-	boxOrViolin: boxOrViolinPage,
+	boxOrDotOrViolin: boxOrDotOrViolinPage,
 	histOrDist: histOrDistPage,
 	scatter: scatterPage,
 };
 
+var chartTypeThreshold = 70;
+
 export default class ChartWizard extends PureComponent {
 	constructor(props) {
 	    super(props);
-		var {chartState: {ycolumn, xcolumn, violin} = {}} = this.props.appState;
+		var {chartState: {ycolumn, xcolumn} = {}} = this.props.appState;
 	    this.state = {
+			chartType: undefined,
 			mode: 'start',
 			ycolumn,
 			xcolumn,
-			violin
 		};
 	}
 
+	getChartType = ({mode, xcolumn, ycolumn}) => {
+		if (!xcolumn || !ycolumn) {return;}
+		if (mode === 'boxOrDotOrViolin') {
+			var {appState: {columns}} = this.props,
+				{chartType} = this.state;
+			if (!isFloat(columns, ycolumn)) {return;}
+			var {fieldList, fields, probes} = columns[ycolumn],
+				xcodemap = _.getIn(columns, [xcolumn, 'codes']),
+				yfields = probes || fieldList || fields;
+			if (xcodemap.length * yfields.length > chartTypeThreshold) {
+				if (chartType === 'dot') {return;}
+				this.setState({chartType: 'dot'});
+			} else {
+				if (chartType === 'boxplot') {return;}
+				this.setState({chartType: 'boxplot'});
+			}
+		}
+	}
 	onMode = ev => {
 		var {appState} = this.props,
-			mode = ev.currentTarget.dataset.mode;
-		this.setState({mode, ...init[mode](appState)});
+			mode = ev.currentTarget.dataset.mode,
+			nextState = init[mode](appState),
+			xcolumn = nextState?.xcolumn,
+			ycolumn = nextState?.ycolumn;
+		this.setState({mode, ...nextState});
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	onClose = () => {
 		var {callback, appState: {chartState = {}}} = this.props;
@@ -227,40 +256,44 @@ export default class ChartWizard extends PureComponent {
 		callback([chartState.another ? 'chart' : 'heatmap']);
 	}
 	onChart = event => {
-		this.setState({violin: event.target.value === 'violin'});
+		this.setState({chartType: event.target.value});
 	}
 	onDone = () => {
 		var {callback, appState} = this.props,
 			{chartState: {colorColumn} = {}} = appState,
-			{ycolumn, xcolumn, violin, mode} = this.state;
+			{chartType, ycolumn, xcolumn, mode} = this.state;
 		gaEvents('chart', modeTxt[mode]);
-		if (mode === 'boxOrViolin') {
-			gaEvents('chart', violin ? 'violin' : 'boxplot');
+		if (mode === 'boxOrDotOrViolin') {
+			chartType && gaEvents('chart', chartType);
 		}
 		callback(['chart-set-state',
 			_.assoc(appState.chartState,
 				'ycolumn', ycolumn,
 				'xcolumn', xcolumn,
+				'chartType', chartType,
 				'colorColumn', mode === 'scatter' ? colorColumn : undefined,
-				'violin', violin,
 				'setColumn', undefined,
 				'another', false)]);
 	}
 	onX = event => {
 		var xcolumn = event.target.value;
-		var {ycolumn} = this.state;
+		var {mode, ycolumn} = this.state;
 		this.setState({xcolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
 			this.setState({ycolumn: undefined});
+			return;
 		}
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	onY = event => {
 		var ycolumn = event.target.value;
-		var {xcolumn} = this.state;
+		var {mode, xcolumn} = this.state;
 		this.setState({ycolumn});
 		if (ycolumn === xcolumn) { // disallow x = y
 			this.setState({xcolumn: undefined});
+			return;
 		}
+		this.getChartType({mode, xcolumn, ycolumn});
 	}
 	render() {
 		return page[this.state.mode](this);
