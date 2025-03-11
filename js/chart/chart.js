@@ -32,6 +32,7 @@ import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
 import {xenaColor} from '../xenaColor';
+var {applyExpression, computeAvgExpr, computePctExpr} = require('./singleCell');
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
 
@@ -449,18 +450,6 @@ function boxplotPoint(data) {
 
 	// This must match BOX order
 	return [lowerwhisker, lower, median, upper, upperwhisker];
-}
-
-function computeAvgExpr(expressedData) {
-	if (expressedData.length === 0) {return 0;}
-	// compute the average expression from non-zero values
-	return expressedData.reduce((sum, v) => sum + v, 0) / expressedData.length;
-}
-
-function computePctExpr(expressedCount, totalCount) {
-	if (totalCount === 0) {return 0;}
-	// compute % of cells with expression levels greater than zero
-	return expressedCount / totalCount;
 }
 
 // poor man's lazy seq
@@ -1387,13 +1376,6 @@ function expressionMode(chartState, ymin) {
 	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
 	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
 }
-
-var expressionMethods = {
-	bulk: data => new Map(_.map(data, (d, i) => [i, new Set()])),
-	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
-};
-
-var applyExpression = (data, expression) => expressionMethods[expression](data);
 
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));

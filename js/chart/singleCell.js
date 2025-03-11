@@ -1,0 +1,50 @@
+var _ = require('../underscore_ext').default;
+
+/**
+ * Methods for computing non-expressed indices.
+ * In "bulk" mode we return an empty set for each series.
+ * In "singleCell" mode we return a set of indices where the value is ≤ 0.
+ */
+var expressionMethods = {
+	bulk: data => new Map(_.map(data, (d, i) => [i, new Set()])),
+	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
+};
+
+/**
+ * Apply the appropriate expression method based on the given mode.
+ * @param data - Array of numeric arrays (one per series).
+ * @param expression - Either "bulk" or "singleCell".
+ * @returns Map from series index to a set of non-expressed indices.
+ */
+var applyExpression = (data, expression = 'bulk') => expressionMethods[expression](data);
+
+/**
+ * Compute the average expression from non-zero values.
+ * @param expressedData - Array of expression values.
+ * @returns The average expression, or 0 if the array is empty.
+ */
+function computeAvgExpr(expressedData) {
+	if (expressedData.length === 0) {
+		return 0;
+	}
+	return expressedData.reduce((sum, v) => sum + v, 0) / expressedData.length;
+}
+
+/**
+ * Compute the percentage of expressed cells.
+ * @param expressedCount - Count of cells with expression > 0.
+ * @param totalCount - Total cell count (expressed + non-expressed).
+ * @returns The fraction of cells that are expressed.
+ */
+function computePctExpr(expressedCount, totalCount) {
+	if (totalCount === 0) {
+		return 0;
+	}
+	return expressedCount / totalCount;
+}
+
+module.exports = {
+	applyExpression,
+	computeAvgExpr,
+	computePctExpr,
+};
