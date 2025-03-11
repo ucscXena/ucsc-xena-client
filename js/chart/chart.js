@@ -32,6 +32,7 @@ import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
 import {xenaColor} from '../xenaColor';
+var {groupValues} = require('./dataUtils');
 var {applyExpression, computeAvgExpr, computePctExpr} = require('./singleCell');
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
@@ -137,9 +138,6 @@ function groupIndex(field) {
 	delete groups.NaN;
 	return groups;
 }
-
-var groupValues = (field, groups) =>
-	groups.map(indices => indices.map(i => field[i]).filter(x => !isNaN(x)));
 
 // utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
 // spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
