@@ -23,6 +23,7 @@ require('./Legend');
 require('./drawHeatmap');
 require('./binpackJSON');
 require('./singleCell');
+require('./fvc');
 
 var xenaWasm = require('../js/xenaWasm');
 xenaWasm.loaded.then(() => run());

@@ -4,18 +4,14 @@ var assert = require('assert');
 
 describe('singleCell', function () {
 	describe('#applyExpression', function () {
-		var data = [
-			[1, 2, 3, 4],
-			[-1, 0, 1, 0],
-			[5, 6, 7, 8]
-		];
-		it('should return empty sets for undefined mode', function () {
+		var data = [[1, 2, 3, 4], [-1, 0, 1, 0], [5, 6, 7, 8]];
+		it('should return empty map for undefined mode', function () {
 			var res = sc.applyExpression(data, undefined);
-			res.forEach(r => assert.deepEqual([...r], []));
+			assert.deepEqual([...res], []);
 		});
-		it('should return empty sets for "bulk" mode', function () {
+		it('should return empty map for "bulk" mode', function () {
 			var res = sc.applyExpression(data, 'bulk');
-			res.forEach(r => assert.deepEqual([...r], []));
+			assert.deepEqual([...res], []);
 		});
 		it('should return indices of non-expressed values for "singleCell" mode', function () {
 			var res = sc.applyExpression(data, 'singleCell'),
