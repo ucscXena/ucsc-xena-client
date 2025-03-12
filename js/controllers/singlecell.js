@@ -244,6 +244,11 @@ var actionPrefix = actions =>
 var reset = state => assoc(state, 'dataset', null, 'data', {},
 	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null);
 
+var setColorBy = (state, key, colorBy) =>
+	Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
+		assocIn(next, [key, 'field'], colorBy,
+			[key, 'hidden'], null));
+
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
@@ -251,11 +256,10 @@ var controls = actionPrefix({
 	dataset: (state, dataset, colorBy, colorBy2) => assoc(state, 'dataset', dataset,
 		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null),
 	reset,
-	advanced: state => updateIn(state, ['advanced'],  a => !a),
 	colorBy: (state, key, colorBy) =>
-		Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
-			assocIn(next, [key, 'field'], colorBy,
-				[key, 'hidden'], null)),
+		Let((next = setColorBy(state, key, colorBy)) =>
+			key === 'colorBy' && !colorBy.mode ? // reset colorBy2 if no colorBy
+				setColorBy(next, 'colorBy2', {mode: ''}) : next),
 	colorScale: (state, key, scale) =>
 		Let(({field: {host, name, field}} = state[key]) =>
 			assocIn(state, ['settings', host, name, field, 'scale'], scale)),

@@ -79,3 +79,18 @@
 .shadow {
 	font-size: 90%;
 }
+
+.blendWith {
+	margin-top: 10px;
+	font-size: 90%;
+}
+
+.colorBy2 {
+	display: grid;
+	grid-template-columns: auto, 1fr;
+	justify-items: end;
+}
+
+.colorBy2 > :nth-child(1) {
+	font-size: 20px;
+}

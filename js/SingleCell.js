@@ -11,7 +11,7 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Accordion, AccordionDetails, AccordionSummary, Button, createTheme, Icon,
+import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Slider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
 import {ExpandMore} from '@material-ui/icons';
@@ -51,6 +51,7 @@ var slider = el(Slider);
 var muiThemeProvider = el(MuiThemeProvider);
 var imgControls = el(ImgControls);
 var tooltip = el(Tooltip);
+var card = el(Card);
 
 var firstMatch = (el, selector) =>
 	el.matches(selector) ? el :
@@ -146,7 +147,8 @@ var layoutSelect = ({onLayout, layout, state}) =>
 	xRadioGroup({label: 'Select layout type', value: layout || '',
 		onChange: onLayout,
 		options:
-		availableCategories(available(state)).map(l => ({label: layouts[l], value: l}))});
+		availableCategories(available(state))
+			.map(l => ({label: layouts[l], value: l}))});
 
 var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
@@ -224,9 +226,11 @@ var shadowSlider = (show, shadow = defaultShadow, onChange) =>
 			marks: [{value: 0.01, label: 1}],
 			value: shadow, onChange}));
 
+var hasColorBy = state => getIn(state, ['field', 'mode']);
+
 class MapTabs extends PureComponent {
 	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false,
-		showDotSize: false}
+		showDotSize: false, showColorBy2: false}
 	componentWillUnmount() {
 		this.showNext && clearTimeout(this.showNext);
 		this.hideNext && clearTimeout(this.hideNext);
@@ -240,6 +244,13 @@ class MapTabs extends PureComponent {
 	}
 	onShowDotSize = () => {
 		this.setState({showDotSize: !this.state.showDotSize});
+	}
+	onShowColorBy2 = () => {
+		this.setState({showColorBy2: true});
+	}
+	onHideColorBy2 = () => {
+		this.setState({showColorBy2: false});
+		this.props.handlers.onColorByHandlers[1].onColorBy({mode: ''});
 	}
 	onDataset = (...args) => {
 		if (!this.state.showedNext) {
@@ -256,10 +267,10 @@ class MapTabs extends PureComponent {
 		this.props.handlers.onDataset(...args);
 	}
 	render() {
-		var {onChange, onDataset, onShowDotSize,
-				state: {value, showDotSize, showNext}, props:
+		var {onChange, onDataset, onShowDotSize, onShowColorBy2, onHideColorBy2,
+				state: {value, showDotSize, showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
-				onBackgroundOpacity, onBackgroundVisible, onAdvanced,
+				onBackgroundOpacity, onBackgroundVisible,
 				onLayout, onRadius, onShadow, onColorByHandlers}, state,
 				layout}} = this,
 			showData = validDataset(state, layout),
@@ -273,23 +284,27 @@ class MapTabs extends PureComponent {
 					open: !showImg && showData && showNext, disabled: !showData}),
 			),
 			tabPanel({value, index: 0},
-				layoutSelect({onLayout, layout, state}),
-				mapSelectIfLayout(available(state), layout,
-					state.dataset, onDataset),
+				card(layoutSelect({onLayout, layout, state}),
+				     mapSelectIfLayout(available(state), layout,
+				     state.dataset, onDataset)),
 				dotSize(state, onRadius, showDotSize, onShowDotSize)),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
 			tabPanel({value, index: 2},
-				mapColor({key: datasetCohort(state), state,
-					handlers: onColorByHandlers[0]}),
-				accordion({expanded: !!state.advanced, onChange: onAdvanced},
-					accordionSummary({expandIcon: expandMore()}, 'Blend with'),
-					accordionDetails({className: styles.advanced},
-						Let((state2 = colorBy2State(state)) =>
+				card(mapColor({key: datasetCohort(state), state,
+					handlers: onColorByHandlers[0]})),
+				!hasColorBy(state.colorBy) ? null :
+					!showColorBy2 && !hasColorBy(state.colorBy2) ?
+						div({className: styles.blendWith, onClick: onShowColorBy2},
+							iconButton(icon('addCircle')),
+							label('Blend color with')) :
+					Let((state2 = colorBy2State(state)) =>
+						card({className: styles.colorBy2},
+							icon({onClick: onHideColorBy2}, 'close'),
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
-								floatOnly: true, handlers: onColorByHandlers[1]})))),
+								floatOnly: true, handlers: onColorByHandlers[1]}))),
 				shadowSlider(hasShadow(state), state.shadow, onShadow)));
 	}
 }
@@ -303,7 +318,6 @@ var shButton = (onClick, txt) =>
 var showHideButtons = ({onHideAll, onShowAll}) =>
 	fragment(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
 
-var hasColorBy = state => getIn(state, ['field', 'mode']);
 var hasColorByData = state =>
 	hasColorBy(state) && getIn(state, ['data', 'req', 'values', 0]);
 var hasCodes = state => hasColorBy(state) && getIn(state, ['data', 'codes']);
@@ -426,9 +440,6 @@ class SingleCellPage extends PureComponent {
 	}
 	onViewState = viewState => {
 		this.callback(['view-state', viewState]);
-	}
-	onAdvanced = () => {
-		this.callback(['advanced']);
 	}
 	onEnter = () => {
 		this.callback(['enter']);
