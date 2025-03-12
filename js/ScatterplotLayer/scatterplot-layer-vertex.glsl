@@ -58,7 +58,7 @@ void main(void) {
     project_size_to_pixel(radiusScale * instanceRadius, radiusUnits),
     radiusMinPixels, radiusMaxPixels
   );
-  if (outerRadiusPixels > 10.) {
+  if (!picking_uActive && outerRadiusPixels > 10.) {
       stroked = 1.;
   } else {
       stroked = 0.;
