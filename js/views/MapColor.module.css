@@ -1,7 +1,9 @@
 .distributionSlider {
+	width: 100%;
 	position: relative;
     line-height: 0;
 	padding-bottom: 5px;
+	margin-top: 10px;
 }
 
 .distributionSlider svg {
