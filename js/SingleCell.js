@@ -15,7 +15,6 @@ import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Slider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
 import {ExpandMore} from '@material-ui/icons';
-var XRadioGroup = require('./views/XRadioGroup');
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, defaultShadow, dotRange, getData,
@@ -23,7 +22,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	phenoValue, probValue, setRadius} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
-	getIn, groupBy, isEqual, keys, Let, merge, object, pick, range, sortByI,
+	getIn, groupBy, isEqual, Let, merge, object, pick, range, sortByI,
 	times, updateIn, without } = require('./underscore_ext').default;
 import {kde} from './chart/chart';
 import singlecellLegend from './views/singlecellLegend';
@@ -39,7 +38,6 @@ var accordion = el(Accordion);
 var accordionDetails = el(AccordionDetails);
 var accordionSummary = el(AccordionSummary);
 var expandMore = el(ExpandMore);
-var xRadioGroup = el(XRadioGroup);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -126,29 +124,12 @@ var integration = ({handlers: {onHighlight, onIntegration}, highlight,
 
 // Page layout after selecting integration
 
-var layouts = {
-	'embedding': 'UMAP/t-SNE',
-	'spatial': 'Spatial'
-};
-
-var available = state =>
-	groupBy(get(state, 'map'), 'type');
-
-var availableCategories = available => keys(pick(layouts, keys(available)));
-
 var integrationLabel = state =>
 	state.defaultStudy ?
 		getIn(state, ['defaultStudy', 'studyList'])
 			.find(c => c.study === state.integration).label :
 	'';
 
-
-var layoutSelect = ({onLayout, layout, state}) =>
-	xRadioGroup({label: 'Select layout type', value: layout || '',
-		onChange: onLayout,
-		options:
-		availableCategories(available(state))
-			.map(l => ({label: layouts[l], value: l}))});
 
 var getOpt = opt => menuItem({value: opt.value}, opt.label);
 
@@ -160,26 +141,22 @@ var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
 	Object.keys(g).sort().map(k =>
 		[listSubheader(subHeaderOpt, k), ...g[k].map(getOpt)]).flat());
 
-function mapSelect(availableMaps, layout, selected, onChange) {
-	var opts = availableMaps[layout].map((m, i) => assoc(m, 'value', i));
+function mapSelect(availableMaps, selected, onChange) {
+	var opts = availableMaps.map((m, i) => assoc(m, 'value', i));
 	return xSelect({
 		id: 'map-select',
-		label: `Select a ${layouts[layout]} layout`,
-		value: mapValue(availableMaps[layout], selected),
+		label: `Select a layout`,
+		value: mapValue(availableMaps, selected),
 		onChange}, ...mapOpts(sortByI(opts, 'label')));
 }
 
-var mapSelectIfLayout = (availableMaps, layout, selected, onChange) =>
-	layout ? mapSelect(availableMaps, layout, selected, onChange) : div();
-
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
-var vizPanel = ({layout, props: {state, ...handlers}}) =>
+var vizPanel = ({props: {state, ...handlers}}) =>
 	Let(({dataset} = state) =>
 		dataset ? map({state, key: datasetCohort(state), ...handlers}) :
-		layout ? vizText(h2(`Select a ${layouts[layout]} layout`)) :
 		vizText(h2('All Xena derived data is in beta'),
-			h2('Select a layout type')));
+			h2('Select a layout')));
 
 var hasColorBy = state => getIn(state, ['field', 'mode']);
 
@@ -203,9 +180,6 @@ var dotSize = (state, onChange, showDotSize, onShowDotSize) =>
 
 var colorBy2State = state => assoc(state,
 	'colorBy', get(state, 'colorBy2'));
-
-var validDataset = (state, layout) =>
-	getIn(state, ['dataset', 'type']) === layout;
 
 var imgDisplay = showImg => showImg ? {} : {style: {display: 'none'}};
 
@@ -271,22 +245,18 @@ class MapTabs extends PureComponent {
 				state: {value, showDotSize, showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible,
-				onLayout, onRadius, onShadow, onColorByHandlers}, state,
-				layout}} = this,
-			showData = validDataset(state, layout),
-			showImg = !!(showData && hasImage(state));
+				onRadius, onShadow, onColorByHandlers}, state}} = this,
+			showImg = !!hasImage(state);
 		return div({className: styles.maptabs},
 			tabs({value, onChange, variant: 'fullWidth'},
 				tab({label: 'Layout'}),
 				tooltipTab({title: 'Next: explore image layers', open: showImg
 					&& showNext, label: 'Image', ...imgDisplay(showImg)}),
 				tooltipTab({title: 'Next: explore omics', label: 'Data',
-					open: !showImg && showData && showNext, disabled: !showData}),
+					open: !showImg && showNext}),
 			),
 			tabPanel({value, index: 0},
-				card(layoutSelect({onLayout, layout, state}),
-				     mapSelectIfLayout(available(state), layout,
-				     state.dataset, onDataset)),
+				card(mapSelect(get(state, 'map'), state.dataset, onDataset)),
 				dotSize(state, onRadius, showDotSize, onShowDotSize)),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
@@ -382,7 +352,7 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
-		layout, showColorPicker, props: {state}}) =>
+		showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
 		h2(integrationLabel(state), closeButton(onReset)),
@@ -396,9 +366,9 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
-			vizPanel({layout, props: {state, onTooltip, onViewState}}),
+			vizPanel({props: {state, onTooltip, onViewState}}),
 			div({className: styles.sidebar},
-				mapTabs({state, handlers, layout}),
+				mapTabs({state, handlers}),
 				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
 				legend(state.colorBy, cellTypeMarkers(state),
 				       handlers.onColorByHandlers[0]),
@@ -413,11 +383,10 @@ var page = state =>
 	welcome;
 
 class SingleCellPage extends PureComponent {
-	constructor(props) {
+	constructor() {
 		super();
 
-		this.state = {highlight: undefined, showColorPicker: false,
-			layout: getIn(props.state, ['dataset', 'type'])};
+		this.state = {highlight: undefined, showColorPicker: false};
 
 		this.onColorByHandlers =
 			['colorBy', 'colorBy2'].map(key => ({
@@ -457,13 +426,10 @@ class SingleCellPage extends PureComponent {
 		this.callback(['integration',
 			this.props.state.defaultStudy.studyList[row].study]);
 	}
-	onLayout = layout => {
-		this.setState({layout});
-	}
 	onDataset = ev => {
-		var {props: {state}, state: {layout}} = this,
+		var {props: {state}} = this,
 			i = parseInt(ev.target.value, 10),
-			dataset = available(state)[layout][i],
+			dataset = state.map[i],
 			colorBy =
 				dataset.cohort === datasetCohort(state) ? state.colorBy :
 				dataset.image ? {} :
@@ -474,7 +440,6 @@ class SingleCellPage extends PureComponent {
 		this.callback(['dataset', dataset, colorBy, colorBy2]);
 	}
 	onReset = () => {
-		this.setState({layout: null});
 		this.callback(['reset']);
 	}
 	colorByKey(key, colorBy) {
