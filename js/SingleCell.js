@@ -181,6 +181,8 @@ var vizPanel = ({layout, props: {state, ...handlers}}) =>
 		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout type')));
 
+var hasColorBy = state => getIn(state, ['field', 'mode']);
+
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 
 var tabPanel = ({value, index}, ...children) =>
@@ -188,7 +190,7 @@ var tabPanel = ({value, index}, ...children) =>
 
 var labelFormat = v => v.toPrecision(2);
 var dotSize = (state, onChange, showDotSize, onShowDotSize) =>
-	!state.dataset || !state.radiusBase ? null :
+	!state.dataset || !state.radiusBase || !hasColorBy(state.colorBy) ? null :
 	accordion({expanded: !!showDotSize, onChange: onShowDotSize},
 		accordionSummary({expandIcon: expandMore()}, 'Advanced'),
 		accordionDetails({className: styles.advanced},
@@ -225,8 +227,6 @@ var shadowSlider = (show, shadow = defaultShadow, onChange) =>
 			valueLabelFormat: v => (v * 100).toPrecision(2),
 			marks: [{value: 0.01, label: 1}],
 			value: shadow, onChange}));
-
-var hasColorBy = state => getIn(state, ['field', 'mode']);
 
 class MapTabs extends PureComponent {
 	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false,
