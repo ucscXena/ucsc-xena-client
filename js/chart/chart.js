@@ -1308,7 +1308,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, hasStats: false, inverted: false, range: undefined, view: undefined};
+		this.state = {advanced: false, hasStats: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1318,7 +1318,7 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, hasStats, inverted, range, view} = this.state,
+			{advanced, hasStats, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
@@ -1339,7 +1339,7 @@ class Chart extends PureComponent {
 					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, colorColumn} = chartState,
+		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
 			{columns} = xenaState,
 			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1395,7 +1395,7 @@ class Chart extends PureComponent {
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
 				'Swap X and Y') : null;
 		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
-				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
+				onClick: () => set(['inverted'], !inverted), variant: 'contained'},
 				'Swap X and Y') : null;
 
 		var yExpression = ymin < 0 ? null : isDot ?
