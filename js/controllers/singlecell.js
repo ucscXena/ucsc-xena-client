@@ -225,7 +225,7 @@ var {controller: fetchController/*, invalidatePath*/} =
 var actionPrefix = actions =>
 	object(pairs(actions).map(([k, v]) => ['singlecell-' + k, v]));
 
-var reset = state => assoc(state, 'dataset', null, 'data', {},
+var reset = state => assoc(state, 'dataset', null, 'data', {}, 'tab', 0,
 	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null);
 
 var setColorBy = (state, key, colorBy) =>
