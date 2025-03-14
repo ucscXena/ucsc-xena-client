@@ -1,20 +1,21 @@
+var {mapToBitmap} = require('../models/bitmap');
 var _ = require('../underscore_ext').default;
 
 /**
  * Methods for computing non-expressed indices.
  * "bulk" mode returns null.
- * "singleCell" mode returns a set of indices where the value is ≤ 0.
+ * "singleCell" mode returns, for each data array, a bitmap where bits are set for indices where the value is ≤ 0.
  */
 var expressionMethods = {
 	bulk: () => null,
-	singleCell: data => _.map(data, d => new Set(_.filter(_.range(d.length), i => d[i] <= 0))),
+	singleCell: data => _.map(data, d => mapToBitmap(_.range(d.length), i => d[i] <= 0)),
 };
 
 /**
  * Apply the appropriate expression method based on the given mode.
  * @param data - Array of numeric arrays (one per series).
  * @param expression - Either "bulk" or "singleCell".
- * @returns Map from series index to a set of non-expressed indices.
+ * @returns For each data array, a bitmap where bits are set for non-expressed indices.
  */
 var applyExpression = (data, expression = 'bulk') => expressionMethods[expression](data);
 

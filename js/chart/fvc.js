@@ -1,6 +1,7 @@
 var dataUtils = require('./dataUtils');
 var highchartsHelper = require('./highcharts_helper');
 var sCell = require('./singleCell');
+var {isSet} = require('../models/bitmap');
 var _ = require('../underscore_ext').default;
 
 var BOXLEN = 5;
@@ -58,12 +59,12 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 		// Track how many non-expressed samples were removed from each group.
 		// Bulk mode:
 		// Just compute the binned values.
-		let nonExpressedSet = ynonexpressed ? ynonexpressed[k] : null,
+		let nonExpressed = ynonexpressed ? ynonexpressed[k] : null,
 			nonExpressedCountByGroup = new Map(),
 			expressedGroupsOrGroups = isSingleCell ? _.map(groups, (group, g) => {
 				nonExpressedCountByGroup.set(g, 0);
 				return _.filter(group, i => {
-					if (nonExpressedSet.has(i)) {
+					if (isSet(nonExpressed, i)) {
 						nonExpressedCountByGroup.set(g, nonExpressedCountByGroup.get(g) + 1);
 						return false;
 					}

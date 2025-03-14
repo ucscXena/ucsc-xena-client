@@ -1,5 +1,6 @@
 /*global describe: false, it: false, require: false */
 var sc = require('../js/chart/singleCell');
+var {fromBitmap} = require('../js/models/bitmap');
 var assert = require('assert');
 
 describe('singleCell', function () {
@@ -13,10 +14,10 @@ describe('singleCell', function () {
 			var res = sc.applyExpression(data, 'bulk');
 			assert.equal(res, null);
 		});
-		it('should return indices of non-expressed values for "singleCell" mode', function () {
+		it('should return bitmaps with correct bits set for non-expressed values in "singleCell" mode', function () {
 			var res = sc.applyExpression(data, 'singleCell'),
 				exp = [[], [0, 1, 3], []];
-			res.forEach((r, i) => assert.deepEqual([...r], exp[i]));
+			res.forEach((bitmap, i) => assert.deepEqual(fromBitmap(bitmap), exp[i]));
 		});
 	});
 	describe('#computeAvgExpr', function () {
