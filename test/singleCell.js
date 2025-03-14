@@ -5,13 +5,13 @@ var assert = require('assert');
 describe('singleCell', function () {
 	describe('#applyExpression', function () {
 		var data = [[1, 2, 3, 4], [-1, 0, 1, 0], [5, 6, 7, 8]];
-		it('should return empty map for undefined mode', function () {
+		it('should return null for undefined mode', function () {
 			var res = sc.applyExpression(data, undefined);
-			assert.deepEqual([...res], []);
+			assert.equal(res, null);
 		});
-		it('should return empty map for "bulk" mode', function () {
+		it('should return null for "bulk" mode', function () {
 			var res = sc.applyExpression(data, 'bulk');
-			assert.deepEqual([...res], []);
+			assert.equal(res, null);
 		});
 		it('should return indices of non-expressed values for "singleCell" mode', function () {
 			var res = sc.applyExpression(data, 'singleCell'),

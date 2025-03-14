@@ -6,7 +6,7 @@ var _ = require('../underscore_ext').default;
  * In "singleCell" mode we return a set of indices where the value is ≤ 0.
  */
 var expressionMethods = {
-	bulk: () => new Map(),
+	bulk: () => null,
 	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
 };
 

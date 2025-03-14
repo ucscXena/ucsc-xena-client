@@ -58,7 +58,7 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 		// Track how many non-expressed samples were removed from each group.
 		// Bulk mode:
 		// Just compute the binned values.
-		let nonExpressedSet = ynonexpressed.get(k),
+		let nonExpressedSet = ynonexpressed ? ynonexpressed.get(k) : new Set(),
 			nonExpressedCountByGroup = new Map(),
 			expressedGroupsOrGroups = isSingleCell ? _.map(groups, (group, g) => {
 				nonExpressedCountByGroup.set(g, 0);
