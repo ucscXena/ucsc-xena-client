@@ -203,14 +203,14 @@ var shadowSlider = (show, shadow = defaultShadow, onChange) =>
 			value: shadow, onChange}));
 
 class MapTabs extends PureComponent {
-	state = {value: 0, showedNext: !!localStorage.showedNext, showNext: false,
+	state = {showedNext: !!localStorage.showedNext, showNext: false,
 		showDotSize: false, showColorBy2: false}
 	componentWillUnmount() {
 		this.showNext && clearTimeout(this.showNext);
 		this.hideNext && clearTimeout(this.hideNext);
 	}
 	onChange = (ev, value) => {
-		this.setState({value});
+		this.props.handlers.onTab(value);
 		if (value > 0) { // Disable tooltip hint if user finds other tabs.
 			this.setState({showedNext: true, showNext: false});
 			localStorage.showedNext = 'true';
@@ -242,10 +242,11 @@ class MapTabs extends PureComponent {
 	}
 	render() {
 		var {onChange, onDataset, onShowDotSize, onShowColorBy2, onHideColorBy2,
-				state: {value, showDotSize, showNext, showColorBy2}, props:
+				state: {showDotSize, showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible,
 				onRadius, onShadow, onColorByHandlers}, state}} = this,
+			{tab: value = 0} = state,
 			showImg = !!hasImage(state);
 		return div({className: styles.maptabs},
 			tabs({value, onChange, variant: 'fullWidth'},
@@ -507,6 +508,9 @@ class SingleCellPage extends PureComponent {
 	onShadow = (ev, shadow) => {
 		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
 		this.callback(['shadow', isLabel ? defaultShadow : shadow]);
+	}
+	onTab = tab => {
+		this.callback(['tab', tab]);
 	}
 	markersKey = key => {
 		this.callback(['show-markers', key, true]);

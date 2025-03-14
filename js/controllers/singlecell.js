@@ -288,6 +288,7 @@ var controls = actionPrefix({
 	'background-opacity': (state, opacity) =>
 		Let(({path} = hasImage(state)) =>
 			assocIn(state, ['image', path, 'backgroundOpacity'], opacity)),
+	tab: (state, tab) => assoc(state, 'tab', tab),
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
 	// XXX drop 'key', since we only do one.
 	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show),
