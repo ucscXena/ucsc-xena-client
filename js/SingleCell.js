@@ -11,14 +11,13 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map} from './views/Map';
-import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme, Icon,
-	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Slider, Tab,
+import {Card, Button, createTheme, Icon,
+	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
-import {ExpandMore} from '@material-ui/icons';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
-	datasetCohort, defaultColor, defaultShadow, dotRange, getData,
-	getDataSubType, getRadius, hasImage, hasShadow, isLog, log2p1, maps,
+	datasetCohort, defaultColor, defaultShadow, getData,
+	getDataSubType, hasImage, isLog, log2p1, maps,
 	mergeColor, ORDINAL, otherValue, phenoValue, probValue, setColor, setRadius
 	} from './models/map';
 import Integrations from './views/Integrations';
@@ -35,10 +34,6 @@ import markers from './views/markers';
 import colorPicker from './views/colorPicker';
 var map = el(Map);
 var button = el(Button);
-var accordion = el(Accordion);
-var accordionDetails = el(AccordionDetails);
-var accordionSummary = el(AccordionSummary);
-var expandMore = el(ExpandMore);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -46,7 +41,6 @@ var tab = el(Tab);
 var tabs = el(Tabs);
 var integrations = el(Integrations);
 var listSubheader = el(ListSubheader);
-var slider = el(Slider);
 var muiThemeProvider = el(MuiThemeProvider);
 var imgControls = el(ImgControls);
 var tooltip = el(Tooltip);
@@ -166,19 +160,6 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
-var labelFormat = v => v.toPrecision(2);
-var dotSize = (state, onChange, showDotSize, onShowDotSize) =>
-	!state.dataset || !state.radiusBase || !hasColorBy(state.colorBy) ? null :
-	accordion({expanded: !!showDotSize, onChange: onShowDotSize},
-		accordionSummary({expandIcon: expandMore()}, 'Advanced'),
-		accordionDetails({className: styles.advanced},
-			label('Dot size'),
-			slider({...dotRange(state.radiusBase),
-				valueLabelDisplay: 'auto',
-				valueLabelFormat: labelFormat,
-				marks: [{value: state.radiusBase, label: state.radiusBase.toPrecision(2)}],
-				value: getRadius(state), onChange})));
-
 // overlay colorB2 onto colorBy, for rending subcomponents. Also, set color to
 // black if doing coded vs. float.
 var blk = '#000000';
@@ -202,18 +183,9 @@ var PopperProps = {
 var tooltipTab = ({title, open, ...props}) =>
 	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
-var shadowSlider = (show, shadow = defaultShadow, onChange) =>
-	!show ? null :
-	div({className: styles.shadow}, label('Cell shadow'),
-		slider({min: 0, max: 0.05, step: 0.001,
-			valueLabelDisplay: 'auto',
-			valueLabelFormat: v => (v * 100).toPrecision(2),
-			marks: [{value: 0.01, label: 1}],
-			value: shadow, onChange}));
-
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
-		showDotSize: false, showColorBy2: false}
+		showColorBy2: false}
 	componentWillUnmount() {
 		this.showNext && clearTimeout(this.showNext);
 		this.hideNext && clearTimeout(this.hideNext);
@@ -224,9 +196,6 @@ class MapTabs extends PureComponent {
 			this.setState({showedNext: true, showNext: false});
 			localStorage.showedNext = 'true';
 		}
-	}
-	onShowDotSize = () => {
-		this.setState({showDotSize: !this.state.showDotSize});
 	}
 	onShowColorBy2 = () => {
 		this.setState({showColorBy2: true});
@@ -250,11 +219,11 @@ class MapTabs extends PureComponent {
 		this.props.handlers.onDataset(...args);
 	}
 	render() {
-		var {onChange, onDataset, onShowDotSize, onShowColorBy2, onHideColorBy2,
-				state: {showDotSize, showNext, showColorBy2}, props:
+		var {onChange, onDataset, onShowColorBy2, onHideColorBy2,
+				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible,
-				onRadius, onShadow, onColorByHandlers}, state}} = this,
+				onColorByHandlers}, state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state);
 		return div({className: styles.maptabs},
@@ -266,8 +235,7 @@ class MapTabs extends PureComponent {
 					open: !showImg && showNext}),
 			),
 			tabPanel({value, index: 0},
-				card(mapSelect(get(state, 'map'), state.dataset, onDataset)),
-				dotSize(state, onRadius, showDotSize, onShowDotSize)),
+				mapSelect(get(state, 'map'), state.dataset, onDataset)),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
@@ -284,8 +252,7 @@ class MapTabs extends PureComponent {
 							icon({onClick: onHideColorBy2}, 'close'),
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
-								floatOnly: true, handlers: onColorByHandlers[1]}))),
-				shadowSlider(hasShadow(state), state.shadow, onShadow)));
+								floatOnly: true, handlers: onColorByHandlers[1]})))));
 	}
 }
 
@@ -358,8 +325,8 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
-var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
-			onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
+var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
+			onRadius, onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
 		showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
@@ -374,7 +341,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode,
 				markers(handlers.onColorByHandlers[0].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
-			vizPanel({props: {state, onTooltip, onViewState}}),
+			vizPanel({props: {state, onTooltip, onViewState, onShadow, onRadius}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
 				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),

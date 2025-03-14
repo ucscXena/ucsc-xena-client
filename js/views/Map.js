@@ -1,7 +1,7 @@
-import {Icon, IconButton} from '@material-ui/core';
+import {Icon, IconButton, Slider} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {br, div, el, img, span} from '../chart/react-hyper.js';
+import {br, div, el, img, label, span} from '../chart/react-hyper.js';
 var {get, getIn, identity, indexOf, Let, max, memoize1, min,
 	pick, pluck} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
@@ -16,12 +16,14 @@ import highlightLayer from './highlightLayer';
 import AxesLayer from './axes-layer';
 
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
-import {colorError, colorLoading, dataError, dataLoading, defaultShadow, getData,
-	getRadius, getSamples, hasColor, hasImage, isOrdinal} from '../models/map';
+import {colorError, colorLoading, dataError, dataLoading, defaultShadow,
+	dotRange, getData, getRadius, getSamples, hasColor, hasColorBy, hasImage,
+	hasShadow, isOrdinal} from '../models/map';
 import Img from '../Img';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
+var slider = el(Slider);
 
 // Styles
 
@@ -114,7 +116,7 @@ var getM = (s, [x, y, z = 0]) => [
 // spatial distribution of data.
 var maxDotRadius = 10;
 
-var id = arr => arr.filter(identity);
+var id = (...arr) => arr.filter(identity);
 
 var initialZoom = props => {
 	var {width, height} = props.container.getBoundingClientRect();
@@ -194,12 +196,12 @@ class MapDrawing extends PureComponent {
 
 		return deckGL({
 			ref: this.props.onDeck,
-			layers: id([!twoD && axesLayer(),
+			layers: id(
+				!twoD && axesLayer(),
 				layer0,
 				tooltip < 0 ? null :
 					highlightLayer({data: [pluck(data, tooltip)], modelMatrix,
-					                radius: radius * scale})
-			]),
+					                radius: radius * scale})),
 			onViewStateChange: ({viewState}) => {
 				this.onViewState(viewState,
 					twoD && currentScale(viewState.zoom, scale));
@@ -254,10 +256,41 @@ var tooltipView = (state, i, onClick) =>
 	div({className: styles.tooltip},
 	    span(sampleID, icon({onClick}, 'close')), br(), valTxt0, br(), valTxt1));
 
+var shadowSlider = (show, shadow = defaultShadow, onChange) =>
+	!show ? null :
+	div(label('Cell shadow'),
+		slider({min: 0, max: 0.05, step: 0.001,
+			valueLabelDisplay: 'auto',
+			valueLabelFormat: v => (v * 100).toPrecision(2),
+			marks: [{value: 0.01, label: 1}],
+			value: shadow, onChange}));
+
+var labelFormat = v => v.toPrecision(2);
+var dotSize = ({state, onRadius: onChange}) =>
+	!state.dataset || !state.radiusBase || !hasColorBy(state.colorBy) ? null :
+	div(label('Dot size'),
+		slider({...dotRange(state.radiusBase),
+			valueLabelDisplay: 'auto',
+			valueLabelFormat: labelFormat,
+			marks: [{value: state.radiusBase,
+				label: state.radiusBase.toPrecision(2)}],
+				value: getRadius(state), onChange}));
+
+var s = (...args) => id(...args).join(' ');
+
+var controlsView = ({state, showControls, onControls, onShadow, onRadius}) =>
+	Let((controls = id(shadowSlider(hasShadow(state), state.shadow, onShadow),
+	                   dotSize({state, onRadius}))) =>
+		div({className: s(styles.controls,
+			              showControls && controls.length && styles.open)},
+			...(showControls ? controls : []),
+			...(controls.length ? [icon({onClick: onControls}, 'settings')] : [])));
+
 export class Map extends PureComponent {
 	state = {
 		tooltipID: undefined,
-		scale: null
+		scale: null,
+		showControls: false
 	}
 	//	For displaying FPS
 //	componentDidMount() {
@@ -299,11 +332,15 @@ export class Map extends PureComponent {
 	onClose = () => {
 		this.setState({tooltipID: undefined});
 	}
+	onControls = () => {
+		this.setState({showControls: !this.state.showControls});
+	}
 	render() {
 		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
 
-		var {onViewState, onTooltip, onClose, onDeck, onReload} = this,
+		var {onViewState, onTooltip, onClose, onControls, onDeck, onReload} = this,
 			mapState = this.props.state,
+			{onShadow, onRadius} = this.props,
 			{shadow} = mapState,
 			params = get(mapState, 'dataset', []),
 			mapData = getData(mapState),
@@ -323,16 +360,17 @@ export class Map extends PureComponent {
 				labels, viewState, image, imageState},
 			unit = get(params, 'micrometer_per_unit'),
 			drawing = image ? imgDrawing : mapDrawing,
-			{container, tooltipID} = this.state,
+			{container, tooltipID, showControls} = this.state,
 			tooltip = tooltipID ?
 				this.findSample(getSamples(mapState), tooltipID) : -1;
 
 		return div({className: styles.content},
 				span({className: styles.fps, ref: this.onFPSRef}),
 				div({className: styles.graphWrapper, ref: this.onRef},
+					controlsView({state: mapState, showControls, onControls,
+					              onRadius, onShadow}),
 					...(unit ? [scale(this.state.scale)] : []),
-					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] :
-						[]),
+					...(tooltip >= 0 ? [tooltipView(mapState, tooltip, onClose)] : []),
 					getStatusView({loading, error, onReload, key: 'status'}),
 					drawing({...handlers, shadow, onViewState, onDeck, onTooltip,
 					        tooltip, data, container, key: 'drawing'})));

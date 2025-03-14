@@ -61,10 +61,6 @@
 	font-size: 70%;
 }
 
-.advanced {
-	display: block;
-}
-
 .showHideButton {
 	font-size: 70%;
 	margin-right: 2px;
@@ -74,10 +70,6 @@
 
 .showHideButton:nth-child(2) {
 	margin-right: 8px;
-}
-
-.shadow {
-	font-size: 90%;
 }
 
 .blendWith {

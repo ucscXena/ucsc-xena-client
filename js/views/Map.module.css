@@ -88,6 +88,30 @@
 	background-color: #000000;
 }
 
+.controls {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	z-index: 10;
+	opacity: .6;
+	background-color: #FFFFFF;
+	width: 24px;
+	font-size: 90%;
+}
+
+/* gear button */
+.controls > :last-child {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	background-color: inherit;
+}
+
+.open {
+	width: 200px;
+	padding: 2px;
+}
+
 .fps {
 	position: absolute;
 	right: 0%;
