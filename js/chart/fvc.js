@@ -54,24 +54,16 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 
 	// Y data and fill in the matrix
 	ydata.forEach((ydataElement, k) => {
-		// Single cell mode (dot plot only):
-		// Retrieve non-expressed indices for the ydata element, and filter those indices from groups, then compute the binned values.
-		// Track how many non-expressed samples were removed from each group.
-		// Bulk mode:
-		// Just compute the binned values.
-		let nonExpressed = ynonexpressed ? ynonexpressed[k] : null,
-			nonExpressedCountByGroup = new Map(),
-			expressedGroupsOrGroups = isSingleCell ? _.map(groups, (group, g) => {
-				nonExpressedCountByGroup.set(g, 0);
-				return _.filter(group, i => {
-					if (isSet(nonExpressed, i)) {
-						nonExpressedCountByGroup.set(g, nonExpressedCountByGroup.get(g) + 1);
-						return false;
-					}
-					return true;
-				});
-			}) : groups,
-			ybinnedSample = dataUtils.groupValues(ydataElement, expressedGroupsOrGroups);
+		// Bulk mode: compute the binned values from groups.
+		let expressedGroupsOrGroups = groups;
+
+		// Single cell mode (dot plot only): filter non-expressed indices from groups, then compute the binned values.
+		if (isSingleCell) {
+			var bitmap = ynonexpressed[k];
+			expressedGroupsOrGroups = _.map(groups, group => _.filter(group, i => !isSet(bitmap, i)));
+		}
+
+		var ybinnedSample = dataUtils.groupValues(ydataElement, expressedGroupsOrGroups);
 
 		// Note that xCategories has already been null filtered on x, so it's not
 		// the same as xcodemap.
@@ -84,7 +76,7 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 				meanMatrix[i][k] = average;
 				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
 				if (isSingleCell) {
-					let nonExpressedCount = nonExpressedCountByGroup.get(i) || 0,
+					let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
 						totalCount = m + nonExpressedCount;
 					detectionMatrix[i][k] = sCell.computePctExpr(m, totalCount);
 					expressionMatrix[i][k] = sCell.computeAvgExpr(data);
