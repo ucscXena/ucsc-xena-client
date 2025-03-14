@@ -2,12 +2,12 @@ var _ = require('../underscore_ext').default;
 
 /**
  * Methods for computing non-expressed indices.
- * In "bulk" mode we return an empty set for each series.
- * In "singleCell" mode we return a set of indices where the value is ≤ 0.
+ * "bulk" mode returns null.
+ * "singleCell" mode returns a set of indices where the value is ≤ 0.
  */
 var expressionMethods = {
 	bulk: () => null,
-	singleCell: data => new Map(_.map(data, (d, i) => [i, new Set(_.range(d.length).filter(i => d[i] <= 0))])),
+	singleCell: data => _.map(data, d => new Set(_.filter(_.range(d.length), i => d[i] <= 0))),
 };
 
 /**
