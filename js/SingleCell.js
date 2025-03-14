@@ -18,8 +18,9 @@ import {ExpandMore} from '@material-ui/icons';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, defaultShadow, dotRange, getData,
-	getDataSubType, getRadius, hasImage, hasShadow, isLog, log2p1, maps, otherValue,
-	phenoValue, probValue, setRadius} from './models/map';
+	getDataSubType, getRadius, hasImage, hasShadow, isLog, log2p1, maps,
+	mergeColor, ORDINAL, otherValue, phenoValue, probValue, setColor, setRadius
+	} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
 	getIn, groupBy, isEqual, Let, merge, object, pick, range, sortByI,
@@ -178,8 +179,16 @@ var dotSize = (state, onChange, showDotSize, onShowDotSize) =>
 				marks: [{value: state.radiusBase, label: state.radiusBase.toPrecision(2)}],
 				value: getRadius(state), onChange})));
 
-var colorBy2State = state => assoc(state,
-	'colorBy', get(state, 'colorBy2'));
+// overlay colorB2 onto colorBy, for rending subcomponents. Also, set color to
+// black if doing coded vs. float.
+var blk = '#000000';
+var colorBy2State = state =>
+	Let(({colorBy, colorBy2} = state,
+		cb = getIn(colorBy, ['data', 'codes']) &&
+					getIn(colorBy2, ['field', 'field']) ?
+			updateIn(colorBy2, ['data', 'scale'], scale => setColor(scale, blk)) :
+			colorBy2) =>
+	assoc(state, 'colorBy', cb));
 
 var imgDisplay = showImg => showImg ? {} : {style: {display: 'none'}};
 
@@ -301,9 +310,7 @@ var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 		scale = getIn(state, ['data', 'scale']),
 		hidden = get(state, 'hidden'),
 		unit = getIn(state, ['field', 'unit']),
-		// XXX the 2 here is pretty nasty. Index of custom colors in categorical
-		// scale variant.
-		color = hidden ? updateIn(scale, [2], custom =>
+		color = hidden ? updateIn(scale, [ORDINAL.CUSTOM], custom =>
 				merge(custom, object(hidden, hidden.map(constant(gray)))))
 			: scale;
 
@@ -588,10 +595,9 @@ var scaleSetting = (state, key) =>
 		getIn(state, ['settings', host, name, field, 'scale']));
 
 // This is required to restore the correct color for stored float scales.
-var colorIndex = 2;
 var mergeScaleType = b => a =>
 	a[0] === 'ordinal' ? b :
-	assoc(b, colorIndex, a[colorIndex]);
+	mergeColor(b, a);
 
 var mergeScale = (state, key) =>
 	Let((scale = scaleSetting(state, key)) =>

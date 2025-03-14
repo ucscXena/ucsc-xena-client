@@ -333,7 +333,41 @@ export var layerColors = [
 
 export var segmentedColor = [0.5, 0.5, 0.5];
 
+var high = (low, a, b, c) =>
+	low < a ? a :
+	low < b ? b :
+	c;
+
+// color scale variant params
+var FLOAT = {
+	VARIANT: 0,
+	COLOR: 2,
+	LOW: 3,
+	HIGH: 4
+};
+
+export var ORDINAL = {
+	VARIANT: 0,
+	COLORS: 1,
+	CUSTOM: 2
+};
+
+// color scale variants
+var getLogScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
+	['float-log', null, color, p05, high(p05, p95, p99, max)];
+
+var getLinearScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
+	['float-pos', null, color, p05, high(p05, p95, p99, max)];
+
+export var getScale = (color, normalization, {codes, avg}) =>
+	codes ? ['ordinal', codes.length] :
+	normalization === 'log2(x)' ? getLogScale(color, avg) :
+	getLinearScale(color, avg);
+
 export var isOrdinal = colors => colors && colors[0] === 'ordinal';
+export var setColor = (scale, color) => assoc(scale, FLOAT.COLOR, color);
+var getColor = scale => get(scale, FLOAT.COLOR);
+export var mergeColor = (a, b) => setColor(a, getColor(b));
 
 export var log2p1 = v => Math.log2(v + 1);
 export var pow2m1 = v => Math.pow(2, v) - 1;

@@ -12,8 +12,8 @@ var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
 import {allCohorts, allDefaultCohortNames, getSamples,
-	hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1, userServerCohorts}
-		from '../models/map';
+	hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1, getScale,
+	userServerCohorts} from '../models/map';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -54,22 +54,6 @@ var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
 
 var fetchMap = (dsID, fields, samples) =>
 	fetch(fieldSpec(dsID, fields, 'probes', 'float'), samples);
-
-var high = (low, a, b, c) =>
-	low < a ? a :
-	low < b ? b :
-	c;
-
-var getLogScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
-	['float-log', null, color, p05, high(p05, p95, p99, max)];
-
-var getLinearScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
-	['float-pos', null, color, p05, high(p05, p95, p99, max)];
-
-var getScale = (color, normalization, {codes, avg}) =>
-	codes ? ['ordinal', codes.length] :
-	normalization === 'log2(x)' ? getLogScale(color, avg) :
-	getLinearScale(color, avg);
 
 var red = '#ff0000';
 var blue = '#0000ff';
