@@ -52,6 +52,7 @@ var setIfNot = (state, path, value) =>
 var initSettings = chartState => {
 	var ycolumn = chartState.ycolumn;
 	if (v(ycolumn)) {
+		chartState = setIfNot(chartState, ['expressionState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['normalizationState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['expState', ycolumn], 0);
 		chartState = setIfNot(chartState, ['avgState', ycolumn], 0);
@@ -119,25 +120,25 @@ var scatterCanDraw = appState => {
 
 var histCanDraw = appState => suitableColumns(appState, true).length > 0;
 
-export var boxOrViolinYDatasets = appState => suitableColumns(appState, true);
+export var boxOrDotOrViolinYDatasets = appState => suitableColumns(appState, true);
 
-export var boxOrViolinXDatasets = appState => suitableColumns(appState, false)
+export var boxOrDotOrViolinXDatasets = appState => suitableColumns(appState, false)
 	.filter(optNotFloat(appState));
 
-var boxOrViolinDatasets = appState => {
-	var x = boxOrViolinXDatasets(appState),
-		y = boxOrViolinYDatasets(appState);
+var boxOrDotOrViolinDatasets = appState => {
+	var x = boxOrDotOrViolinXDatasets(appState),
+		y = boxOrDotOrViolinYDatasets(appState);
 
 	return {x, y};
 };
 
-var boxOrViolinCanDraw = appState =>
-	boxOrViolinDatasets(appState).y.length > 0 &&
-	boxOrViolinDatasets(appState).x.length > 0;
+var boxOrDotViolinCanDraw = appState =>
+	boxOrDotOrViolinDatasets(appState).y.length > 0 &&
+	boxOrDotOrViolinDatasets(appState).x.length > 0;
 
 
 export var canDraw = {
-	boxOrViolin: boxOrViolinCanDraw,
+	boxOrDotOrViolin: boxOrDotViolinCanDraw,
 	histOrDist: histCanDraw,
 	scatter: scatterCanDraw
 };

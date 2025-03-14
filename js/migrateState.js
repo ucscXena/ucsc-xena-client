@@ -8,7 +8,7 @@
 //
 //
 
-var version = 4; // XXX duplicated in store.js?
+var version = 5; // XXX duplicated in store.js?
 
 var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString,
 	updateIn, without} = require('./underscore_ext').default;
@@ -69,12 +69,29 @@ var noExpX = state =>
 		}) :
 	state;
 
+// chart mode. `violin` boolean is replaced by `chartType` string e.g. 'boxplot', 'dot', 'violin'.
+// If `violin` is true, set `chartType` to 'violin', otherwise set it to 'boxplot'.
+// `expressionState` `ycolumn` value defaults to `0` which is 'bulk' mode.
+var noViolin = state =>
+	get(state, 'spreadsheet') ?
+		updateIn(state, ['spreadsheet', 'chartState'], chartState => {
+			if (chartState) {
+				var {expressionState = {}, violin, ycolumn} = chartState;
+				chartState = omit(chartState, 'violin');
+				chartState = assoc(chartState, 'chartType', violin ? 'violin' : 'boxplot');
+				chartState = assoc(chartState, 'expressionState', merge(expressionState, {[ycolumn]: expressionState[ycolumn] || 0}));
+				return chartState;
+			}
+		}) :
+		state;
+
 // This must be sorted, with later versions appearing last.
 var migrations = [
 	[noComposite, splitPages, samplesToLeft], // to v1
 	[noFieldSpec],                            // to v2
 	[noLocalCert],                            // to v3
-	[noExpX]                                  // to v4
+	[noExpX],                                 // to v4
+	[noViolin]                                // to v5
 ];
 
 function apply(state) {

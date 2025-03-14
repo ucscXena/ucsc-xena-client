@@ -42,6 +42,7 @@
 
 .chartActions {
 	align-content: flex-start;
+	overflow: hidden;
 }
 
 .chartActionsPrimary {
@@ -56,7 +57,9 @@
 }
 
 .chartActionsSecondary {
+	border-radius: inherit;
 	box-shadow: none;
+	min-height: 0;
 }
 
 .chartActionsSecondarySummary {
@@ -119,15 +122,3 @@
 .violinTooltip table {
 	 border-collapse: collapse;
  }
-
-/* Stats container */
-.stats {
-	display: none;
-}
-
-.stats.visible {
-	display: block;
-	flex: none;
-	overflow: auto;
-	padding: 48px 24px;
-}

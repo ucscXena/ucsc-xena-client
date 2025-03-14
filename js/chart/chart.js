@@ -4,6 +4,7 @@ var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
+require('highcharts/modules/heatmap')(Highcharts);
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 var jStat = require('../jStatShim');
@@ -30,6 +31,10 @@ var sc = require('science');
 import {div, el, fragment, label, textNode} from './react-hyper';
 import classNames from 'classnames';
 import {isSet, bitCount} from '../models/bitmap';
+import {xenaColor} from '../xenaColor';
+var fvc = require('./fvc');
+var {groupValues} = require('./dataUtils');
+var {applyExpression} = require('./singleCell');
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
 
@@ -65,6 +70,8 @@ var menuItem = el(MenuItem);
 var textField = el(TextField);
 var typography = el(Typography);
 
+var defaultColor = xenaColor.BLUE_PRIMARY;
+
 var selectProps = {
 	className: compStyles.formControl,
 	select: true,
@@ -78,13 +85,21 @@ var selectProps = {
 };
 
 var sxAccordion = {
+	'&.MuiAccordion-root + .MuiAccordion-root:before': {
+		display: 'block', // persist border between accordions
+	},
 	'&.Mui-expanded': {
 		margin: 0,
 		'&::before': {
 			opacity: 1,
 		},
+		'& .MuiCollapse-entered': {
+			height: '100% !important',
+			overflow: 'auto',
+		},
 	},
 };
+
 var sxAccordionSummary = {
 	'&.Mui-expanded': {
 		margin: 0,
@@ -124,9 +139,6 @@ function groupIndex(field) {
 	delete groups.NaN;
 	return groups;
 }
-
-var groupValues = (field, groups) =>
-	groups.map(indices => indices.map(i => field[i]).filter(x => !isNaN(x)));
 
 // utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
 // spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
@@ -170,7 +182,7 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 
 // p value when there is only 2 group comparison student t-test
 // https://en.wikipedia.org/wiki/Welch%27s_t-test
-function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
+function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields, setHasStats) {
 	var statsDiv = document.getElementById('stats');
 	statsDiv.innerHTML = 'Welch\'s t-test<br>';
 	_.range(yfields.length).map(k => {
@@ -198,13 +210,13 @@ function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
 			);
 		}
 	});
-	statsDiv.classList.toggle(compStyles.visible);
+	setHasStats(true);
 }
 
 // p value for >2 groups one-way ANOVA
 // https://en.wikipedia.org/wiki/One-way_analysis_of_variance
 function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
-		yfields, ydata, groups}) {
+		yfields, ydata, groups}, setHasStats) {
 	var statsDiv = document.getElementById('stats');
 	statsDiv.innerHTML = 'One-way Anova<br>';
 	_.range(yfields.length).map(k => {
@@ -256,10 +268,23 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 			'(f = ' + fScore.toPrecision(4) + ')<br>'
 		);
 	});
-	statsDiv.classList.toggle(compStyles.visible);
+	setHasStats(true);
 }
 
-var getOpt = opt => menuItem({key: opt.value, dense: true, value: opt.value}, opt.label);
+var getOpt = opt => menuItem({key: opt.value, dense: true, disabled: opt.disabled, value: opt.value}, opt.label);
+
+var viewOptions = [
+	{label: 'box plot', value: 'boxplot'},
+	{label: 'violin plot', value: 'violin'},
+	{label: 'dot plot', value: 'dot'}
+];
+
+var expressionOptions = [
+	{label: 'continuous value data', value: 'bulk'},
+	{label: 'single cell count data', value: 'singleCell'}
+];
+
+var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
 
 var normalizationOptions = [{
 		"value": "none",
@@ -395,6 +420,7 @@ function newChart(opts) {
 
 function sizeChartView() {
 	var chartViewEl = document.getElementById('chartView');
+	if (!chartViewEl) {return;}
 	var chartViewRect = chartViewEl.getBoundingClientRect();
 	var height = window.innerHeight - chartViewRect.top;
 	chartViewEl.style.setProperty('height', `${height}px`);
@@ -405,72 +431,6 @@ const LOWER = 1;
 const MEDIAN = 2;
 const UPPER = 3;
 const UPPERWHISKER = 4;
-const BOXLEN = 5;
-
-function boxplotPoint(data) {
-	var m = data.length;
-	data.sort((a, b) => a - b);
-
-	// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-	var median = data[Math.floor( m / 2)],
-		lower =  data[Math.floor( m / 4)],
-		upper =  data[Math.floor( 3 * m / 4)],
-		whisker = 1.5 * (upper - lower),
-		upperwhisker = data[
-			_.findIndexDefault(data, x => x > upper + whisker, data.length) - 1],
-		lowerwhisker = data[
-			_.findLastIndexDefault(data, x => x < lower - whisker, -1) + 1];
-
-	// This must match BOX order
-	return [lowerwhisker, lower, median, upper, upperwhisker];
-}
-
-// poor man's lazy seq
-function* constantly (fn) {
-	while (true) {
-		yield fn();
-	}
-}
-
-var nobox = new Array(BOXLEN).fill(NaN);
-
-function initFVCMatrices({ydata, groups}) {
-	// matrices, row is x and column is y:
-	// mean
-	// median
-	// upper --  75 percentile
-	// lower --  25 percentile
-	// upperwhisker --  upperwhisker percentile
-	// lowerwhisker --  lowerwhisker percentile
-	// std
-	// nNumber -- number of data points (real data points) for dataMatrix
-
-	// init average matrix std matrix // row is x by column y
-	var [meanMatrix, stdMatrix, nNumberMatrix] =
-			constantly(() =>
-				_.times(groups.length, () => new Array(ydata.length).fill(NaN))),
-		boxes = _.times(groups.length, () => new Array(ydata.length));
-
-
-	// Y data and fill in the matrix
-	ydata.forEach((ydataElement, k) => {
-		let ybinnedSample = groupValues(ydataElement, groups);
-
-		// Note that xCategories has already been null filtered on x, so it's not
-		// the same as xcodemap.
-		ybinnedSample.forEach((data, i) => {
-			let m = data.length;
-			nNumberMatrix[i][k] = m;
-			boxes[i][k] = m ? boxplotPoint(data) : nobox;
-			if (m) {
-				let average =  highchartsHelper.average(data);
-				meanMatrix[i][k] = average;
-				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
-			}
-		});
-	});
-	return {meanMatrix, boxes, stdMatrix, nNumberMatrix};
-}
 
 function sortMatrices(xCategories, groups, colors, matrices) {
 	let {boxes} = matrices,
@@ -505,6 +465,58 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 				description: nNumberSeries[0]});
 		}
 	});
+}
+
+function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, detectionMatrix }, xCategories, yexpression, yfields }) {
+	// determine the appropriate matrix for the selected data type
+	var isSingleCellData = yexpression === 'singleCell',
+		expressionMatrix = isSingleCellData ? exprMatrix : meanMatrix;
+
+	// flatten the expression matrix, filter out NaN values, and determine min and max values for scaling
+	var meanValues = expressionMatrix.flat().filter(v => !Number.isNaN(v)),
+		minMean = _.min(meanValues),
+		maxMean = _.max(meanValues),
+		range = maxMean - minMean || 1;
+
+	// retrieve marker scale settings from the chart configuration with default values
+	var {
+		opacity: { max: maxOpacity = 1, min: minOpacity = 0.2 } = {},
+		radius: { max: maxRadius = 10, min: minRadius = 2 } = {}
+	} = chart.markerScale || {};
+
+	// add the series to the chart
+	xCategories.forEach((category, categoryIndex) => {
+		var nNumberSeries = nNumberMatrix[categoryIndex];
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			name: category,
+			data: yfields.map((feature, featureIndex) => {
+				// retrieve the expression value for the current category and feature
+				var value = expressionMatrix[categoryIndex][featureIndex],
+					// for single cell data, get the detection rate
+					detectionValue = detectionMatrix?.[categoryIndex]?.[featureIndex],
+					normalizedValue = (value - minMean) / range,
+					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity,
+					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
+					// choose the metric for radius: detection rate for single cell data or normalized expression for bulk data
+					radiusMetric = isSingleCellData ? detectionValue : normalizedValue,
+					radius = radiusMetric * (maxRadius - minRadius) + minRadius;
+				return {
+					color,
+					custom: {expressedInCells: detectionValue, n: nNumberSeries[0]},
+					marker: {radius},
+					value,
+					x: featureIndex,
+					y: categoryIndex,
+				};
+			}),
+			showInLegend: false,
+			type: 'scatter',
+		});
+	});
+
+	// update the x-axis scale to match the min and max expression values
+	chart.colorAxis[0].update({min: minMean, max: maxMean, tickPositions: [minMean, maxMean]});
 }
 
 var violinSamples = 30;
@@ -626,43 +638,48 @@ function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
 				data: medians});
 }
 
-var fvcOptions = violin => violin ?
-	highchartsHelper.violinOptions :
-	highchartsHelper.boxplotOptions;
+var fvcOptions = chartType => ({
+	boxplot: highchartsHelper.boxplotOptions,
+	dot: highchartsHelper.dotOptions,
+	violin: highchartsHelper.violinOptions
+}[chartType]);
 
-var fvcChart = violin => violin ?
-	violinplot : boxplot;
+var fvcChart = chartType => ({
+	boxplot,
+	dot: dotplot,
+	violin: violinplot
+}[chartType]);
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrViolin({groups, xCategories, colors, yfields, ydata,
-		xlabel, ylabel, violin}, chartOptions) {
-
-	var matrices = initFVCMatrices({ydata, groups});
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setHasStats, setView, yexpression, yfields, ydata,
+		xlabel, ylabel, ynonexpressed, ynorm}, chartOptions) {
+	setView(chartType);
+	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 
 	// sort by median of xCategories if yfields.length === 1
 	if (xCategories.length > 0 && yfields.length === 1) {
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(violin)({chartOptions, series: xCategories.length,
-		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
+	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series: xCategories.length,
+		categories: yfields, xAxis: {categories: yfields}, xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle: ylabel, yexpression, ynorm});
 
 	var chart = newChart(chartOptions);
 
-	fvcChart(violin)({xCategories, groups, matrices, yfields, ydata, colors, chart});
+	fvcChart(chartType)({xCategories, groups, matrices, yexpression, yfields, ydata, colors, chart});
 
 	if (xCategories.length === 2) {
-		welch(matrices, yfields);
+		welch(matrices, yfields, setHasStats);
 	} else if (xCategories.length > 2) {
-		anova({matrices, yfields, ydata, groups});
+		anova({matrices, yfields, ydata, groups}, setHasStats);
 	}
 
 	return chart;
 }
 
 // compute group sample indices, codes, and colors, then draw
-// box or violin plot.
+// box, dot or violin plot.
 function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 		samplesMatched, //commnet out see below */ ...params}, chartOptions) {
 
@@ -689,7 +706,7 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 
 	var colors = values.map(scale);
 
-	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
 function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange, setView}, chartOptions) {
@@ -706,6 +723,7 @@ function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
 		chart,
+		color: defaultColor,
 		type: 'areaspline',
 		data: density,
 		marker: {enabled: false}});
@@ -717,7 +735,7 @@ function summaryBoxplot(params, chartOptions) {
 		groups = [_.range(0, cohortSamples.length)],
 		colors = ['#0000FF80', 'blue'],
 		xCategories = [null];
-	return boxOrViolin({groups, colors, xCategories, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, colors, xCategories, ...params}, chartOptions);
 }
 
 function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
@@ -741,7 +759,7 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 		yIsCategorical: true,
 		showDataLabel: categories.length < 30,
 		showInLegend: false,
-		color: 0,
+		color: defaultColor,
 		description: nNumberSeries});
 	return chart;
 }
@@ -755,7 +773,7 @@ summary.add('column', summaryColumn);
 summary.add('boxplot', summaryBoxplot);
 summary.add('density', densityplot);
 
-function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
+function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		columns, ycolumn}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
@@ -860,7 +878,7 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
 				'p = ' + pValue.toPrecision(4) + ' ' +
 				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
-		statsDiv.classList.toggle(compStyles.visible);
+		setHasStats(true);
 	}
 
 	return chart;
@@ -873,6 +891,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 		xlabel, ylabel,
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
+		setHasStats,
 		columns, colorColumn, cohortSamples}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
@@ -1009,7 +1028,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 				}
 
 			} else {
-				color = null;
+				color = defaultColor;
 				colorLabel = "sample";
 				showInLegend = true;
 			}
@@ -1051,21 +1070,21 @@ function floatVFloat({samplesLength, xfield, xdata,
 			printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
 		}
 
-		statsDiv.classList.toggle(compStyles.visible);
+		setHasStats(true);
 	}
 
 	return chart;
 }
 
 function drawChart(params) {
-	var {cohort, samplesLength, xfield, xcodemap, ycodemap} = params,
+	var {cohort, samplesLength, setHasStats, xfield, xcodemap, ycodemap} = params,
 		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${samplesLength})`,
 		chartOptions = _.assoc(highchartsHelper.chartOptions,
 			'subtitle', {text: subtitle}),
 		statsDiv = document.getElementById('stats');
 
 	statsDiv.innerHTML = "";
-	statsDiv.classList.toggle(compStyles.visible, false);
+	setHasStats(false);
 
 	if (xcodemap && !ycodemap) {
 		return floatVCoded(params, chartOptions);
@@ -1105,6 +1124,8 @@ function addSDs({mean, sd, ...yavg}) {
 
 var inRange = (number, {max, min}) => number >= min && number <= max;
 
+var yMin = ydata => _.min(_.map(ydata, d => _.min(d)));
+
 function pickMetrics(yavg, range) {
 	if (!range) {return yavg;}
 	return Object.entries(yavg).reduce((acc,  [key, value]) => {
@@ -1141,8 +1162,8 @@ function getMeasures({avgState, pctState, ycolumn}, yavg) {
 
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
-		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
-		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
 }
 
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
@@ -1152,7 +1173,7 @@ function callDrawChart(xenaState, params) {
 	var {ydata, xdata, doScatter, colorColumn} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
-		{violin} = chartState,
+		{chartType} = chartState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
@@ -1182,10 +1203,10 @@ function callDrawChart(xenaState, params) {
 
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
+		chartType,
 		cohort, cohortSamples, samplesLength, // why both cohortSamples an samplesLength??
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		violin,
 		xdata, ydata, // normalized
 		yavg,
 	}));
@@ -1255,6 +1276,16 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
+function expressionMode(chartState, ymin) {
+	var {chartType, expressionState, ycolumn} = chartState;
+	// 'bulk' expression mode only for chart types other than dot plot
+	if (chartType !== 'dot') {return 'bulk';}
+	// 'bulk' expression mode only for negative values
+	if (ymin < 0) {return 'bulk';}
+	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
+	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
+}
+
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
 
@@ -1264,8 +1295,8 @@ var gaSwap = fn => () => {
 	fn();
 };
 
-var gaViolin = fn => () => {
-	gaEvents('chart', 'toggleViolin');
+var gaChartType = fn => (v) => {
+	gaEvents('chart', `toggle${v.replace(/^./, (char) => char.toUpperCase())}`);
 	fn();
 };
 
@@ -1277,7 +1308,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, range: undefined, view: undefined};
+		this.state = {advanced: false, hasStats: false, inverted: false, range: undefined, view: undefined};
 	}
 
 	onClose = () => {
@@ -1287,12 +1318,13 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, range, view} = this.state,
+			{advanced, hasStats, inverted, range, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
 			},
+			setHasStats = (hasStats) => this.setState({hasStats}),
 			setRange = (range) => this.setState({range}),
 			setView = (view) => this.setState({view});
 
@@ -1307,7 +1339,7 @@ class Chart extends PureComponent {
 					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
 		}
 
-		var {xcolumn, ycolumn, colorColumn, violin} = chartState,
+		var {xcolumn, ycolumn, colorColumn} = chartState,
 			{columns} = xenaState,
 			xdata0 = getColumnValues(xenaState, xcolumn),
 			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
@@ -1317,6 +1349,9 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata0),
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
+			ymin = yMin(ydata0),
+			// 'singleCell' expression mode only for dot plots with positive values
+			yexpression = expressionMode(chartState, ymin),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
@@ -1324,12 +1359,14 @@ class Chart extends PureComponent {
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].probes ||
 				columns[ycolumn].fieldList || columns[ycolumn].fields,
+			isDot = view === 'dot',
 			isDensity = view === 'density',
 			// doScatter is really "show scatter color selector", which
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
-		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
+		var {ydata, xdata, yavg} = applyTransforms(ydata0,  yexp, ynorm, xdata0, xexp),
+			ynonexpressed = applyExpression(ydata0, yexpression), // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
 			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
 			// we only do for density plots.
 			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
@@ -1341,6 +1378,11 @@ class Chart extends PureComponent {
 			yavg: pickMetrics(addSDs(yavg), range),
 			yexp,
 			xexp,
+			yexpression,
+			ynonexpressed,
+			ynorm,
+			inverted,
+			setHasStats,
 			setRange,
 			setView,
 		};
@@ -1351,14 +1393,23 @@ class Chart extends PureComponent {
 			!isFloat(columns, ycolumn);
 		var swapAxes = codedVCoded || doScatter ? button({color: 'secondary', disableElevation: true,
 				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
-				'Swap X and Y') :
-			null;
+				'Swap X and Y') : null;
+		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
+				onClick: () => this.setState({inverted: !inverted}), variant: 'contained'},
+				'Swap X and Y') : null;
+
+		var yExpression = ymin < 0 ? null : isDot ?
+			buildDropdown({
+				index: chartState.expressionState[ycolumn],
+				label: 'View as',
+				onChange: i => set(['expressionState', chartState.ycolumn], i),
+				opts: expressionOptions}) : null;
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
 				opts: yexpOpts,
 				index: chartState.expState[ycolumn],
-				label: isDensity ? 'Data unit' : 'Y unit',
+				label: isDot ? 'Continuous data unit' : isDensity ? 'Data unit' : 'Y unit',
 				onChange: i => set(['expState', ycolumn], i)});
 
 		var xExp = !v(xcolumn) || xcodemap ? null :
@@ -1371,15 +1422,17 @@ class Chart extends PureComponent {
 		var normalization = ycodemap ? null :
 			buildDropdown({
 				index: chartState.normalizationState[ycolumn],
-				label: isDensity ? 'Data linear transform' : 'Y data linear transform',
+				label: isDot ? 'Continuous data linear transform' : isDensity ? 'Data linear transform' : 'Y data linear transform',
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({color: 'secondary', disableElevation: true,
-				onClick: gaViolin(() => set(['violin'], !violin)), variant: 'contained'},
-				`View as  ${violin ? 'boxplot' : 'violin plot'}`) :
-			null;
+		var viewOpts = filterViewOptions(viewOptions, xfield),
+		switchView = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
+			buildDropdown({
+				label: 'Chart type',
+				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
+				opts: viewOpts,
+				value: view}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
@@ -1407,6 +1460,12 @@ class Chart extends PureComponent {
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp)));
 
+		var chartStats = fragment(box(
+			{className: compStyles.chartActionsSecondary, component: Accordion, square: true, sx: {...sxAccordion, display: hasStats ? 'block' : 'none'}},
+			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
+				typography({color: 'secondary', component: 'span', variant: 'inherit'}, 'Statistics')),
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, typography({id: 'stats', component: 'div', variant: 'caption'}))));
+
 		var HCV = highchartView({xenaState, drawProps});
 
 		// statistics XXX note that we scribble over stats. Should either render
@@ -1416,16 +1475,13 @@ class Chart extends PureComponent {
 		return box({className: compStyles.chartView, id: 'chartView'},
 				card({className: compStyles.card},
 					div({className: compStyles.chartRender},
-						closeButton(this.onClose),
-						HCV,
-						typography({id: 'stats', className: compStyles.stats, component: 'div', variant: 'caption'}))),
+						closeButton(this.onClose), HCV)),
 				card({className: classNames(compStyles.card, compStyles.chartActions)},
 					div({className: compStyles.chartActionsPrimary},
 						div({className: compStyles.chartActionsButtons},
 							button({color: 'secondary', disableElevation: true, onClick: gaAnother(() => set(['another'], true)), variant: 'contained'}, 'Make another graph'),
-							swapAxes,
-						violinOpt && violinOpt), avg, pct, colorAxisDiv && colorAxisDiv),
-						yExp && advOpt));
+							swapAxes, invertAxes, switchView, yExpression), avg, pct, colorAxisDiv && colorAxisDiv),
+						yExp && advOpt, chartStats));
 	};
 }
 

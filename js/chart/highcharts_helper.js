@@ -2,6 +2,7 @@ var _ = require('../underscore_ext').default;
 var styles = require('./chart.module.css');
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';
+import {xenaColor} from '../xenaColor';
 
 function hcLabelRender() {
 	var s = this.name;
@@ -486,6 +487,222 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	return _.deepMerge(chartOptions, opts);
 }
 
+function formatPercentage(value) {
+	if (isNaN(value)) {return value;}
+	return `${Math.round(value * 10000) / 100}%`;
+}
+
+var relativeMatrix = (element1, element2) => element1.getCTM().inverse().multiply(element2.getCTM());
+
+var yAttribute = (element) => parseFloat(element.getAttribute('y')) || 0;
+
+var titleCSS = { fontStyle: 'italic', fontWeight: 'bold' };
+
+function renderLegendTitle({chart, exprGroup, isSingleCell}) {
+	var {legend: {group, padding, title}, renderer} = chart,
+		colorAxisTitleEl = title.element.querySelector('text'), // get the color axis title element, for matrix and y attribute
+		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
+		y = yAttribute(colorAxisTitleEl),
+		titleValue = isSingleCell ? 'Expressed in Cells (%)' : title.text.textStr,
+	// create group for the legend title
+	titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
+	// render title
+	renderer.text(titleValue, 0, y)
+		.css(titleCSS)
+		.add(titleGroup);
+}
+
+var metricColumnGap = 24;
+
+function renderLegendMetrics({chart, exprItemGroup}) {
+	var {legend: {group}, markerScale: {radius: {max: maxR, min: minR}}, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		{legendGroup} = colorAxis,
+		colorAxisMetricEl = legendGroup.element.querySelector('rect'), // get the color axis legend metric element, for matrix and y attribute.
+		relMatrix = relativeMatrix(group.element, colorAxisMetricEl),
+		y = yAttribute(colorAxisMetricEl),
+		// create group for the legend metrics
+		metricsGroup = renderer.g('metrics').translate(0, relMatrix.f).add(exprItemGroup),
+		// render legend metrics
+		// calculate the step (increment) between radii
+		nCircles = 5,
+		rStep = (maxR - minR) / (nCircles - 1);
+	let rXPos = minR;
+	for (let i = 0; i < nCircles; i++) {
+		// calculate the current metric's radius
+		var r = minR + rStep * i,
+			d = r * 2;
+		// render the metric symbol
+		renderer.circle(0, 0, r)
+			.attr({ fill: xenaColor.GRAY_DARK })
+			.translate(rXPos, maxR + y)
+			.add(metricsGroup);
+		rXPos += d + metricColumnGap; // increment the x position for the next symbol
+	}
+}
+
+var labelCSS = {color: '#666666', fill: '#666666', fontSize: '11px'};
+
+function renderLegendLabel({chart, exprItemGroup, isSingleCell}) {
+	var {legend: {group}, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		{labelGroup} = colorAxis,
+		minValue = isSingleCell ? 0 : colorAxis.min.toFixed(2),
+		maxValue = isSingleCell ? 100 : colorAxis.max.toFixed(2),
+		colorAxisLabelEl = labelGroup.element.querySelector('text'), // get the color axis label element, for matrix and y attribute.
+		relMatrix = relativeMatrix(group.element, colorAxisLabelEl),
+		y = yAttribute(colorAxisLabelEl),
+		{x, width} = exprItemGroup.getBBox(),
+		// create group for the legend labels
+		labelsGroup = renderer.g('metrics-labels').translate(0, relMatrix.f).add(exprItemGroup);
+	// render legend labels
+	renderer.text(minValue, 0, y)
+		.css(labelCSS)
+		.add(labelsGroup);
+	renderer.text(maxValue, x + width, y)
+		.attr({ align: 'right' })
+		.css({ ...labelCSS, textAlign: 'right' })
+		.add(labelsGroup);
+}
+
+function repositionLegend({chart}) {
+	var {chartWidth, legend: {group}} = chart,
+		{e} = group.element.getCTM(),
+		{width} = group.getBBox(),
+		e2 = e + width; // end 'x' position of group
+	if (e2 < chartWidth) {return;} // legend is positioned within chart area
+	var translateX = chartWidth - width;
+	group.attr({translateX});
+}
+
+function renderExpressionMetricsLegend({chart, isSingleCell}) {
+	var {legend: {group, legendWidth, padding}, markerScale, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		radius = markerScale?.radius;
+	if (!group || !markerScale || !radius) {return;}
+	if (!colorAxis.min || !colorAxis.max) {return;}
+
+	// Destroy the expression metrics legend group, if it exists
+	if (chart.legend.exprGroup) {
+		chart.legend.exprGroup.destroy();
+	}
+
+	// create groups for the legend, and position to the right of the color axis legend
+	var exprGroup = renderer.g('legend-metrics').translate(legendWidth + 16, 0).add(group),
+		exprItemGroup = renderer.g('legend-item').translate(padding, 0).add(exprGroup);
+
+	// store the expression metrics legend group
+	chart.legend.exprGroup = exprGroup;
+
+	// render legend title
+	renderLegendTitle({chart, exprGroup, isSingleCell});
+
+	// render legend metrics
+	renderLegendMetrics({chart, exprItemGroup});
+
+	// render legend label
+	renderLegendLabel({chart, exprItemGroup, isSingleCell});
+
+	// reposition the chart legend
+	repositionLegend({chart});
+}
+
+// Map of yexpression.ynorm values to corresponding dot plot legend title.
+var legendTitle = {
+	singleCell: {
+		'none': 'Average\u00A0expression',
+		'subset': 'Average\u00A0normalized\u00A0expression',
+		'subset_stdev': 'Average\u00A0expression\u00A0z‑score',
+	},
+	bulk: {
+		'none': 'Average\u00A0value',
+		'subset': 'Average\u00A0normalized\u00A0value',
+		'subset_stdev': 'Average\u00A0z‑score',
+	}
+};
+
+// Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
+var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
+
+function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
+	var isSingleCell = yexpression === 'singleCell',
+		opts = {
+			chart: {
+				events: {
+					load: function () {
+						var chart = this;
+						chart.markerScale = markerScale;
+					},
+					render: function () {
+						var chart = this;
+						renderExpressionMetricsLegend({chart, isSingleCell});
+					},
+				},
+				inverted,
+				type: 'scatter',
+				zoomType: inverted ? 'y' : 'x',
+			},
+			colorAxis: {
+				max: null,
+				maxColor: xenaColor.BLUE_PRIMARY,
+				min: null,
+				minColor: xenaColor.BLUE_PRIMARY_2,
+				labels: {
+					formatter: function () {
+						var value = this.value,
+							isFirst = this.isFirst,
+							isLast = this.isLast;
+						if (isFirst || isLast) {return value.toFixed(2);}
+					}
+				},
+				showInLegend: true,
+			},
+			legend: {
+				align: 'right',
+				layout: 'horizontal',
+				padding: 8,
+				symbolHeight: markerScale.radius.max * 2,
+				title: {text: legendTitle[yexpression][ynorm]},
+			},
+			plotOptions: {
+				scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
+			},
+			title: {text: ''},
+			tooltip: {
+				formatter: function () {
+					var {xAxis, yAxis} = this.series,
+						{custom, value, x, y} = this.point;
+					return `<div>
+								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+								<div>${isSingleCell ? 'average expression' : 'average'}: ${value.toPrecision(3)}</div>
+								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
+								<div>n = ${custom?.n || 'NaN'}</div>
+							</div>`;
+				},
+				hideDelay: 0,
+				useHTML: true,
+			},
+			xAxis: {
+				categories: xAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? 0 : -90},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: yAxisTitle},
+			},
+			yAxis: {
+				categories: yAxis.categories,
+				gridLineWidth: 0,
+				labels: {rotation: inverted ? -90 : 0},
+				lineWidth: 1,
+				tickWidth: 0,
+				title: {text: xAxisTitle},
+			},
+	};
+
+	return _.deepMerge(chartOptions, opts);
+}
+
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
@@ -612,6 +829,7 @@ module.exports = {
 	average,
 	columnChartOptions,
 	boxplotOptions,
+	dotOptions,
 	violinOptions,
 	scatterChart,
 	addSeriesToColumn
