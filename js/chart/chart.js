@@ -96,6 +96,7 @@ var sxAccordion = {
 		'& .MuiCollapse-entered': {
 			height: '100% !important',
 			overflow: 'auto',
+			overscrollBehavior: 'contain',
 		},
 	},
 };

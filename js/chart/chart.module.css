@@ -59,10 +59,13 @@
 .chartActionsSecondary {
 	border-radius: inherit;
 	box-shadow: none;
+	display: flex;
+	flex-direction: column;
 	min-height: 0;
 }
 
 .chartActionsSecondarySummary {
+	flex: none;
 	font-size: 14px;
 	font-weight: 500;
 	letter-spacing: 0.46px;
