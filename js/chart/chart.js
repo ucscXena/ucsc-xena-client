@@ -96,6 +96,7 @@ var sxAccordion = {
 		'& .MuiCollapse-entered': {
 			height: '100% !important',
 			overflow: 'auto',
+			overscrollBehavior: 'contain',
 		},
 	},
 };
@@ -422,7 +423,7 @@ function sizeChartView() {
 	var chartViewEl = document.getElementById('chartView');
 	if (!chartViewEl) {return;}
 	var chartViewRect = chartViewEl.getBoundingClientRect();
-	var height = window.innerHeight - chartViewRect.top;
+	var height = window.innerHeight - window.scrollY - chartViewRect.top;
 	chartViewEl.style.setProperty('height', `${height}px`);
 }
 
