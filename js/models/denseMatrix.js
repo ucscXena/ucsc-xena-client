@@ -350,10 +350,17 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 	};
 }
 
+var uniqCodes = values => _.reject(_.uniq(values), x => isNaN(x));
+
+var codesInView = data =>
+	data.codes ? {
+		codesInView: uniqCodes(data.req.values[0]),
+	} : {};
+
 function denseAverage(column, data) {
 	var values = _.getIn(data, ['req', 'values'], []),
 		avg = fastats(values);
-	return {avg};
+	return {avg, ...codesInView(data)};
 }
 
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {

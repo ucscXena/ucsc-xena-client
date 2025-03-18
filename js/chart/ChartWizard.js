@@ -220,12 +220,14 @@ export default class ChartWizard extends PureComponent {
 	getChartType = ({mode, xcolumn, ycolumn}) => {
 		if (!xcolumn || !ycolumn) {return;}
 		if (mode === 'boxOrDotOrViolin') {
-			var {appState: {columns}} = this.props,
+			var {appState: {columns, data}} = this.props,
 				{chartType} = this.state;
 			if (!isFloat(columns, ycolumn)) {return;}
 			var {fieldList, fields, probes} = columns[ycolumn],
-				xcodemap = _.getIn(columns, [xcolumn, 'codes']),
+				codes = _.getIn(columns, [xcolumn, 'codes']),
+				xcodemap = _.getIn(data, [xcolumn, 'codesInView']).map(i => codes[i]),
 				yfields = probes || fieldList || fields;
+
 			if (xcodemap.length * yfields.length > chartTypeThreshold) {
 				if (chartType === 'dot') {return;}
 				this.setState({chartType: 'dot'});
