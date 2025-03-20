@@ -734,7 +734,7 @@ function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange
 function summaryBoxplot(params, chartOptions) {
 	var {cohortSamples} = params,
 		groups = [_.range(0, cohortSamples.length)],
-		colors = ['#0000FF80', 'blue'],
+		colors = ['rgba(0, 0, 255, .5)', 'blue'],
 		xCategories = [null];
 	return boxOrDotOrViolin({groups, colors, xCategories, ...params}, chartOptions);
 }
