@@ -586,7 +586,7 @@ var theme = outer => createTheme(outer, {
 	overrides: {
 		MuiAccordion: {
 			root: {
-				backgroundColor: '#00000000',
+				backgroundColor: '#00000000', //eslint-disable-line ucsc-xena-client/no-hex-color-alpha
 				'&:before': {
 					opacity: '0.5 !important'
 				},

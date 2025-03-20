@@ -54,6 +54,7 @@
     "cypress": "^3.1.0",
     "eslint": "^4.19.1",
     "eslint-plugin-react": "^4.3.0",
+    "eslint-plugin-ucsc-xena-client": "file:eslint-rules",
     "exports-loader": "^1.1.0",
     "file-loader": "^6.0.0",
     "ghooks": "^1.2.1",

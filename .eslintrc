@@ -5,13 +5,15 @@
 		"es6": true
 	},
 	"plugins": [
-		"react"
+		"react",
+		"ucsc-xena-client"
 	],
 	"extends": [
 		"plugin:react/recommended"
 	],
 	"parser": "@babel/eslint-parser",
 	"rules": {
+		"ucsc-xena-client/no-hex-color-alpha": 2,
 		"arrow-spacing": 2,
 		"camelcase": 2,
 		"dot-notation": [2, { "allowKeywords": true }],
