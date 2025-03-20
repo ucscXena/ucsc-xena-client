@@ -119,74 +119,143 @@ var pctLabel = {
 var isBelowMean = key => /^(p([0-4][0-9])|sd0[1-3]_)$/.test(key);
 var isMeanOrMedian = key => /^(mean|median)$/.test(key);
 
-function plotlineOpts([key, values]) {
-	if (!key || !values) {
-		return;
-	}
-	var isPct = Boolean(pctLabel[key]),
-		belowMean = isBelowMean(key),
-		meanOrMedian = isMeanOrMedian(key),
-		isLeft = belowMean || meanOrMedian, // plotline label alignment
-		label = pctLabel[key] || key,
-		value = _.first(values);
-	return {
-		dashStyle: isPct ? 'dash' : 'solid',
-		label: {
-			align: isLeft ? 'left' : 'right',
-			style: {
-				textTransform: isPct ? 'none' : 'capitalize',
-			},
-			text: `<div style='margin: 0 7px;'><span>${label}: ${value.toPrecision(4)}</span>
-						<svg fill='none' height='10' style='bottom: -9px; left: ${isLeft ? '-9px' : 'undefined'}; position: absolute; right: ${isLeft ? 'undefined' : '-9px'};' viewBox='0 0 10 10' width='10'><path opacity='0.5' d='${isLeft ? 'M9 1L1 9' : 'M9 9.00003L1 1.00003'}' stroke='#212121'/></svg>
-						<svg class='copy' fill='none' height='14' viewBox='0 0 14 14' width='14'><path d='M5.25 10.5C4.92917 10.5 4.65451 10.3858 4.42604 10.1573C4.19757 9.92883 4.08333 9.65417 4.08333 9.33334V2.33334C4.08333 2.01251 4.19757 1.73785 4.42604 1.50938C4.65451 1.28091 4.92917 1.16667 5.25 1.16667H10.5C10.8208 1.16667 11.0955 1.28091 11.324 1.50938C11.5524 1.73785 11.6667 2.01251 11.6667 2.33334V9.33334C11.6667 9.65417 11.5524 9.92883 11.324 10.1573C11.0955 10.3858 10.8208 10.5 10.5 10.5H5.25ZM5.25 9.33334H10.5V2.33334H5.25V9.33334ZM2.91667 12.8333C2.59583 12.8333 2.32118 12.7191 2.09271 12.4906C1.86424 12.2622 1.75 11.9875 1.75 11.6667V3.50001H2.91667V11.6667H9.33333V12.8333H2.91667Z' fill='#1C1B1F'/></svg>
-					</div>`,
-			y: meanOrMedian ? 0 : belowMean ? -32 : 32,
-		},
-		value
-	};
-}
-
 function addXAxisPlotline({chart, ...opts}) {
 	var plotLineOptions = _.deepMerge({
-		color: '#21212180',
-		label: {
-			rotation: 0,
-			style: {
-				fontSize: '11px',
-				textTransform: 'capitalize',
-			},
-			useHTML: true,
-			verticalAlign: 'middle',
-			x: 0,
-		},
+		color: 'rgba(33, 33, 33, 0.5)', // pdf requires rgba format for transparency
 		width: 1,
 	}, opts);
 	chart.xAxis[0].addPlotLine(plotLineOptions);
 }
 
-function addCopyToXAxisPlotlineLabel({chart}) {
-	chart.xAxis[0].plotLinesAndBands.forEach((plotLine) => {
-		if (plotLine && plotLine.svgElem) {
-			setTimeout(() => {
-				var {label, options} = plotLine,
-					{value} = options || {};
-					label?.on('click', function () {
-						navigator.clipboard.writeText(value);
-					});
-			}, 0);
+var copyIconPath = [
+    'M', 5.25, 10.5,
+    'C', 4.92917, 10.5, 4.65451, 10.3858, 4.42604, 10.1573,
+    'C', 4.19757, 9.92883, 4.08333, 9.65417, 4.08333, 9.33334,
+    'V', 2.33334,
+    'C', 4.08333, 2.01251, 4.19757, 1.73785, 4.42604, 1.50938,
+    'C', 4.65451, 1.28091, 4.92917, 1.16667, 5.25, 1.16667,
+    'H', 10.5,
+    'C', 10.8208, 1.16667, 11.0955, 1.28091, 11.324, 1.50938,
+    'C', 11.5524, 1.73785, 11.6667, 2.01251, 11.6667, 2.33334,
+    'V', 9.33334,
+    'C', 11.6667, 9.65417, 11.5524, 9.92883, 11.324, 10.1573,
+    'C', 11.0955, 10.3858, 10.8208, 10.5, 10.5, 10.5,
+    'H', 5.25,
+    'Z', // Close the first shape
+    'M', 5.25, 9.33334,
+    'H', 10.5,
+    'V', 2.33334,
+    'H', 5.25,
+    'V', 9.33334,
+    'Z', // Close the second shape
+    'M', 2.91667, 12.8333,
+    'C', 2.59583, 12.8333, 2.32118, 12.7191, 2.09271, 12.4906,
+    'C', 1.86424, 12.2622, 1.75, 11.9875, 1.75, 11.6667,
+    'V', 3.50001,
+    'H', 2.91667,
+    'V', 11.6667,
+    'H', 9.33333,
+    'V', 12.8333,
+    'H', 2.91667,
+    'Z' // Close the third shape
+];
+
+function addLabel(chart, key, value) {
+	var group = chart.renderer.g('plot-line-group')
+			.attr({class: 'plot-line-group', zIndex: 5}).add();
+	var axis = chart.xAxis[0];
+	var isPct = !!pctLabel[key],
+		belowMean = isBelowMean(key),
+		meanOrMedian = isMeanOrMedian(key),
+		isLeft = belowMean || meanOrMedian, // plotline label alignment
+		label = pctLabel[key] || key;
+	var plotLineX = axis.toPixels(value);
+
+	var labelText = `${label}: ${value.toPrecision(4)}`;
+	var labelY = chart.plotTop + chart.plotHeight / 2 + 3 +
+		+ (meanOrMedian ? 0 : belowMean ? -32 : 32);
+	var labelX = isLeft ? plotLineX + 14 : plotLineX - 14;
+
+	var labelElement = chart.renderer.text(labelText, labelX, labelY)
+		.css({
+			textTransform: isPct ? 'none' : 'capitalize',
+			color: '#212121',
+			fontSize: '11px',
+		}).attr({
+			align: isLeft ? 'left' : 'right',
+			cursor: 'default',
+			zIndex: 5 // Ensure text is above background
+		}).add(group);
+
+	// Get the bounding box of the label
+	var labelBBox = labelElement.getBBox(true);
+
+	var xPad = 6;
+	var yPad = 5;
+	var bgX = labelBBox.x - xPad;
+	var bgY = labelBBox.y - yPad + 1;
+	var bgWidth = labelBBox.width + 2 * xPad + 1;
+	var bgHeight = labelBBox.height + 2 * yPad - 1;
+
+	// Add the background rectangle with border
+	var rect = chart.renderer.rect(bgX, bgY, bgWidth, bgHeight)
+		.attr({
+			fill: 'rgba(255, 255, 255, 0.6)', // Semi-transparent white background
+			stroke: 'rgba(33, 33, 33, 0.5)',  // Border color
+			'stroke-width': 1,
+			'shape-rendering': 'crispEdges',
+			cursor: 'pointer',
+			zIndex: 4,                     // Behind the text but above other elements
+		}).add(group);
+
+	// Add the connecting line
+	chart.renderer.path([
+			'M', isLeft ? bgX : bgX + bgWidth, bgY + bgHeight,
+			'L', plotLineX, bgY + bgHeight + 6
+		]).attr({
+			'stroke-width': 1,
+			stroke: '#212121',
+			opacity: 0.5,
+			zIndex: 3
+		}).add(group);
+
+	var copyIconX = bgX + (isLeft ? bgWidth - 3 : -14);
+	var copyIconY = bgY + 3;
+	var copyIcon = chart.renderer.path(copyIconPath)
+		.attr({
+			fill: '#1C1B1F',
+			zIndex: 106,
+			opacity: 0,
+			transform: `translate(${copyIconX}, ${copyIconY})`
+		}).add(group);
+
+	// Bind mouse events to the group
+	group.element.addEventListener('click', function () {
+		navigator.clipboard.writeText(value);
+	});
+
+	var iconWidth = 18;
+	var expandedWidth = bgWidth + iconWidth;
+	group.element.addEventListener('mouseenter', function () {
+		rect.attr({width: expandedWidth}); // Expand width
+		copyIcon.attr({opacity: 1});
+		if (!isLeft) {
+			rect.attr({x: bgX - iconWidth});
 		}
+	});
+	group.element.addEventListener('mouseleave', function () {
+		rect.attr({width: bgWidth, x: bgX}); // Shrink back
+		copyIcon.attr({opacity: 0});
 	});
 }
 
-function positionXAxisPlotlineLabel({chart}) {
-	var {chartWidth, xAxis} = chart;
-	xAxis[0].plotLinesAndBands.forEach(({label}) => {
-		if (label) {
-			var {alignAttr, alignOptions: {align} = {}, element} = label;
-			if (align === 'right') {
-				element.style.removeProperty('left');
-				element.style.setProperty('right', `${chartWidth - alignAttr.x}px`);
-			}
+function destroyLabels(chart) {
+	var existingGroups = chart.container.querySelectorAll('.plot-line-group');
+	Array.from(existingGroups).forEach(groupElement => {
+		if (groupElement.hcElement) {
+			groupElement.hcElement.destroy(); // Highcharts SVGElement cleanup
+		} else {
+			groupElement.remove(); // Raw DOM fallback
 		}
 	});
 }
@@ -196,14 +265,16 @@ function densityChart({chartOptions, yavg, Y}) {
 		chart: {
 			events: {
 				load: function() {
-					Object.entries(yavg || {}).forEach((measure) => {
-						addXAxisPlotline({chart: this,  ...plotlineOpts(measure)});
+					_.each(yavg, ([value], key) => {
+						addXAxisPlotline({chart: this, value,
+							dashStyle: pctLabel[key] ? 'dash' : 'solid'});
 					});
-					addCopyToXAxisPlotlineLabel({chart: this});
-					positionXAxisPlotlineLabel({chart: this});
 				},
 				redraw: function() {
-					positionXAxisPlotlineLabel({chart: this});
+					destroyLabels(this);
+					_.each(yavg, ([value], key) => {
+						addLabel(this, key, value);
+					});
 				},
 			},
 			zoomType: 'x'
