@@ -310,6 +310,7 @@ function xenaCallBPJ(queryFn, ...params) {
 
 var BPJAlts = {
 	cohortSamples: 'cohortSamplesHFC',
+	cohortMaxSamples: 'cohortMaxSamplesHFC',
 	datasetSamples: 'datasetSamplesHFC',
 	datasetSamplesExamples: 'datasetSamplesHFCExamples',
 	datasetMetadata: 'datasetMetadataHFC',

@@ -1,7 +1,7 @@
 import query from './query';
 import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
-var {allCohorts: fetchAllCohorts, allFieldMetadata, datasetList,
+var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
 	datasetMetadata, datasetSamples, donorFields, fetchDefaultStudy} =
 	require('../xenaQuery');
 var {assoc, assocIn, contains, findIndex, get, getIn, identity, intersection,
@@ -11,9 +11,9 @@ var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
-import {allCohorts, allDefaultCohortNames, getSamples,
-	hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1, getScale,
-	userServerCohorts} from '../models/map';
+import {allCohorts, allDefaultCohortNames, getSamples, getScale, hasColorBy,
+	hasDataset, hasImage, isLog, log2p1, pow2m1, studyList, userServerCohorts}
+		from '../models/map';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -120,10 +120,9 @@ var fetchMethods = {
 			cohorts.length ?
 				fetchAllCohorts(server, []).map(list => intersection(cohorts, list)) :
 				of([], asap)),
-	cohortDatasets: (cohort, server) =>
-		datasetList(server, [cohort]),
-	cohortFeatures: (cohort, server, dataset) =>
-		allFieldMetadata(server, dataset),
+	cohortMaxSamples: (cohort, server) => cohortMaxSamples(server, cohort),
+	cohortDatasets: (cohort, server) => datasetList(server, [cohort]),
+	cohortFeatures: (cohort, server, dataset) => allFieldMetadata(server, dataset),
 	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
 	samples: (server, dataset) => datasetSamples(server, dataset)
@@ -147,6 +146,7 @@ var fetchMethods = {
 var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
+	cohortMaxSamples: identity, // cache indefinitely
 	colorBy: identity, // always updates in-place
 	colorBy2: identity, // always updates in-place
 	serverCohorts: identity, // cache indefinitely
@@ -189,9 +189,15 @@ var singlecellData = state =>
 		// We need datasetMetadata to draw the integration list, and need
 		// cohortDatasets after the user has selected an integration.
 		getIn(state, ['singlecell', 'defaultStudy']) && allDatasets(state),
+		Let((cohorts = allDefaultCohortNames(studyList(state.singlecell)),
+			usc = userServerCohorts(state.spreadsheet.servers,
+				state.singlecell.serverCohorts, cohorts)) =>
+			map(usc, (cohorts, server) =>
+				cohorts.map(cohort => [['cohortMaxSamples', cohort, server]]).flat())
+			.flat()),
 		userServers(state.spreadsheet).map(server =>
 			['serverCohorts', server, ['singlecell', 'defaultStudy']]),
-		Let((cohorts = allCohorts(state.singlecell),
+		Let((cohorts = pluck(allCohorts(state.singlecell), 'cohort'),
 			usc = userServerCohorts(state.spreadsheet.servers,
 				state.singlecell.serverCohorts, cohorts)) =>
 			map(usc, (cohorts, server) =>

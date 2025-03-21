@@ -23,7 +23,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
 	getIn, groupBy, isEqual, Let, merge, object, pick, range, sortByI,
-	times, updateIn, without } = require('./underscore_ext').default;
+	times, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './chart/chart';
 import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
@@ -59,8 +59,8 @@ var welcome = ({handlers: {onEnter}}) =>
 var studyList = ['defaultStudy', 'studyList'];
 
 // XXX take max & round to a few digits.
-var maxCells = (state, datasets = []) => Math.max(...datasets.map(({host, name}) =>
-	getIn(state, ['datasetMetadata', host, name, 'count'], 0)));
+var maxCells = (state, cohort) =>
+	Math.max(...values(getIn(state, ['cohortMaxSamples', cohort])));
 
 var allAssays = state => cohort => (cohort.preferredDataset || []).map(({host, name}) =>
 	getIn(state, ['datasetMetadata', host, name, 'assay'])).join(' / ');
@@ -70,10 +70,9 @@ var findStudy = (studyList, studyID) =>
 
 var studyRows = (state, study, label = study.label) => {
 	let cohorts = (study.cohortList || [])
-		.filter(cohort => get(cohort.preferredDataset, 'length'))
 		.map(cohort => ({
 			donors: cohort.donorNumber,
-			cells: maxCells(state, cohort.preferredDataset),
+			cells: maxCells(state, cohort.cohort),
 			assays: allAssays(state)(cohort)
 		}));
 

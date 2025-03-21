@@ -100,6 +100,7 @@ export var curatedFields = (cohorts, cohortDatasets, cohortFeatures) =>
 						.map(d => ({[cohort]: d}))))));
 
 
+export var studyList = state => getIn(state, ['defaultStudy', 'studyList'], []);
 var studyCohorts = study => get(study, 'cohortList', []);
 
 var allCohorts1 = memoize1((studyList, id) =>
@@ -109,16 +110,14 @@ var allCohorts1 = memoize1((studyList, id) =>
 			.map(({studyID}) => studyCohorts(byId[studyID])))));
 
 export var allCohorts = state =>
-	allCohorts1(getIn(state, ['defaultStudy', 'studyList'], []),
-		get(state, 'integration'));
+	allCohorts1(studyList(state), get(state, 'integration'));
 
 export var allDefaultCohortNames = memoize1(studyList =>
 		uniq(pluck(studyList.map(studyCohorts).flat(), 'cohort')));
 
 export var userServerCohorts = memoize1((servers, serverCohorts, cohorts) =>
-	Let((us = userServers({servers}),
-		cnames = pluck(cohorts, 'cohort')) =>
-		mapObject(pick(serverCohorts, us), sc => intersection(sc, cnames))));
+	Let((us = userServers({servers})) =>
+		mapObject(pick(serverCohorts, us), sc => intersection(sc, cohorts))));
 
 var ignore = ['_DONOR', '_SAMPLE', 'sampleID', '_DATASOURCE'];
 var dropIgnored = features =>
@@ -190,7 +189,7 @@ export var hasOther = (state, floatOnly, cohort = datasetCohort(state)) =>
 export var hasGene = (state, cohort = datasetCohort(state)) =>
 	Let((datasets =
 		get(
-			findValue(getIn(state, ['defaultStudy', 'studyList']),
+			findValue(studyList(state),
 				study => find(study.cohortList, c => c.cohort === cohort)),
 			'preferredDataset')) =>
 	get(datasets, 'length') && datasets);
