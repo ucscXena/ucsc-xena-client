@@ -73,7 +73,7 @@ var studyRows = (state, study, label = study.label) => {
 		.map(cohort => ({
 			donors: cohort.donorNumber,
 			cells: maxCells(state, cohort.cohort),
-			assays: allAssays(state)(cohort)
+			assays: cohort.cohortDataType || allAssays(state)(cohort)
 		}));
 
 	// Grouping by 'assays' and summing 'donors' and 'cells'
