@@ -1,8 +1,9 @@
 var {assoc, deepMerge, every, find, filter, findValue, first, flatmap, get, getIn,
 	identity, intersection, Let, map, mapObject, memoize1, merge, min, max,
-	mmap, object, omit, pairs, pick, pluck, sortByI, updateIn, uniq, values}
+	mmap, object, omit, pairs, pick, pluck, range, sorted, sortByI, updateIn, uniq, values}
 		= require('../underscore_ext').default;
 var {userServers} = require('./servers');
+var {categoryMore} = require('../colorScales');
 
 var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
 
@@ -351,6 +352,15 @@ export var ORDINAL = {
 	CUSTOM: 2
 };
 
+var cmpStr = (i, j) => i < j ? 1 : j < i ? -1 : 0;
+
+export var cmpCodes = codes => (i, j) =>
+	Let((ci = codes[i], cj = codes[j]) =>
+		isNaN(ci) && isNaN(cj) ? cmpStr(ci, cj) :
+		isNaN(ci) ? 1 :
+		isNaN(cj) ? -1 :
+		+cj - +ci);
+
 // color scale variants
 var getLogScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
 	['float-log', null, color, p05, high(p05, p95, p99, max)];
@@ -358,8 +368,14 @@ var getLogScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
 var getLinearScale = (color, {p95: [p95], p05: [p05], p99: [p99], max: [max]}) =>
 	['float-pos', null, color, p05, high(p05, p95, p99, max)];
 
+// sort codes by their display order before assigning colors
+var ordinalColors = codes =>
+	Let((r = range(codes.length)) =>
+		object(sorted(r, cmpCodes(codes)).reverse().map((c, i) =>
+			[c, categoryMore[i % categoryMore.length]])));
+
 export var getScale = (color, normalization, {codes, avg}) =>
-	codes ? ['ordinal', codes.length] :
+	codes ? ['ordinal', codes.length, ordinalColors(codes)] :
 	normalization === 'log2(x)' ? getLogScale(color, avg) :
 	getLinearScale(color, avg);
 

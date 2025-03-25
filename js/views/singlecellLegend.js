@@ -4,23 +4,15 @@ var Legend = require('./Legend');
 var BandLegend = require('./BandLegend');
 import {el, span} from '../chart/react-hyper';
 import {colorScale} from '../colorScales';
+import {cmpCodes} from '../models/map';
 var {first, get, last, Let} = require('../underscore_ext').default;
 
 var legend = el(Legend);
 var bandLegend = el(BandLegend); //eslint-disable-line no-unused-vars
 
-var cmpStr = (i, j) => i < j ? 1 : j < i ? -1 : 0;
-
-export var cmp = codes => (i, j) =>
-	Let((ci = codes[i], cj = codes[j]) =>
-		isNaN(ci) && isNaN(cj) ? cmpStr(ci, cj) :
-		isNaN(ci) ? 1 :
-		isNaN(cj) ? -1 :
-		+cj - +ci);
-
 function codedLegend({column: {color, codes, codesInView}, onClick}) {
 	var colorFn = colorScale(color),
-		data = codesInView.sort(cmp(codes)),
+		data = codesInView.sort(cmpCodes(codes)),
 		colors = data.map(colorFn),
 		labels = data.map(d => codes[d]);
 

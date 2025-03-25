@@ -4,7 +4,7 @@ import {el, span} from '../chart/react-hyper';
 import {tableLayout} from './muiTable';
 import {colorScale, categoryMore as colors} from '../colorScales';
 var {assoc, Let, range} = require('../underscore_ext').default;
-import {cmp} from './singlecellLegend';
+import {cmpCodes} from '../models/map';
 
 var button = el(Button);
 var dialog = el(Dialog);
@@ -25,7 +25,7 @@ var onCellClick = ({customColor, onClick}) => ev => {
 var colorTable = ({customColor, onClick, codes, scale}) =>
   tableLayout({className: styles.table, onClick: onCellClick({customColor, onClick})},
               ['Category', ...colors.map(c => span({style: {backgroundColor: c}}))],
-              range(codes.length).sort(cmp(codes)).reverse().map(
+              range(codes.length).sort(cmpCodes(codes)).reverse().map(
                 i => [{'data-code': i}, codes[i], ...colors.map(c =>
                   span({style: {backgroundColor:
                     scale(i) === c ? c : 'rgba(0, 0, 0, 0)'}}, ''))]));
