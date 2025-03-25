@@ -1,7 +1,8 @@
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import PureComponent from '../PureComponent';
-var {identity, isEqual, memoize1, mmap} = require('../underscore_ext').default;
+var {identity, isEqual, isObject, memoize1, mmap} =
+	require('../underscore_ext').default;
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {rxEvents} = require('../react-utils');
@@ -54,7 +55,7 @@ export class GeneDatasetSuggest extends PureComponent {
 	}
 
 	onChange = (ev, value) => {
-		if (value) {
+		if (isObject(value)) {
 			this.props.onSelect(value);
 			this.setState({inputValue: getOptionLabel(value)});
 		}
