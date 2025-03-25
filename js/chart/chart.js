@@ -18,8 +18,6 @@ import {
 	Box,
 	Button,
 	Card,
-	CardContent,
-	CardHeader,
 	FormControl,
 	Icon,
 	IconButton,
@@ -63,8 +61,6 @@ var button = el(Button);
 var icon = el(Icon);
 var iconButton = el(IconButton);
 var card = el(Card);
-var cardContent = el(CardContent);
-var cardHeader = el(CardHeader);
 var formControl = el(FormControl);
 var menuItem = el(MenuItem);
 var textField = el(TextField);
@@ -1328,17 +1324,6 @@ class Chart extends PureComponent {
 			setHasStats = (hasStats) => this.setState({hasStats}),
 			setRange = (range) => this.setState({range}),
 			setView = (view) => this.setState({view});
-
-		// XXX note that this will also display if data is still loading, which is
-		// a bit misleading.
-		// XXX this should now be happening in ChartWizard, so we should drop this.
-		if (!(v(chartState.ycolumn) && xenaState.cohort && xenaState.samples &&
-			xenaState.columnOrder.length > 0)) {
-			return box({display: 'flex', justifyContent: 'center', my: 12},
-				card({elevation: 2},
-					cardHeader({action: closeButton(() => callback(['heatmap']))}),
-					cardContent('There is no plottable data. Please add some from the Visual Spreadsheet.')));
-		}
 
 		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
 			{columns} = xenaState,
