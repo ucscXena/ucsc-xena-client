@@ -706,16 +706,24 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
 	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
-function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], setRange, setView}, chartOptions) {
+var inRange = (number, {max, min}) => number >= min && number <= max;
+
+// pick metrics that are in the display range.
+var pickMetrics = (yavg, range) => _.pick(yavg, ([value]) => inRange(value, range));
+
+function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data],
+		setView}, chartOptions) {
 	setView('density');
-	chartOptions = highchartsHelper.densityChart({chartOptions, yavg, yaxis: field, Y});
 	var nndata = _.filter(data, x => !isNaN(x)),
 		min = _.min(nndata),
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
-		density = kde().sample(nndata)
-		(_.range(min, max, (max - min) / points));
-	setRange({min, max});
+		density = kde().sample(nndata)(_.range(min, max, (max - min) / points));
+
+	chartOptions = highchartsHelper.densityChart({
+		chartOptions,
+		yavg: pickMetrics(yavg, {min, max}),
+		yaxis: field, Y});
 
 	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
@@ -1119,19 +1127,7 @@ function addSDs({mean, sd, ...yavg}) {
 	};
 }
 
-var inRange = (number, {max, min}) => number >= min && number <= max;
-
 var yMin = ydata => _.min(_.map(ydata, d => _.min(d)));
-
-function pickMetrics(yavg, range) {
-	if (!range) {return yavg;}
-	return Object.entries(yavg).reduce((acc,  [key, value]) => {
-		if (inRange(_.first(value), range)) {
-			acc[key] = value;
-		}
-		return acc;
-	}, {});
-}
 
 function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	if (!v(id)) {
@@ -1144,23 +1140,16 @@ function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	return label + unit + noralization;
 }
 
-function getMeasures({avgState, pctState, ycolumn}, yavg) {
-	let measures = [];
-	var centralMeasure = _.Let((n = avgOptions[avgState[ycolumn]]) => n && v(n.label));
-	var pctMeasure = _.Let((n = pctOptions[pctState[ycolumn]]) => n && v(n.label));
-	if (centralMeasure) {
-		measures.push(centralMeasure);
-	}
-	if (pctMeasure) {
-		measures.push(...pctRange[pctMeasure]);
-	}
-	return _.pick(yavg, measures);
-}
+// select metrics from state
+var selectedMetrics = ({avgState, pctState, ycolumn}, yavg) =>
+	_.pick(yavg,
+		_.get(avgOptions[avgState[ycolumn]], 'label'),
+		...pctRange[_.get(pctOptions[pctState[ycolumn]], 'label')] || []);
 
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
-		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
-		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats', 'setView', 'setRange']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats', 'setView']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats', 'setView']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
 }
 
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
@@ -1196,7 +1185,6 @@ function callDrawChart(xenaState, params) {
 		scatterColorData = scatterColorData[0];
 	}
 
-	var yavg = getMeasures(chartState, params.yavg);
 
 	// XXX omit unused downstream params? e.g. chartState?
 	return drawChart(_.merge(params, {
@@ -1205,7 +1193,6 @@ function callDrawChart(xenaState, params) {
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		xdata, ydata, // normalized
-		yavg,
 	}));
 };
 
@@ -1305,7 +1292,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, hasStats: false, range: undefined, view: undefined};
+		this.state = {advanced: false, hasStats: false, view: undefined};
 	}
 
 	onClose = () => {
@@ -1315,14 +1302,13 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, hasStats, range, view} = this.state,
+			{advanced, hasStats, view} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
 			},
 			setHasStats = (hasStats) => this.setState({hasStats}),
-			setRange = (range) => this.setState({range}),
 			setView = (view) => this.setState({view});
 
 		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
@@ -1361,7 +1347,7 @@ class Chart extends PureComponent {
 		var drawProps = {ydata, ycolumn,
 			xdata, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, callback,
-			yavg: pickMetrics(addSDs(yavg), range),
+			yavg: selectedMetrics(chartState, addSDs(yavg)),
 			yexp,
 			xexp,
 			yexpression,
@@ -1369,7 +1355,6 @@ class Chart extends PureComponent {
 			ynorm,
 			inverted,
 			setHasStats,
-			setRange,
 			setView,
 		};
 
