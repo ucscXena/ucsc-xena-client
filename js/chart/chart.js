@@ -649,9 +649,8 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setHasStats, setView, yexpression, yfields, ydata,
+function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors, inverted, setHasStats, yexpression, yfields, ydata,
 		xlabel, ylabel, ynonexpressed, ynorm}, chartOptions) {
-	setView(chartType);
 	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 
 	// sort by median of xCategories if yfields.length === 1
@@ -695,9 +694,8 @@ var inRange = (number, {max, min}) => number >= min && number <= max;
 // pick metrics that are in the display range.
 var pickMetrics = (yavg, range) => _.pick(yavg, ([value]) => inRange(value, range));
 
-function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data],
-		setView}, chartOptions) {
-	setView('density');
+function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data]},
+		chartOptions) {
 	var nndata = _.filter(data, x => !isNaN(x)),
 		min = _.min(nndata),
 		max = _.max(nndata),
@@ -753,10 +751,12 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 	return chart;
 }
 
-var summary = multi(({ycodemap, yfields}) =>
+var summaryMode = ({ycodemap, yfields}) =>
 	ycodemap ? 'column' :
 	yfields.length > 1 ? 'boxplot' :
-	'density');
+	'density';
+
+var summary = multi(summaryMode);
 
 summary.add('column', summaryColumn);
 summary.add('boxplot', summaryBoxplot);
@@ -1065,8 +1065,18 @@ function floatVFloat({samplesLength, xfield, xdata,
 	return chart;
 }
 
+var isFloatVCoded = ({xcodemap, ycodemap}) => xcodemap && !ycodemap;
+var isSummary = ({xfield}) => !xfield;
+var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
+// box or dot or violin
+var isBoxplot = state => isFloatVCoded(state) || isSummary(state) &&
+		summaryMode(state) === 'boxplot';
+var isDensityPlot = state => isSummary(state) && summaryMode(state) === 'density';
+var isFloatVFloat = ({xcodemap, xfield}) => !xcodemap && xfield;
+var doScatterColor = state => isFloatVFloat(state) && state.yfields.length === 1;
+
 function drawChart(params) {
-	var {cohort, samplesLength, setHasStats, xfield, xcodemap, ycodemap} = params,
+	var {cohort, samplesLength, setHasStats} = params,
 		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${samplesLength})`,
 		chartOptions = _.assoc(highchartsHelper.chartOptions,
 			'subtitle', {text: subtitle}),
@@ -1075,11 +1085,11 @@ function drawChart(params) {
 	statsDiv.innerHTML = "";
 	setHasStats(false);
 
-	if (xcodemap && !ycodemap) {
+	if (isFloatVCoded(params)) {
 		return floatVCoded(params, chartOptions);
-	} else if (!xfield) {
+	} else if (isSummary(params)) {
 		return summary(params, chartOptions);
-	} else if (xcodemap && ycodemap) {
+	} else if (isCodedVCoded(params)) {
 		return codedVCoded(params, chartOptions);
 	} else {
 		return floatVFloat(params, chartOptions);
@@ -1132,19 +1142,20 @@ var selectedMetrics = ({avgState, pctState, ycolumn}, yavg) =>
 
 function shouldCallDrawChart(prevProps, currentProps) {
 	return !_.isEqual(
-		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats', 'setView']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
-		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats', 'setView']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
+		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats']), xenaState: _.omit(prevProps.xenaState, ['defaultValue', 'showWelcome'])},
+		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats']), xenaState: _.omit(currentProps.xenaState, ['defaultValue', 'showWelcome'])});
 }
 
 // XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
-	var {ydata, xdata, doScatter, colorColumn} = params,
+	var {ydata, xdata, colorColumn} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
 		{chartType} = chartState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
+		doScatter = doScatterColor(params),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
 
@@ -1276,7 +1287,7 @@ var gaAnother = fn => () => {
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, hasStats: false, view: undefined};
+		this.state = {advanced: false, hasStats: false};
 	}
 
 	onClose = () => {
@@ -1286,14 +1297,13 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, hasStats, view} = this.state,
+			{advanced, hasStats} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
 			},
-			setHasStats = (hasStats) => this.setState({hasStats}),
-			setView = (view) => this.setState({view});
+			setHasStats = (hasStats) => this.setState({hasStats});
 
 		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
 			{columns} = xenaState,
@@ -1314,33 +1324,21 @@ class Chart extends PureComponent {
 			ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, ynorm),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].probes ||
-				columns[ycolumn].fieldList || columns[ycolumn].fields,
-			isDot = view === 'dot',
-			isDensity = view === 'density',
-			// doScatter is really "show scatter color selector", which
-			// we only do if y is single-valued.
-			doScatter = !xcodemap && xfield && yfields.length === 1;
+				columns[ycolumn].fieldList || columns[ycolumn].fields;
 
-		var {ydata, xdata, yavg} = applyTransforms(ydata0,  yexp, ynorm, xdata0, xexp),
-			ynonexpressed = applyExpression(ydata0, yexpression), // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
-			// doAvg is "show mean or median selector" and doPct is "percentile shown", which
-			// we only do for density plots.
+		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
+			ynonexpressed = applyExpression(ydata0, yexpression); // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
+
+		var drawProps = {ydata, ycolumn, xdata, xcolumn, colorColumn, columns,
+			xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, yavg:
+			selectedMetrics(chartState, addSDs(yavg)), yexp, xexp, yexpression,
+			ynonexpressed, ynorm, inverted, setHasStats};
+
+		var isDot = isBoxplot(drawProps) && _.get(chartState, 'chartType') === 'dot',
+			isDensity = isDensityPlot(drawProps),
+			doScatter = doScatterColor(drawProps),
 			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
 			doPct = isDensity && 'mean' in yavg && 'sd' in yavg;
-		// XXX is callback used??
-		var drawProps = {ydata, ycolumn,
-			xdata, xcolumn, doScatter, colorColumn, columns,
-			xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, callback,
-			yavg: selectedMetrics(chartState, addSDs(yavg)),
-			yexp,
-			xexp,
-			yexpression,
-			ynonexpressed,
-			ynorm,
-			inverted,
-			setHasStats,
-			setView,
-		};
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
 				ev => set(['colorColumn'], ev.target.value)) : null;
@@ -1382,12 +1380,12 @@ class Chart extends PureComponent {
 				opts: normalizationOptions});
 
 		var viewOpts = filterViewOptions(viewOptions, xfield),
-		switchView = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
+		switchView = isBoxplot(drawProps) ?
 			buildDropdown({
 				label: 'Chart type',
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
 				opts: viewOpts,
-				value: view}) : null;
+				value: chartState.chartType}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
