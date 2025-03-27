@@ -627,9 +627,7 @@ function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
 var nullStr = v => v !== v ? 'null' : v;
 
 function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
-	scatterColorScale, scatterColorData, scatterColorDataCodemap,
-	scatterColorLabel, samplesMatched, setHasStats,
-	cohortSamples}, chartOptions) {
+	scatterColor, samplesMatched, setHasStats, cohortSamples}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
 		yfield,
@@ -671,16 +669,16 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 			colorScale,
 			highlightSeries = [],
 			colorCode, colorMin, color, colorLabel,
-			useCodedSeries = scatterColorDataCodemap || !scatterColorData,
+			useCodedSeries = !scatterColor || scatterColor.codemap,
 			gray = 'rgb(150,150,150)',
 			bin;
 
 		if (!useCodedSeries) {
-			average = highchartsHelper.average(scatterColorData);
-			stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
-			colorMin = _.min(scatterColorData);
+			average = highchartsHelper.average(scatterColor.data);
+			stdDev = highchartsHelper.standardDeviation(scatterColor.data, average);
+			colorMin = _.min(scatterColor.data);
 			bin = stdDev * 0.1;
-			colorScale = v => isNaN(v) ? 'gray' : scatterColorScale(v);
+			colorScale = v => isNaN(v) ? 'gray' : scatterColor.scale(v);
 		}
 
 		chartOptions = _.deepMerge(chartOptions, {
@@ -692,8 +690,8 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 		for (i = 0; i < xdata[0].length; i++) {
 			x = xdata[0][i];
 			y = ydata[0][i];
-			if (scatterColorData) {
-				colorCode = scatterColorData[i];
+			if (scatterColor) {
+				colorCode = scatterColor.data[i];
 			} else {
 				colorCode = 0;
 			}
@@ -706,8 +704,8 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 						};
 					}
 					multiSeries[colorCode].data.push({
-						colorLabel: scatterColorDataCodemap ?
-							(scatterColorDataCodemap[colorCode] || "null (no data)") : '',
+						colorLabel: scatterColor?.codemap ?
+							(scatterColor.codemap[colorCode] || "null (no data)") : '',
 						name: sampleLabels[i],
 						x: x,
 						y: y
@@ -720,7 +718,7 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 						};
 					}
 					multiSeries[colorCode].data.push({
-						colorLabel: nullStr(scatterColorData[i]),
+						colorLabel: nullStr(scatterColor.data[i]),
 						name: sampleLabels[i],
 						x: x,
 						y: y,
@@ -741,14 +739,14 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 
 		_.keys(multiSeries).map( (colorCode, i) => {
 			var showInLegend;
-			if (scatterColorData) {
+			if (scatterColor) {
 				if (useCodedSeries) {
-					colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-					color = scatterColorScale(colorCode) || gray;
+					colorLabel = scatterColor.codemap[colorCode] || "null (no data)";
+					color = scatterColor.scale(colorCode) || gray;
 					showInLegend = true;
 				} else {
 					color = colorScale(colorCode);
-					colorLabel = scatterColorLabel;
+					colorLabel = scatterColor.label;
 					showInLegend = (i === 0) ? true : false;
 				}
 

@@ -347,28 +347,26 @@ function scatterProps(xenaState, params) {
 		return {};
 	}
 
-	var scatterColorScale, scatterColorData;
+	var scale, data;
 
 	if (isSegmented(xenaState, colorColumn)) {
 		let color = _.getIn(xenaState, ['columns', colorColumn, 'color']);
-		let scale = colorScales.colorScale(color),
+		let s = colorScales.colorScale(color),
 			[,,,, origin] = color;
 
 		// see km.js:segmentedVals(). This is a work-around for
 		// trend-amplitude scales. We should deprecate them.
-		scatterColorScale = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin));
-		scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues', 0]);
+		scale = v => RGBToHex(...v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin));
+		data = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues', 0]);
 	} else {
 		let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
-		scatterColorScale = color && colorScales.colorScale(color);
-		scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values', 0]);
+		scale = color && colorScales.colorScale(color);
+		data = _.getIn(xenaState, ['data', colorColumn, 'req', 'values', 0]);
 	}
-	var scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
-	var scatterColorLabel = _.getIn(xenaState,
-		['columns', colorColumn, 'user', 'fieldLabel']);
+	var codemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
+	var label = _.getIn(xenaState, ['columns', colorColumn, 'user', 'fieldLabel']);
 
-	return {scatterColorScale, scatterColorData, scatterColorDataCodemap,
-		scatterColorLabel};
+	return {scatterColor: {scale, data, codemap, label}};
 }
 
 var firstColorScale = (xenaState, column) =>
