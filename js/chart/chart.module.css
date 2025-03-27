@@ -35,11 +35,6 @@
 	padding: 24px 16px;
 }
 
-.chart {
-	flex: 1;
-	overflow: hidden;
-}
-
 .chartActions {
 	align-content: flex-start;
 	overflow: hidden;
@@ -94,16 +89,3 @@
 .chartAction .formControl {
 	margin: 0;
 }
-
-.chart [class*='plot-line-group'] * {
-	cursor: pointer;
-}
-
-.violinTooltip td {
-	border: 1px solid black;
-	padding: 0 1px;
-}
-
-.violinTooltip table {
-	 border-collapse: collapse;
- }

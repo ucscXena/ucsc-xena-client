@@ -1,0 +1,17 @@
+.chart {
+	flex: 1;
+	overflow: hidden;
+}
+
+.chart [class*='plot-line-group'] * {
+	cursor: pointer;
+}
+
+.violinTooltip td {
+	border: 1px solid black;
+	padding: 0 1px;
+}
+
+.violinTooltip table {
+	 border-collapse: collapse;
+ }
