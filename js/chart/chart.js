@@ -114,13 +114,12 @@ var sxAccordionSummary = {
 };
 
 // group field0 by code0, where field1 has value
-function groupIndexWithValueByCode(field0, codes0, field1) {
+function groupIndexWithValue(field0, field1) {
 	var indicies = _.range(field0.length).filter(i => !isNaN(field1[i]));
-	var groups = _.groupBy(indicies, i => codes0[field0[i]]);
-	delete groups[undefined];
+	var groups = _.groupBy(indicies, i => field0[i]);
+	delete groups.NaN;
 	return groups;
 }
-
 
 // XXX We should really group by value, and covert values
 // to codes late, but the current implementation uses
@@ -762,114 +761,70 @@ summary.add('column', summaryColumn);
 summary.add('boxplot', summaryBoxplot);
 summary.add('density', densityplot);
 
+function codedVCodedData({xdata, ydata}) {
+	var ybins = groupIndex(ydata[0]),
+		xbins = groupIndexWithValue(xdata[0], ydata[0]),
+		yMargin = _.map(ybins, bin => bin.length),
+		total = _.sum(yMargin),
+		xMargin = _.map(xbins, bin => bin.length),
+		xRatio = xMargin.map(count => count / total),
+		expected = jStat.outer(yMargin, xRatio),
+		observed =  _.map(ybins,
+			ybin => _.map(xbins, xbin => _.intersection(xbin, ybin).length));
+
+	return {observed, expected, xMargin, xbins, ybins};
+}
+
+// Pearson's chi-squared
+// https://en.wikipedia.org/wiki/Pearson's_chi-squared_test note, another
+// version of pearson's chi-squared test is G-test, Likelihood-ratio test,
+// https://en.wikipedia.org/wiki/Likelihood-ratio_test
+function codedVCodedStats({expected, observed}) {
+	var dof = (observed.length - 1) * (observed[0].length - 1);
+	if (dof) {
+		var chisquareStats = jStat(observed).subtract(expected).pow(2)
+			.map((v, i, j) => v / expected[i][j]).sum(true);
+
+		var pValue = 1 - jStat.chisquare.cdf(chisquareStats, dof);
+		return 'Pearson\'s chi-squared test<br>' +
+				'p = ' + pValue.toPrecision(4) + ' ' +
+				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
+	}
+}
+
 function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		columns, ycolumn}, chartOptions) {
 
-	var statsDiv = document.getElementById('stats'),
-		showLegend,
-		code,
-		categories,
-		i, k,
-		pValue, dof,
-		total, chart;
+	var {xbins, ybins, observed, expected, xMargin} = codedVCodedData({xdata, ydata});
 
-	// Y data: yfields can only have array size of 1
-	var ybinnedSample = groupIndexByCode(ydata[0], ycodemap);
+	chartOptions = highchartsHelper.columnChartOptions(chartOptions,
+		_.keys(xbins).map((v, i) => `${xcodemap[v]} (${xMargin[i]})`),
+		xlabel, 'Distribution', ylabel, true);
 
-	var xbinnedSample = groupIndexWithValueByCode(xdata[0], xcodemap, ydata[0]);
+	var chart = newChart(chartOptions);
 
-	// column chart setup
-	// XXX this order may be weird
-	categories = _.keys(xbinnedSample);
-
-
-	showLegend = true;
-
-	chartOptions = highchartsHelper.columnChartOptions(
-		chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
-		xlabel, 'Distribution', ylabel, showLegend);
-
-	chart = newChart(chartOptions);
-
-	// XXX this order may be weird
-	var ycategories = Object.keys(ybinnedSample);
-
-	//code
-	let scale = colorScales.colorScale(columns[ycolumn].colors[0]),
-		invCodeMap = _.invert(ycodemap);
-
-	// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
-	// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
-	var observed = [],
-		expected = [],
-		xRatio = [],
-		xMargin = [],
-		yMargin = [];
-
-	total = 0.0;
-	for (i = 0; i < ycategories.length; i++) {
-		code = ycategories[i];
-		observed.push(new Array(categories.length));
-		expected.push(new Array(categories.length));
-		yMargin.push(ybinnedSample[code].length);
-		total += yMargin[i];
-	}
-	// fill expected matrix
-	for (k = 0; k < categories.length; k++) {
-		code = categories[k];
-		xMargin.push(xbinnedSample[code].length);
-		xRatio.push(xMargin[k] / total);
-	}
-	for (i = 0; i < ycategories.length; i++) {
-		code = ycategories[i];
-		var ybinnedSampleSet = new Set(ybinnedSample[code]);
-		for (k = 0; k < categories.length; k++) {
-			observed[i][k] = xbinnedSample[categories[k]].filter(x => ybinnedSampleSet.has(x)).length;
-			expected[i][k] = xRatio[k] * yMargin[i];
-		}
-	}
-
-	for (i = 0; i < ycategories.length; i++) {
-		code = ycategories[i];
-		var ycodeSeries = new Array(categories.length);
-		for (k = 0; k < categories.length; k++) {
-			if (xMargin[k] && observed[i][k]) {
-				ycodeSeries[k] = parseFloat(((observed[i][k] / xMargin[k]) * 100).toPrecision(3));
-			} else {
-				ycodeSeries[k] = 0;
-			}
-		}
+	let scale = colorScales.colorScale(columns[ycolumn].colors[0]);
+	_.keys(ybins).map((v, i) => {
+		var ycodeSeries = _.mmap(xMargin, observed[i], (xMarg, obs) =>
+			xMarg && obs ? parseFloat(((obs / xMarg) * 100).toPrecision(3)) : 0);
 
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			type: 'column',
-			name: code,
+			name: ycodemap[v],
 			data: ycodeSeries,
-			yIsCategorical: ycodemap,
-			showDataLabel: ycodemap.length * categories.length < 30,
-			showInLegend: showLegend,
-			color: scale(invCodeMap[code]),
+			yIsCategorical: true,
+			showDataLabel: observed.length * observed[0].length < 30,
+			showInLegend: true,
+			color: scale(v),
 			description: observed[i]});
-	}
+	});
 
-	// pearson chi-square test statistics
-	dof = (ycategories.length - 1) * (categories.length - 1);
-	if (dof) {
-		var chisquareStats = 0.0;
-
-		for (i = 0; i < ycategories.length; i++) {
-			for (k = 0; k < categories.length; k++) {
-				chisquareStats += Math.pow((observed[i][k] - expected[i][k]), 2) / expected[i][k];
-			}
-		}
-
-		pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
-		statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
-				'p = ' + pValue.toPrecision(4) + ' ' +
-				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
+	var stats = codedVCodedStats({observed, expected});
+	if (stats) {
+		document.getElementById('stats').innerHTML = stats;
 		setHasStats(true);
 	}
-
 	return chart;
 }
 
