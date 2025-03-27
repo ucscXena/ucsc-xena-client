@@ -343,6 +343,10 @@ var isSegmented = (xenaState, colorColumn) =>
 
 function scatterProps(xenaState, params) {
 	var {colorColumn} = params;
+	if (!(doScatterColor(params) && v(colorColumn))) {
+		return {};
+	}
+
 	var scatterColorScale, scatterColorData;
 
 	if (isSegmented(xenaState, colorColumn)) {
@@ -367,9 +371,12 @@ function scatterProps(xenaState, params) {
 		scatterColorLabel};
 }
 
-var mergeScatterProps = (xenaState, params) =>
-	doScatterColor(params) && v(params.colorColumn) ?
-		_.merge(params, scatterProps(xenaState, params)) : params;
+var firstColorScale = (xenaState, column) =>
+	_.Let((color = _.getIn(xenaState, ['columns', column, 'colors', 0])) =>
+		color && colorScales.colorScale(color));
+
+var chartSubtitle = ({cohort, cohortSamples}) =>
+	 `cohort: ${_.get(cohort, 'name')} (n=${cohortSamples.length})`;
 
 class Chart extends PureComponent {
 	constructor() {
@@ -408,6 +415,8 @@ class Chart extends PureComponent {
 			yexpression = expressionMode(chartState, ymin),
 			ynorm = !ycodemap && _.get(normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]], 'value'),
+			ycolor = firstColorScale(xenaState, ycolumn),
+			xcolor = firstColorScale(xenaState, xcolumn),
 			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
 			ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, ynorm),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
@@ -417,14 +426,13 @@ class Chart extends PureComponent {
 		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
 			ynonexpressed = applyExpression(ydata0, yexpression); // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
 
-		// XXX drop columns, cohort
 		// XXX move stats
-		var drawProps = mergeScatterProps(xenaState,
-				{ydata, ycolumn, xdata, xcolumn, colorColumn, columns,
-				chartType, cohort, cohortSamples, samplesMatched,
-				xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, yavg:
-				selectedMetrics(chartState, addSDs(yavg)), yexpression,
-				ynonexpressed, ynorm, inverted, setHasStats});
+		var drawProps = {ydata, ycolor, xdata, xcolor, chartType,
+			cohortSamples, samplesMatched, xcodemap, ycodemap, yfields, xfield,
+			xlabel, ylabel, yavg: selectedMetrics(chartState, addSDs(yavg)),
+			yexpression, ynonexpressed, ynorm, inverted, setHasStats,
+			subtitle: chartSubtitle({cohort, cohortSamples}),
+			...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})};
 
 		var isDot = isBoxplot(drawProps) && _.get(chartState, 'chartType') === 'dot',
 			isDensity = isDensityPlot(drawProps),

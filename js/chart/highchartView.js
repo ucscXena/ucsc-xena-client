@@ -6,7 +6,6 @@ var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
 require('highcharts/modules/heatmap')(Highcharts);
 import {xenaColor} from '../xenaColor';
-import * as colorScales from '../colorScales';
 var jStat = require('../jStatShim');
 import {isSet, bitCount} from '../models/bitmap';
 import multi from '../multi';
@@ -475,15 +474,13 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
 
 // compute group sample indices, codes, and colors, then draw
 // box, dot or violin plot.
-function floatVCoded({xdata, xcodemap, xcolumn, columns, ...params}, chartOptions) {
+function floatVCoded({xdata, xcodemap, xcolor, ...params}, chartOptions) {
 	var groupsByValue = groupIndex(xdata[0]),
 		values = _.range(xcodemap.length).filter(v => groupsByValue[v]),
 		xCategories = values.map(v => xcodemap[v]),
 		groups = values.map(v => groupsByValue[v]);
 
-	var scale = colorScales.colorScale(columns[xcolumn].colors[0]);
-
-	var colors = values.map(scale);
+	var colors = values.map(xcolor);
 
 	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
@@ -592,8 +589,8 @@ function codedVCodedStats({expected, observed}) {
 	}
 }
 
-function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
-		columns, ycolumn}, chartOptions) {
+function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
+	xlabel, ylabel}, chartOptions) {
 
 	var {xbins, ybins, observed, expected, xMargin} = codedVCodedData({xdata, ydata});
 
@@ -603,7 +600,6 @@ function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, yla
 
 	var chart = newChart(chartOptions);
 
-	let scale = colorScales.colorScale(columns[ycolumn].colors[0]);
 	_.keys(ybins).map((v, i) => {
 		var ycodeSeries = _.mmap(xMargin, observed[i], (xMarg, obs) =>
 			xMarg && obs ? parseFloat(((obs / xMarg) * 100).toPrecision(3)) : 0);
@@ -616,7 +612,7 @@ function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, xlabel, yla
 			yIsCategorical: true,
 			showDataLabel: observed.length * observed[0].length < 30,
 			showInLegend: true,
-			color: scale(v),
+			color: ycolor(v),
 			description: observed[i]});
 	});
 
@@ -810,8 +806,7 @@ export var isSummary = ({xfield}) => !xfield;
 var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
 
 function drawChart(params) {
-	var {cohort, cohortSamples, setHasStats} = params,
-		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${cohortSamples.length})`,
+	var {subtitle, setHasStats} = params,
 		chartOptions = _.assoc(highchartsHelper.chartOptions,
 			'subtitle', {text: subtitle}),
 		statsDiv = document.getElementById('stats');
@@ -837,7 +832,6 @@ function shouldCallDrawChart(prevProps, currentProps) {
 }
 
 
-// XXX remove columns from parameters & pass in color
 class HighchartView extends PureComponent {
 	componentDidMount() {
 		sizeChartView();
