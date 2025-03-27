@@ -360,8 +360,11 @@ function scatterProps(xenaState, params) {
 		scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values', 0]);
 	}
 	var scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
+	var scatterColorLabel = _.getIn(xenaState,
+		['columns', colorColumn, 'user', 'fieldLabel']);
 
-	return {scatterColorScale, scatterColorData, scatterColorDataCodemap};
+	return {scatterColorScale, scatterColorData, scatterColorDataCodemap,
+		scatterColorLabel};
 }
 
 var mergeScatterProps = (xenaState, params) =>

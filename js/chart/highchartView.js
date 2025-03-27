@@ -634,8 +634,8 @@ var nullStr = v => v !== v ? 'null' : v;
 
 function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 	scatterColorScale, scatterColorData, scatterColorDataCodemap,
-	samplesMatched, setHasStats, columns, colorColumn, cohortSamples},
-	chartOptions) {
+	scatterColorLabel, samplesMatched, setHasStats,
+	cohortSamples}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
 		yfield,
@@ -767,7 +767,7 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 					showInLegend = true;
 				} else {
 					color = colorScale(colorCode);
-					colorLabel = columns[colorColumn].user.fieldLabel;
+					colorLabel = scatterColorLabel;
 					showInLegend = (i === 0) ? true : false;
 				}
 
