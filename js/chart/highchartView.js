@@ -8,10 +8,8 @@ require('highcharts/modules/heatmap')(Highcharts);
 import {xenaColor} from '../xenaColor';
 import * as colorScales from '../colorScales';
 var jStat = require('../jStatShim');
-import {v} from './utils.js';
 import {isSet, bitCount} from '../models/bitmap';
 import multi from '../multi';
-var {hexToRGB, colorStr} = require ('../color_helper').default;
 import {div, el} from './react-hyper';
 var compStyles = require('./highchartView.module.css');
 
@@ -674,21 +672,12 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 		}
 	} else { // y single subcolumn  --- coloring with a 3rd column
 		var multiSeries = {},
-			colorScale, getCodedColor,
+			colorScale,
 			highlightSeries = [],
-			opacity = 0.6,
 			colorCode, colorMin, color, colorLabel,
-			customColors,
 			useCodedSeries = scatterColorDataCodemap || !scatterColorData,
-			gray = `rgba(150,150,150,${opacity})`,
+			gray = 'rgb(150,150,150)',
 			bin;
-
-		getCodedColor = code => {
-			if ("NaN" === code) {
-				return gray;
-			}
-			return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
-		};
 
 		if (!useCodedSeries) {
 			average = highchartsHelper.average(scatterColorData);
@@ -754,16 +743,12 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 			}
 		}
 
-		if (v(colorColumn)) { // custome categorial color
-			customColors = _.getIn(columns[v(colorColumn)], ['colors', 0, 2]);
-		}
-
 		_.keys(multiSeries).map( (colorCode, i) => {
 			var showInLegend;
 			if (scatterColorData) {
 				if (useCodedSeries) {
 					colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-					color = customColors ? customColors[colorCode] : getCodedColor(colorCode);
+					color = scatterColorScale(colorCode) || gray;
 					showInLegend = true;
 				} else {
 					color = colorScale(colorCode);
