@@ -420,7 +420,7 @@ class Chart extends PureComponent {
 				{ydata, ycolumn, xdata, xcolumn, colorColumn, columns,
 				chartType, cohort, cohortSamples, samplesMatched,
 				xcodemap, ycodemap, yfields, xfield, xlabel, ylabel, yavg:
-				selectedMetrics(chartState, addSDs(yavg)), yexp, xexp, yexpression,
+				selectedMetrics(chartState, addSDs(yavg)), yexpression,
 				ynonexpressed, ynorm, inverted, setHasStats});
 
 		var isDot = isBoxplot(drawProps) && _.get(chartState, 'chartType') === 'dot',
@@ -513,7 +513,7 @@ class Chart extends PureComponent {
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, 'Statistics')),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, typography({id: 'stats', component: 'div', variant: 'caption'}))));
 
-		var HCV = highchartView({xenaState, drawProps});
+		var HCV = highchartView({drawProps});
 
 		// statistics XXX note that we scribble over stats. Should either render
 		// it in react, or make another wrapper component so react won't touch it.
