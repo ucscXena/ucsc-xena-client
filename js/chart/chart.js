@@ -24,7 +24,8 @@ import classNames from 'classnames';
 var {applyExpression} = require('./singleCell');
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
-import {isFloatVCoded, isSummary, summaryMode, highchartView} from './highchartView';
+import {highchartView, isCodedVCoded, isFloatVCoded, isSummary, summaryMode}
+	from './highchartView';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -440,12 +441,10 @@ class Chart extends PureComponent {
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
 				ev => set(['colorColumn'], ev.target.value)) : null;
-		// XXX refactor
-		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
-			!isFloat(columns, ycolumn);
-		var swapAxes = codedVCoded || doScatter ? button({color: 'secondary', disableElevation: true,
-				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)), variant: 'contained'},
-				'Swap X and Y') : null;
+		var swapAxes = isCodedVCoded(drawProps) || doScatter ?
+			button({color: 'secondary', disableElevation: true,
+				onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'],
+					ycolumn)), variant: 'contained'}, 'Swap X and Y') : null;
 		var invertAxes = isDot ? button({color: 'secondary', disableElevation: true,
 				onClick: () => set(['inverted'], !inverted), variant: 'contained'},
 				'Swap X and Y') : null;

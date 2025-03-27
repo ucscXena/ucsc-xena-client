@@ -801,7 +801,7 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 
 export var isFloatVCoded = ({xcodemap, ycodemap}) => xcodemap && !ycodemap;
 export var isSummary = ({xfield}) => !xfield;
-var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
+export var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
 
 function drawChart(params) {
 	var {subtitle, setHasStats} = params,
