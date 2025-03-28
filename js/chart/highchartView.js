@@ -100,7 +100,8 @@ function pValueFromCoefficient(coeff, length) {
 }
 
 //scatter plot stats Pearson's rho/r, Spearman rank rho/ρ value
-function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
+function printPearsonAndSpearmanRho(xlabel, yfields, xVector, ydata) {
+	var ret = '';
 	[...Array(yfields.length).keys()].forEach(i => {
 		var ylabel = yfields[i],
 			yVector = ydata[i],
@@ -110,25 +111,25 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 			pValueRho = pValueFromCoefficient(rho, ylist.length), // P value from pearson's rho value and length of ylist
 			pValueSpearmanRho = pValueFromCoefficient(spearmanRho, ylist.length); // P value from spearman rho value and length of ylist
 
-		if (div.innerHTML !== '') {
-			div.innerHTML += '<br>'  + '<br>';
+		if (ret !== '') {
+			ret += '\n'  + '\n';
 		}
-		div.innerHTML = div.innerHTML +
-			xlabel + ' ~ ' + ylabel + '<br>' +
-			'Pearson\'s rho<br>' +
+		ret +=
+			xlabel + ' ~ ' + ylabel + '\n' +
+			'Pearson\'s rho\n' +
 			'r = ' + rho.toPrecision(4) + '  ' +
-			'(p = ' + pValueRho.toPrecision(4) + ')' + '<br>' +
-			'Spearman\'s rank rho<br>' +
+			'(p = ' + pValueRho.toPrecision(4) + ')' + '\n' +
+			'Spearman\'s rank rho\n' +
 			'rho = ' + spearmanRho.toPrecision(4) + '  ' +
-			'(p = ' + pValueSpearmanRho.toPrecision(4) + ')' + '<br>';
+			'(p = ' + pValueSpearmanRho.toPrecision(4) + ')' + '\n';
 	});
+	return ret;
 }
 
 // p value when there is only 2 group comparison student t-test
 // https://en.wikipedia.org/wiki/Welch%27s_t-test
-function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields, setHasStats) {
-	var statsDiv = document.getElementById('stats');
-	statsDiv.innerHTML = 'Welch\'s t-test<br>';
+function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
+	var ret = 'Welch\'s t-test\n';
 	_.range(yfields.length).map(k => {
 		if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
 			let yfield = yfields[k];
@@ -147,22 +148,22 @@ function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields, setHasStats) {
 				cdf = jStat.studentt.cdf(tStatistics, dof),
 				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
 
-			statsDiv.innerHTML += (
-				(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+			ret += (
+				(yfields.length > 1 ? ('\n' + yfield + '\n') : '') +
 				'p = ' + pValue.toPrecision(4) + ' ' +
-				'(t = ' + tStatistics.toPrecision(4) + ')<br>'
+				'(t = ' + tStatistics.toPrecision(4) + ')\n'
 			);
 		}
 	});
-	setHasStats(true);
+	return ret;
 }
 
 // p value for >2 groups one-way ANOVA
 // https://en.wikipedia.org/wiki/One-way_analysis_of_variance
 function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
-		yfields, ydata, groups}, setHasStats) {
-	var statsDiv = document.getElementById('stats');
-	statsDiv.innerHTML = 'One-way Anova<br>';
+		yfields, ydata, groups}) {
+	var ret;
+	ret = 'One-way Anova\n';
 	_.range(yfields.length).map(k => {
 		let yfield = yfields[k],
 			ydataElement = ydata[k],
@@ -206,13 +207,13 @@ function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
 			// p value
 			pValue = jStat.ftest(fScore, fB, fW);
 
-		statsDiv.innerHTML += (
-			(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+		ret += (
+			(yfields.length > 1 ? ('\n' + yfield + '\n') : '') +
 			'p = ' + pValue.toPrecision(4) + ' ' +
-			'(f = ' + fScore.toPrecision(4) + ')<br>'
+			'(f = ' + fScore.toPrecision(4) + ')\n'
 		);
 	});
-	setHasStats(true);
+	return ret;
 }
 
 const LOWERWHISKER = 0;
@@ -441,16 +442,11 @@ var fvcChart = chartType => ({
 
 // It might make sense to split this into three functions instead of having
 // two polymorphic calls in here, and not much else.
-function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
-		inverted, setHasStats, subtitle, yexpression, yfields, ydata, xlabel, ylabel,
-		ynonexpressed, ynorm}) {
-	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
+function boxOrDotOrViolin({chartType = 'boxplot',
+		inverted, subtitle, yexpression, yfields, ydata, xlabel, ylabel,
+		ynorm, chartData}) {
 
-	// sort by median of xCategories if yfields.length === 1
-	if (xCategories.length > 0 && yfields.length === 1) {
-		[xCategories, groups, colors, matrices] = sortMatrices(xCategories,
-			groups, colors, matrices);
-	}
+	var {xCategories, groups, colors, matrices} = chartData;
 
 	var chartOptions = fvcOptions(chartType)({inverted, series:
 		xCategories.length, categories: yfields, xAxis: {categories: yfields},
@@ -462,26 +458,38 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
 	fvcChart(chartType)({xCategories, groups, matrices, yexpression, yfields,
 		ydata, colors, chart});
 
-	if (xCategories.length === 2) {
-		welch(matrices, yfields, setHasStats);
-	} else if (xCategories.length > 2) {
-		anova({matrices, yfields, ydata, groups}, setHasStats);
-	}
-
 	return chart;
 }
 
-// compute group sample indices, codes, and colors, then draw
-// box, dot or violin plot.
-function floatVCoded({xdata, xcodemap, xcolor, ...params}) {
+function floatVCodedData({xCategories, colors, ydata, groups, yexpression,
+		yfields, ynonexpressed}) {
+	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
+
+	// sort by median of xCategories if yfields.length === 1
+	if (xCategories.length > 0 && yfields.length === 1) {
+		[xCategories, groups, colors, matrices] = sortMatrices(xCategories,
+			groups, colors, matrices);
+	}
+
+	var stats = xCategories.length === 2 ? welch(matrices, yfields) :
+		xCategories.length > 2 ? anova({matrices, yfields, ydata, groups}) :
+		null;
+
+	return {chartData: {xCategories, groups, colors, matrices}, stats};
+}
+
+function computeFloatVCoded({xdata, xcodemap, xcolor, ...params}) {
 	var groupsByValue = groupIndex(xdata[0]),
 		values = _.range(xcodemap.length).filter(v => groupsByValue[v]),
 		xCategories = values.map(v => xcodemap[v]),
 		groups = values.map(v => groupsByValue[v]);
 
 	var colors = values.map(xcolor);
+	return floatVCodedData({groups, xCategories, colors, ...params});
+}
 
-	return boxOrDotOrViolin({groups, xCategories, colors, ...params});
+function floatVCoded(params) {
+	return boxOrDotOrViolin(params);
 }
 
 var inRange = (number, {max, min}) => number >= min && number <= max;
@@ -515,7 +523,8 @@ function summaryBoxplot(params) {
 		groups = [_.range(0, cohortSamples.length)],
 		colors = ['rgba(0, 0, 255, .5)', 'blue'],
 		xCategories = [null];
-	return boxOrDotOrViolin({groups, colors, xCategories, ...params});
+	var {chartData} = floatVCodedData({groups, xCategories, colors, ...params});
+	return boxOrDotOrViolin({...params, chartData});
 }
 
 function summaryColumn({ydata, ycodemap, xlabel, ylabel, subtitle}) {
@@ -580,16 +589,22 @@ function codedVCodedStats({expected, observed}) {
 			.map((v, i, j) => v / expected[i][j]).sum(true);
 
 		var pValue = 1 - jStat.chisquare.cdf(chisquareStats, dof);
-		return 'Pearson\'s chi-squared test<br>' +
+		return 'Pearson\'s chi-squared test\n' +
 				'p = ' + pValue.toPrecision(4) + ' ' +
 				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
 	}
 }
 
-function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
-	xlabel, ylabel, subtitle}) {
+function computeCodedVCoded(params) {
+	var chartData = codedVCodedData(params),
+		stats = codedVCodedStats(chartData);
+	return {chartData, stats};
+}
 
-	var {xbins, ybins, observed, expected, xMargin} = codedVCodedData({xdata, ydata});
+function codedVCoded({xcodemap, ycodemap, ycolor,
+	xlabel, ylabel, subtitle, chartData}) {
+
+	var {xbins, ybins, observed, xMargin} = chartData;
 
 	var chartOptions = highchartsHelper.columnChartOptions(
 		_.keys(xbins).map((v, i) => `${xcodemap[v]} (${xMargin[i]})`),
@@ -613,21 +628,28 @@ function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
 			description: observed[i]});
 	});
 
-	var stats = codedVCodedStats({observed, expected});
-	if (stats) {
-		document.getElementById('stats').innerHTML = stats;
-		setHasStats(true);
-	}
 	return chart;
 }
 
 var nullStr = v => v !== v ? 'null' : v;
 
-function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
-	scatterColor, samplesMatched, setHasStats, cohortSamples, subtitle}) {
+function computeFloatVFloat({xfield, yfields, xdata, ydata}) {
+	var stats;
+	// pearson rho value when there are <= 10 series x y scatter plot
+	if (yfields.length <= 10 && xdata[0].length > 1) {
+		if (xdata[0].length >= 5000) {
+			stats = () => printPearsonAndSpearmanRho(xfield, yfields, xdata[0], ydata);
+		} else {
+			stats = printPearsonAndSpearmanRho(xfield, yfields, xdata[0], ydata);
+		}
+	}
+	return {stats};
+}
 
-	var statsDiv = document.getElementById('stats'),
-		yfield,
+function floatVFloat({xdata, yfields, ydata, xlabel, ylabel,
+	scatterColor, samplesMatched, cohortSamples, subtitle}) {
+
+	var yfield,
 		i, k,
 		average, stdDev,
 		chart;
@@ -774,23 +796,6 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 		}
 	}
 
-	// pearson rho value when there are <= 10 series x y scatter plot
-	if (yfields.length <= 10 && xdata[0].length > 1) {
-		if (xdata[0].length >= 5000) {
-			var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
-			statsDiv.appendChild(btn);
-			btn.innerHTML = "Run Stats";
-			btn.onclick = function() {
-				printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
-				chart.reflow();
-			};
-		} else {
-			printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
-		}
-
-		setHasStats(true);
-	}
-
 	return chart;
 }
 
@@ -798,37 +803,33 @@ export var isFloatVCoded = ({xcodemap, ycodemap}) => xcodemap && !ycodemap;
 export var isSummary = ({xfield}) => !xfield;
 export var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
 
-function drawChart(params) {
-	if (isFloatVCoded(params)) {
-		return floatVCoded(params);
-	} else if (isSummary(params)) {
-		return summary(params);
-	} else if (isCodedVCoded(params)) {
-		return codedVCoded(params);
-	} else {
-		return floatVFloat(params);
-	}
-}
+var chartMode = params =>
+	isFloatVCoded(params) ? 'floatVCoded' :
+	isSummary(params) ? 'summary' :
+	isCodedVCoded(params) ? 'codedVCoded' :
+	'floatVFloat';
 
-function resetStats(params) {
-	var {setHasStats} = params,
-		statsDiv = document.getElementById('stats');
+var drawChart = multi(chartMode);
 
-	statsDiv.innerHTML = "";
-	setHasStats(false);
-}
+drawChart.add('floatVCoded', floatVCoded);
+drawChart.add('summary', summary);
+drawChart.add('codedVCoded', codedVCoded);
+drawChart.add('floatVFloat', floatVFloat);
+
+export var computeChart = multi(chartMode);
+
+computeChart.add('floatVCoded', computeFloatVCoded);
+computeChart.add('codedVCoded', computeCodedVCoded);
+computeChart.add('floatVFloat', computeFloatVFloat);
+computeChart.dflt = () => ({});
 
 function shouldCallDrawChart(prevProps, currentProps) {
-	return !_.isEqual(
-		{...prevProps, drawProps: _.omit(prevProps.drawProps, ['setHasStats'])},
-		{...currentProps, drawProps: _.omit(currentProps.drawProps, ['setHasStats'])});
+	return !_.isEqual(prevProps, currentProps);
 }
-
 
 class HighchartView extends PureComponent {
 	componentDidMount() {
 		sizeChartView();
-		resetStats(this.props.drawProps);
 		this.chart = drawChart(this.props.drawProps);
 		this.chart.redraw();
 		this.chart.reflow();
@@ -844,7 +845,6 @@ class HighchartView extends PureComponent {
 	componentDidUpdate(prevProps) {
 		if (shouldCallDrawChart(prevProps, this.props)) {
 			this.chart.destroy();
-			resetStats(this.props.drawProps);
 			this.chart = drawChart(this.props.drawProps);
 			this.chart.redraw();
 		} else {

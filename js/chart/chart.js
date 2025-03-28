@@ -24,8 +24,8 @@ import classNames from 'classnames';
 var {applyExpression} = require('./singleCell');
 var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
-import {highchartView, isCodedVCoded, isFloatVCoded, isSummary, summaryMode}
-	from './highchartView';
+import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
+	summaryMode} from './highchartView';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -377,10 +377,27 @@ var firstColorScale = (xenaState, column) =>
 var chartSubtitle = ({cohort, cohortSamples}) =>
 	 `cohort: ${_.get(cohort, 'name')} (n=${cohortSamples.length})`;
 
+// XXX this doesn't update correctly if stats changes aftera deferred call.
+var statsView = el(class extends PureComponent {
+	state = {}
+	onClick = () => {
+		this.setState({deferred: this.props.stats()});
+	}
+	render() {
+		var {state: {deferred}, props: {stats}, onClick} = this,
+			text = deferred || !_.isFunction(stats) && stats;
+		return text ?
+			typography({component: 'div',
+			            className: compStyles.stats, variant: 'caption'}, text) :
+			button({onClick}, 'Run Stats');
+	}
+});
+
+// XXX audit our redraws, to reduce churn
 class Chart extends PureComponent {
 	constructor() {
 		super();
-		this.state = {advanced: false, hasStats: false};
+		this.state = {advanced: false};
 	}
 
 	onClose = () => {
@@ -390,13 +407,12 @@ class Chart extends PureComponent {
 
 	render() {
 		var {callback, appState: xenaState} = this.props,
-			{advanced, hasStats} = this.state,
+			{advanced} = this.state,
 			{chartState} = xenaState,
 			set = (...args) => {
 				var cs = _.assocIn(chartState, ...args);
 				callback(['chart-set-state', cs]);
-			},
-			setHasStats = (hasStats) => this.setState({hasStats});
+			};
 
 		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
 			{chartState: {chartType}, cohort, cohortSamples, columns,
@@ -425,11 +441,10 @@ class Chart extends PureComponent {
 		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
 			ynonexpressed = applyExpression(ydata0, yexpression); // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
 
-		// XXX move stats
 		var drawProps = {ydata, ycolor, xdata, xcolor, chartType,
 			cohortSamples, samplesMatched, xcodemap, ycodemap, yfields, xfield,
 			xlabel, ylabel, yavg: selectedMetrics(chartState, addSDs(yavg)),
-			yexpression, ynonexpressed, ynorm, inverted, setHasStats,
+			yexpression, ynonexpressed, ynorm, inverted,
 			subtitle: chartSubtitle({cohort, cohortSamples}),
 			...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})};
 
@@ -515,17 +530,20 @@ class Chart extends PureComponent {
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp)));
 
-		var chartStats = fragment(box(
-			{className: compStyles.chartActionsSecondary, component: Accordion, square: true, sx: {...sxAccordion, display: hasStats ? 'block' : 'none'}},
-			box({className: compStyles.chartActionsSecondarySummary, component: AccordionSummary, expandIcon: icon({color: 'secondary'}, 'expand_more'), sx: sxAccordionSummary},
-				typography({color: 'secondary', component: 'span', variant: 'inherit'}, 'Statistics')),
-			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, typography({id: 'stats', component: 'div', variant: 'caption'}))));
+		var chartStats = stats => fragment(box(
+			{className: compStyles.chartActionsSecondary, component: Accordion,
+				square: true, sx: {...sxAccordion, display: stats ? 'block'
+					: 'none'}},
+			box({className: compStyles.chartActionsSecondarySummary, component:
+				AccordionSummary, expandIcon: icon({color: 'secondary'},
+					'expand_more'), sx: sxAccordionSummary}, typography({color:
+						'secondary', component: 'span', variant: 'inherit'},
+						'Statistics')),
+			accordionDetails({className: compStyles.chartActionsSecondaryDetails},
+				statsView({stats}))));
 
-		var HCV = highchartView({drawProps});
-
-		// statistics XXX note that we scribble over stats. Should either render
-		// it in react, or make another wrapper component so react won't touch it.
-		// otoh, since we always re-render, it kinda works as-is.
+		var {chartData, stats} = computeChart(drawProps);
+		var HCV = highchartView({drawProps: {...drawProps, chartData}});
 
 		return box({className: compStyles.chartView, id: 'chartView'},
 				card({className: compStyles.card},
@@ -540,7 +558,7 @@ class Chart extends PureComponent {
 								'Make another graph'),
 							swapAxes, invertAxes, switchView, yExpression),
 						avg, pct, colorAxisDiv && colorAxisDiv),
-					yExp && advOpt, chartStats));
+					yExp && advOpt, chartStats(stats)));
 	};
 }
 

@@ -89,3 +89,7 @@
 .chartAction .formControl {
 	margin: 0;
 }
+
+.stats {
+	white-space: pre-line;
+}
