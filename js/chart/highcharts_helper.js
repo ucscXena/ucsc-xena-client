@@ -260,8 +260,8 @@ function destroyLabels(chart) {
 	});
 }
 
-function densityChart({chartOptions, yavg, Y}) {
-	var opts = {
+function densityChart({yavg, Y}) {
+	return {
 		chart: {
 			events: {
 				load: function() {
@@ -310,16 +310,15 @@ function densityChart({chartOptions, yavg, Y}) {
 			}
 		}
 	};
-	return _.deepMerge(chartOptions, opts);
 }
 
 
 // x categorical, Y categorical
-function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
+function columnChartOptions(categories, xAxisTitle, yAxisType, Y, showLegend) {
 	var isHisto = yAxisType === 'Histogram',
 		yAxisTitle = isHisto ? 'Histogram' : 'Distribution';
 
-	var opts = {
+	return {
 		chart: {zoomType: 'x'},
 		legend: {
 			align: 'right',
@@ -367,8 +366,6 @@ function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, 
 		},
 		tooltip: codedTooltip(isHisto, xAxisTitle, categories, Y)
 	};
-
-	return _.deepMerge(chartOptions, opts);
 }
 
 var tableBody = (...args) => table(tbody(...args));
@@ -388,8 +385,8 @@ var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 				trd('Q1', statsPrec(lower)),
 				trd('lower', statsPrec(lowerwhisker)))));
 
-function violinOptions({chartOptions, categories, series, xAxisTitle, yAxisTitle}) {
-	var opts = {
+function violinOptions({categories, series, xAxisTitle, yAxisTitle}) {
+	return {
 		boost: {enabled: false},
 		chart: {
 			zoomType: 'xy',
@@ -479,13 +476,11 @@ function violinOptions({chartOptions, categories, series, xAxisTitle, yAxisTitle
 			}
 		}
 	};
-
-	return _.deepMerge(chartOptions, opts);
 }
 
 // x categorical y float  boxplot
-function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
-	var opts = {
+function boxplotOptions({categories, xAxisTitle, yAxisTitle}) {
+	return {
 		chart: {
 			zoomType: 'x',
 		},
@@ -554,8 +549,6 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 			}
 		}
 	};
-
-	return _.deepMerge(chartOptions, opts);
 }
 
 function formatPercentage(value) {
@@ -695,90 +688,88 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function dotOptions({ chartOptions, inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
-	var isSingleCell = yexpression === 'singleCell',
-		opts = {
-			chart: {
-				events: {
-					load: function () {
-						var chart = this;
-						chart.markerScale = markerScale;
-					},
-					render: function () {
-						var chart = this;
-						renderExpressionMetricsLegend({chart, isSingleCell});
-					},
+function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
+	var isSingleCell = yexpression === 'singleCell';
+	return {
+		chart: {
+			events: {
+				load: function () {
+					var chart = this;
+					chart.markerScale = markerScale;
 				},
-				inverted,
-				type: 'scatter',
-				zoomType: inverted ? 'y' : 'x',
-			},
-			colorAxis: {
-				max: null,
-				maxColor: xenaColor.BLUE_PRIMARY,
-				min: null,
-				minColor: xenaColor.BLUE_PRIMARY_2,
-				labels: {
-					formatter: function () {
-						var value = this.value,
-							isFirst = this.isFirst,
-							isLast = this.isLast;
-						if (isFirst || isLast) {return value.toFixed(2);}
-					}
+				render: function () {
+					var chart = this;
+					renderExpressionMetricsLegend({chart, isSingleCell});
 				},
-				showInLegend: true,
 			},
-			legend: {
-				align: 'right',
-				layout: 'horizontal',
-				padding: 8,
-				symbolHeight: markerScale.radius.max * 2,
-				title: {text: legendTitle[yexpression][ynorm]},
-			},
-			plotOptions: {
-				scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
-			},
-			title: {text: ''},
-			tooltip: {
+			inverted,
+			type: 'scatter',
+			zoomType: inverted ? 'y' : 'x',
+		},
+		colorAxis: {
+			max: null,
+			maxColor: xenaColor.BLUE_PRIMARY,
+			min: null,
+			minColor: xenaColor.BLUE_PRIMARY_2,
+			labels: {
 				formatter: function () {
-					var {xAxis, yAxis} = this.series,
-						{custom, value, x, y} = this.point;
-					return `<div>
-								<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
-								<div>${isSingleCell ? 'average expression' : 'average'}: ${value.toPrecision(3)}</div>
-								<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
-								<div>n = ${custom?.n || 'NaN'}</div>
-							</div>`;
-				},
-				hideDelay: 0,
-				useHTML: true,
+					var value = this.value,
+						isFirst = this.isFirst,
+						isLast = this.isLast;
+					if (isFirst || isLast) {return value.toFixed(2);}
+				}
 			},
-			xAxis: {
-				categories: xAxis.categories,
-				gridLineWidth: 0,
-				labels: {rotation: inverted ? 0 : -90},
-				lineWidth: 1,
-				tickWidth: 0,
-				title: {text: yAxisTitle},
+			showInLegend: true,
+		},
+		legend: {
+			align: 'right',
+			layout: 'horizontal',
+			padding: 8,
+			symbolHeight: markerScale.radius.max * 2,
+			title: {text: legendTitle[yexpression][ynorm]},
+		},
+		plotOptions: {
+			scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
+		},
+		title: {text: ''},
+		tooltip: {
+			formatter: function () {
+				var {xAxis, yAxis} = this.series,
+					{custom, value, x, y} = this.point;
+				return `<div>
+							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+							<div>${isSingleCell ? 'average expression' : 'average'}: ${value.toPrecision(3)}</div>
+							<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
+							<div>n = ${custom?.n || 'NaN'}</div>
+						</div>`;
 			},
-			yAxis: {
-				categories: yAxis.categories,
-				gridLineWidth: 0,
-				labels: {rotation: inverted ? -90 : 0},
-				lineWidth: 1,
-				tickWidth: 0,
-				title: {text: xAxisTitle},
-			},
+			hideDelay: 0,
+			useHTML: true,
+		},
+		xAxis: {
+			categories: xAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? 0 : -90},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: yAxisTitle},
+		},
+		yAxis: {
+			categories: yAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? -90 : 0},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: xAxisTitle},
+		},
 	};
-
-	return _.deepMerge(chartOptions, opts);
 }
 
-function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
+function scatterChart(xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
 
-	var opts = {
+	return {
 		chart: {
 			zoomType: 'xy',
 			type: 'scatter',
@@ -849,7 +840,6 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 			}
 		}
 	};
-	return _.deepMerge(chartOptions, opts);
 }
 
 var labelMethod = {

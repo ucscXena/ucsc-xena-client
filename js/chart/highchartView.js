@@ -50,9 +50,8 @@ export function kde() {
 	return k;
 }
 
-function newChart(opts) {
-	return new Highcharts.Chart(opts);
-}
+var newChart = (...args) =>
+	new Highcharts.Chart(_.deepMerge(highchartsHelper.chartOptions, ...args));
 
 function sizeChartView() {
 	var chartViewEl = document.getElementById('chartView');
@@ -443,8 +442,8 @@ var fvcChart = chartType => ({
 // It might make sense to split this into three functions instead of having
 // two polymorphic calls in here, and not much else.
 function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
-		inverted, setHasStats, yexpression, yfields, ydata, xlabel, ylabel,
-		ynonexpressed, ynorm}, chartOptions) {
+		inverted, setHasStats, subtitle, yexpression, yfields, ydata, xlabel, ylabel,
+		ynonexpressed, ynorm}) {
 	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 
 	// sort by median of xCategories if yfields.length === 1
@@ -453,12 +452,12 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
 			groups, colors, matrices);
 	}
 
-	chartOptions = fvcOptions(chartType)({chartOptions, inverted, series:
+	var chartOptions = fvcOptions(chartType)({inverted, series:
 		xCategories.length, categories: yfields, xAxis: {categories: yfields},
 		xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle:
 		ylabel, yexpression, ynorm});
 
-	var chart = newChart(chartOptions);
+	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 
 	fvcChart(chartType)({xCategories, groups, matrices, yexpression, yfields,
 		ydata, colors, chart});
@@ -474,7 +473,7 @@ function boxOrDotOrViolin({groups, xCategories, chartType = 'boxplot', colors,
 
 // compute group sample indices, codes, and colors, then draw
 // box, dot or violin plot.
-function floatVCoded({xdata, xcodemap, xcolor, ...params}, chartOptions) {
+function floatVCoded({xdata, xcodemap, xcolor, ...params}) {
 	var groupsByValue = groupIndex(xdata[0]),
 		values = _.range(xcodemap.length).filter(v => groupsByValue[v]),
 		xCategories = values.map(v => xcodemap[v]),
@@ -482,7 +481,7 @@ function floatVCoded({xdata, xcodemap, xcolor, ...params}, chartOptions) {
 
 	var colors = values.map(xcolor);
 
-	return boxOrDotOrViolin({groups, xCategories, colors, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, xCategories, colors, ...params});
 }
 
 var inRange = (number, {max, min}) => number >= min && number <= max;
@@ -490,20 +489,18 @@ var inRange = (number, {max, min}) => number >= min && number <= max;
 // pick metrics that are in the display range.
 var pickMetrics = (yavg, range) => _.pick(yavg, ([value]) => inRange(value, range));
 
-function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data]},
-		chartOptions) {
+function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data], subtitle}) {
 	var nndata = _.filter(data, x => !isNaN(x)),
 		min = _.min(nndata),
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
 		density = kde().sample(nndata)(_.range(min, max, (max - min) / points));
 
-	chartOptions = highchartsHelper.densityChart({
-		chartOptions,
+	var chartOptions = highchartsHelper.densityChart({
 		yavg: pickMetrics(yavg, {min, max}),
 		yaxis: field, Y});
 
-	var chart = newChart(chartOptions);
+	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 	highchartsHelper.addSeriesToColumn({
 		chart,
 		color: defaultColor,
@@ -513,26 +510,26 @@ function densityplot({yavg, yfields: [field], ylabel: Y, ydata: [data]},
 	return chart;
 }
 
-function summaryBoxplot(params, chartOptions) {
+function summaryBoxplot(params) {
 	var {cohortSamples} = params,
 		groups = [_.range(0, cohortSamples.length)],
 		colors = ['rgba(0, 0, 255, .5)', 'blue'],
 		xCategories = [null];
-	return boxOrDotOrViolin({groups, colors, xCategories, ...params}, chartOptions);
+	return boxOrDotOrViolin({groups, colors, xCategories, ...params});
 }
 
-function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
+function summaryColumn({ydata, ycodemap, xlabel, ylabel, subtitle}) {
 	var lengths = _.mapObject(groupIndexByCode(ydata[0], ycodemap), g => g.length),
 		categories = ycodemap.filter(c => _.has(lengths, c)),
 		total = _.sum(_.values(lengths)),
 		nNumberSeries = categories.map(code => lengths[code]),
 		dataSeries = nNumberSeries.map(len => len * 100 / total);
 
-	chartOptions = highchartsHelper.columnChartOptions(chartOptions,
+	var chartOptions = highchartsHelper.columnChartOptions(
 		categories.map(code => `${code} (${lengths[code]})`),
 		xlabel, "Distribution", ylabel, false);
 
-	var chart = newChart(chartOptions);
+	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 
 	highchartsHelper.addSeriesToColumn({
 		chart,
@@ -590,15 +587,15 @@ function codedVCodedStats({expected, observed}) {
 }
 
 function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
-	xlabel, ylabel}, chartOptions) {
+	xlabel, ylabel, subtitle}) {
 
 	var {xbins, ybins, observed, expected, xMargin} = codedVCodedData({xdata, ydata});
 
-	chartOptions = highchartsHelper.columnChartOptions(chartOptions,
+	var chartOptions = highchartsHelper.columnChartOptions(
 		_.keys(xbins).map((v, i) => `${xcodemap[v]} (${xMargin[i]})`),
 		xlabel, 'Distribution', ylabel, true);
 
-	var chart = newChart(chartOptions);
+	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 
 	_.keys(ybins).map((v, i) => {
 		var ycodeSeries = _.mmap(xMargin, observed[i], (xMarg, obs) =>
@@ -627,7 +624,7 @@ function codedVCoded({setHasStats, xcodemap, xdata, ycodemap, ydata, ycolor,
 var nullStr = v => v !== v ? 'null' : v;
 
 function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
-	scatterColor, samplesMatched, setHasStats, cohortSamples}, chartOptions) {
+	scatterColor, samplesMatched, setHasStats, cohortSamples, subtitle}) {
 
 	var statsDiv = document.getElementById('stats'),
 		yfield,
@@ -638,10 +635,10 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 	var sampleLabels = cohortSamples,
 		x, y;
 
-	chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, cohortSamples.length);
+	var chartOptions = highchartsHelper.scatterChart(xlabel, ylabel, cohortSamples.length);
 
 	if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-		chart = newChart(chartOptions);
+		chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 
 		for (k = 0; k < yfields.length; k++) {
 			var series = [];
@@ -681,10 +678,8 @@ function floatVFloat({xfield, xdata, yfields, ydata, xlabel, ylabel,
 			colorScale = v => isNaN(v) ? 'gray' : scatterColor.scale(v);
 		}
 
-		chartOptions = _.deepMerge(chartOptions, {
-			legend: {title: {text: ''}}
-		});
-		chart = newChart(chartOptions);
+		chart = newChart(chartOptions, {legend: {title: {text: ''}},
+			subtitle: {text: subtitle}});
 
 		yfield = yfields[0];
 		for (i = 0; i < xdata[0].length; i++) {
@@ -804,22 +799,20 @@ export var isSummary = ({xfield}) => !xfield;
 export var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
 
 function drawChart(params) {
-	var {subtitle, setHasStats} = params,
-		chartOptions = _.assoc(highchartsHelper.chartOptions,
-			'subtitle', {text: subtitle}),
+	var {setHasStats} = params,
 		statsDiv = document.getElementById('stats');
 
 	statsDiv.innerHTML = "";
 	setHasStats(false);
 
 	if (isFloatVCoded(params)) {
-		return floatVCoded(params, chartOptions);
+		return floatVCoded(params);
 	} else if (isSummary(params)) {
-		return summary(params, chartOptions);
+		return summary(params);
 	} else if (isCodedVCoded(params)) {
-		return codedVCoded(params, chartOptions);
+		return codedVCoded(params);
 	} else {
-		return floatVFloat(params, chartOptions);
+		return floatVFloat(params);
 	}
 }
 
