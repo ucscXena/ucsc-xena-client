@@ -339,39 +339,39 @@ var gaAnother = fn => () => {
 	fn();
 };
 
-var isSegmented = (xenaState, colorColumn) =>
-	_.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
+var isSegmented = (data, colorColumn) =>
+	_.getIn(data, [colorColumn, 'req', 'rows']);
 
-function scatterProps(xenaState, params) {
+function scatterProps({data, columns}, params) {
 	var {colorColumn} = params;
 	if (!(doScatterColor(params) && v(colorColumn))) {
 		return {};
 	}
 
-	var scale, data;
+	var scale, sdata;
 
-	if (isSegmented(xenaState, colorColumn)) {
-		let color = _.getIn(xenaState, ['columns', colorColumn, 'color']);
+	if (isSegmented(data, colorColumn)) {
+		let color = _.getIn(columns, [colorColumn, 'color']);
 		let s = colorScales.colorScale(color),
 			[,,,, origin] = color;
 
 		// see km.js:segmentedVals(). This is a work-around for
 		// trend-amplitude scales. We should deprecate them.
 		scale = v => RGBToHex(...v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin));
-		data = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues', 0]);
+		sdata = _.getIn(data, [colorColumn, 'avg', 'geneValues', 0]);
 	} else {
-		let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
+		let color = _.getIn(columns, [colorColumn, 'colors', 0]);
 		scale = color && colorScales.colorScale(color);
-		data = _.getIn(xenaState, ['data', colorColumn, 'req', 'values', 0]);
+		sdata = _.getIn(data, [colorColumn, 'req', 'values', 0]);
 	}
-	var codemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
-	var label = _.getIn(xenaState, ['columns', colorColumn, 'user', 'fieldLabel']);
+	var codemap = _.getIn(columns, [colorColumn, 'codes']);
+	var label = _.getIn(columns, [colorColumn, 'user', 'fieldLabel']);
 
-	return {scatterColor: {scale, data, codemap, label}};
+	return {scatterColor: {scale, data: sdata, codemap, label}};
 }
 
-var firstColorScale = (xenaState, column) =>
-	_.Let((color = _.getIn(xenaState, ['columns', column, 'colors', 0])) =>
+var firstColorScale = column =>
+	_.Let((color = _.getIn(column, ['colors', 0])) =>
 		color && colorScales.colorScale(color));
 
 var chartSubtitle = ({cohort, cohortSamples}) =>
@@ -393,11 +393,76 @@ var statsView = el(class extends PureComponent {
 	}
 });
 
-// XXX audit our redraws, to reduce churn
+
+function xParamsFromState({columns, columnOrder, data, chartState}, column) {
+	var xcodemap = _.get(columns[column], 'codes'),
+		xcolor = firstColorScale(columns[column]),
+		xdata = getColumnValues({columns, data}, column),
+		xexpOpts = expOptions(columns[column], xdata),
+		xexp = xexpOpts[chartState.expState[column]],
+
+		xfield = _.getIn(columns[column], ['fields', 0]),
+		xlabel = axisLabel({columns, columnOrder}, column, !xcodemap, xexp);
+	return {xcodemap, xcolor, xdata, xexpOpts, xexp, xfield, xlabel};
+}
+
+function yParamsFromState({columns, columnOrder, data, chartState}, column) {
+	var ycodemap = _.get(columns[column], 'codes'),
+		ycolor = firstColorScale(columns[column]),
+		ydata = getColumnValues({columns, data}, column),
+		yexpOpts = expOptions(columns[column], ydata),
+		yexp = yexpOpts[chartState.expState[column]],
+
+		ynorm = !ycodemap && _.get(normalizationOptions[
+				chartState.normalizationState[column]], 'value'),
+
+		yfields = columns[column].probes || columns[column].fieldList
+			|| columns[column].fields,
+		ylabel = axisLabel({columns, columnOrder}, column, !ycodemap, yexp, ynorm),
+
+		ymin = yMin(data[column]),
+		// 'singleCell' expression mode only for dot plots with positive values
+		yexpression = expressionMode(chartState, ymin);
+	return {ycodemap, ycolor, ydata, yexpOpts, yexp, ynorm, yfields, ylabel, ymin,
+		yexpression};
+}
+
+function chartPropsFromState(xenaState) {
+	var {chartState, cohort, cohortSamples, samplesMatched} = xenaState,
+		{xcolumn, ycolumn, colorColumn, inverted, chartType} = chartState,
+
+		// Using this destructuring pattern to remove things from xParams
+		// that we need locally but not in drawProps. Things we need both
+		// places are destructured on the next line.
+		{xexpOpts, xexp, xdata, ...xParams} = xParamsFromState(xenaState, xcolumn),
+		{xfield, xcodemap} = xParams,
+
+		{yexpOpts, yexp, ydata, ymin, ...yParams} =
+			yParamsFromState(xenaState, ycolumn),
+		{yfields, ynorm, yexpression} = yParams,
+
+		{yavg, ...transformedData} =
+			applyTransforms(ydata, yexp, ynorm, xdata, xexp);
+
+	var drawProps = {
+		subtitle: chartSubtitle({cohort, cohortSamples}),
+		cohortSamples, samplesMatched, chartType, inverted,
+		...xParams,
+		...yParams,
+		yavg: selectedMetrics(chartState, addSDs(yavg)),
+		ynonexpressed: applyExpression(ydata, yexpression),
+		...transformedData,
+		...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})
+	};
+
+	return {drawProps, xexpOpts, yexpOpts, ymin, yavg, ...computeChart(drawProps)};
+}
+
 class Chart extends PureComponent {
 	constructor() {
 		super();
 		this.state = {advanced: false};
+		this.chartPropsFromState = _.memoize1(chartPropsFromState);
 	}
 
 	onClose = () => {
@@ -414,39 +479,13 @@ class Chart extends PureComponent {
 				callback(['chart-set-state', cs]);
 			};
 
-		var {xcolumn, ycolumn, colorColumn, inverted} = chartState,
-			{chartState: {chartType}, cohort, cohortSamples, columns,
-			 samplesMatched} = xenaState,
-			xdata0 = getColumnValues(xenaState, xcolumn),
-			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
-			ydata0 = getColumnValues(xenaState, ycolumn),
-			ycodemap = _.getIn(columns, [ycolumn, 'codes']),
-			yexpOpts = expOptions(columns[ycolumn], ydata0),
-			xexpOpts = expOptions(columns[xcolumn], xdata0),
-			xexp = xexpOpts[chartState.expState[xcolumn]],
-			yexp = yexpOpts[chartState.expState[ycolumn]],
-			ymin = yMin(xenaState.data[ycolumn]),
-			// 'singleCell' expression mode only for dot plots with positive values
-			yexpression = expressionMode(chartState, ymin),
-			ynorm = !ycodemap && _.get(normalizationOptions[
-					chartState.normalizationState[chartState.ycolumn]], 'value'),
-			ycolor = firstColorScale(xenaState, ycolumn),
-			xcolor = firstColorScale(xenaState, xcolumn),
-			xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp),
-			ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, ynorm),
-			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
-			yfields = columns[ycolumn].probes ||
-				columns[ycolumn].fieldList || columns[ycolumn].fields;
+		var {xcolumn, ycolumn, inverted, chartType} = chartState;
 
-		var {ydata, xdata, yavg} = applyTransforms(ydata0, yexp, ynorm, xdata0, xexp),
-			ynonexpressed = applyExpression(ydata0, yexpression); // ydata0 is not transformed, so we can use it to find the indices of non-expressed values
+		var {drawProps, chartData, xexpOpts, yavg,
+				yexpOpts, ymin, stats} = this.chartPropsFromState(xenaState),
+			{xcodemap, xfield, ycodemap} = drawProps;
 
-		var drawProps = {ydata, ycolor, xdata, xcolor, chartType,
-			cohortSamples, samplesMatched, xcodemap, ycodemap, yfields, xfield,
-			xlabel, ylabel, yavg: selectedMetrics(chartState, addSDs(yavg)),
-			yexpression, ynonexpressed, ynorm, inverted,
-			subtitle: chartSubtitle({cohort, cohortSamples}),
-			...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})};
+		var HCV = highchartView({drawProps: {...drawProps, chartData}});
 
 		var isDot = isBoxplot(drawProps) && _.get(chartState, 'chartType') === 'dot',
 			isDensity = isDensityPlot(drawProps),
@@ -530,7 +569,7 @@ class Chart extends PureComponent {
 				typography({color: 'secondary', component: 'span', variant: 'inherit'}, `${advanced ? 'Hide' : 'Show'} Advanced Options`)),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails}, yExp, normalization, xExp)));
 
-		var chartStats = stats => fragment(box(
+		var chartStats = fragment(box(
 			{className: compStyles.chartActionsSecondary, component: Accordion,
 				square: true, sx: {...sxAccordion, display: stats ? 'block'
 					: 'none'}},
@@ -541,9 +580,6 @@ class Chart extends PureComponent {
 						'Statistics')),
 			accordionDetails({className: compStyles.chartActionsSecondaryDetails},
 				statsView({stats}))));
-
-		var {chartData, stats} = computeChart(drawProps);
-		var HCV = highchartView({drawProps: {...drawProps, chartData}});
 
 		return box({className: compStyles.chartView, id: 'chartView'},
 				card({className: compStyles.card},
@@ -558,8 +594,14 @@ class Chart extends PureComponent {
 								'Make another graph'),
 							swapAxes, invertAxes, switchView, yExpression),
 						avg, pct, colorAxisDiv && colorAxisDiv),
-					yExp && advOpt, chartStats(stats)));
+					yExp && advOpt, chartStats));
 	};
 }
 
-export default Chart;
+var chart = el(Chart);
+
+// pick what we need to reduce re-renders
+export default ({appState, ...rest}) =>
+	chart({appState: _.pick(appState, 'columns', 'data', 'columnOrder',
+	                        'cohortSamples', 'cohort', 'samplesMatched', 'chartState'),
+		   ...rest});
