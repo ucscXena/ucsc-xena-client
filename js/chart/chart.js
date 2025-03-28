@@ -375,11 +375,15 @@ var firstColorScale = column =>
 var chartSubtitle = ({cohort, cohortSamples}) =>
 	 `cohort: ${_.get(cohort, 'name')} (n=${cohortSamples.length})`;
 
-// XXX this doesn't update correctly if stats changes aftera deferred call.
 var statsView = el(class extends PureComponent {
 	state = {}
 	onClick = () => {
 		this.setState({deferred: this.props.stats()});
+	}
+	componentDidUpdate(prev) {
+		if (this.props.stats !== prev.stats) {
+			this.setState({deferred: null}); //eslint-disable-line react/no-did-update-set-state
+		}
 	}
 	render() {
 		var {state: {deferred}, props: {stats}, onClick} = this,
