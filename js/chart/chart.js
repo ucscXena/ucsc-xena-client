@@ -218,7 +218,7 @@ function colUnit(colSettings) {
 var hasUnits = c => _.filter(c.units, _.identity).length !== 0;
 var logScale = c => !_.any(c.units, unit => !unit || unit.search(/log/i) === -1);
 var removeLogUnit = c => _.get(/\(([^)]+)\)/.exec(colUnit(c)), 1, '');
-var someNegative = data => _.some(data, d => _.some(d, v => v < 0));
+var someNegative = data => _.min(_.getIn(data, ['avg', 'min'])) < 0;
 
 var expOptions = (column, data)  =>
 	!(column && column.units) ? [] :
@@ -260,8 +260,6 @@ function addSDs({mean, sd, ...yavg}) {
 		...yavg,
 	};
 }
-
-var yMin = data => _.min(_.getIn(data, ['avg', 'min']));
 
 function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	if (!v(id)) {
@@ -310,12 +308,12 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	return {ydata, xdata, yavg};
 }
 
-function expressionMode(chartState, ymin) {
+function expressionMode(chartState, yneg) {
 	var {chartType, expressionState, ycolumn} = chartState;
 	// 'bulk' expression mode only for chart types other than dot plot
 	if (chartType !== 'dot') {return 'bulk';}
 	// 'bulk' expression mode only for negative values
-	if (ymin < 0) {return 'bulk';}
+	if (yneg) {return 'bulk';}
 	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
 	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
 }
@@ -398,7 +396,7 @@ function xParamsFromState({columns, columnOrder, data, chartState}, column) {
 	var xcodemap = _.get(columns[column], 'codes'),
 		xcolor = firstColorScale(columns[column]),
 		xdata = getColumnValues({columns, data}, column),
-		xexpOpts = expOptions(columns[column], xdata),
+		xexpOpts = expOptions(columns[column], data[column]),
 		xexp = xexpOpts[chartState.expState[column]],
 
 		xfield = _.getIn(columns[column], ['fields', 0]),
@@ -410,7 +408,7 @@ function yParamsFromState({columns, columnOrder, data, chartState}, column) {
 	var ycodemap = _.get(columns[column], 'codes'),
 		ycolor = firstColorScale(columns[column]),
 		ydata = getColumnValues({columns, data}, column),
-		yexpOpts = expOptions(columns[column], ydata),
+		yexpOpts = expOptions(columns[column], data[column]),
 		yexp = yexpOpts[chartState.expState[column]],
 
 		ynorm = !ycodemap && _.get(normalizationOptions[
@@ -420,10 +418,10 @@ function yParamsFromState({columns, columnOrder, data, chartState}, column) {
 			|| columns[column].fields,
 		ylabel = axisLabel({columns, columnOrder}, column, !ycodemap, yexp, ynorm),
 
-		ymin = yMin(data[column]),
+		yneg = someNegative(data[column]),
 		// 'singleCell' expression mode only for dot plots with positive values
-		yexpression = expressionMode(chartState, ymin);
-	return {ycodemap, ycolor, ydata, yexpOpts, yexp, ynorm, yfields, ylabel, ymin,
+		yexpression = expressionMode(chartState, yneg);
+	return {ycodemap, ycolor, ydata, yexpOpts, yexp, ynorm, yfields, ylabel, yneg,
 		yexpression};
 }
 
@@ -437,7 +435,7 @@ function chartPropsFromState(xenaState) {
 		{xexpOpts, xexp, xdata, ...xParams} = xParamsFromState(xenaState, xcolumn),
 		{xfield, xcodemap} = xParams,
 
-		{yexpOpts, yexp, ydata, ymin, ...yParams} =
+		{yexpOpts, yexp, ydata, yneg, ...yParams} =
 			yParamsFromState(xenaState, ycolumn),
 		{yfields, ynorm, yexpression} = yParams,
 
@@ -455,7 +453,7 @@ function chartPropsFromState(xenaState) {
 		...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})
 	};
 
-	return {drawProps, xexpOpts, yexpOpts, ymin, yavg, ...computeChart(drawProps)};
+	return {drawProps, xexpOpts, yexpOpts, yneg, yavg, ...computeChart(drawProps)};
 }
 
 class Chart extends PureComponent {
@@ -482,7 +480,7 @@ class Chart extends PureComponent {
 		var {xcolumn, ycolumn, inverted, chartType} = chartState;
 
 		var {drawProps, chartData, xexpOpts, yavg,
-				yexpOpts, ymin, stats} = this.chartPropsFromState(xenaState),
+				yexpOpts, yneg, stats} = this.chartPropsFromState(xenaState),
 			{xcodemap, xfield, ycodemap} = drawProps;
 
 		var HCV = highchartView({drawProps: {...drawProps, chartData}});
@@ -503,12 +501,12 @@ class Chart extends PureComponent {
 				onClick: () => set(['inverted'], !inverted), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var yExpression = ymin < 0 ? null : isDot ?
+		var yExpression = yneg || !isDot ? null :
 			buildDropdown({
 				index: chartState.expressionState[ycolumn],
 				label: 'View as',
 				onChange: i => set(['expressionState', chartState.ycolumn], i),
-				opts: expressionOptions}) : null;
+				opts: expressionOptions});
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
