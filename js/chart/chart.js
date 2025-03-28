@@ -261,7 +261,7 @@ function addSDs({mean, sd, ...yavg}) {
 	};
 }
 
-var yMin = ydata => _.min(_.map(ydata, d => _.min(d)));
+var yMin = data => _.min(_.getIn(data, ['avg', 'min']));
 
 function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	if (!v(id)) {
@@ -425,7 +425,7 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata0),
 			xexp = xexpOpts[chartState.expState[xcolumn]],
 			yexp = yexpOpts[chartState.expState[ycolumn]],
-			ymin = yMin(ydata0),
+			ymin = yMin(xenaState.data[ycolumn]),
 			// 'singleCell' expression mode only for dot plots with positive values
 			yexpression = expressionMode(chartState, ymin),
 			ynorm = !ycodemap && _.get(normalizationOptions[
