@@ -799,12 +799,6 @@ export var isSummary = ({xfield}) => !xfield;
 export var isCodedVCoded = ({xcodemap, ycodemap}) => xcodemap && ycodemap;
 
 function drawChart(params) {
-	var {setHasStats} = params,
-		statsDiv = document.getElementById('stats');
-
-	statsDiv.innerHTML = "";
-	setHasStats(false);
-
 	if (isFloatVCoded(params)) {
 		return floatVCoded(params);
 	} else if (isSummary(params)) {
@@ -814,6 +808,14 @@ function drawChart(params) {
 	} else {
 		return floatVFloat(params);
 	}
+}
+
+function resetStats(params) {
+	var {setHasStats} = params,
+		statsDiv = document.getElementById('stats');
+
+	statsDiv.innerHTML = "";
+	setHasStats(false);
 }
 
 function shouldCallDrawChart(prevProps, currentProps) {
@@ -826,6 +828,7 @@ function shouldCallDrawChart(prevProps, currentProps) {
 class HighchartView extends PureComponent {
 	componentDidMount() {
 		sizeChartView();
+		resetStats(this.props.drawProps);
 		this.chart = drawChart(this.props.drawProps);
 		this.chart.redraw();
 		this.chart.reflow();
@@ -841,6 +844,7 @@ class HighchartView extends PureComponent {
 	componentDidUpdate(prevProps) {
 		if (shouldCallDrawChart(prevProps, this.props)) {
 			this.chart.destroy();
+			resetStats(this.props.drawProps);
 			this.chart = drawChart(this.props.drawProps);
 			this.chart.redraw();
 		} else {
