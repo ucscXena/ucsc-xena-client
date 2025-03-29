@@ -24,7 +24,7 @@ import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
 	getIn, groupBy, isEqual, Let, merge, object, pick, range, sortByI,
 	times, updateIn, values, without} = require('./underscore_ext').default;
-import {kde} from './chart/highchartView';
+import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';

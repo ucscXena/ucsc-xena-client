@@ -12,7 +12,7 @@ import multi from '../multi';
 import {div, el} from './react-hyper';
 var compStyles = require('./highchartView.module.css');
 
-var sc = require('science');
+import {kde} from '../models/kde';
 var fvc = require('./fvc');
 var {groupValues} = require('./dataUtils');
 var defaultColor = xenaColor.BLUE_PRIMARY;
@@ -33,22 +33,6 @@ Highcharts.wrap(Highcharts.Series.prototype, 'drawLegendSymbol',
 		}
 	});
 
-
-var nrd = sc.stats.bandwidth.nrd;
-var variance = sc.stats.variance;
-
-export function kde() {
-	var k = sc.stats.kde();
-	k.bandwidth(function(x) {
-		var bw = nrd(x);
-		if (bw === 0) {
-			bw = variance(x);
-		}
-
-		return bw;
-	});
-	return k;
-}
 
 var newChart = (...args) =>
 	new Highcharts.Chart(_.deepMerge(highchartsHelper.chartOptions, ...args));
