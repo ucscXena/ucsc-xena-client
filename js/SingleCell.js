@@ -10,7 +10,7 @@
 import PureComponent from './PureComponent';
 import nav from './nav';
 import {div, el, fragment, h2, label, span} from './chart/react-hyper';
-import {Map} from './views/Map';
+import {Map as CellView} from './views/Map';
 import {Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
@@ -32,7 +32,7 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-var map = el(Map);
+var cellView = el(CellView);
 var button = el(Button);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
@@ -148,7 +148,7 @@ var vizText = (...children) => div({className: styles.vizText}, ...children);
 
 var vizPanel = ({props: {state, ...handlers}}) =>
 	Let(({dataset} = state) =>
-		dataset ? map({state, key: datasetCohort(state), ...handlers}) :
+		dataset ? cellView({state, key: datasetCohort(state), ...handlers}) :
 		vizText(h2('All Xena derived data is in beta'),
 			h2('Select a layout')));
 
