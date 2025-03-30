@@ -35,9 +35,9 @@ var deckGL = el(DeckGL);
 var filterFn = (colorColumn, hideColors) =>
 	colorColumn ?
 		Let((hidden = new Set(hideColors || [])) =>
-			(coords, {index}) => Let((v = colorColumn[index]) =>
-				isNaN(v) || hidden.has(v) ? 0 : 1))
-	: () => 1;
+			(coord, {index}) => Let((v = colorColumn[index]) =>
+				isNaN(coord) || isNaN(v) || hidden.has(v) ? 0 : 1))
+	: coord => isNaN(coord) ? 0 : 1;
 
 var cvtColorScale = (colorColumn, colors) =>
 	colorColumn ?

@@ -223,9 +223,8 @@ export var setRadius = (sd, datasetData) =>
 
 export var getRadius = state => get(state, 'radius') || get(state, 'radiusBase');
 
-export var getSamples = state =>
-	Let(({host, name} = JSON.parse(hasDataset(state))) =>
-		getIn(state, ['samples', host, name, 'samples']));
+export var getSamples = state => getIn(state,
+	['samples', datasetCohort(state), 'samples']);
 
 export var dataLoading = state =>
 	Let(({dsID, dimension} = state.dataset, dims = JSON.stringify(dimension)) =>

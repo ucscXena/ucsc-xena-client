@@ -1,25 +1,24 @@
 import query from './query';
 import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
+var {samplesQuery} = require('./common');
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
-	datasetMetadata, datasetSamples, donorFields, fetchDefaultStudy} =
+	datasetMetadata, donorFields, fetchDefaultStudy} =
 	require('../xenaQuery');
-var {assoc, assocIn, contains, findIndex, get, getIn, identity, intersection,
+var {assoc, assocIn, findIndex, get, getIn, identity, intersection,
 	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
-	reject, uniq, updateIn} = require('../underscore_ext').default;
+	uniq, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
 var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
-import {allCohorts, allDefaultCohortNames, getSamples, getScale, hasColorBy,
-	hasDataset, hasImage, isLog, log2p1, pow2m1, studyList, userServerCohorts}
-		from '../models/map';
+import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
+	getScale, hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1,
+	studyList, userServerCohorts} from '../models/map';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
 import {isPhenotype} from '../models/dataType';
-import {hfc} from '../hfc';
-var {publicServers} = require('../defaultServers');
 
 // Number of image layers in display
 var layers = 6;
@@ -71,15 +70,7 @@ var scaleBounds = (data, scale) =>
 			[min, max] = (isLog(scale) ?
 				applyLog : applyLinear)(extendScale, minIn, maxIn)) => ({min, max}));
 
-var uniqCodes = values =>
-	reject(uniq(values), x => isNaN(x)).sort((v1, v2) =>  v1 - v2);
-
-var codesInView = data =>
-	data.codes ? {
-		codesInView: uniqCodes(data.req.values[0]),
-	} : {};
-
-var setAvg = (data, field) => merge(data, widgets.avg(field, data), codesInView(data));
+var setAvg = (data, field) => merge(data, widgets.avg(field, data));
 
 var colorParams = (field, color) => colorData =>
 	Let((data = setAvg(colorData, fieldSpecMode(field)),
@@ -125,11 +116,8 @@ var fetchMethods = {
 	cohortFeatures: (cohort, server, dataset) => allFieldMetadata(server, dataset),
 	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
-	samples: (server, dataset) => datasetSamples(server, dataset)
-		// map to private or public
-		.map(s => contains(publicServers, server) ? [[[s]], []] : [[], [[s]]])
-		.flatMap(s => hfc(...s).map(samples =>
-			({samples, hasPrivateSamples: samples.hasPrivateSamples}))),
+	samples: (cohort, servers) =>
+		samplesQuery(userServers({servers}), {name: cohort}, Infinity).spy('samples'),
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	colorBy: (_, field, samples) =>
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, red)),
@@ -154,9 +142,7 @@ var cachePolicy = {
 		updateIn(state, ['singlecell', 'data'], data => pick(data, dsID)),
 	image: (state, [, img]) =>
 		updateIn(state, ['singlecell', 'image'], cache => pick(cache, img)),
-	samples: (state, [, host, name]) =>
-		assocIn(state, ['singlecell', 'samples'],
-			{[host]: {[name]: state.singlecell.samples[host][name]}}),
+	// ['samples', cohort]
 	// ['cohortDatasets', cohort, server]
 	// ['cohortFeatures', cohort, server, dsName]
 	// ['donorFields', cohort, server]
@@ -176,10 +162,6 @@ var allDatasets = state =>
 			preferredDataset.map(ds => ['datasetMetadata', ds.host, ds.name])).flat());
 
 var concat = (...arr) => arr.filter(identity).flat();
-
-var samplesPath = state =>
-	Let(({host, name} = JSON.parse(hasDataset(state.singlecell))) =>
-		['samples', host, name]);
 
 var singlecellData = state =>
 	state.page !== 'singlecell' || isAuthPending(state) ? [] : concat(
@@ -210,18 +192,19 @@ var singlecellData = state =>
 				.flat())
 			.flat()),
 		Let((img = hasImage(state.singlecell)) => img && [['image', img.path]]),
-		hasDataset(state.singlecell) && [samplesPath(state)],
+		hasDataset(state.singlecell) &&
+			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
 		hasDataset(state.singlecell) && getSamples(state.singlecell) &&
 			Let(({dsID, dimension} = state.singlecell.dataset) =>
 				[['data', dsID, JSON.stringify(dimension),
-					['singlecell', ...samplesPath(state)]]]),
+					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
 		hasColorBy(get(state.singlecell, ['colorBy'])) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
-				['singlecell', ...samplesPath(state)]]] : [],
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
 		hasColorBy(get(state.singlecell, ['colorBy2']))
 				&& getSamples(state.singlecell) ?
 			[['colorBy2', 'data', ['singlecell', 'colorBy2', 'field'],
-				['singlecell', ...samplesPath(state)]]] : []);
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : []);
 
 var {controller: fetchController/*, invalidatePath*/} =
 	query(fetchMethods, singlecellData, cachePolicy, 'singlecell');

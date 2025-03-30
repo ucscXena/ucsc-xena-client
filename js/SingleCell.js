@@ -22,8 +22,8 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
-	getIn, groupBy, isEqual, Let, merge, object, pick, range, sortByI,
-	times, updateIn, values, without} = require('./underscore_ext').default;
+	getIn, groupBy, isEqual, Let, merge, object, pick, range, reject, sortByI,
+	times, uniq, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
 import mapColor from './views/MapColor';
@@ -538,6 +538,19 @@ var mergeDensity = state =>
 	Let((d0 = density0Selector(state), d1 = density1Selector(state)) =>
 		mergeDensityField(mergeDensityField(state, 'colorBy', d0), 'colorBy2', d1));
 
+var uniqCodes = values =>
+	reject(uniq(values), x => isNaN(x)).sort((v1, v2) =>  v1 - v2);
+
+var codesSelector = createSelector(
+	state => getIn(state, ['colorBy', 'data', 'codes']),
+	state => getIn(state, ['colorBy', 'data', 'req', 'values', 0]),
+	(codes, array) => codes && uniqCodes(array));
+
+var mergeCodes = state =>
+	Let((codesInView = codesSelector(state)) =>
+		codesInView ? assocIn(state, ['colorBy', 'data', 'codesInView'], codesInView) :
+		state);
+
 var mapSelector = createSelector(
 	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
@@ -574,7 +587,7 @@ var mergeScales = state =>
 	mergeScale(mergeScale(state, 'colorBy'), 'colorBy2');
 
 var selector = state => assoc(
-	merge(mergeScales(mergeDensity(state)), cohortFieldsSelector(state)),
+	merge(mergeScales(mergeCodes(mergeDensity(state))), cohortFieldsSelector(state)),
 	'radiusBase', radiusSelector(state),
 	'map', mapSelector(state));
 
