@@ -17,7 +17,7 @@ import {Card, Button, createTheme, Icon,
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, defaultShadow, getData,
-	getDataSubType, hasImage, isLog, log2p1, maps,
+	getDataSubType, hasImage, isLog, log2p1, availableMaps,
 	mergeColor, ORDINAL, otherValue, phenoValue, probValue, setColor, setRadius
 	} from './models/map';
 import Integrations from './views/Integrations';
@@ -234,7 +234,7 @@ class MapTabs extends PureComponent {
 					open: !showImg && showNext}),
 			),
 			tabPanel({value, index: 0},
-				mapSelect(get(state, 'map'), state.dataset, onDataset)),
+				mapSelect(get(state, 'availableMaps'), state.dataset, onDataset)),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
@@ -403,7 +403,7 @@ class SingleCellPage extends PureComponent {
 	onDataset = ev => {
 		var {props: {state}} = this,
 			i = parseInt(ev.target.value, 10),
-			dataset = state.map[i],
+			dataset = state.availableMaps[i],
 			colorBy =
 				dataset.cohort === datasetCohort(state) ? state.colorBy :
 				dataset.image ? {} :
@@ -554,7 +554,7 @@ var mergeCodes = state =>
 var mapSelector = createSelector(
 	state => allCohorts(state),
 	state => get(state, 'cohortDatasets'),
-	(cohorts, cohortDatasets) => maps(cohorts, cohortDatasets));
+	(cohorts, cohortDatasets) => availableMaps(cohorts, cohortDatasets));
 
 var cohortFieldsSelector = createSelector(
 	state => allCohorts(state),
@@ -589,7 +589,7 @@ var mergeScales = state =>
 var selector = state => assoc(
 	merge(mergeScales(mergeCodes(mergeDensity(state))), cohortFieldsSelector(state)),
 	'radiusBase', radiusSelector(state),
-	'map', mapSelector(state));
+	'availableMaps', mapSelector(state));
 
 // MuiThemeProvider does a shallow merge into the outer theme, which is not
 // useful. So, we explicitly merge it here by passing a function which will

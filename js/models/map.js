@@ -21,7 +21,7 @@ var cohortMaps = cohortDatasets => ({cohort}) =>
 					'image', 'spot_diameter'))))
 		.flat();
 
-export var maps = (cohorts, cohortDatasets) =>
+export var availableMaps = (cohorts, cohortDatasets) =>
 	!cohorts.length || !cohortDatasets ? [] :
 	cohorts.map(cohortMaps(cohortDatasets)).flat();
 
