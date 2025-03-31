@@ -117,8 +117,10 @@ var fetchMethods = {
 	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
-		samplesQuery(userServers({servers}), {name: cohort}, Infinity).spy('samples'),
+		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
+	chartY: (_, field, samples) =>
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, blue)),
 	colorBy: (_, field, samples) =>
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, red)),
 	colorBy2: (_, field, samples) =>
@@ -135,6 +137,7 @@ var cachePolicy = {
 	defaultStudy: identity,
 	datasetMetadata: identity,
 	cohortMaxSamples: identity, // cache indefinitely
+	chartY: identity, // always updates in-place
 	colorBy: identity, // always updates in-place
 	colorBy2: identity, // always updates in-place
 	serverCohorts: identity, // cache indefinitely
@@ -192,12 +195,15 @@ var singlecellData = state =>
 				.flat())
 			.flat()),
 		Let((img = hasImage(state.singlecell)) => img && [['image', img.path]]),
-		hasDataset(state.singlecell) &&
+		datasetCohort(state.singlecell) &&
 			[['samples', datasetCohort(state.singlecell), ['spreadsheet', 'servers']]],
 		hasDataset(state.singlecell) && getSamples(state.singlecell) &&
 			Let(({dsID, dimension} = state.singlecell.dataset) =>
 				[['data', dsID, JSON.stringify(dimension),
 					['singlecell', 'samples', datasetCohort(state.singlecell)]]]),
+		hasColorBy(get(state.singlecell, ['chartY'])) && getSamples(state.singlecell) ?
+			[['chartY', 'data', ['singlecell', 'chartY', 'field'],
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
 		hasColorBy(get(state.singlecell, ['colorBy'])) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],

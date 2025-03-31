@@ -17,15 +17,16 @@ import {Card, Button, createTheme, Icon,
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
 	datasetCohort, defaultColor, defaultShadow, getData,
-	getDataSubType, hasImage, isLog, log2p1, availableMaps,
+	getDataSubType, hasDataset, hasImage, isLog, log2p1, availableMaps,
 	mergeColor, ORDINAL, otherValue, phenoValue, probValue, setColor, setRadius
 	} from './models/map';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, find, findIndexDefault, get,
-	getIn, groupBy, isEqual, Let, merge, object, pick, range, reject, sortByI,
+var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
+	isEqual, keys, Let, mapObject, merge, object, pick, range, reject, sortByI,
 	times, uniq, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
+import singlecellChart from './views/singlecellChart';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
@@ -124,35 +125,66 @@ var integrationLabel = state =>
 			.find(c => c.study === state.integration).label :
 	'';
 
+var mapValue = (cohorts, selected) =>
+	find(values(cohorts).flat(), m => isEqual(m, selected)) || '';
+var getOpt = value => menuItem({value}, value.label);
+var chartOpt = cohort => ({label: 'Charts and graphs', cohort});
+var listSubheaderOpt = title => listSubheader({style: {fontSize: 'unset'}}, title);
 
-var getOpt = opt => menuItem({value: opt.value}, opt.label);
-
-var mapValue = (list, selected) =>
-	findIndexDefault(list, m => isEqual(m, selected), '');
-
-var subHeaderOpt = {style: {fontSize: 'unset'}};
-var mapOpts = maps => Let((g = groupBy(maps, 'cohort')) =>
-	Object.keys(g).sort().map(k =>
-		[listSubheader(subHeaderOpt, k), ...g[k].map(getOpt)]).flat());
+var mapOpts = cohortMaps =>
+	keys(cohortMaps).sort().map(cohort =>
+		[listSubheaderOpt(cohort), ...cohortMaps[cohort].map(getOpt)]).flat();
 
 function mapSelect(availableMaps, selected, onChange) {
-	var opts = availableMaps.map((m, i) => assoc(m, 'value', i));
+	var opts = mapObject(groupBy(availableMaps, 'cohort'),
+	                     (maps, cohort) => [chartOpt(cohort),
+	                                         ...sortByI(maps, 'label')]);
 	return xSelect({
 		id: 'map-select',
 		label: `Select a layout`,
-		value: mapValue(availableMaps, selected),
-		onChange}, ...mapOpts(sortByI(opts, 'label')));
+		value: mapValue(opts, selected),
+		onChange}, ...mapOpts(opts));
 }
+
+var chartSelect = el(class extends PureComponent {
+	displayName = 'chartSelect';
+	constructor() {
+		super();
+		// XXX check columns & pick mode
+		this.state = {mode: 'dist'};
+	}
+	onMode = ev => {
+		this.setState({mode: ev.target.value});
+	}
+
+	render() {
+		var {props: {state: state0, handlers}, state: {mode}, onMode} = this,
+			state = assoc(state0, 'colorBy', state0.chartY);
+
+		return (!datasetCohort(state) || hasDataset(state)) ? null :
+			fragment(
+				xSelect({label: 'What do you want to do?', value: mode,
+					onChange: onMode},
+					menuItem({value: 'compare', disabled: true}, 'Compare groups of cells'),
+					menuItem({value: 'dist'}, 'See a distribution')),
+				mode === 'dist' ?
+					mapColor({label: 'Select a grouping', state, handlers}) : null);
+	}
+});
+
+// XXX this is different from the definition in map.js
+// Switch to colorByMode & move to map.js.
+// Also, rename map.js
+var hasColorBy = state => getIn(state, ['field', 'mode']);
 
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
 var vizPanel = ({props: {state, ...handlers}}) =>
-	Let(({dataset} = state) =>
-		dataset ? cellView({state, key: datasetCohort(state), ...handlers}) :
-		vizText(h2('All Xena derived data is in beta'),
-			h2('Select a layout')));
-
-var hasColorBy = state => getIn(state, ['field', 'mode']);
+	hasDataset(state) ? cellView({state, key: datasetCohort(state), ...handlers}) :
+	hasColorBy(state.chartY) ? singlecellChart({state}) :
+	datasetCohort(state) ? vizText(h2('Select grouping and data')) :
+	vizText(h2('All Xena derived data is in beta'),
+		h2('Select a layout'));
 
 var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 
@@ -227,14 +259,15 @@ class MapTabs extends PureComponent {
 			showImg = !!hasImage(state);
 		return div({className: styles.maptabs},
 			tabs({value, onChange, variant: 'fullWidth'},
-				tab({label: 'Layout'}),
+				tab({label: 'View'}),
 				tooltipTab({title: 'Next: explore image layers', open: showImg
 					&& showNext, label: 'Image', ...imgDisplay(showImg)}),
 				tooltipTab({title: 'Next: explore omics', label: 'Data',
 					open: !showImg && showNext}),
 			),
 			tabPanel({value, index: 0},
-				mapSelect(get(state, 'availableMaps'), state.dataset, onDataset)),
+				mapSelect(get(state, 'availableMaps'), state.dataset, onDataset),
+				chartSelect({state, handlers: onColorByHandlers[2]})),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
@@ -316,13 +349,26 @@ var datasetCount = state =>
 
 var space = n => times(n, () => '\u00a0').join('');
 var datasetLabel = state =>
-	state.dataset ? div(`${state.dataset.cohort} - ${state.dataset.label}${space(10)}${datasetCount(state)} cells/dots`) : null;
+	hasDataset(state) ? div(`${state.dataset.cohort} - ${state.dataset.label}${space(10)}${datasetCount(state)} cells/dots`) : null;
 
 var colorPickerButton = ({state, onShowColorPicker}) =>
 	hasCodes(get(state, 'colorBy')) ?
 		iconButton({onClick: onShowColorPicker, color: 'secondary'},
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
+
+var isChartView = state => datasetCohort(state) && !hasDataset(state);
+
+var legends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+	isChartView(state) ? null :
+	fragment(
+		span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
+		legend(state.colorBy, cellTypeMarkers(state),
+			   onColorByHandlers[0]),
+		...Let((state2 = colorBy2State(state)) => [
+			legendTitle(state2),
+			legend(state2.colorBy, false,
+				   onColorByHandlers[1])]));
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 			onRadius, onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
@@ -343,13 +389,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 			vizPanel({props: {state, onTooltip, onViewState, onShadow, onRadius}}),
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
-				span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
-				legend(state.colorBy, cellTypeMarkers(state),
-				       handlers.onColorByHandlers[0]),
-				...Let((state2 = colorBy2State(state)) => [
-					legendTitle(state2),
-					legend(state2.colorBy, false,
-					       handlers.onColorByHandlers[1])]))));
+				legends({state, handlers}))));
 
 var page = state =>
 	get(state, 'integration') ? viz :
@@ -363,7 +403,7 @@ class SingleCellPage extends PureComponent {
 		this.state = {highlight: undefined, showColorPicker: false};
 
 		this.onColorByHandlers =
-			['colorBy', 'colorBy2'].map(key => ({
+			['colorBy', 'colorBy2', 'chartY', 'chartX'].map(key => ({
 				onColorBy: colorBy => this.colorByKey(key, colorBy),
 				onScale: (ev, params) => this.scaleKey(key, params),
 				onCode: ev => this.codeKey(key, ev),
@@ -402,8 +442,7 @@ class SingleCellPage extends PureComponent {
 	}
 	onDataset = ev => {
 		var {props: {state}} = this,
-			i = parseInt(ev.target.value, 10),
-			dataset = state.availableMaps[i],
+			dataset = ev.target.value,
 			colorBy =
 				dataset.cohort === datasetCohort(state) ? state.colorBy :
 				dataset.image ? {} :
@@ -538,13 +577,16 @@ var mergeDensity = state =>
 	Let((d0 = density0Selector(state), d1 = density1Selector(state)) =>
 		mergeDensityField(mergeDensityField(state, 'colorBy', d0), 'colorBy2', d1));
 
-var uniqCodes = values =>
-	reject(uniq(values), x => isNaN(x)).sort((v1, v2) =>  v1 - v2);
+var uniqCodes = (values, dim, isChart) =>
+	Let((rfn = isChart || !dim ? isNaN : (v, i) => isNaN(v) || isNaN(dim[i])) =>
+		reject(uniq(values), rfn).sort((v1, v2) =>  v1 - v2));
 
 var codesSelector = createSelector(
 	state => getIn(state, ['colorBy', 'data', 'codes']),
 	state => getIn(state, ['colorBy', 'data', 'req', 'values', 0]),
-	(codes, array) => codes && uniqCodes(array));
+	state => getData(state),
+	state => isChartView(state),
+	(codes, array, dims, isChart) => codes && uniqCodes(array, get(dims, 0), isChart));
 
 var mergeCodes = state =>
 	Let((codesInView = codesSelector(state)) =>

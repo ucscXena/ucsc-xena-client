@@ -4,7 +4,7 @@ var {assoc, assocIn, filter, find, get, getIn, identity, isMatch, Let, mapObject
 	max, pick, pluck, sortByI} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
-import {cellTypeValue, datasetCohort, getDataSubType, hasCellType, hasDataset,
+import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
 	hasDatasource, hasDonor, hasGene, hasSignatureScore, hasOther,
 	hasTransferProb, otherValue, phenoValue, probValue, sigValue} from '../models/map';
 import {scaleParams} from '../colorScales';
@@ -32,10 +32,10 @@ var hasMode = {
 	gene: hasGene
 };
 
-var availModes = (state, modes) => !hasDataset(state) ? [] :
+var availModes = (state, modes) => !datasetCohort(state) ? [] :
 	modes.filter(mode => (hasMode[mode] || alwaysFalse)(state));
 
-var availOther = (state, floatOnly) => !hasDataset(state) ? [] :
+var availOther = (state, floatOnly) => !datasetCohort(state) ? [] :
 	hasOther(state, floatOnly) ? ['other'] : [];
 var ident = a => a.map(identity);
 
