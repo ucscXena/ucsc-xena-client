@@ -221,19 +221,23 @@ var actionPrefix = actions =>
 	object(pairs(actions).map(([k, v]) => ['singlecell-' + k, v]));
 
 var reset = state => assoc(state, 'dataset', null, 'data', {}, 'tab', 0,
-	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null);
+	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null,
+	'chartY', {});
 
 var setColorBy = (state, key, colorBy) =>
 	Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
 		assocIn(next, [key, 'field'], colorBy,
 			[key, 'hidden'], null));
 
+var setChartY = (state, dataset) =>
+	dataset.cohort === datasetCohort(state) ? state.chartY : {};
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	dataset: (state, dataset, colorBy, colorBy2) => assoc(state, 'dataset', dataset,
-		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null),
+		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null,
+		'chartY', setChartY(state, dataset)),
 	reset,
 	colorBy: (state, key, colorBy) =>
 		Let((next = setColorBy(state, key, colorBy)) =>
