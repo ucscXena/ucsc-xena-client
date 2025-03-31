@@ -235,7 +235,7 @@ class MapColor extends PureComponent {
 	}
 	onColorBy = ev => {
 		var {state} = this.props,
-			{colorBy: {field: colorBy}} = state,
+			colorBy = get(state.colorBy, 'field'),
 			{value} = ev.target,
 			{mode} = value,
 			[[host, name] = [], field, type] =
