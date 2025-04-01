@@ -211,6 +211,10 @@ var PopperProps = {
 var tooltipTab = ({title, open, ...props}) =>
 	tooltip({title, open, arrow: true, placement: 'top', PopperProps}, tab(props));
 
+var isChartView = state => datasetCohort(state) && !hasDataset(state);
+
+var showHide = [{style: {display: 'none'}}, {}];
+
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
 		showColorBy2: false}
@@ -253,15 +257,16 @@ class MapTabs extends PureComponent {
 				onBackgroundOpacity, onBackgroundVisible,
 				onColorByHandlers}, state}} = this,
 			{tab: value = 0} = state,
-			showImg = !!hasImage(state);
+			showImg = !!hasImage(state),
+			chart = ~~isChartView(state);
 		return div({className: styles.maptabs},
 			tabs({value, onChange, variant: 'fullWidth'},
 				tab({label: 'View'}),
 				tooltipTab({title: 'Next: explore image layers', open: showImg
 					&& showNext, label: 'Image', ...imgDisplay(showImg)}),
 				tooltipTab({title: 'Next: explore omics', label: 'Data',
-					open: !showImg && showNext}),
-			),
+					open: !showImg && showNext, ...showHide[chart ^ 1]}),
+				tab({label: 'Configure', ...showHide[chart]})),
 			tabPanel({value, index: 0},
 				mapSelect(get(state, 'availableMaps'), state.dataset, onDataset),
 				chartSelect({state, handlers: onColorByHandlers[2]})),
@@ -351,8 +356,6 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 		iconButton({onClick: onShowColorPicker, color: 'secondary'},
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
-
-var isChartView = state => datasetCohort(state) && !hasDataset(state);
 
 var legends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	isChartView(state) ? null :
