@@ -3,7 +3,7 @@ import {make, mount, compose} from './utils';
 var fetch = require('../fieldFetch');
 var {samplesQuery} = require('./common');
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
-	datasetMetadata, donorFields, fetchDefaultStudy} =
+	datasetMetadata, fetchDefaultStudy} =
 	require('../xenaQuery');
 var {assoc, assocIn, findIndex, get, getIn, identity, intersection,
 	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
@@ -114,7 +114,6 @@ var fetchMethods = {
 	cohortMaxSamples: (cohort, server) => cohortMaxSamples(server, cohort),
 	cohortDatasets: (cohort, server) => datasetList(server, [cohort]),
 	cohortFeatures: (cohort, server, dataset) => allFieldMetadata(server, dataset),
-	donorFields: (cohort, server) => donorFields(server, cohort),
 	// XXX might be a race here, with the error from localhost
 	samples: (cohort, servers) =>
 		samplesQuery(userServers({servers}), {name: cohort}, Infinity),
@@ -148,7 +147,6 @@ var cachePolicy = {
 	// ['samples', cohort]
 	// ['cohortDatasets', cohort, server]
 	// ['cohortFeatures', cohort, server, dsName]
-	// ['donorFields', cohort, server]
 	// limit cache to cohorts in study
 	default: (state, path) =>
 		Let((cohorts = pluck(allCohorts(state.singlecell), 'cohort')) =>
@@ -188,7 +186,6 @@ var singlecellData = state =>
 			map(usc, (cohorts, server) =>
 				cohorts.map(cohort =>
 					[['cohortDatasets', cohort, server],
-						['donorFields', cohort, server],
 					...getIn(state.singlecell, ['cohortDatasets', cohort, server], [])
 						.filter(isPhenotype)
 						.map(ds => ['cohortFeatures', cohort, server, ds.name])])

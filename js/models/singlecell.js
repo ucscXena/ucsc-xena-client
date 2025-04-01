@@ -1,7 +1,7 @@
-var {assoc, deepMerge, every, find, filter, findValue, first, flatmap, get, getIn,
-	identity, intersection, Let, map, mapObject, memoize1, merge, min, max,
-	mmap, object, omit, pairs, pick, pluck, range, sorted, sortByI, updateIn, uniq, values}
-		= require('../underscore_ext').default;
+var {assoc, deepMerge, every, find, filter, findValue, first,
+	flatmap, get, getIn, identity, intersection, keys, Let, map, mapObject, memoize1,
+	merge, min, max, mmap, object, omit, pairs, pick, pluck, range, sorted,
+	sortByI, updateIn, uniq, values} = require('../underscore_ext').default;
 var {userServers} = require('./servers');
 var {categoryMore} = require('../colorScales');
 
@@ -76,6 +76,12 @@ var labelTransferProb = datasets =>
 			label: m.label
 		}))).flat();
 
+var donorFields = servers =>
+	mapObject(servers, datasets =>
+		keys(datasets).map(name =>
+			map(pick(datasets[name], '_DONOR', '_DATASOURCE'),
+				field => ({name, field: field.name}))).flat());
+
 var empty = {
 	cellType: {},
 	labelTransfer: {},
@@ -90,14 +96,17 @@ export var curatedFields = (cohorts, cohortDatasets, cohortFeatures) =>
 	!cohorts.length ? empty :
 	deepMerge(
 		...cohorts.map(({cohort}) =>
-			Let((ds = allCohortDatasets(cohort, cohortDatasets)) =>
-				object(
-					['cellType', 'labelTransfer', 'labelTransferProb', 'signature',
-						'signatureScore', 'defaultPhenotype'],
-					[cellTypeCluster(ds), labelTransfer(ds), labelTransferProb(ds),
-					 signature(ds), signatureScore(ds),
-					 defaultPhenotype(ds, get(cohortFeatures, cohort, {}))]
-						.map(d => ({[cohort]: d}))))));
+			Let((ds = allCohortDatasets(cohort, cohortDatasets),
+					features = get(cohortFeatures, cohort, {})) =>
+				mapObject({
+					donorFields: donorFields(features),
+					cellType: cellTypeCluster(ds),
+					labelTransfer: labelTransfer(ds),
+					labelTransferProb: labelTransferProb(ds),
+					signature: signature(ds),
+					signatureScore: signatureScore(ds),
+					defaultPhenotype: defaultPhenotype(ds, features)
+				}, d => ({[cohort]: d})))));
 
 
 export var studyList = state => getIn(state, ['defaultStudy', 'studyList'], []);
