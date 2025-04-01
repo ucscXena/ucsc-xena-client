@@ -25,7 +25,6 @@ export var availableMaps = (cohorts, cohortDatasets) =>
 	!cohorts.length || !cohortDatasets ? [] :
 	cohorts.map(cohortMaps(cohortDatasets)).flat();
 
-
 var cellTypeCluster = datasets =>
 	datasets.map(ds => getProps(ds.cluster, ds.celltype)
 		.map(m => ({
@@ -240,6 +239,8 @@ export var hasColorBy = colorBy => getIn(colorBy, ['field', 'field']);
 
 export var hasColor = colorBy =>
 	hasColorBy(colorBy) && getIn(colorBy, ['data', 'req', 'values', 0]);
+
+export var colorByMode = state => getIn(state, ['field', 'mode']);
 
 export var hasShadow = state =>
 	hasColorBy(state.colorBy) && !hasColorBy(state.colorBy2) &&

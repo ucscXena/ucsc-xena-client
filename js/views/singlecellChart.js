@@ -1,14 +1,11 @@
 var {assoc, get, getIn, Let} = require('../underscore_ext').default;
-import {cellTypeValue, datasetCohort, getSamples, getDataSubType, phenoValue,
-	probValue, otherValue} from '../models/map';
+import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
+	phenoValue, probValue, otherValue} from '../models/map';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
 
 import {div} from '../chart/react-hyper';
-
-
-var colorByMode = state => getIn(state, ['field', 'mode']);
 
 // XXX duplicated in SingleCell.js
 // Note colorBy is hard-coded into cellTypeValue, etc.

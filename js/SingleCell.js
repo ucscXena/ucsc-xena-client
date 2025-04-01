@@ -15,10 +15,11 @@ import {Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
 import styles from './SingleCell.module.css';
-import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields,
+import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, getData,
-	getDataSubType, hasDataset, hasImage, isLog, log2p1, availableMaps,
-	mergeColor, ORDINAL, otherValue, phenoValue, probValue, setColor, setRadius
+	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isLog, log2p1,
+	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
+	setColor, setRadius
 	} from './models/map';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
@@ -173,11 +174,6 @@ var chartSelect = el(class extends PureComponent {
 	}
 });
 
-// XXX this is different from the definition in map.js
-// Switch to colorByMode & move to map.js.
-// Also, rename map.js
-var hasColorBy = state => getIn(state, ['field', 'mode']);
-
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
 var vizPanel = ({props: {state, ...handlers}}) =>
@@ -298,8 +294,6 @@ var shButton = (onClick, txt) =>
 var showHideButtons = ({onHideAll, onShowAll}) =>
 	fragment(shButton(onHideAll, 'Hide all'), shButton(onShowAll, 'Show all'));
 
-var hasColorByData = state =>
-	hasColorBy(state) && getIn(state, ['data', 'req', 'values', 0]);
 var hasCodes = state => hasColorBy(state) && getIn(state, ['data', 'codes']);
 
 var gray = '#F0F0F0';
@@ -314,7 +308,7 @@ var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
 				merge(custom, object(hidden, hidden.map(constant(gray)))))
 			: scale;
 
-	return hasColorByData(state) ?
+	return hasColor(state) ?
 		fragment(
 			div(
 				codes ? showHideButtons({onHideAll, onShowAll}) : null,
@@ -342,7 +336,7 @@ var legendTitleMode = {
 
 var legendTitle = state =>
 	span({className: styles.legendTitle},
-		legendTitleMode[hasColorBy(get(state, 'colorBy')) || null](state));
+		legendTitleMode[colorByMode(get(state, 'colorBy')) || null](state));
 
 var datasetCount = state =>
 	Let(({host, name} = JSON.parse(state.dataset.dsID)) =>
