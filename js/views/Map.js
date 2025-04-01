@@ -19,7 +19,7 @@ import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, defaultShadow,
 	dotRange, getData, getRadius, getSamples, hasColor, hasColorBy, hasImage,
 	hasShadow, isOrdinal} from '../models/singlecell';
-import Img from '../Img';
+import Img from './Img';
 
 var iconButton = el(IconButton);
 var icon = el(Icon);
