@@ -18,7 +18,7 @@ import AxesLayer from './axes-layer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {colorError, colorLoading, dataError, dataLoading, defaultShadow,
 	dotRange, getData, getRadius, getSamples, hasColor, hasColorBy, hasImage,
-	hasShadow, isOrdinal} from '../models/map';
+	hasShadow, isOrdinal} from '../models/singlecell';
 import Img from '../Img';
 
 var iconButton = el(IconButton);

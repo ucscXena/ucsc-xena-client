@@ -4,7 +4,7 @@ var Legend = require('./Legend');
 var BandLegend = require('./BandLegend');
 import {el, span} from '../chart/react-hyper';
 import {colorScale} from '../colorScales';
-import {cmpCodes} from '../models/map';
+import {cmpCodes} from '../models/singlecell';
 var {first, get, last, Let} = require('../underscore_ext').default;
 
 var legend = el(Legend);

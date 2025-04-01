@@ -1,6 +1,6 @@
 var {assoc, get, getIn, Let} = require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
-	phenoValue, probValue, otherValue} from '../models/map';
+	phenoValue, probValue, otherValue} from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';

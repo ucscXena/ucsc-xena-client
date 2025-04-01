@@ -6,7 +6,7 @@ import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
 	hasDatasource, hasDonor, hasGene, hasSignatureScore, hasOther,
-	hasTransferProb, otherValue, phenoValue, probValue, sigValue} from '../models/map';
+	hasTransferProb, otherValue, phenoValue, probValue, sigValue} from '../models/singlecell';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';

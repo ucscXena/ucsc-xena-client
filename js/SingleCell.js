@@ -20,7 +20,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isLog, log2p1,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
 	setColor, setRadius
-	} from './models/map';
+	} from './models/singlecell';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
 	isEqual, keys, Let, mapObject, merge, object, pick, range, reject, sortByI,

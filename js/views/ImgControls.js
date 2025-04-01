@@ -5,7 +5,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from '../views/XAutosuggestInput';
 var {getIn, Let, pluck, sorted} = require('../underscore_ext').default;
 import styles from './ImgControls.module.css';
-import {hasImage, layerColors, segmentedColor} from '../models/map';
+import {hasImage, layerColors, segmentedColor} from '../models/singlecell';
 var {RGBToHex} = require('../color_helper').default;
 
 var autocomplete = el(Autocomplete);

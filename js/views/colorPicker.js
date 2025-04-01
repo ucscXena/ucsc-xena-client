@@ -4,7 +4,7 @@ import {el, span} from '../chart/react-hyper';
 import {tableLayout} from './muiTable';
 import {colorScale, categoryMore as colors} from '../colorScales';
 var {assoc, Let, range} = require('../underscore_ext').default;
-import {cmpCodes} from '../models/map';
+import {cmpCodes} from '../models/singlecell';
 
 var button = el(Button);
 var dialog = el(Dialog);
