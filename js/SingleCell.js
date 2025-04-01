@@ -23,7 +23,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	} from './models/singlecell';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
-	isEqual, keys, Let, mapObject, merge, object, pick, range, reject, sortByI,
+	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
 	times, uniq, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
