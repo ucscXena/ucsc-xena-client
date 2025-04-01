@@ -582,10 +582,10 @@ var uniqCodes = (values, dim, isChart) =>
 var codesSelector = createSelector(
 	state => getIn(state, ['colorBy', 'data', 'codes']),
 	state => getIn(state, ['colorBy', 'data', 'req', 'values', 0]),
-	state => getData(state),
+	state => getIn(getData(state), ['req', 'values', 0]),
 	state => isChartView(state),
-	(codes, array, dims, isChart) => codes &&
-		uniqCodes(array, getIn(dims, ['req', 'values', 0]), isChart));
+	(codes, array, dim, isChart) => codes && dim &&
+		uniqCodes(array, dim, isChart));
 
 var mergeCodes = state =>
 	Let((codesInView = codesSelector(state)) =>
