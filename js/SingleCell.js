@@ -168,7 +168,8 @@ var chartSelect = el(class extends PureComponent {
 					menuItem({value: 'compare', disabled: true}, 'Compare groups of cells'),
 					menuItem({value: 'dist'}, 'See a distribution')),
 				mode === 'dist' ?
-					mapColor({label: 'Select a grouping', state, handlers}) : null);
+					mapColor({label: 'Select a grouping', key: datasetCohort(state),
+						state, handlers}) : null);
 	}
 });
 
