@@ -576,8 +576,8 @@ var mergeDensity = state =>
 		mergeDensityField(mergeDensityField(state, 'colorBy', d0), 'colorBy2', d1));
 
 var uniqCodes = (values, dim, isChart) =>
-	Let((rfn = isChart || !dim ? isNaN : (v, i) => isNaN(v) || isNaN(dim[i])) =>
-		reject(uniq(values), rfn).sort((v1, v2) =>  v1 - v2));
+	Let((inMap = isChart ? values : values.filter((v, i) => !isNaN(dim[i]))) =>
+		without(uniq(inMap), NaN).sort((v1, v2) =>  v1 - v2));
 
 var codesSelector = createSelector(
 	state => getIn(state, ['colorBy', 'data', 'codes']),
