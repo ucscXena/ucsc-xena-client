@@ -147,38 +147,57 @@ function mapSelect(availableMaps, selected, onChange) {
 		onChange}, ...mapOpts(opts));
 }
 
+// XXX update this enum to include colorBy
+var CHARTY = 2;
+var CHARTX = 3;
+
+// XXX fix this overlay by passing a key, or passing the color state
+// as a different key.
+var overlayColorBy = (state, key) =>
+	assoc(state, 'colorBy', state[key]);
+
 var chartSelect = el(class extends PureComponent {
 	displayName = 'chartSelect';
-	constructor() {
-		super();
-		// XXX check columns & pick mode
-		this.state = {mode: 'dist'};
-	}
 	onMode = ev => {
 		this.setState({mode: ev.target.value});
 	}
 
 	render() {
-		var {props: {state: state0, handlers}, state: {mode}, onMode} = this,
-			state = assoc(state0, 'colorBy', state0.chartY);
+		var {props: {state, onChartMode, onColorByHandlers: handlers}} = this,
+			{chartMode: mode = 'dist'} = state;
 
 		return (!datasetCohort(state) || hasDataset(state)) ? null :
 			fragment(
 				xSelect({label: 'What do you want to do?', value: mode,
-					onChange: onMode},
-					menuItem({value: 'compare', disabled: true}, 'Compare groups of cells'),
+					onChange: onChartMode},
+					menuItem({value: 'compare'}, 'Compare groups of cells'),
 					menuItem({value: 'dist'}, 'See a distribution')),
 				mode === 'dist' ?
-					mapColor({label: 'Select a grouping', key: datasetCohort(state),
-						fieldPred: {type: 'coded'}, state, handlers}) : null);
+					mapColor({label: 'Select a grouping', key: `0${datasetCohort(state)}${mode}`,
+						fieldPred: {type: 'coded'},
+						state: overlayColorBy(state, 'chartY'),
+						handlers: handlers[CHARTY]}) :
+				fragment(
+					mapColor({label: 'Select a grouping', key: `0${datasetCohort(state)}${mode}`,
+						fieldPred: {type: 'coded'},
+						state: overlayColorBy(state, 'chartX'),
+						handlers: handlers[CHARTX]}),
+					mapColor({label: 'Select data', key: `1${datasetCohort(state)}${mode}`,
+						state: overlayColorBy(state, 'chartY'),
+						handlers: handlers[CHARTY]})));
 	}
 });
 
 var vizText = (...children) => div({className: styles.vizText}, ...children);
 
+var showChart = state =>
+	state.chartMode === 'compare' ?
+		hasColorBy(state.chartX) && hasColorBy(state.chartY) :
+	hasColorBy(state.chartY);
+
 var vizPanel = ({props: {state, ...handlers}}) =>
 	hasDataset(state) ? cellView({state, key: datasetCohort(state), ...handlers}) :
-	hasColorBy(state.chartY) ? singlecellChart({state}) :
+	showChart(state) ? singlecellChart({state}) :
 	datasetCohort(state) ? vizText(h2('Select grouping and data')) :
 	vizText(h2('All Xena derived data is in beta'),
 		h2('Select a layout'));
@@ -255,7 +274,7 @@ class MapTabs extends PureComponent {
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onBackgroundOpacity, onBackgroundVisible,
-				onColorByHandlers}, state}} = this,
+				onColorByHandlers, onChartMode}, state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
 			chart = ~~isChartView(state);
@@ -269,7 +288,7 @@ class MapTabs extends PureComponent {
 				tab({label: 'Configure', ...showHide[chart]})),
 			tabPanel({value, index: 0},
 				mapSelect(get(state, 'availableMaps'), state.dataset, onDataset),
-				chartSelect({state, handlers: onColorByHandlers[2]})),
+				chartSelect({state, onColorByHandlers, onChartMode})),
 			tabPanel({value, index: 1},
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
@@ -528,6 +547,9 @@ class SingleCellPage extends PureComponent {
 	}
 	markersCloseKey = key => {
 		this.callback(['show-markers', key, false]);
+	}
+	onChartMode = ev => {
+		this.callback(['chartMode', ev.target.value]);
 	}
 
 	componentDidMount() {

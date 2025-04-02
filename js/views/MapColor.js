@@ -84,7 +84,7 @@ var setDataSubType = (state, datasets) =>
 			name,
 			dataSubType: getDataSubType(state, host, name)}));
 
-var colorData = state => getIn(state, ['colorBy', 'data', 'req', 'values', 0])
+var hasDensity = state => getIn(state, ['colorBy', 'data', 'density'])
 	&& !getIn(state, ['colorBy', 'data', 'codes']);
 var getSteps = ({min, max}) => (max - min) / 200;
 
@@ -150,7 +150,7 @@ var modeOptions = {
 	'': () => null,
 	datasource: () => null,
 	donor: () => null,
-	pheno: ({state, onScale}) => isFloat(state, phenoValue) && colorData(state) ?
+	pheno: ({state, onScale}) => isFloat(state, phenoValue) && hasDensity(state) ?
 		distributionSlider(state, onScale) : null,
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
@@ -164,7 +164,7 @@ var modeOptions = {
 				label: 'Select a phenotype',
 				value: otherValue(state), onChange
 			}, ...otherOpts(state, pred)),
-			isFloat(state, otherValue) && colorData(state) ?
+			isFloat(state, otherValue) && hasDensity(state) ?
 				distributionSlider(state, onScale) : null),
 	prob: ({state, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
@@ -180,7 +180,7 @@ var modeOptions = {
 						value: probCellValue(state),
 						onChange: onProbCell
 					}, ...probCellOpts(prob)),
-				colorData(state) ? distributionSlider(state, onScale) : null)),
+				hasDensity(state) ? distributionSlider(state, onScale) : null)),
 	sig: ({state, onSig, onScale}) =>
 		fragment(xSelect({
 					id: 'sig-cell',
@@ -188,13 +188,13 @@ var modeOptions = {
 					value: sigValue(state),
 					onChange: onSig
 				}, ...sigOpts(state)),
-			colorData(state) ? distributionSlider(state, onScale) : null),
+			hasDensity(state) ? distributionSlider(state, onScale) : null),
 	gene: ({state, onGene, onScale}) =>
 		fragment(
 			geneDatasetSuggest({label: 'Gene name', datasets:
 				setDataSubType(state, hasGene(state, datasetCohort(state))),
 				onSelect: onGene, value: geneValue(state)}),
-			colorData(state) ? distributionSlider(state, onScale) :
+			hasDensity(state) ? distributionSlider(state, onScale) :
 				null)
 };
 

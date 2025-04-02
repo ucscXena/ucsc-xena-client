@@ -120,6 +120,8 @@ var fetchMethods = {
 	data: (dsID, dims, samples) => fetchMap(dsID, JSON.parse(dims), samples.samples),
 	chartY: (_, field, samples) =>
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, blue)),
+	chartX: (_, field, samples) =>
+		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, blue)),
 	colorBy: (_, field, samples) =>
 		fetch(fieldSpecMode(field), samples.samples).map(colorParams(field, red)),
 	colorBy2: (_, field, samples) =>
@@ -137,6 +139,7 @@ var cachePolicy = {
 	datasetMetadata: identity,
 	cohortMaxSamples: identity, // cache indefinitely
 	chartY: identity, // always updates in-place
+	chartX: identity, // always updates in-place
 	colorBy: identity, // always updates in-place
 	colorBy2: identity, // always updates in-place
 	serverCohorts: identity, // cache indefinitely
@@ -201,6 +204,9 @@ var singlecellData = state =>
 		hasColorBy(get(state.singlecell, ['chartY'])) && getSamples(state.singlecell) ?
 			[['chartY', 'data', ['singlecell', 'chartY', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
+		hasColorBy(get(state.singlecell, ['chartX'])) && getSamples(state.singlecell) ?
+			[['chartX', 'data', ['singlecell', 'chartX', 'field'],
+				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
 		hasColorBy(get(state.singlecell, ['colorBy'])) && getSamples(state.singlecell) ?
 			[['colorBy', 'data', ['singlecell', 'colorBy', 'field'],
 				['singlecell', 'samples', datasetCohort(state.singlecell)]]] : [],
@@ -219,22 +225,23 @@ var actionPrefix = actions =>
 
 var reset = state => assoc(state, 'dataset', null, 'data', {}, 'tab', 0,
 	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null,
-	'chartY', {});
+	'chartY', {}, 'chartX', {});
 
 var setColorBy = (state, key, colorBy) =>
 	Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
 		assocIn(next, [key, 'field'], colorBy,
 			[key, 'hidden'], null));
 
-var setChartY = (state, dataset) =>
-	dataset.cohort === datasetCohort(state) ? state.chartY : {};
+var setChart = (state, dataset, current) =>
+	dataset.cohort === datasetCohort(state) ? current : {};
 
 var controls = actionPrefix({
 	enter: state => assoc(state, 'enter', 'true'),
 	integration: (state, cohort) => assoc(state, 'integration', cohort),
 	dataset: (state, dataset, colorBy, colorBy2) => assoc(state, 'dataset', dataset,
 		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null,
-		'chartY', setChartY(state, dataset)),
+		'chartY', setChart(state, dataset, state.chartY),
+		'chartX', setChart(state, dataset, state.chartX)),
 	reset,
 	colorBy: (state, key, colorBy) =>
 		Let((next = setColorBy(state, key, colorBy)) =>
@@ -272,7 +279,9 @@ var controls = actionPrefix({
 	'view-state': (state, viewState) => assoc(state, 'viewState', viewState),
 	// XXX drop 'key', since we only do one.
 	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show),
-	'shadow': (state, shadow) => assoc(state, 'shadow', shadow)
+	'shadow': (state, shadow) => assoc(state, 'shadow', shadow),
+	chartMode: (state, mode) => assoc(state, 'chartMode', mode, 'chartY', {},
+		'chartX', {})
 });
 
 var resetIntegration = (state = {}, params) =>
@@ -303,7 +312,10 @@ var pageControls = {
 	// get the latest.
 	'page-unload': state =>
 		assocIn(state, ['colorBy', 'data'], undefined, ['data'], undefined,
-			['samples'], undefined)
+			['samples'], undefined,
+			['colorBy2', 'data'], undefined,
+			['chartY', 'data'], undefined,
+			['chartX', 'data'], undefined)
 };
 
 // Have to separate this to get access to the server list. Need a better
