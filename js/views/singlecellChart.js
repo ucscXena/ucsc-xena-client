@@ -58,9 +58,6 @@ function chartPropsFromState(state) {
 var singlecellChart = el(class extends PureComponent {
 	constructor() {
 		super();
-		// XXX we are redrawing when changing an axis, with the old data.
-		// This makes the UI freeze. Need to not redraw until the data
-		// updates.
 		this.computeChart = memoize1(computeChart);
 	}
 	render () {
