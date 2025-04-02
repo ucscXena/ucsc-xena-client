@@ -1,4 +1,4 @@
-var {assoc, get, getIn, Let, memoize1, pick} = require('../underscore_ext').default;
+var {assocIn, getIn, Let, memoize1, pick} = require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
 	hasColor, phenoValue, probValue, otherValue} from '../models/singlecell';
 import {colorScale} from '../colorScales';
@@ -15,7 +15,7 @@ var axisTitleMode = {
 	donor: () => 'Donor',
 	type: state => cellTypeValue(state).label,
 	prob: state => getIn(state, ['colorBy', 'field', 'field']) ?
-		Let(({field} = state.colorBy.field) =>
+		Let(({field} = state.colorBy.data.field) =>
 			`${probValue(state).label}: ${field}`) : '',
 	sig: state => getIn(state, ['colorBy', 'field', 'field'], ''),
 	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?
@@ -26,8 +26,8 @@ var axisTitleMode = {
 	null: () => ''
 };
 var axisTitle = (state, axis) =>
-	axisTitleMode[colorByMode(get(state, axis)) || null]
-		(assoc(state, 'colorBy', state.chartY));
+	axisTitleMode[colorByMode(getIn(state, [axis, 'data'])) || null]
+		(assocIn(state, ['colorBy', 'field'], getIn(state, [axis, 'data', 'field'])));
 
 var chartSubtitle = (cohort, cohortSamples) =>
 	 `cohort: ${cohort} (n=${cohortSamples.length})`;
@@ -52,7 +52,7 @@ function chartPropsFromState(state) {
 		xlabel: axisTitle(state, 'chartX')
 	};
 
-	return {drawProps, ...computeChart(drawProps)};
+	return {drawProps};
 }
 
 var singlecellChart = el(class extends PureComponent {
@@ -61,7 +61,7 @@ var singlecellChart = el(class extends PureComponent {
 		// XXX we are redrawing when changing an axis, with the old data.
 		// This makes the UI freeze. Need to not redraw until the data
 		// updates.
-		this.chartPropsFromState = memoize1(chartPropsFromState);
+		this.computeChart = memoize1(computeChart);
 	}
 	render () {
 		var content;
@@ -73,7 +73,8 @@ var singlecellChart = el(class extends PureComponent {
 			// XXX improve this.
 			content = 'Loading...';
 		} else {
-			var {drawProps, chartData} = this.chartPropsFromState(state);
+			var {drawProps} = chartPropsFromState(state),
+				{chartData} = this.computeChart(drawProps);
 			content = highchartView({drawProps: {...drawProps, chartData}});
 		}
 
