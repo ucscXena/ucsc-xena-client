@@ -170,7 +170,7 @@ var chartSelect = el(class extends PureComponent {
 					menuItem({value: 'dist'}, 'See a distribution')),
 				mode === 'dist' ?
 					mapColor({label: 'Select a grouping', key: datasetCohort(state),
-						state, handlers}) : null);
+						fieldPred: {type: 'coded'}, state, handlers}) : null);
 	}
 });
 
@@ -286,7 +286,8 @@ class MapTabs extends PureComponent {
 							icon({onClick: onHideColorBy2}, 'close'),
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
-								floatOnly: true, handlers: onColorByHandlers[1]})))));
+								fieldPred: {type: 'float'},
+								handlers: onColorByHandlers[1]})))));
 	}
 }
 

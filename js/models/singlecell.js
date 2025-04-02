@@ -1,6 +1,6 @@
-var {assoc, deepMerge, every, find, filter, findValue, first,
+var {assoc, deepMerge, every, find, findValue, first,
 	flatmap, get, getIn, identity, intersection, keys, Let, map, mapObject, memoize1,
-	merge, min, max, mmap, object, omit, pairs, pick, pluck, range, sorted,
+	merge, min, max, mmap, object, omit, pairs, pick, pluck, range, some, sorted,
 	sortByI, updateIn, uniq, values} = require('../underscore_ext').default;
 var {userServers} = require('./servers');
 var {categoryMore} = require('../colorScales');
@@ -174,7 +174,8 @@ export var hasImage = state =>
 
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
-var hasField = field => (state, cohort = datasetCohort(state)) =>
+var hasField = field => (state, {type} = {}, cohort = datasetCohort(state)) =>
+	type !== 'float' &&
 	findValue(pairs(getIn(state, ['donorFields', cohort])),
 		([host, fields]) => findValue(fields,
 			f => f.field === field && [host, f.name]));
@@ -182,22 +183,27 @@ var hasField = field => (state, cohort = datasetCohort(state)) =>
 export var hasDonor = hasField('_DONOR');
 export var hasDatasource = hasField('_DATASOURCE');
 
-export var hasCellType = (state, cohort = datasetCohort(state)) =>
-	state.cellType[cohort].length || state.labelTransfer[cohort].length ||
-	state.signature[cohort].length;
+export var hasCellType = (state, {type} = {}, cohort = datasetCohort(state)) =>
+	type !== 'float' &&
+	(state.cellType[cohort].length || state.labelTransfer[cohort].length ||
+		state.signature[cohort].length);
 
-export var hasTransferProb = (state, cohort = datasetCohort(state)) =>
-	state.labelTransferProb[cohort].length;
+export var hasTransferProb = (state, {type} = {}) =>
+	type !== 'coded' &&
+	state.labelTransferProb[datasetCohort(state)].length;
 
-export var hasSignatureScore = (state, cohort = datasetCohort(state)) =>
-	state.signatureScore[cohort].length;
+export var hasSignatureScore = (state, {type} = {}) =>
+	type !== 'coded' &&
+	state.signatureScore[datasetCohort(state)].length;
 
-export var hasOther = (state, floatOnly, cohort = datasetCohort(state)) =>
-	(floatOnly ? identity : filter)(state.other[cohort], {type: 'float'}).length;
+// pred will be {type: <type>} or falsey
+export var hasOther = (state, pred = identity) =>
+	some(state.other[datasetCohort(state)], pred);
 
-export var hasGene = (state, cohort = datasetCohort(state)) =>
-	Let((datasets =
-		get(
+export var hasGene = (state, {type} = {}) =>
+	type !== 'coded' &&
+	Let((cohort = datasetCohort(state),
+		datasets = get(
 			findValue(studyList(state),
 				study => find(study.cohortList, c => c.cohort === cohort)),
 			'preferredDataset')) =>
@@ -321,13 +327,13 @@ var LetIf = (v, f) => v && f(v) ;
 var firstOpt = list => first(sortByI(list, 'label'));
 
 export var defaultColor = (state, cohort) =>
-	hasCellType(state, cohort) &&
+	hasCellType(state, {}, cohort) &&
 		Let(({dsID, field} = firstOpt(state.cellType[cohort]) ||
 			firstOpt(state.labelTransfer[cohort]) || firstOpt(state.signature[cohort]),
 			{host, name} = JSON.parse(dsID)) => ({mode: 'type', host, name, field})) ||
-	LetIf(hasDonor(state, cohort), ([host, name]) =>
+	LetIf(hasDonor(state, {}, cohort), ([host, name]) =>
 		({mode: 'donor', host, name, field: '_DONOR'})) ||
-	LetIf(hasDatasource(state, cohort), ([host, name]) =>
+	LetIf(hasDatasource(state, {}, cohort), ([host, name]) =>
 		({mode: 'datasource', host, name, field: '_DATASOURCE'})) ||
 	null;
 
