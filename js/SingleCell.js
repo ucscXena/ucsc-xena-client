@@ -165,7 +165,7 @@ var chartSelect = el(class extends PureComponent {
 
 	render() {
 		var {props: {state, onChartMode, onColorByHandlers: handlers}} = this,
-			{chartMode: mode = 'dist'} = state;
+			{chartMode: mode = 'compare'} = state;
 
 		return (!datasetCohort(state) || hasDataset(state)) ? null :
 			fragment(
