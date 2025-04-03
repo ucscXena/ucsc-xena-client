@@ -689,7 +689,11 @@ var legendTitle = {
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
 function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
-	var isSingleCell = yexpression === 'singleCell';
+	var isSingleCell = yexpression === 'singleCell',
+		slant = _.Let((m = _.max(_.pluck(xAxis.categories, 'length'))) =>
+			m > 12 ? -30 :
+			m > 8 ? -45 :
+			-90);
 	return {
 		chart: {
 			events: {
@@ -749,7 +753,7 @@ function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression
 		xAxis: {
 			categories: xAxis.categories,
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? 0 : -90},
+			labels: {rotation: inverted ? 0 : slant},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: yAxisTitle},
@@ -757,7 +761,7 @@ function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression
 		yAxis: {
 			categories: yAxis.categories,
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? -90 : 0},
+			labels: {rotation: inverted ? slant : 0},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: xAxisTitle},
