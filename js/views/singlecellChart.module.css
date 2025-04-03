@@ -1,5 +1,7 @@
 .container {
-	width: 800;
+	width: 800px;
+	height: 500px;
 	border: 1px solid black;
 	margin-right: 5px;
+	padding: 4px;
 }
