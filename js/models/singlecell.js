@@ -1,7 +1,8 @@
 var {assoc, deepMerge, every, find, findValue, first,
-	flatmap, get, getIn, identity, intersection, keys, Let, map, mapObject, memoize1,
-	merge, min, max, mmap, object, omit, pairs, pick, pluck, range, some, sorted,
-	sortByI, updateIn, uniq, values} = require('../underscore_ext').default;
+	flatmap, get, getIn, identity, intersection, isEqual, keys, Let, map,
+	mapObject, memoize1, merge, min, max, mmap, object, omit, pairs, pick,
+	pluck, range, some, sorted, sortByI, updateIn, uniq, values} =
+	require('../underscore_ext').default;
 var {userServers} = require('./servers');
 var {categoryMore} = require('../colorScales');
 
@@ -61,6 +62,13 @@ var signatureScore = datasets =>
 			label: field
 		}))).flat()).flat();
 
+var signatureScorePanel = datasets =>
+	datasets.map(ds => getProps(ds.signaturescorematrix).map(m => ({
+		dsID: ds.dsID,
+		field: m.category,
+		label: m.label
+	}))).flat();
+
 var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
 			dsID: ds.dsID,
@@ -88,6 +96,7 @@ var empty = {
 	labelTransferProb: {},
 	signature: {},
 	signatureScore: {},
+	signatureScorePanel: {},
 	other: {}
 };
 
@@ -105,6 +114,7 @@ export var curatedFields = (cohorts, cohortDatasets, cohortFeatures) =>
 					labelTransferProb: labelTransferProb(ds),
 					signature: signature(ds),
 					signatureScore: signatureScore(ds),
+					signatureScorePanel: signatureScorePanel(ds),
 					defaultPhenotype: defaultPhenotype(ds, features)
 				}, d => ({[cohort]: d})))));
 
@@ -307,6 +317,13 @@ export var phenoValue = state =>
 			cohort = datasetCohort(state)) =>
 		state.defaultPhenotype[cohort]
 			.find(f => f.dsID === dsID && f.field === field) || '');
+
+export var sigPanelValue = state =>
+	Let(({host, name, field} = state.colorBy.field,
+			dsID = JSON.stringify({host, name}),
+			cohort = datasetCohort(state)) =>
+		state.signatureScorePanel[cohort]
+			.find(f => f.dsID === dsID && isEqual(f.field, field)) || '');
 
 export var cellTypeMarkers = state =>
 	getIn(state, ['colorBy', 'field', 'mode']) === 'type' &&

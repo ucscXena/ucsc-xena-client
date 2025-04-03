@@ -1,7 +1,8 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, filter, find, get, getIn, identity, insert, isMatch, keys, last,
-	Let, mapObject, max, pick, pluck, sortByI} = require('../underscore_ext').default;
+var {assoc, assocIn, concat, every, filter, find, get, getIn, identity, insert,
+	isEqual, keys, last, Let, mapObject, max, pick, pluck, sortByI} =
+	require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
@@ -52,14 +53,6 @@ var otherOpts = (state, pred) =>
 	sortByI(filter(state.other[datasetCohort(state)], pred), 'field')
 		.map(value => menuItem({value}, value.field));
 
-var phenoItem = ({label, dsID, field, type}) =>
-	Let(({host, name} = JSON.parse(dsID)) =>
-		menuItem({value: {mode: 'pheno', host, name, field, type}}, label));
-
-var phenoOpts = (state, pred) =>
-	filter(state.defaultPhenotype[datasetCohort(state)] || [], pred)
-		.map(phenoItem);
-
 var probOpts = state =>
 	state.labelTransferProb[datasetCohort(state)]
 		.map(type => menuItem({value: type}, type.label));
@@ -70,6 +63,23 @@ var sigOpts = state =>
 
 var probCellOpts = prob =>
 	get(prob, 'category', []).map(c => menuItem({value: c}, c));
+
+var phenoItem = ({label, dsID, field, type}) =>
+	Let(({host, name} = JSON.parse(dsID)) =>
+		menuItem({value: {mode: 'pheno', host, name, field, type}}, label));
+
+var phenoOpts = (state, pred) =>
+	filter(state.defaultPhenotype[datasetCohort(state)] || [], pred)
+		.map(phenoItem);
+
+var sigPanelItem = ({label, dsID, field}) =>
+	Let(({host, name} = JSON.parse(dsID)) =>
+		menuItem({value: {mode: 'sigPanel', host, name, field}}, label));
+
+var sigPanelOpts = (state, {type, multi} = {}) =>
+	multi && type !== 'coded' ?
+	state.signatureScorePanel[datasetCohort(state)]
+		.map(sigPanelItem) : [];
 
 var probCellValue = state => state.colorBy.field.field || '';
 
@@ -152,6 +162,7 @@ var modeOptions = {
 	donor: () => null,
 	pheno: ({state, onScale}) => isFloat(state, phenoValue) && hasDensity(state) ?
 		distributionSlider(state, onScale) : null,
+	sigPanel: () => null,
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
 				id: 'celltype',
@@ -215,7 +226,11 @@ var defaultLabel = 'Select how to color cells by';
 
 var modeOpts = (state, pred) =>
 	Let((m = availModes(state, pred), i = m.length - (last(m) === 'other' ? 1 : 0)) =>
-		insert(m.map(modeOpt), i, phenoOpts(state, pred)));
+		insert(m.map(modeOpt), i,
+		       concat(phenoOpts(state, pred), sigPanelOpts(state, pred))));
+
+var isMatch = (obj, attrs) =>
+	every(keys(attrs), key => isEqual(obj[key], attrs[key]));
 
 class MapColor extends PureComponent {
 	constructor(props) {
@@ -231,6 +246,7 @@ class MapColor extends PureComponent {
 			[[host, name] = [], field, type] =
 				mode === 'donor' ? [hasDonor(state), '_DONOR'] :
 				mode === 'datasource' ? [hasDatasource(state), '_DATASOURCE'] :
+				mode === 'sigPanel' ? [[value.host, value.name], value.field] :
 				mode === 'pheno' ?
 			        [[value.host, value.name], value.field, value.type] :
 			    [],

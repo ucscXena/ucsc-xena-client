@@ -691,9 +691,7 @@ var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
 	var isSingleCell = yexpression === 'singleCell',
 		slant = _.Let((m = _.max(_.pluck(xAxis.categories, 'length'))) =>
-			m > 12 ? -30 :
-			m > 8 ? -45 :
-			-90);
+			m > 12 ? -40 : -90);
 	return {
 		chart: {
 			events: {

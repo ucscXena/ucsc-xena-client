@@ -5,7 +5,7 @@ var {samplesQuery} = require('./common');
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
 	datasetMetadata, fetchDefaultStudy} =
 	require('../xenaQuery');
-var {assoc, assocIn, findIndex, get, getIn, identity, intersection,
+var {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
 	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
 	uniq, updateIn} = require('../underscore_ext').default;
 var {userServers} = require('./common');
@@ -29,6 +29,7 @@ var fieldType = {
 	type: () => ['clinical', 'coded'],
 	prob: () => ['clinical', 'float'],
 	sig: () => ['clinical', 'float'],
+	sigPanel: () => ['probes', 'float'],
 	gene: () => ['probes', 'float'],
 	pheno: type => ['clinical', type],
 	other: type => ['clinical', type]
@@ -45,9 +46,10 @@ var fieldSpec = (dsID, fields, fieldType, valueType, other) => ({
 });
 
 var toDsID = (host, name) => JSON.stringify({host, name});
+var ensureArray = x => isArray(x) ? x : [x];
 
 var fieldSpecMode = ({mode, host, name, field, type, colnormalization}) =>
-	fieldSpec(toDsID(host, name), [field], ...fieldType[mode](type),
+	fieldSpec(toDsID(host, name), ensureArray(field), ...fieldType[mode](type),
 		// XXX drop this?
 		{defaultNormalization: colnormalization});
 

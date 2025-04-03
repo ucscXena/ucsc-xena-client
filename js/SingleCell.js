@@ -184,6 +184,7 @@ var chartSelect = el(class extends PureComponent {
 						state: overlayColorBy(state, 'chartX'),
 						handlers: handlers[CHARTX]}),
 					mapColor({label: 'Select data', key: `1${datasetCohort(state)}${mode}`,
+						fieldPred: {multi: true},
 						state: overlayColorBy(state, 'chartY'),
 						handlers: handlers[CHARTY]})));
 	}
