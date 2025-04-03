@@ -281,7 +281,9 @@ var controls = actionPrefix({
 	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show),
 	'shadow': (state, shadow) => assoc(state, 'shadow', shadow),
 	chartMode: (state, mode) => assoc(state, 'chartMode', mode, 'chartY', {},
-		'chartX', {})
+		'chartX', {}),
+	chartType: (state, chartType) =>
+		assocIn(state, ['chartState', 'chartType'], chartType)
 });
 
 var resetIntegration = (state = {}, params) =>

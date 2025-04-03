@@ -34,6 +34,7 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
+import {chartTypeControl} from './chart/chartControls';
 var cellView = el(CellView);
 var button = el(Button);
 var menuItem = el(MenuItem);
@@ -234,6 +235,10 @@ var isChartView = state => datasetCohort(state) && !hasDataset(state);
 
 var showHide = [{style: {display: 'none'}}, {}];
 
+var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
+var isBoxplot = state => state.chartMode === 'compare' &&
+	!getIn(state.chartY, ['data', 'codes']);
+
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
 		showColorBy2: false}
@@ -273,7 +278,7 @@ class MapTabs extends PureComponent {
 		var {onChange, onDataset, onShowColorBy2, onHideColorBy2,
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
-				onBackgroundOpacity, onBackgroundVisible,
+				onChartType, onBackgroundOpacity, onBackgroundVisible,
 				onColorByHandlers, onChartMode}, state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
@@ -306,7 +311,12 @@ class MapTabs extends PureComponent {
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
 								fieldPred: {type: 'float'},
-								handlers: onColorByHandlers[1]})))));
+								handlers: onColorByHandlers[1]})))),
+			tabPanel({value, index: 3},
+				isBoxplot(state) ?
+					chartTypeControl({onChange: onChartType,
+					                  chartType: getChartType(state)}) : null)
+		);
 	}
 }
 
@@ -550,6 +560,9 @@ class SingleCellPage extends PureComponent {
 	}
 	onChartMode = ev => {
 		this.callback(['chartMode', ev.target.value]);
+	}
+	onChartType = (_, v) => {
+		this.callback(['chartType', v]);
 	}
 
 	componentDidMount() {

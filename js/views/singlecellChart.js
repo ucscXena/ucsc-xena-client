@@ -1,10 +1,11 @@
-var {assocIn, getIn, Let, memoize1, pick} = require('../underscore_ext').default;
+var {assocIn, getIn, Let, memoize1} = require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
 	hasColor, phenoValue, probValue, otherValue} from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
 import PureComponent from '../PureComponent';
+var {applyExpression} = require('../chart/singleCell');
 
 import {el, div} from '../chart/react-hyper';
 
@@ -34,31 +35,45 @@ var chartSubtitle = (cohort, cohortSamples) =>
 
 var LetIf = (v, f) => v && f(v);
 
+function computedProps(props) {
+	var {ydata, yexpression} = props,
+		xcolor = LetIf(props.xcolor, colorScale),
+		ycolor = colorScale(props.ycolor),
+		ynonexpressed = applyExpression(ydata, yexpression),
+		{chartData/*, stats*/} = computeChart({...props, xcolor, ycolor,
+			ynonexpressed});
+	return {...props, chartData, ycolor, xcolor};
+}
+
 function chartPropsFromState(state) {
-	var drawProps = {
+	var ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
+		yexpression = 'singleCell';
+
+	return {
 		cohortSamples: getSamples(state),
 		subtitle: chartSubtitle(datasetCohort(state), getSamples(state)),
+		chartType: getIn(state, ['chartState', 'chartType'], 'dot'),
 
 		ycodemap: getIn(state, ['chartY', 'data', 'codes']),
-		ydata: getIn(state, ['chartY', 'data', 'req', 'values']),
-		ycolor: colorScale(getIn(state, ['chartY', 'data', 'scale'])),
+		ydata,
+		ycolor: getIn(state, ['chartY', 'data', 'scale']),
 		yfields: [getIn(state, ['chartY', 'data', 'field', 'field'])],
 		ylabel: axisTitle(state, 'chartY'),
+		yexpression,
+		ynorm: 'none',
 
 		xcodemap: getIn(state, ['chartX', 'data', 'codes']),
 		xdata: getIn(state, ['chartX', 'data', 'req', 'values']),
-		xcolor: LetIf(getIn(state, ['chartX', 'data', 'scale']), colorScale),
+		xcolor: getIn(state, ['chartX', 'data', 'scale']),
 		xfield: getIn(state, ['chartX', 'data', 'field', 'field']),
 		xlabel: axisTitle(state, 'chartX')
 	};
-
-	return {drawProps};
 }
 
-var singlecellChart = el(class extends PureComponent {
+export default el(class extends PureComponent {
 	constructor() {
 		super();
-		this.computeChart = memoize1(computeChart);
+		this.computedProps = memoize1(computedProps);
 	}
 	render () {
 		var content;
@@ -70,16 +85,11 @@ var singlecellChart = el(class extends PureComponent {
 			// XXX improve this.
 			content = 'Loading...';
 		} else {
-			var {drawProps} = chartPropsFromState(state),
-				{chartData} = this.computeChart(drawProps);
-			content = highchartView({drawProps: {...drawProps, chartData}});
+			var props = chartPropsFromState(state),
+				drawProps = this.computedProps(props);
+			content = highchartView({drawProps});
 		}
 
 		return div({className: styles.container}, content);
 	}
 });
-
-export default ({state}) =>
-	singlecellChart({state: pick(state, 'chartX', 'chartY', 'dataset', 'samples',
-		'cellType', 'labelTransfer', 'signature', 'other', 'defaultPhenotype',
-		'labelTransferProb', 'datasetMetadata')});

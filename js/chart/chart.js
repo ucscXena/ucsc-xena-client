@@ -14,7 +14,6 @@ import {
 	FormControl,
 	Icon,
 	IconButton,
-	MenuItem,
 	TextField,
 	Typography
 } from '@material-ui/core';
@@ -26,6 +25,7 @@ var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
+import {selectProps, getOpt, buildDropdown, chartTypeControl} from './chartControls';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -37,21 +37,8 @@ var icon = el(Icon);
 var iconButton = el(IconButton);
 var card = el(Card);
 var formControl = el(FormControl);
-var menuItem = el(MenuItem);
 var textField = el(TextField);
 var typography = el(Typography);
-
-var selectProps = {
-	className: compStyles.formControl,
-	select: true,
-	SelectProps: {
-		MenuProps: {
-			style: {width: 224},
-		},
-	},
-	size: 'small',
-	variant: 'outlined'
-};
 
 var sxAccordion = {
 	'&.MuiAccordion-root + .MuiAccordion-root:before': {
@@ -86,20 +73,10 @@ var sxAccordionSummary = {
 	},
 };
 
-var getOpt = opt => menuItem({key: opt.value, dense: true, disabled: opt.disabled, value: opt.value}, opt.label);
-
-var viewOptions = [
-	{label: 'box plot', value: 'boxplot'},
-	{label: 'violin plot', value: 'violin'},
-	{label: 'dot plot', value: 'dot'}
-];
-
 var expressionOptions = [
 	{label: 'continuous value data', value: 'bulk'},
 	{label: 'single cell count data', value: 'singleCell'}
 ];
-
-var filterViewOptions = (viewOptions, xfield) => xfield ? viewOptions : viewOptions.filter(({value}) => value !== 'dot');
 
 var normalizationOptions = [{
 		"value": "none",
@@ -146,19 +123,6 @@ var pctOptions = [
 
 var filterAvgOptions = (avgOptions, yavg) => avgOptions.filter(({label}) => label === 'none' || label in yavg);
 var filterPctOptions = (pctOptions, yavg) => pctOptions.filter(({label}) => label === 'none' || pctRange[label].some(pctRange => pctRange in yavg));
-
-var dropdownOpt = (opts, value, index = 0) => (opts.find(({value: v}) => v === value) || opts[index]);
-
-function buildDropdown({disabled = false, index = 0, label: text, onChange, opts, value}) {
-	return formControl({className: compStyles.chartAction},
-		label(textNode(text)),
-		textField({
-			disabled,
-			onChange: ev => onChange(opts.findIndex(o => o.value === ev.target.value), ev.target.value),
-			value: dropdownOpt(opts, value, index).value,
-			...selectProps},
-			...opts.map(getOpt)));
-}
 
 var isFloat = (columns, id) => v(id) && !columns[id].codes;
 var bigMulti = (columns, id) => columns[id].fields.length > 10;
@@ -537,13 +501,10 @@ class Chart extends PureComponent {
 				onChange: i => set(['normalizationState', chartState.ycolumn], i),
 				opts: normalizationOptions});
 
-		var viewOpts = filterViewOptions(viewOptions, xfield),
-		switchView = isBoxplot(drawProps) ?
-			buildDropdown({
-				label: 'Chart type',
+		var switchView = isBoxplot(drawProps) ?
+			chartTypeControl({
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
-				opts: viewOpts,
-				value: chartType}) : null;
+				chartType, hasDot: !!xfield}) : null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
