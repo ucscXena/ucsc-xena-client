@@ -34,7 +34,7 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-import {chartTypeControl} from './chart/chartControls';
+import {chartTypeControl, normalizationControl} from './chart/chartControls';
 var cellView = el(CellView);
 var button = el(Button);
 var menuItem = el(MenuItem);
@@ -237,8 +237,12 @@ var isChartView = state => datasetCohort(state) && !hasDataset(state);
 var showHide = [{style: {display: 'none'}}, {}];
 
 var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
-var isBoxplot = state => state.chartMode === 'compare' &&
-	!getIn(state.chartY, ['data', 'codes']);
+var isBoxplot = state => state.chartMode !== 'compare' &&
+	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
+
+var getNormalization = state =>
+	Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
+		getIn(state, ['chartState', 'normalization', host, name]));
 
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
@@ -280,7 +284,7 @@ class MapTabs extends PureComponent {
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onChartType, onBackgroundOpacity, onBackgroundVisible,
-				onColorByHandlers, onChartMode}, state}} = this,
+				onColorByHandlers, onChartMode, onNormalization}, state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
 			chart = ~~isChartView(state);
@@ -316,7 +320,11 @@ class MapTabs extends PureComponent {
 			tabPanel({value, index: 3},
 				isBoxplot(state) ?
 					chartTypeControl({onChange: onChartType,
-					                  chartType: getChartType(state)}) : null)
+					                  chartType: getChartType(state)}) : null,
+				isBoxplot(state) ?
+					normalizationControl({onChange: onNormalization,
+						isDot: true, index: getNormalization(state)}) : null
+			)
 		);
 	}
 }
@@ -564,6 +572,9 @@ class SingleCellPage extends PureComponent {
 	}
 	onChartType = (_, v) => {
 		this.callback(['chartType', v]);
+	}
+	onNormalization = i => {
+		this.callback(['chartNormalization', i]);
 	}
 
 	componentDidMount() {

@@ -9,6 +9,7 @@ import styles from './singlecellChart.module.css';
 import PureComponent from '../PureComponent';
 var {applyExpression} = require('../chart/singleCell');
 import spinner from '../ajax-loader.gif';
+import {normalizationOptions} from '../chart/chartControls';
 
 import {el, div, img} from '../chart/react-hyper';
 
@@ -55,12 +56,18 @@ function computedProps(props) {
 
 var ensureArray = x => isArray(x) ? x : [x];
 
+var getNormalizationValue = state =>
+	Let(({host, name} = getIn(state, ['chartY', 'data', 'field']),
+		i = getIn(state, ['chartState', 'normalization', host, name], 0)) =>
+			normalizationOptions[i].value);
+
 function chartPropsFromState(state) {
 	var ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
 		inverted = ydata.length < get(xcodemap, 'length', 1),
 		yexpression = someNegative(getIn(state, ['chartY', 'data'])) ? 'bulk' :
-			'singleCell';
+			'singleCell',
+		ycodemap = getIn(state, ['chartY', 'data', 'codes']);
 
 	return {
 		cohortSamples: getSamples(state),
@@ -68,13 +75,13 @@ function chartPropsFromState(state) {
 		chartType: getIn(state, ['chartState', 'chartType'], 'dot'),
 		inverted,
 
-		ycodemap: getIn(state, ['chartY', 'data', 'codes']),
+		ycodemap,
 		ydata,
 		ycolor: getIn(state, ['chartY', 'data', 'scale']),
 		yfields: ensureArray(getIn(state, ['chartY', 'data', 'field', 'field'])),
 		ylabel: axisTitle(state, 'chartY'),
 		yexpression,
-		ynorm: 'none',
+		ynorm: !ycodemap && getNormalizationValue(state),
 
 		xcodemap,
 		xdata: getIn(state, ['chartX', 'data', 'req', 'values']),

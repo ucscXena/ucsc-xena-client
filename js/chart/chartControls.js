@@ -52,3 +52,25 @@ export var chartTypeControl = ({onChange, chartType, hasDot = true}) =>
 		onChange,
 		opts: reject(viewOptions, hasDot ? false : {value: 'dot'}),
 		value: chartType});
+
+export var normalizationOptions = [{
+		"value": "none",
+		"label": "none",
+	}, //no normalization
+	{
+		"value": "subset",
+		"label": "subtract mean",
+	}, //selected sample level current heatmap normalization
+	{
+		"value": "subset_stdev",
+		"label": "subtract mean, divide stdev (z-score)",
+	} //selected sample level current heatmap normalization
+];
+
+export var normalizationControl = ({onChange, isDot, isDensity, index}) =>
+	buildDropdown({
+		index,
+		label: isDot ? 'Continuous data linear transform' :
+			isDensity ? 'Data linear transform' :
+			'Y data linear transform',
+		onChange, opts: normalizationOptions});

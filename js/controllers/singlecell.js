@@ -286,7 +286,10 @@ var controls = actionPrefix({
 	chartMode: (state, mode) => assoc(state, 'chartMode', mode, 'chartY', {},
 		'chartX', {}),
 	chartType: (state, chartType) =>
-		assocIn(state, ['chartState', 'chartType'], chartType)
+		assocIn(state, ['chartState', 'chartType'], chartType),
+	chartNormalization: (state, i) =>
+		Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
+			assocIn(state, ['chartState', 'normalization', host, name], i))
 });
 
 var resetIntegration = (state = {}, params) =>

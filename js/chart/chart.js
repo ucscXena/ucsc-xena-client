@@ -25,7 +25,8 @@ var {fastats} = require('../xenaWasm');
 var {reOrderFields} = require('../models/denseMatrix');
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
-import {selectProps, getOpt, buildDropdown, chartTypeControl} from './chartControls';
+import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,
+	normalizationControl} from './chartControls';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -76,20 +77,6 @@ var sxAccordionSummary = {
 var expressionOptions = [
 	{label: 'continuous value data', value: 'bulk'},
 	{label: 'single cell count data', value: 'singleCell'}
-];
-
-var normalizationOptions = [{
-		"value": "none",
-		"label": "none",
-	}, //no normalization
-	{
-		"value": "subset",
-		"label": "subtract mean",
-	}, //selected sample level current heatmap normalization
-	{
-		"value": "subset_stdev",
-		"label": "subtract mean, divide stdev (z-score)",
-	} //selected sample level current heatmap normalization
 ];
 
 var pctRange = {
@@ -493,13 +480,11 @@ class Chart extends PureComponent {
 				onChange: i => set(['expState', chartState.xcolumn], i)});
 
 		var normalization = ycodemap ? null :
-			buildDropdown({
+			normalizationControl({
+				isDot, isDensity,
 				index: chartState.normalizationState[ycolumn],
-				label: isDot ? 'Continuous data linear transform' :
-					isDensity ? 'Data linear transform' :
-					'Y data linear transform',
-				onChange: i => set(['normalizationState', chartState.ycolumn], i),
-				opts: normalizationOptions});
+				onChange: i => set(['normalizationState', chartState.ycolumn], i)
+			});
 
 		var switchView = isBoxplot(drawProps) ?
 			chartTypeControl({
