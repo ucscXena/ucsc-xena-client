@@ -27,7 +27,7 @@
 	display: flex;
 }
 
-.panel > * {
+.panel > :nth-child(1) {
 	margin-top: 30px;
 }
 
@@ -85,4 +85,8 @@
 
 .colorBy2 > :nth-child(1) {
 	font-size: 20px;
+}
+
+.chartControl {
+	margin-top: 5px;
 }

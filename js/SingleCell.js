@@ -174,19 +174,25 @@ var chartSelect = el(class extends PureComponent {
 					menuItem({value: 'compare'}, 'Compare groups of cells'),
 					menuItem({value: 'dist'}, 'See a distribution')),
 				mode === 'dist' ?
-					mapColor({label: 'Select a grouping', key: `0${datasetCohort(state)}${mode}`,
-						fieldPred: {type: 'coded'},
-						state: overlayColorBy(state, 'chartY'),
-						handlers: handlers[CHARTY]}) :
+					card({className: styles.chartControl},
+						mapColor({label: 'Select a grouping',
+						          key: `0${datasetCohort(state)}${mode}`,
+							fieldPred: {type: 'coded'},
+							state: overlayColorBy(state, 'chartY'),
+							handlers: handlers[CHARTY]})) :
 				fragment(
-					mapColor({label: 'Select a grouping', key: `0${datasetCohort(state)}${mode}`,
-						fieldPred: {type: 'coded'},
-						state: overlayColorBy(state, 'chartX'),
-						handlers: handlers[CHARTX]}),
-					mapColor({label: 'Select data', key: `1${datasetCohort(state)}${mode}`,
-						fieldPred: {multi: true},
-						state: overlayColorBy(state, 'chartY'),
-						handlers: handlers[CHARTY]})));
+					card({className: styles.chartControl},
+						mapColor({label: 'Select a grouping',
+						          key: `0${datasetCohort(state)}${mode}`,
+							fieldPred: {type: 'coded'},
+							state: overlayColorBy(state, 'chartX'),
+							handlers: handlers[CHARTX]})),
+					card({className: styles.chartControl},
+						mapColor({label: 'Select data',
+						          key: `1${datasetCohort(state)}${mode}`,
+							fieldPred: {multi: true},
+							state: overlayColorBy(state, 'chartY'),
+							handlers: handlers[CHARTY]}))));
 	}
 });
 
