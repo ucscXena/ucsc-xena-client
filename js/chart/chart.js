@@ -534,8 +534,8 @@ class Chart extends PureComponent {
 
 		var chartStats = fragment(box(
 			{className: compStyles.chartActionsSecondary, component: Accordion,
-				square: true, sx: {...sxAccordion, display: stats ? 'block'
-					: 'none'}},
+				square: true, sx: {...sxAccordion,
+					display: `${stats ? 'block' : 'none'} !important`}},
 			box({className: compStyles.chartActionsSecondarySummary, component:
 				AccordionSummary, expandIcon: icon({color: 'secondary'},
 					'expand_more'), sx: sxAccordionSummary}, typography({color:
