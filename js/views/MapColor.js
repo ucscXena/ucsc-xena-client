@@ -1,8 +1,8 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, concat, every, filter, find, get, getIn, identity, insert,
-	isEqual, keys, last, Let, mapObject, max, pick, pluck, sortByI} =
-	require('../underscore_ext').default;
+var {assoc, assocIn, concat, contains, every, filter, find, get, getIn,
+	identity, insert, isEqual, keys, last, Let, mapObject, max, pick, pluck,
+	sortByI} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
@@ -62,7 +62,7 @@ var sigOpts = state =>
 		.map(value => menuItem({value}, value.label));
 
 var probCellOpts = prob =>
-	get(prob, 'category', []).map(c => menuItem({value: c}, c));
+	get(prob, 'field', []).map(c => menuItem({value: c}, c));
 
 var phenoItem = ({label, dsID, field, type}) =>
 	Let(({host, name} = JSON.parse(dsID)) =>
@@ -80,6 +80,15 @@ var sigPanelOpts = (state, {type, multi} = {}) =>
 	multi && type !== 'coded' ?
 	state.signatureScorePanel[datasetCohort(state)]
 		.map(sigPanelItem) : [];
+
+var probPanelItem = ({label, dsID, field}) =>
+	Let(({host, name} = JSON.parse(dsID)) =>
+		menuItem({value: {mode: 'probPanel', host, name, field}}, label));
+
+var probPanelOpts = (state, {type, multi} = {}) =>
+	multi && type !== 'coded' ?
+	state.labelTransferProb[datasetCohort(state)]
+		.map(probPanelItem) : [];
 
 var probCellValue = state => state.colorBy.field.field || '';
 
@@ -163,6 +172,7 @@ var modeOptions = {
 	pheno: ({state, onScale}) => isFloat(state, phenoValue) && hasDensity(state) ?
 		distributionSlider(state, onScale) : null,
 	sigPanel: () => null,
+	probPanel: () => null,
 	type: ({state, onCellType: onChange}) =>
 		fragment(xSelect({
 				id: 'celltype',
@@ -227,7 +237,8 @@ var defaultLabel = 'Select how to color cells by';
 var modeOpts = (state, pred) =>
 	Let((m = availModes(state, pred), i = m.length - (last(m) === 'other' ? 1 : 0)) =>
 		insert(m.map(modeOpt), i,
-		       concat(phenoOpts(state, pred), sigPanelOpts(state, pred))));
+		       concat(phenoOpts(state, pred), sigPanelOpts(state, pred),
+		              probPanelOpts(state, pred))));
 
 var isMatch = (obj, attrs) =>
 	every(keys(attrs), key => isEqual(obj[key], attrs[key]));
@@ -247,11 +258,13 @@ class MapColor extends PureComponent {
 				mode === 'donor' ? [hasDonor(state), '_DONOR'] :
 				mode === 'datasource' ? [hasDatasource(state), '_DATASOURCE'] :
 				mode === 'sigPanel' ? [[value.host, value.name], value.field] :
+				mode === 'probPanel' ? [[value.host, value.name], value.field] :
 				mode === 'pheno' ?
 			        [[value.host, value.name], value.field, value.type] :
 			    [],
 			// Re-populate form if user selects the active mode
-			newState = mode !== 'pheno' && mode === get(colorBy, 'mode') ? colorBy :
+			newState = !contains(['pheno', 'sigPanel', 'probPanel'], mode) &&
+				mode === get(colorBy, 'mode') ? colorBy :
 				{mode, host, name, field, type};
 		this.setState({colorBy: newState});
 		if (field || !mode) {

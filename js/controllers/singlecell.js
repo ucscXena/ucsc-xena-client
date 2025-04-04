@@ -28,6 +28,7 @@ var fieldType = {
 	datasource: () => ['clinical', 'coded'],
 	type: () => ['clinical', 'coded'],
 	prob: () => ['clinical', 'float'],
+	probPanel: () => ['probes', 'float'],
 	sig: () => ['clinical', 'float'],
 	sigPanel: () => ['probes', 'float'],
 	gene: () => ['probes', 'float'],

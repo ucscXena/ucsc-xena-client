@@ -1,7 +1,7 @@
 var {assocIn, get, getIn, isArray, Let, memoize1, min} =
 	require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
-	hasColor, phenoValue, probValue, sigPanelValue, otherValue}
+	hasColor, phenoValue, probValue, sigPanelValue, otherValue, probPanelValue}
 		from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
@@ -20,6 +20,7 @@ var axisTitleMode = {
 	prob: state => getIn(state, ['colorBy', 'field', 'field']) ?
 		Let(({field} = state.colorBy.field) =>
 			`${probValue(state).label}: ${field}`) : '',
+	probPanel: state => probPanelValue(state).label,
 	sig: state => getIn(state, ['colorBy', 'field', 'field'], ''),
 	sigPanel: state => sigPanelValue(state).label,
 	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?

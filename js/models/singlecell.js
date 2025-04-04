@@ -80,7 +80,7 @@ var labelTransfer = datasets =>
 var labelTransferProb = datasets =>
 	datasets.map(ds => getProps(ds.labeltransferfullprob).map(m => ({
 			dsID: ds.dsID,
-			category: m.category,
+			field: m.category,
 			label: m.label
 		}))).flat();
 
@@ -198,8 +198,8 @@ export var hasCellType = (state, {type} = {}, cohort = datasetCohort(state)) =>
 	(state.cellType[cohort].length || state.labelTransfer[cohort].length ||
 		state.signature[cohort].length);
 
-export var hasTransferProb = (state, {type} = {}) =>
-	type !== 'coded' &&
+export var hasTransferProb = (state, {type, multi} = {}) =>
+	type !== 'coded' && multi !== true &&
 	state.labelTransferProb[datasetCohort(state)].length;
 
 export var hasSignatureScore = (state, {type} = {}) =>
@@ -323,6 +323,13 @@ export var sigPanelValue = state =>
 			dsID = JSON.stringify({host, name}),
 			cohort = datasetCohort(state)) =>
 		state.signatureScorePanel[cohort]
+			.find(f => f.dsID === dsID && isEqual(f.field, field)) || '');
+
+export var probPanelValue = state =>
+	Let(({host, name, field} = state.colorBy.field,
+			dsID = JSON.stringify({host, name}),
+			cohort = datasetCohort(state)) =>
+		state.labelTransferProb[cohort]
 			.find(f => f.dsID === dsID && isEqual(f.field, field)) || '');
 
 export var cellTypeMarkers = state =>
