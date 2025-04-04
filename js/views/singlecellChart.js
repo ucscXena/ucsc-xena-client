@@ -1,4 +1,4 @@
-var {assocIn, get, getIn, isArray, Let, memoize1, min} =
+var {assocIn, get, getIn, isArray, isEqual, Let, memoize1, min} =
 	require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
 	hasColor, phenoValue, probValue, sigPanelValue, otherValue, probPanelValue}
@@ -8,8 +8,9 @@ import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
 import PureComponent from '../PureComponent';
 var {applyExpression} = require('../chart/singleCell');
+import spinner from '../ajax-loader.gif';
 
-import {el, div} from '../chart/react-hyper';
+import {el, div, img} from '../chart/react-hyper';
 
 // XXX duplicated in SingleCell.js
 // Note colorBy is hard-coded into cellTypeValue, etc.
@@ -83,6 +84,18 @@ function chartPropsFromState(state) {
 	};
 }
 
+var hasData = state => state.chartMode === 'dist' ?
+	hasColor(state.chartY) :
+	hasColor(state.chartY) && hasColor(state.chartX);
+
+var fieldMatchesData = (state, key) =>
+	isEqual(getIn(state, [key, 'field']), getIn(state, [key, 'data', 'field']));
+
+var dataLoaded = state =>
+	state.chartMode === 'dist' ?
+		fieldMatchesData(state, 'chartY') :
+		fieldMatchesData(state, 'chartY') && fieldMatchesData(state, 'chartX');
+
 export default el(class extends PureComponent {
 	constructor() {
 		super();
@@ -92,17 +105,17 @@ export default el(class extends PureComponent {
 		var content;
 		var {state} = this.props;
 
-		if (state.chartMode === 'compare' && !(hasColor(state.chartY) &&
-				hasColor(state.chartX)) ||
-			!hasColor(state.chartY)) {
-			// XXX improve this.
-			content = 'Loading...';
-		} else {
+		if (hasData(state)) {
 			var props = chartPropsFromState(state),
 				drawProps = this.computedProps(props);
 			content = highchartView({drawProps});
 		}
 
-		return div({id: 'chartView', className: styles.container}, content);
+		return div({id: 'chartView', className: styles.container}, content,
+			div({className: styles.overlay,
+			         style: {display: dataLoaded(state) ? 'none' : 'block'}},
+				img({src: spinner})
+			)
+		);
 	}
 });
