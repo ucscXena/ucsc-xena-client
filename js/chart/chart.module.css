@@ -32,7 +32,7 @@
 	display: flex;
 	min-height: 0; /* required for chart resize */
 	min-width: 0; /* required for chart resize */
-	padding: 24px 16px;
+	padding: 24px 16px 4px 16px;
 }
 
 .chartActions {

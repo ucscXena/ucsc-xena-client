@@ -103,6 +103,6 @@ export default el(class extends PureComponent {
 			content = highchartView({drawProps});
 		}
 
-		return div({className: styles.container}, content);
+		return div({id: 'chartView', className: styles.container}, content);
 	}
 });

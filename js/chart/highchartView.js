@@ -37,11 +37,13 @@ Highcharts.wrap(Highcharts.Series.prototype, 'drawLegendSymbol',
 var newChart = (...args) =>
 	new Highcharts.Chart(_.deepMerge(highchartsHelper.chartOptions, ...args));
 
+var minHeight = 700;
 function sizeChartView() {
 	var chartViewEl = document.getElementById('chartView');
 	if (!chartViewEl) {return;}
 	var chartViewRect = chartViewEl.getBoundingClientRect();
-	var height = window.innerHeight - window.scrollY - chartViewRect.top;
+	var height = _.max([minHeight,
+		window.innerHeight - window.scrollY - chartViewRect.top]);
 	chartViewEl.style.setProperty('height', `${height}px`);
 }
 
