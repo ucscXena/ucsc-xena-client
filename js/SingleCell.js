@@ -177,20 +177,20 @@ var chartSelect = el(class extends PureComponent {
 					card({className: styles.chartControl},
 						mapColor({label: 'Select a grouping',
 						          key: `0${datasetCohort(state)}${mode}`,
-							fieldPred: {type: 'coded'},
+							fieldPred: {type: 'coded'}, none: false,
 							state: overlayColorBy(state, 'chartY'),
 							handlers: handlers[CHARTY]})) :
 				fragment(
 					card({className: styles.chartControl},
 						mapColor({label: 'Select a grouping',
 						          key: `0${datasetCohort(state)}${mode}`,
-							fieldPred: {type: 'coded'},
+							fieldPred: {type: 'coded'}, none: false,
 							state: overlayColorBy(state, 'chartX'),
 							handlers: handlers[CHARTX]})),
 					card({className: styles.chartControl},
 						mapColor({label: 'Select data',
 						          key: `1${datasetCohort(state)}${mode}`,
-							fieldPred: {multi: true},
+							fieldPred: {multi: true}, none: false,
 							state: overlayColorBy(state, 'chartY'),
 							handlers: handlers[CHARTY]}))));
 	}

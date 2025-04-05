@@ -332,15 +332,17 @@ class MapColor extends PureComponent {
 	}
 	render() {
 		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,
-			{state: appState, fieldPred, label = defaultLabel} = this.props,
+			{state: appState, fieldPred, none = true,
+			                     label = defaultLabel} = this.props,
 			// overlay local state, for local control of the form
 			state = assocIn(appState, ['colorBy', 'field'], colorBy),
-			opts = [modeOpt(''), ...modeOpts(state, fieldPred)],
+			noneOpt = none ? [modeOpt('')] : [],
+			opts = [...noneOpt, ...modeOpts(state, fieldPred)],
 			mv = modeValue(state);
 		return fragment(xSelect({
 					id: 'color-mode',
 					label,
-					value: find(pluck(opts, ['props', 'value']), v => isMatch(mv, v)),
+					value: find(pluck(opts, ['props', 'value']), v => isMatch(mv, v)) || '',
 					onChange: onColorBy
 			}, ...opts),
 			modeOptions[modeValue(state).mode]({state, pred: fieldPred, onScale,
