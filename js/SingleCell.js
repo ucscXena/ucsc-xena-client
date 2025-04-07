@@ -243,7 +243,7 @@ var isChartView = state => datasetCohort(state) && !hasDataset(state);
 var showHide = [{style: {display: 'none'}}, {}];
 
 var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
-var isBoxplot = state => state.chartMode !== 'compare' &&
+var isBoxplot = state => state.chartMode !== 'dist' &&
 	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
 
 var getNormalization = state =>
