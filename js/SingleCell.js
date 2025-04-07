@@ -414,7 +414,7 @@ var legends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 				   onColorByHandlers[1])]));
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
-			onRadius, onShowColorPicker, onCloseColorPicker, onColor, ...handlers},
+			onRadius, onCloseColorPicker, onColor, ...handlers},
 		showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
