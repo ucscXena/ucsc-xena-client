@@ -228,7 +228,7 @@ var actionPrefix = actions =>
 
 var reset = state => assoc(state, 'dataset', null, 'data', {}, 'tab', 0,
 	'integration', null, 'colorBy', {}, 'colorBy2', {}, 'radius', null,
-	'chartY', {}, 'chartX', {});
+	'chartY', {}, 'chartX', {}, 'chartState', {});
 
 var setColorBy = (state, key, colorBy) =>
 	Let((next = colorBy.mode ? state : assocIn(state, [key, 'data'], null)) =>
@@ -244,7 +244,8 @@ var controls = actionPrefix({
 	dataset: (state, dataset, colorBy, colorBy2) => assoc(state, 'dataset', dataset,
 		'colorBy', colorBy, 'colorBy2', colorBy2, 'radius', null, 'viewState', null,
 		'chartY', setChart(state, dataset, state.chartY),
-		'chartX', setChart(state, dataset, state.chartX)),
+		'chartX', setChart(state, dataset, state.chartX),
+		'chartState', setChart(state, dataset, state.chartState)),
 	reset,
 	colorBy: (state, key, colorBy) =>
 		Let((next = setColorBy(state, key, colorBy)) =>
