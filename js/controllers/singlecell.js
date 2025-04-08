@@ -284,12 +284,13 @@ var controls = actionPrefix({
 	'show-markers': (state, key, show) => assocIn(state, ['showMarkers', key], show),
 	'shadow': (state, shadow) => assoc(state, 'shadow', shadow),
 	chartMode: (state, mode) => assoc(state, 'chartMode', mode, 'chartY', {},
-		'chartX', {}),
+		'chartX', {}, 'chartState', {}),
 	chartType: (state, chartType) =>
 		assocIn(state, ['chartState', 'chartType'], chartType),
 	chartNormalization: (state, i) =>
 		Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
-			assocIn(state, ['chartState', 'normalization', host, name], i))
+			assocIn(state, ['chartState', 'normalization', host, name], i)),
+	chartInverted: state => updateIn(state, ['chartState', 'inverted'], x => !x)
 });
 
 var resetIntegration = (state = {}, params) =>

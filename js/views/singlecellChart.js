@@ -1,4 +1,4 @@
-var {assocIn, get, getIn, isArray, isEqual, Let, memoize1, min} =
+var {assoc, assocIn, get, getIn, isArray, isEqual, Let, memoize1, min} =
 	require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
 	hasColor, phenoValue, probValue, sigPanelValue, otherValue, probPanelValue}
@@ -61,8 +61,25 @@ var getNormalizationValue = state =>
 		i = getIn(state, ['chartState', 'normalization', host, name], 0)) =>
 			normalizationOptions[i].value);
 
-function chartPropsFromState(state) {
-	var ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
+var isBoxplot = state => state.chartMode !== 'dist' &&
+	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
+
+// 'inverted' setting has two subtleties. For dot plot we don't invert
+// axes because we can't plot coded v float. Instead we flop the chart by
+// passing 'inverted' to the renderer. For other plots we invert the axes
+// here.
+// Additionally, for dot plot we default to inverted depending on cardinality
+// of the two axes, so when the user selects inverted we may already be inverted.
+// The desired inverted state is the default xor the user setting, as below.
+var isInverted = state => getIn(state, ['chartState', 'inverted']);
+var swapAxes = state =>
+	state.chartMode !== 'dist' && !isBoxplot(state) && isInverted(state) ?
+		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :
+		state;
+
+function chartPropsFromState(state0) {
+	var state = swapAxes(state0),
+		ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
 		inverted = ydata.length < get(xcodemap, 'length', 1),
 		yexpression = someNegative(getIn(state, ['chartY', 'data'])) ? 'bulk' :
@@ -73,7 +90,7 @@ function chartPropsFromState(state) {
 		cohortSamples: getSamples(state),
 		subtitle: chartSubtitle(datasetCohort(state), getSamples(state)),
 		chartType: getIn(state, ['chartState', 'chartType'], 'dot'),
-		inverted,
+		inverted: !isInverted(state) !== !inverted, // xor with boolean cast
 
 		ycodemap,
 		ydata,

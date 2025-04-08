@@ -246,9 +246,17 @@ var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
 var isBoxplot = state => state.chartMode !== 'dist' &&
 	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
 
+var isDot = state => isBoxplot(state) && getChartType(state) === 'dot';
+
+var isCoded = (state, axis) => getIn(state, [axis, 'data', 'codes']);
+var isCodedVCoded = state => isCoded(state, 'chartY') && isCoded(state, 'chartX');
+
 var getNormalization = state =>
 	Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
 		getIn(state, ['chartState', 'normalization', host, name]));
+
+var invertAxes = ({onClick}) =>
+	button({color: 'secondary', disableElevation: true, onClick}, 'Swap X and Y');
 
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
@@ -289,7 +297,7 @@ class MapTabs extends PureComponent {
 		var {onChange, onDataset, onShowColorBy2, onHideColorBy2,
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
-				onChartType, onBackgroundOpacity, onBackgroundVisible,
+				onChartType, onBackgroundOpacity, onBackgroundVisible, onChartInverted,
 				onColorByHandlers, onChartMode, onNormalization}, state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
@@ -324,6 +332,9 @@ class MapTabs extends PureComponent {
 								fieldPred: {type: 'float'},
 								handlers: onColorByHandlers[1]})))),
 			tabPanel({value, index: 3},
+				isDot(state) || isCodedVCoded(state) ?
+					invertAxes({onClick: onChartInverted}) :
+					null,
 				isBoxplot(state) ?
 					chartTypeControl({onChange: onChartType,
 					                  chartType: getChartType(state)}) : null,
@@ -581,6 +592,10 @@ class SingleCellPage extends PureComponent {
 	}
 	onNormalization = i => {
 		this.callback(['chartNormalization', i]);
+	}
+
+	onChartInverted = () => {
+		this.callback(['chartInverted']);
 	}
 
 	componentDidMount() {
