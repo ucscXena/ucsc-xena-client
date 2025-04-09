@@ -1,4 +1,4 @@
-var {assoc, assocIn, get, getIn, isArray, isEqual, Let, memoize1} =
+var {assoc, assocIn, get, getIn, isArray, isEqual, Let} =
 	require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, expressionMode,  getSamples,
 	getDataSubType, hasColor, isBoxplot, phenoValue, probValue, sigPanelValue,
@@ -42,14 +42,16 @@ var chartSubtitle = (cohort, cohortSamples) =>
 
 var LetIf = (v, f) => v && f(v);
 
-function computedProps(props) {
+export function computedProps(props) {
+	if (!props) {
+		return;
+	}
 	var {ydata, yexpression} = props,
 		xcolor = LetIf(props.xcolor, colorScale),
 		ycolor = colorScale(props.ycolor),
 		ynonexpressed = applyExpression(ydata, yexpression),
-		{chartData/*, stats*/} = computeChart({...props, xcolor, ycolor,
-			ynonexpressed});
-	return {...props, chartData, ycolor, xcolor};
+		computed = computeChart({...props, xcolor, ycolor, ynonexpressed});
+	return {...props, ...computed, ycolor, xcolor};
 }
 
 var ensureArray = x => isArray(x) ? x : [x];
@@ -72,7 +74,14 @@ var swapAxes = state =>
 		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :
 		state;
 
-function chartPropsFromState(state0) {
+var hasData = state => state.chartMode === 'dist' ?
+	hasColor(state.chartY) :
+	hasColor(state.chartY) && hasColor(state.chartX);
+
+export function chartPropsFromState(state0) {
+	if (!hasData(state0)) {
+		return;
+	}
 	var state = swapAxes(state0),
 		ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
@@ -102,10 +111,6 @@ function chartPropsFromState(state0) {
 	};
 }
 
-var hasData = state => state.chartMode === 'dist' ?
-	hasColor(state.chartY) :
-	hasColor(state.chartY) && hasColor(state.chartX);
-
 var fieldMatchesData = (state, key) =>
 	isEqual(getIn(state, [key, 'field']), getIn(state, [key, 'data', 'field']));
 
@@ -114,19 +119,16 @@ var dataLoaded = state =>
 		fieldMatchesData(state, 'chartY') :
 		fieldMatchesData(state, 'chartY') && fieldMatchesData(state, 'chartX');
 
-export default el(class extends PureComponent {
+export var singlecellChart = el(class extends PureComponent {
 	constructor() {
 		super();
-		this.computedProps = memoize1(computedProps);
 	}
 	render () {
 		var content;
 		var {state} = this.props;
 
-		if (hasData(state)) {
-			var props = chartPropsFromState(state),
-				drawProps = this.computedProps(props);
-			content = highchartView({drawProps});
+		if (state.chartProps) {
+			content = highchartView({drawProps: state.chartProps});
 		}
 
 		return div({id: 'chartView', className: styles.container}, content,

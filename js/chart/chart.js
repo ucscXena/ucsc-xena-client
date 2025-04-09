@@ -4,6 +4,7 @@ var _ = require('../underscore_ext').default;
 var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
+import statsView from './statsView';
 import {
 	Accordion,
 	AccordionDetails,
@@ -310,27 +311,6 @@ var firstColorScale = column =>
 
 var chartSubtitle = ({cohort, cohortSamples}) =>
 	 `cohort: ${_.get(cohort, 'name')} (n=${cohortSamples.length})`;
-
-var statsView = el(class extends PureComponent {
-	state = {}
-	onClick = () => {
-		this.setState({deferred: this.props.stats()});
-	}
-	componentDidUpdate(prev) {
-		if (this.props.stats !== prev.stats) {
-			this.setState({deferred: null}); //eslint-disable-line react/no-did-update-set-state
-		}
-	}
-	render() {
-		var {state: {deferred}, props: {stats}, onClick} = this,
-			text = deferred || !_.isFunction(stats) && stats;
-		return text ?
-			typography({component: 'div',
-			            className: compStyles.stats, variant: 'caption'}, text) :
-			button({onClick}, 'Run Stats');
-	}
-});
-
 
 function xParamsFromState({columns, columnOrder, data, chartState}, column) {
 	var xcodemap = _.get(columns[column], 'codes'),

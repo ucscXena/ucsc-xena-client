@@ -11,9 +11,10 @@ import PureComponent from './PureComponent';
 import nav from './nav';
 import {div, el, fragment, h2, label, span} from './chart/react-hyper';
 import {Map as CellView} from './views/Map';
-import {Card, Button, createTheme, Icon,
+import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
+import {ExpandMore} from '@material-ui/icons';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
@@ -27,7 +28,8 @@ var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
 	times, uniq, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
-import singlecellChart from './views/singlecellChart';
+import {singlecellChart, computedProps, chartPropsFromState} from
+	'./views/singlecellChart';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';
 import {item} from './views/Legend.module.css';
@@ -36,8 +38,13 @@ import markers from './views/markers';
 import colorPicker from './views/colorPicker';
 import {chartTypeControl, normalizationControl, yExpressionControl} from
 	'./chart/chartControls';
+import statsView from './chart/statsView';
 var cellView = el(CellView);
 var button = el(Button);
+var accordion = el(Accordion);
+var accordionDetails = el(AccordionDetails);
+var accordionSummary = el(AccordionSummary);
+var expandMore = el(ExpandMore);
 var menuItem = el(MenuItem);
 var iconButton = el(IconButton);
 var icon = el(Icon);
@@ -257,6 +264,11 @@ var getNormalization = state =>
 var invertAxes = ({onClick}) =>
 	button({color: 'secondary', disableElevation: true, onClick}, 'Swap X and Y');
 
+var statsAccordion = ({stats}) =>
+	accordion(
+		accordionSummary({expandIcon: expandMore()}, 'Stats'),
+		accordionDetails({className: styles.advanced}, statsView({stats})));
+
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
 		showColorBy2: false}
@@ -343,7 +355,8 @@ class MapTabs extends PureComponent {
 						isDot: true, index: getNormalization(state)}) : null,
 				isDot(state) ?
 					yExpressionControl({onChange: onChartYexp,
-						value: expressionMode(state)}) : null
+						value: expressionMode(state)}) : null,
+				statsAccordion({stats: getIn(state, ['chartProps', 'stats']) })
 			)
 		);
 	}
@@ -701,10 +714,20 @@ var mergeScale = (state, key) =>
 var mergeScales = state =>
 	mergeScale(mergeScale(state, 'colorBy'), 'colorBy2');
 
+var chartSelector = createSelector(
+	chartPropsFromState,
+	computedProps);
+
+var mergeChart = state =>
+	merge(state, {chartProps: chartSelector(state)});
+
+
 var selector = state => assoc(
-	merge(mergeScales(mergeCodes(mergeDensity(state))), cohortFieldsSelector(state)),
+	mergeChart(merge(mergeScales(mergeCodes(mergeDensity(state))),
+		cohortFieldsSelector(state))),
 	'radiusBase', radiusSelector(state),
-	'availableMaps', mapSelector(state));
+	'availableMaps', mapSelector(state)
+);
 
 // MuiThemeProvider does a shallow merge into the outer theme, which is not
 // useful. So, we explicitly merge it here by passing a function which will
@@ -717,17 +740,18 @@ var theme = outer => createTheme(outer, {
 				'&:before': {
 					opacity: '0.5 !important'
 				},
-				boxShadow: 'unset'
+				boxShadow: 'unset',
+				margin: '4px !important'
 			}
 		},
 		MuiAccordionSummary: {
 			root: {
-				minHeight: 'unset',
+				minHeight: 'unset !important',
 				fontSize: '90%',
 				color: 'rgba(0, 0, 0, 0.38)'
 			},
 			content: {
-				margin: 'unset'
+				margin: 'unset !important'
 			}
 		},
 		MuiList: {
