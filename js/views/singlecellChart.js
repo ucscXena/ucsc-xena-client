@@ -1,8 +1,8 @@
-var {assoc, assocIn, get, getIn, isArray, isEqual, Let, memoize1, min} =
+var {assoc, assocIn, get, getIn, isArray, isEqual, Let, memoize1} =
 	require('../underscore_ext').default;
-import {cellTypeValue, colorByMode, datasetCohort, getSamples, getDataSubType,
-	hasColor, phenoValue, probValue, sigPanelValue, otherValue, probPanelValue}
-		from '../models/singlecell';
+import {cellTypeValue, colorByMode, datasetCohort, expressionMode,  getSamples,
+	getDataSubType, hasColor, isBoxplot, phenoValue, probValue, sigPanelValue,
+	otherValue, probPanelValue} from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
@@ -33,8 +33,6 @@ var axisTitleMode = {
 	null: () => ''
 };
 
-var someNegative = data => min(getIn(data, ['avg', 'min'])) < 0;
-
 var axisTitle = (state, axis) =>
 	axisTitleMode[colorByMode(getIn(state, [axis, 'data'])) || null]
 		(assocIn(state, ['colorBy', 'field'], getIn(state, [axis, 'data', 'field'])));
@@ -61,9 +59,6 @@ var getNormalizationValue = state =>
 		i = getIn(state, ['chartState', 'normalization', host, name], 0)) =>
 			normalizationOptions[i].value);
 
-var isBoxplot = state => state.chartMode !== 'dist' &&
-	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
-
 // 'inverted' setting has two subtleties. For dot plot we don't invert
 // axes because we can't plot coded v float. Instead we flop the chart by
 // passing 'inverted' to the renderer. For other plots we invert the axes
@@ -82,8 +77,7 @@ function chartPropsFromState(state0) {
 		ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
 		inverted = ydata.length < get(xcodemap, 'length', 1),
-		yexpression = someNegative(getIn(state, ['chartY', 'data'])) ? 'bulk' :
-			'singleCell',
+		yexpression = expressionMode(state),
 		ycodemap = getIn(state, ['chartY', 'data', 'codes']);
 
 	return {

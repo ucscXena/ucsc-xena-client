@@ -1,5 +1,6 @@
 import {FormControl, MenuItem, TextField} from '@material-ui/core';
 var {el, label, textNode} = require('./react-hyper');
+var {get} = require('../underscore_ext').default;
 
 var menuItem = el(MenuItem);
 var formControl = el(FormControl);
@@ -74,3 +75,21 @@ export var normalizationControl = ({onChange, isDot, isDensity, index}) =>
 			isDensity ? 'Data linear transform' :
 			'Y data linear transform',
 		onChange, opts: normalizationOptions});
+
+var expressionOptions = [
+	{label: 'continuous value data', value: 'bulk'},
+	{label: 'single cell count data', value: 'singleCell'}
+];
+
+export function expressionMode(chartState, yneg) {
+	var {chartType, expressionState, ycolumn} = chartState;
+	// 'bulk' expression mode only for chart types other than dot plot
+	if (chartType !== 'dot') {return 'bulk';}
+	// 'bulk' expression mode only for negative values
+	if (yneg) {return 'bulk';}
+	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
+	return get(expressionOptions[expressionState[ycolumn]], 'value');
+}
+
+export var yExpressionControl = ({onChange, index, value}) =>
+	buildDropdown({index, value, label: 'View as', onChange, opts: expressionOptions});

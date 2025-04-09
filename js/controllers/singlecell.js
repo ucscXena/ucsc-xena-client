@@ -291,7 +291,8 @@ var controls = actionPrefix({
 	chartNormalization: (state, i) =>
 		Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
 			assocIn(state, ['chartState', 'normalization', host, name], i)),
-	chartInverted: state => updateIn(state, ['chartState', 'inverted'], x => !x)
+	chartInverted: state => updateIn(state, ['chartState', 'inverted'], x => !x),
+	chartYExpression: (state, x) => assocIn(state, ['chartState', 'yexpression'], x)
 });
 
 var resetIntegration = (state = {}, params) =>

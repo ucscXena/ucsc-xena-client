@@ -428,3 +428,19 @@ export var pow2m1 = v => Math.pow(2, v) - 1;
 export var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
 
 export var defaultShadow = 0.01;
+
+export var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
+
+export var isBoxplot = state => state.chartMode !== 'dist' &&
+	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
+
+export var isDot = state => isBoxplot(state) && getChartType(state) === 'dot';
+
+var someNegative = data => min(getIn(data, ['avg', 'min'])) < 0;
+
+// use singlecell expression mode in dot plot if data is not negative, and
+// user hasn't explicitly disabled it.
+export var expressionMode = state =>
+	isDot(state) && !someNegative(getIn(state, ['chartY', 'data'])) &&
+		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ?
+		'singleCell' : 'bulk';

@@ -26,7 +26,7 @@ var {reOrderFields} = require('../models/denseMatrix');
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
 import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,
-	normalizationControl} from './chartControls';
+	normalizationControl, yExpressionControl, expressionMode} from './chartControls';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -73,11 +73,6 @@ var sxAccordionSummary = {
 		padding: 0,
 	},
 };
-
-var expressionOptions = [
-	{label: 'continuous value data', value: 'bulk'},
-	{label: 'single cell count data', value: 'singleCell'}
-];
 
 var pctRange = {
 	'3 stdev': ['sd03_', 'sd03'],
@@ -257,16 +252,6 @@ function applyTransforms(ydata, yexp, ynorm, xdata, xexp) {
 	}
 
 	return {ydata, xdata, yavg};
-}
-
-function expressionMode(chartState, yneg) {
-	var {chartType, expressionState, ycolumn} = chartState;
-	// 'bulk' expression mode only for chart types other than dot plot
-	if (chartType !== 'dot') {return 'bulk';}
-	// 'bulk' expression mode only for negative values
-	if (yneg) {return 'bulk';}
-	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
-	return _.get(expressionOptions[expressionState[ycolumn]], 'value');
 }
 
 var closeButton = onClose =>
@@ -457,11 +442,9 @@ class Chart extends PureComponent {
 				'Swap X and Y') : null;
 
 		var yExpression = yneg || !isDot ? null :
-			buildDropdown({
+			yExpressionControl({
 				index: chartState.expressionState[ycolumn],
-				label: 'View as',
-				onChange: i => set(['expressionState', chartState.ycolumn], i),
-				opts: expressionOptions});
+				onChange: i => set(['expressionState', chartState.ycolumn], i)});
 
 		var yExp = ycodemap ? null :
 			buildDropdown({

@@ -16,8 +16,8 @@ import {Card, Button, createTheme, Icon,
 	Tabs, Tooltip} from '@material-ui/core';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
-	datasetCohort, defaultColor, defaultShadow, getData,
-	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isLog, log2p1,
+	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
+	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isDot, isLog, log2p1,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
 	setColor, setRadius
 	} from './models/singlecell';
@@ -34,7 +34,8 @@ import {item} from './views/Legend.module.css';
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-import {chartTypeControl, normalizationControl} from './chart/chartControls';
+import {chartTypeControl, normalizationControl, yExpressionControl} from
+	'./chart/chartControls';
 var cellView = el(CellView);
 var button = el(Button);
 var menuItem = el(MenuItem);
@@ -242,11 +243,9 @@ var isChartView = state => datasetCohort(state) && !hasDataset(state);
 
 var showHide = [{style: {display: 'none'}}, {}];
 
-var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
 var isBoxplot = state => state.chartMode !== 'dist' &&
 	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
 
-var isDot = state => isBoxplot(state) && getChartType(state) === 'dot';
 
 var isCoded = (state, axis) => getIn(state, [axis, 'data', 'codes']);
 var isCodedVCoded = state => isCoded(state, 'chartY') && isCoded(state, 'chartX');
@@ -298,7 +297,8 @@ class MapTabs extends PureComponent {
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onChartType, onBackgroundOpacity, onBackgroundVisible, onChartInverted,
-				onColorByHandlers, onChartMode, onNormalization}, state}} = this,
+				onChartYexp, onColorByHandlers, onChartMode, onNormalization},
+					state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
 			chart = ~~isChartView(state);
@@ -340,7 +340,10 @@ class MapTabs extends PureComponent {
 					                  chartType: getChartType(state)}) : null,
 				isBoxplot(state) ?
 					normalizationControl({onChange: onNormalization,
-						isDot: true, index: getNormalization(state)}) : null
+						isDot: true, index: getNormalization(state)}) : null,
+				isDot(state) ?
+					yExpressionControl({onChange: onChartYexp,
+						value: expressionMode(state)}) : null
 			)
 		);
 	}
@@ -593,9 +596,11 @@ class SingleCellPage extends PureComponent {
 	onNormalization = i => {
 		this.callback(['chartNormalization', i]);
 	}
-
 	onChartInverted = () => {
 		this.callback(['chartInverted']);
+	}
+	onChartYexp = (_, v) => {
+		this.callback(['chartYExpression', v]);
 	}
 
 	componentDidMount() {
