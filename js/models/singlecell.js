@@ -202,8 +202,8 @@ export var hasTransferProb = (state, {type, multi} = {}) =>
 	type !== 'coded' && multi !== true &&
 	state.labelTransferProb[datasetCohort(state)].length;
 
-export var hasSignatureScore = (state, {type} = {}) =>
-	type !== 'coded' &&
+export var hasSignatureScore = (state, {type, multi} = {}) =>
+	type !== 'coded' && multi !== true &&
 	state.signatureScore[datasetCohort(state)].length;
 
 // pred will be {type: <type>} or falsey
