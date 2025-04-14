@@ -1,5 +1,5 @@
 var {assoc, deepMerge, every, find, findValue, first,
-	flatmap, get, getIn, identity, intersection, isEqual, keys, Let, map,
+	flatmap, get, getIn, identity, intersection, isArray, isEqual, keys, Let, map,
 	mapObject, memoize1, merge, min, max, mmap, object, omit, pairs, pick,
 	pluck, range, some, sorted, sortByI, updateIn, uniq, values} =
 	require('../underscore_ext').default;
@@ -26,10 +26,12 @@ export var availableMaps = (cohorts, cohortDatasets) =>
 	!cohorts.length || !cohortDatasets ? [] :
 	cohorts.map(cohortMaps(cohortDatasets)).flat();
 
+var {parse} = JSON;
+
 var cellTypeCluster = datasets =>
 	datasets.map(ds => getProps(ds.cluster, ds.celltype)
 		.map(m => ({
-			dsID: ds.dsID,
+			...parse(ds.dsID),
 			field: m.feature,
 			label: m.label,
 			markers: m.markers
@@ -39,7 +41,8 @@ var defaultPhenotype = (datasets, cohortFeatures) =>
 	datasets.map(ds => getProps(ds.defaultphenotype)
 		.map(m =>
 			Let(({host, name} = JSON.parse(ds.dsID)) => ({
-				dsID: ds.dsID,
+				host,
+				name,
 				field: m.feature,
 				label: m.label,
 				type: type(getIn(cohortFeatures, [host, name, m.feature],
@@ -49,7 +52,7 @@ var defaultPhenotype = (datasets, cohortFeatures) =>
 var signature = datasets =>
 	datasets.map(ds => getProps(ds.signatureassignment)
 		.map(m => ({
-			dsID: ds.dsID,
+			...parse(ds.dsID),
 			field: m.assignment,
 			label: m.label
 		}))).flat();
@@ -57,38 +60,39 @@ var signature = datasets =>
 var signatureScore = datasets =>
 	datasets.map(ds => getProps(ds.signaturescorematrix).map(m =>
 		m.category.map(field => ({
-			dsID: ds.dsID,
+			...parse(ds.dsID),
 			field,
-			label: field
+			label: field,
+			type: 'float'
 		}))).flat()).flat();
 
 var signatureScorePanel = datasets =>
 	datasets.map(ds => getProps(ds.signaturescorematrix).map(m => ({
-		dsID: ds.dsID,
+		...parse(ds.dsID),
 		field: m.category,
 		label: m.label
 	}))).flat();
 
 var labelTransfer = datasets =>
 	datasets.map(ds => getProps(ds.labeltransfer).map(m => ({
-			dsID: ds.dsID,
+			...parse(ds.dsID),
 			field: m.transferredLabel,
-			prob: m.transferProbability,
 			label: m.label
 		}))).flat();
 
 var labelTransferProb = datasets =>
 	datasets.map(ds => getProps(ds.labeltransferfullprob).map(m => ({
-			dsID: ds.dsID,
+			...parse(ds.dsID),
 			field: m.category,
 			label: m.label
 		}))).flat();
 
+// XXX flatten this?
 var donorFields = servers =>
-	mapObject(servers, datasets =>
+	mapObject(servers, (host, datasets) =>
 		keys(datasets).map(name =>
 			map(pick(datasets[name], '_DONOR', '_DATASOURCE'),
-				field => ({name, field: field.name}))).flat());
+				field => ({host, name, field: field.name}))).flat());
 
 var empty = {
 	cellType: {},
@@ -143,20 +147,17 @@ var dropIgnored = features =>
 	mapObject(features, datasets =>
 		mapObject(datasets, fields => omit(fields, ignore)));
 
-var dropFields = (features, [dsID, fields]) =>
-	Let(({host, name} = JSON.parse(dsID)) =>
-		updateIn(features, [host, name], ds => omit(ds, fields)));
+var ensureArray = x => isArray(x) ? x : [x];
 
-// pull curated fields
-var getCohortFields = cohort => fields =>
-	fields[cohort].map(f => f.category ? [f.dsID, f.category] : [f.dsID, [f.field]]);
+var dropFields = (features, {host, name, field}) =>
+	updateIn(features, [host, name], ds => omit(ds, ensureArray(field)));
 
 var curatedFieldKeys = ['labelTransfer', 'labelTransferProb', 'cellType',
 	'signature', 'signatureScore', 'defaultPhenotype'];
 
 var cohortOther = (cohort, state, features) =>
-	Let((pruned = curatedFieldKeys.map(k => state[k]).map(getCohortFields(cohort))
-		.flat().reduce(dropFields, dropIgnored(features))) =>
+	Let((pruned = flatmap(curatedFieldKeys, k => state[k][cohort])
+		.reduce(dropFields, dropIgnored(features))) =>
 			flatmap(pruned, (datasets, host) => flatmap(datasets, (fields, name) =>
 				map(fields, (p, field) => ({host, name, field, type: type(p)})))));
 
@@ -184,6 +185,7 @@ export var hasImage = state =>
 
 export var datasetCohort = state => getIn(state, ['dataset', 'cohort']);
 
+// XXX flatten
 var hasField = field => (state, {type} = {}, cohort = datasetCohort(state)) =>
 	type !== 'float' &&
 	findValue(pairs(getIn(state, ['donorFields', cohort])),
@@ -292,17 +294,13 @@ export var colorError = state =>
 export var getDataSubType = (state, host, name) =>
 	getIn(state.datasetMetadata, [host, name, 'dataSubType']);
 
-var toDsID = a => JSON.stringify(pick(a, 'host', 'name'));
 // select component requires reference equality, so we have to find
 // the matching option here.
-// XXX Will this behave badly if we recompute cellType in the selector
-// due to data coming in?
 export var cellTypeValue = state =>
-	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
+	Let((field = pick(state.colorBy.field, 'host', 'name', 'field'),
 			cohort = datasetCohort(state)) =>
-		state.cellType[cohort].concat(state.labelTransfer[cohort])
-			.concat(state.signature[cohort])
-			.find(t => t.dsID === dsID && t.field === field) || '');
+		find(state.cellType[cohort].concat(state.labelTransfer[cohort])
+			.concat(state.signature[cohort]), field) || '');
 
 export var otherValue = state =>
 	Let(({host, name, field} = state.colorBy.field,
@@ -313,38 +311,35 @@ export var otherValue = state =>
 
 export var phenoValue = state =>
 	Let(({host, name, field} = state.colorBy.field,
-			dsID = JSON.stringify({host, name}),
-			cohort = datasetCohort(state)) =>
+		cohort = datasetCohort(state)) =>
 		state.defaultPhenotype[cohort]
-			.find(f => f.dsID === dsID && f.field === field) || '');
+		.find(f => f.host === host &&  f.name === name && f.field === field) || '');
 
 export var sigPanelValue = state =>
 	Let(({host, name, field} = state.colorBy.field,
-			dsID = JSON.stringify({host, name}),
 			cohort = datasetCohort(state)) =>
 		state.signatureScorePanel[cohort]
-			.find(f => f.dsID === dsID && isEqual(f.field, field)) || '');
+			.find(f => f.host === host && f.name === name &&
+				isEqual(f.field, field)) || '');
 
 export var probPanelValue = state =>
-	Let(({host, name, field} = state.colorBy.field,
-			dsID = JSON.stringify({host, name}),
-			cohort = datasetCohort(state)) =>
+	Let(({host, name, field} = state.colorBy.field, cohort = datasetCohort(state)) =>
 		state.labelTransferProb[cohort]
-			.find(f => f.dsID === dsID && isEqual(f.field, field)) || '');
+			.find(f => f.host === host && f.name === name &&
+				isEqual(f.field, field)) || '');
 
 export var cellTypeMarkers = state =>
 	getIn(state, ['colorBy', 'field', 'mode']) === 'type' &&
 		get(cellTypeValue(state), 'markers');
 
 export var probValue = state =>
-	Let((dsID = toDsID(state.colorBy.field)) =>
-		state.labelTransferProb[datasetCohort(state)].find(t => t.dsID === dsID) || '');
+	Let((field = pick(state.colorBy.field, 'host', name)) =>
+		find(state.labelTransferProb[datasetCohort(state)], field) || '');
 
 export var sigValue = state =>
-	Let((dsID = toDsID(state.colorBy.field), {field} = state.colorBy.field,
+	Let((field = pick(state.colorBy.field, 'host', 'name', 'field'),
 		cohort = datasetCohort(state)) =>
-			state.signatureScore[cohort]
-				.find(t => t.dsID === dsID && t.field === field) || '');
+			find(state.signatureScore[cohort], field) || '');
 
 var LetIf = (v, f) => v && f(v) ;
 
@@ -352,9 +347,9 @@ var firstOpt = list => first(sortByI(list, 'label'));
 
 export var defaultColor = (state, cohort) =>
 	hasCellType(state, {}, cohort) &&
-		Let(({dsID, field} = firstOpt(state.cellType[cohort]) ||
-			firstOpt(state.labelTransfer[cohort]) || firstOpt(state.signature[cohort]),
-			{host, name} = JSON.parse(dsID)) => ({mode: 'type', host, name, field})) ||
+		Let((opt = firstOpt(state.cellType[cohort]) ||
+			firstOpt(state.labelTransfer[cohort]) ||
+			firstOpt(state.signature[cohort])) => ({mode: 'type', ...opt})) ||
 	LetIf(hasDonor(state, {}, cohort), ([host, name]) =>
 		({mode: 'donor', host, name, field: '_DONOR'})) ||
 	LetIf(hasDatasource(state, {}, cohort), ([host, name]) =>

@@ -1,13 +1,13 @@
 import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
-var {assoc, assocIn, concat, contains, every, filter, find, get, getIn,
-	identity, insert, isEqual, keys, last, Let, mapObject, max, pick, pluck,
+var {assoc, assocIn, concat, contains, every, filter, find, flatmap, get, getIn,
+	identity, insert, isEqual, keys, last, Let, mapObject, max, omit, pick, pluck,
 	sortByI} = require('../underscore_ext').default;
 import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
 import {el, div} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
 	hasDatasource, hasDonor, hasGene, hasSignatureScore, hasOther,
-	hasTransferProb, otherValue, phenoValue, probValue, sigValue} from '../models/singlecell';
+	hasTransferProb, phenoValue, probValue, sigValue} from '../models/singlecell';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
 import xSelect from './xSelect';
@@ -19,6 +19,9 @@ var slider = el(Slider);
 var listSubheader = el(ListSubheader);
 var fragment = el(Fragment);
 
+var hasOtherOrScores = (state, {type, multi} = {}) =>
+	hasOther(state, {type}) ||
+		multi && (hasTransferProb(state, {type}) || hasSignatureScore(state, {type}));
 
 var hasMode = {
 	datasource: hasDatasource,
@@ -27,7 +30,7 @@ var hasMode = {
 	prob: hasTransferProb,
 	sig: hasSignatureScore,
 	gene: hasGene,
-	other: hasOther
+	other: hasOtherOrScores
 };
 
 var availModes = (state, pred) => !datasetCohort(state) ? [] :
@@ -35,7 +38,9 @@ var availModes = (state, pred) => !datasetCohort(state) ? [] :
 
 var ident = (...a) => a.filter(identity);
 
-// cell type and transferred label options
+/*
+ * cell type and transferred label options
+ */
 var cellTypeOpts = state =>
 	Let((cohort = datasetCohort(state),
 			{cellType: {[cohort]: cellType},
@@ -48,49 +53,98 @@ var cellTypeOpts = state =>
 		signature.length && [listSubheader('Cell types by gene signatures'),
 			...sortByI(signature, 'label').map(value => menuItem({value}, value.label))]).flat());
 
-// XXX Use label
-var otherOpts = (state, pred) =>
-	sortByI(filter(state.other[datasetCohort(state)], pred), 'field')
-		.map(value => menuItem({value}, value.field));
+/*
+ * cell type score selector & subselector
+ */
 
 var probOpts = state =>
 	state.labelTransferProb[datasetCohort(state)]
 		.map(type => menuItem({value: type}, type.label));
 
+var probCellOpts = prob =>
+	get(prob, 'field', []).map(c => menuItem({value: c}, c));
+
+var probCellValue = state => state.colorBy.field.field || '';
+
+
+/*
+ * signature score mode
+ */
+
 var sigOpts = state =>
 	sortByI(state.signatureScore[datasetCohort(state)], 'label')
 		.map(value => menuItem({value}, value.label));
 
-var probCellOpts = prob =>
-	get(prob, 'field', []).map(c => menuItem({value: c}, c));
+/*
+ * Other options. In multi mode (Y chart axis) mix in labelTransferProb and
+ * signatureScore fields.
+ */
 
-var phenoItem = ({label, dsID, field, type}) =>
-	Let(({host, name} = JSON.parse(dsID)) =>
-		menuItem({value: {mode: 'pheno', host, name, field, type}}, label));
+var otherItems = ({host, name, fields}) =>
+	sortByI(fields, x => x).map(field =>
+		menuItem({value: {host, name, field, type: 'float'}}, field));
+
+var sigOptsOther = state =>
+	flatmap(state.signatureScorePanel[datasetCohort(state)],
+		({host, name, field: fields, label}) =>
+			[listSubheader(label), ...otherItems({host, name, fields})]);
+
+var probOptsOther = state =>
+	flatmap(state.labelTransferProb[datasetCohort(state)],
+		({host, name, field: fields, label}) =>
+			[listSubheader(label), ...otherItems({host, name, fields})]);
+
+// should probably generalize this & use it for all the selectors
+var otherValue = (state, opts) =>
+	Let((field = pick(state.colorBy.field, 'host', 'name', 'field'),
+			vals = opts.map(opt => getIn(opt, ['props', 'value']))) =>
+		find(vals, field) || '');
+
+// drop scores into 'other' when in 'multi' mode.
+var scoreOpts = (state, {type, multi} = {}) =>
+	!multi || type === 'coded' ? [] :
+	probOptsOther(state).concat(sigOptsOther(state));
+
+// XXX Use label
+var otherOpts = (state, pred) =>
+	sortByI(filter(state.other[datasetCohort(state)], omit(pred, 'multi')), 'field')
+		.map(value => menuItem({value}, value.field)).concat(scoreOpts(state, pred));
+
+/*
+ * default phenotype opts that are hoisted to the mode selector.
+ */
+
+var phenoItem = ({label, ...opt}) =>
+	menuItem({value: {mode: 'pheno', ...opt}}, label);
 
 var phenoOpts = (state, pred) =>
 	filter(state.defaultPhenotype[datasetCohort(state)] || [], pred)
 		.map(phenoItem);
 
-var sigPanelItem = ({label, dsID, field}) =>
-	Let(({host, name} = JSON.parse(dsID)) =>
-		menuItem({value: {mode: 'sigPanel', host, name, field}}, label));
+/*
+ * signature score panel & cell type score panels that are hoisted
+ * to the mode selector when multi is set (chart Y axis)
+ */
+
+var sigPanelItem = ({label, ...opt}) =>
+	menuItem({value: {mode: 'sigPanel', ...opt}}, label);
 
 var sigPanelOpts = (state, {type, multi} = {}) =>
 	multi && type !== 'coded' ?
 	state.signatureScorePanel[datasetCohort(state)]
 		.map(sigPanelItem) : [];
 
-var probPanelItem = ({label, dsID, field}) =>
-	Let(({host, name} = JSON.parse(dsID)) =>
-		menuItem({value: {mode: 'probPanel', host, name, field}}, label));
+var probPanelItem = ({label, ...opt}) =>
+	menuItem({value: {mode: 'probPanel', ...opt}}, label);
 
 var probPanelOpts = (state, {type, multi} = {}) =>
 	multi && type !== 'coded' ?
 	state.labelTransferProb[datasetCohort(state)]
 		.map(probPanelItem) : [];
 
-var probCellValue = state => state.colorBy.field.field || '';
+/*
+ *
+ */
 
 var geneValue = state =>
 	Let(({field, host, name} = state.colorBy.field,
@@ -180,13 +234,14 @@ var modeOptions = {
 				value: cellTypeValue(state), onChange
 			}, ...cellTypeOpts(state))),
 	other: ({state, pred, onOther: onChange, onScale}) =>
-		fragment(xSelect({
-				id: 'other',
-				label: 'Select a phenotype',
-				value: otherValue(state), onChange
-			}, ...otherOpts(state, pred)),
-			isFloat(state, otherValue) && hasDensity(state) ?
-				distributionSlider(state, onScale) : null),
+		Let((opts = otherOpts(state, pred), value = otherValue(state, opts)) =>
+			fragment(xSelect({
+					id: 'other',
+					label: 'Select a phenotype',
+					value, onChange
+				}, ...opts),
+				get(value, 'type') === 'float' && hasDensity(state) ?
+					distributionSlider(state, onScale) : null)),
 	prob: ({state, onProb, onProbCell, onScale}) =>
 		Let((prob = probValue(state)) =>
 			fragment(xSelect({
@@ -281,8 +336,7 @@ class MapColor extends PureComponent {
 	}
 	onCellType = ev => {
 		var type = ev.target.value,
-			{host, name} = JSON.parse(type.dsID),
-			{field} = type,
+			{host, name, field} = type,
 			newState = {mode: 'type', host, name, field};
 
 		this.setState({colorBy: newState});
@@ -297,8 +351,7 @@ class MapColor extends PureComponent {
 		this.props.handlers.onColorBy(newState);
 	}
 	onProb = ev => {
-		var prob = ev.target.value,
-			{host, name} = JSON.parse(prob.dsID);
+		var {host, name} = ev.target.value;
 		this.setState({colorBy: {mode: 'prob', host, name, field: null}});
 	}
 	onProbCell = ev => {
@@ -310,9 +363,7 @@ class MapColor extends PureComponent {
 		this.props.handlers.onColorBy(newState);
 	}
 	onSig = ev => {
-		var sig = ev.target.value,
-			{host, name} = JSON.parse(sig.dsID),
-			{field} = sig,
+		var {host, name, field} = ev.target.value,
 			newState = {mode: 'sig', host, name, field};
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
