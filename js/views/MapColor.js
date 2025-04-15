@@ -2,7 +2,7 @@ import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
 var {assoc, assocIn, concat, contains, every, filter, find, flatmap, get, getIn,
 	identity, insert, isEqual, keys, last, Let, mapObject, max, omit, pick, pluck,
-	sortByI, without} = require('../underscore_ext').default;
+	sortByI, splice} = require('../underscore_ext').default;
 import {Chip, ListSubheader, MenuItem, Slider} from '@material-ui/core';
 import {el, div, label} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
@@ -289,8 +289,8 @@ var modeOptions = {
 				datasets: pickDataset(state,
 					setDataSubType(state, hasGene(state, datasetCohort(state)))),
 				onSelect: onGeneSet, key: geneSet(state).join(',')}),
-			geneSet(state).map(field =>
-				chip({onDelete: onDelete(field), key: field, color:
+			geneSet(state).map((field, i) =>
+				chip({onDelete: onDelete(i), key: i, color:
 					'secondary', variant: 'outlined', size: 'small', label: field})))
 };
 
@@ -364,8 +364,8 @@ class MapColor extends PureComponent {
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
 	}
-	onDelete = toDelete => () => {
-		var field = without(get(this.state.colorBy, 'field', []), toDelete),
+	onDelete = i => () => {
+		var field = splice(this.state.colorBy.field, i, 1),
 			newState = assoc(this.state.colorBy, 'field', field);
 
 		this.setState({colorBy: newState});
