@@ -2,11 +2,11 @@ import PureComponent from '../PureComponent';
 var {Fragment} = require('react');
 var {assoc, assocIn, concat, contains, every, filter, find, flatmap, get, getIn,
 	identity, insert, isEqual, keys, last, Let, mapObject, max, omit, pick, pluck,
-	sortByI} = require('../underscore_ext').default;
-import {Slider, ListSubheader, MenuItem} from '@material-ui/core';
-import {el, div} from '../chart/react-hyper';
+	sortByI, without} = require('../underscore_ext').default;
+import {Chip, ListSubheader, MenuItem, Slider} from '@material-ui/core';
+import {el, div, label} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,
-	hasDatasource, hasDonor, hasGene, hasSignatureScore, hasOther,
+	hasDatasource, hasDonor, hasGene, hasGeneSet, hasSignatureScore, hasOther,
 	hasTransferProb, phenoValue, probValue, sigValue} from '../models/singlecell';
 import {scaleParams} from '../colorScales';
 import geneDatasetSuggest from './GeneDatasetSuggest';
@@ -18,6 +18,7 @@ var menuItem = el(MenuItem);
 var slider = el(Slider);
 var listSubheader = el(ListSubheader);
 var fragment = el(Fragment);
+var chip = el(Chip);
 
 var hasOtherOrScores = (state, {type, multi} = {}) =>
 	hasOther(state, {type}) ||
@@ -30,6 +31,7 @@ var hasMode = {
 	prob: hasTransferProb,
 	sig: hasSignatureScore,
 	gene: hasGene,
+	geneSet: hasGeneSet,
 	other: hasOtherOrScores
 };
 
@@ -151,6 +153,8 @@ var geneValue = state =>
 			dataSubType = getDataSubType(state, host, name)) =>
 		field ? {field, host, name, dataSubType} : null);
 
+var geneSet = state => get(geneValue(state), 'field', []);
+
 var setDataSubType = (state, datasets) =>
 		datasets.map(({host, name}) => ({
 			host,
@@ -219,6 +223,8 @@ var distributionSlider = (state, onScale) =>
 		...(!emptyDist(state) ? [distribution(state)] : []),
 		slider(sliderOpts(state, onScale)));
 
+//var inc = Let((i = 0) => () => i++);
+
 var modeOptions = {
 	'': () => null,
 	datasource: () => null,
@@ -271,7 +277,16 @@ var modeOptions = {
 				setDataSubType(state, hasGene(state, datasetCohort(state))),
 				onSelect: onGene, value: geneValue(state)}),
 			hasDensity(state) ? distributionSlider(state, onScale) :
-				null)
+				null),
+	geneSet: ({state, onGeneSet, onDelete}) =>
+		fragment(
+			label('Search:'),
+			geneDatasetSuggest({label: 'Gene name',
+				datasets: setDataSubType(state, hasGene(state, datasetCohort(state))),
+				onSelect: onGeneSet, key: geneSet(state).join(',')}),
+			geneSet(state).map(field =>
+				chip({onDelete: onDelete(field), key: field, color:
+					'secondary', variant: 'outlined', size: 'small', label: field})))
 };
 
 var modeLabel = {
@@ -281,6 +296,7 @@ var modeLabel = {
 	prob: 'Cell type/cluster scores',
 	sig: 'Gene signature scores',
 	gene: 'Gene/protein',
+	geneSet: 'Gene/protein',
 	'': 'None',
 	other: 'More options'
 };
@@ -330,6 +346,22 @@ class MapColor extends PureComponent {
 		var {state} = this.props,
 			{colnormalization, unit} = getIn(state, ['datasetMetadata', host, name]),
 			newState = {mode: 'gene', host, name, field, colnormalization, unit};
+
+		this.setState({colorBy: newState});
+		this.props.handlers.onColorBy(newState);
+	}
+	onGeneSet = ({host, name, field: newField}) => {
+		var {state} = this.props,
+			{colnormalization, unit} = getIn(state, ['datasetMetadata', host, name]),
+			field = (this.state.colorBy.field || []).concat([newField]),
+			newState = {mode: 'geneSet', host, name, field, colnormalization, unit};
+
+		this.setState({colorBy: newState});
+		this.props.handlers.onColorBy(newState);
+	}
+	onDelete = toDelete => () => {
+		var field = without(get(this.state.colorBy, 'field', []), toDelete),
+			newState = assoc(this.state.colorBy, 'field', field);
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);

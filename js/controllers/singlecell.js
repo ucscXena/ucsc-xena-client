@@ -32,6 +32,7 @@ var fieldType = {
 	sig: () => ['clinical', 'float'],
 	sigPanel: () => ['probes', 'float'],
 	gene: () => ['probes', 'float'],
+	geneSet: () => ['probes', 'float'],
 	pheno: type => ['clinical', type],
 	other: type => ['clinical', type]
 };

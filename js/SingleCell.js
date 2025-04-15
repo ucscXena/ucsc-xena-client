@@ -406,6 +406,9 @@ var legendTitleMode = {
 	gene: state => getIn(state, ['colorBy', 'field', 'field']) ?
 		Let(({host, name, field} = state.colorBy.field) =>
 			`${field} - ${getDataSubType(state, host, name)}`) : '',
+	geneSet: state => getIn(state, ['colorBy', 'field', 'field']) ?
+		Let(({host, name, field} = state.colorBy.field) =>
+			`${field.join(', ')} - ${getDataSubType(state, host, name)}`) : '',
 	other: state => otherValue(state).field,
 	pheno: state => phenoValue(state).label,
 	null: () => ''

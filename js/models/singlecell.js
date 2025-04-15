@@ -212,7 +212,7 @@ export var hasSignatureScore = (state, {type, multi} = {}) =>
 export var hasOther = (state, pred = identity) =>
 	some(state.other[datasetCohort(state)], pred);
 
-export var hasGene = (state, {type} = {}) =>
+var hasGene0 = (state, {type} = {}) =>
 	type !== 'coded' &&
 	Let((cohort = datasetCohort(state),
 		datasets = get(
@@ -220,6 +220,12 @@ export var hasGene = (state, {type} = {}) =>
 				study => find(study.cohortList, c => c.cohort === cohort)),
 			'preferredDataset')) =>
 	get(datasets, 'length') && datasets);
+
+export var hasGene = (state, {type, multi} = {}) =>
+	!multi && hasGene0(state, {type});
+
+export var hasGeneSet = (state, {type, multi} = {}) =>
+	multi && hasGene0(state, {type});
 
 export var dotRange = Let((ratio = 4) =>
 	radius => ({min: radius / ratio, max: radius * ratio,
