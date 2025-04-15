@@ -8,6 +8,7 @@ import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
 import PureComponent from '../PureComponent';
 var {applyExpression} = require('../chart/singleCell');
+import applyTransforms from '../chart/applyTransforms';
 import spinner from '../ajax-loader.gif';
 import {normalizationOptions} from '../chart/chartControls';
 
@@ -49,12 +50,15 @@ export function computedProps(props) {
 	if (!props) {
 		return;
 	}
-	var {ydata, yexpression} = props,
+	var {ydata, yexpression, ynorm, xdata} = props,
 		xcolor = LetIf(props.xcolor, colorScale),
 		ycolor = colorScale(props.ycolor),
 		ynonexpressed = applyExpression(ydata, yexpression),
-		computed = computeChart({...props, xcolor, ycolor, ynonexpressed});
-	return {...props, ...computed, ycolor, xcolor};
+		{yavg, ...transformedData} = applyTransforms(ydata, null, ynorm, xdata, null), //eslint-disable-line no-unused-vars
+
+		computed = computeChart({...props, xcolor, ycolor, ynonexpressed,
+			...transformedData});
+	return {...props, ...computed, ycolor, xcolor, ...transformedData};
 }
 
 var ensureArray = x => isArray(x) ? x : [x];
