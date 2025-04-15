@@ -161,6 +161,10 @@ var setDataSubType = (state, datasets) =>
 			name,
 			dataSubType: getDataSubType(state, host, name)}));
 
+var pickDataset = (state, datasets) =>
+	Let(({host, name, field = []} = getIn(state, ['colorBy', 'field'], {})) =>
+		field.length ? filter(datasets, {host, name}) : datasets);
+
 var hasDensity = state => getIn(state, ['colorBy', 'data', 'density'])
 	&& !getIn(state, ['colorBy', 'data', 'codes']);
 var getSteps = ({min, max}) => (max - min) / 200;
@@ -282,7 +286,8 @@ var modeOptions = {
 		fragment(
 			label('Search:'),
 			geneDatasetSuggest({label: 'Gene name',
-				datasets: setDataSubType(state, hasGene(state, datasetCohort(state))),
+				datasets: pickDataset(state,
+					setDataSubType(state, hasGene(state, datasetCohort(state)))),
 				onSelect: onGeneSet, key: geneSet(state).join(',')}),
 			geneSet(state).map(field =>
 				chip({onDelete: onDelete(field), key: field, color:
