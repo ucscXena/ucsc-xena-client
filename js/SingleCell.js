@@ -265,6 +265,7 @@ var invertAxes = ({onClick}) =>
 	button({color: 'secondary', disableElevation: true, onClick}, 'Swap X and Y');
 
 var statsAccordion = ({stats}) =>
+	!stats ? null :
 	accordion(
 		accordionSummary({expandIcon: expandMore()}, 'Stats'),
 		accordionDetails({className: styles.advanced}, statsView({stats})));
