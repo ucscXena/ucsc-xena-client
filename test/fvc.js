@@ -40,12 +40,12 @@ describe('fvc', function () {
 				res = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 			assert.deepEqual(res.expressionMatrix, exp);
 		});
-		it('should have correct values in detectionMatrix for singleCell mode', function () {
+		it('should have correct values in totalMatrix for singleCell mode', function () {
 			var yexpression = 'singleCell',
 				ynonexpressed = applyExpression(ydata, yexpression),
-				exp = [[1, 1], [2 / 3, 1], [3 / 5, 1], [5 / 6, 5 / 6]],
+				exp = [[2, 2], [3, 3], [5, 5], [6, 6]],
 				res = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
-			assert.deepEqual(res.detectionMatrix, exp);
+			assert.deepEqual(res.totalMatrix, exp);
 		});
 	});
 });
