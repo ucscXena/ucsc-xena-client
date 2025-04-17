@@ -742,8 +742,8 @@ function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression
 				return `<div>
 							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
 							<div>${isSingleCell ? 'average expression' : 'average'}: ${value.toPrecision(3)}</div>
-							<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)}</div>
-							<div>n = ${custom?.n || 'NaN'}</div>
+							<div style='display: ${isSingleCell ? 'block' : 'none'};'>expressed in cells: ${formatPercentage(custom.expressedInCells)} (${custom.n} of ${custom.total})</div>
+							<div style='display: ${isSingleCell ? 'none' : 'block'};'>n = ${custom.n}</div>
 						</div>`;
 			},
 			hideDelay: 0,

@@ -243,7 +243,7 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	});
 }
 
-function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, detectionMatrix }, xCategories, yexpression, yfields }) {
+function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatrix: exprMatrix, totalMatrix }, xCategories, yexpression, yfields }) {
 	// determine the appropriate matrix for the selected data type
 	var isSingleCellData = yexpression === 'singleCell',
 		expressionMatrix = isSingleCellData ? exprMatrix : meanMatrix;
@@ -270,7 +270,9 @@ function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatri
 				// retrieve the expression value for the current category and feature
 				var value = expressionMatrix[categoryIndex][featureIndex],
 					// for single cell data, get the detection rate
-					detectionValue = detectionMatrix?.[categoryIndex]?.[featureIndex],
+					count = nNumberSeries[featureIndex],
+					totalCount = totalMatrix?.[categoryIndex][featureIndex],
+					detectionValue = count / totalCount,
 					normalizedValue = (value - minMean) / range,
 					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity,
 					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
@@ -279,7 +281,7 @@ function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatri
 					radius = radiusMetric * (maxRadius - minRadius) + minRadius;
 				return {
 					color,
-					custom: {expressedInCells: detectionValue, n: nNumberSeries[0]},
+					custom: {expressedInCells: detectionValue, n: nNumberSeries[featureIndex], total: totalCount},
 					marker: {radius},
 					value,
 					x: featureIndex,

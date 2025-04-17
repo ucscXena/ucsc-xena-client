@@ -45,7 +45,7 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 	// nNumber -- number of data points (real data points) for dataMatrix
 
 	// init average matrix std matrix // row is x by column y
-	var [meanMatrix, stdMatrix, nNumberMatrix, expressionMatrix, detectionMatrix] =
+	var [meanMatrix, stdMatrix, nNumberMatrix, expressionMatrix, totalMatrix] =
 			constantly(() =>
 				_.times(groups.length, () => new Array(ydata.length).fill(NaN))),
 		boxes = _.times(groups.length, () => new Array(ydata.length));
@@ -63,6 +63,7 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 			expressedGroupsOrGroups = _.map(groups, group => _.filter(group, i => !isSet(bitmap, i)));
 		}
 
+		// look up y from indicies & drop where y is NaN
 		var ybinnedSample = dataUtils.groupValues(ydataElement, expressedGroupsOrGroups);
 
 		// Note that xCategories has already been null filtered on x, so it's not
@@ -78,13 +79,13 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 				if (isSingleCell) {
 					let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
 						totalCount = m + nonExpressedCount;
-					detectionMatrix[i][k] = sCell.computePctExpr(m, totalCount);
+					totalMatrix[i][k] = totalCount;
 					expressionMatrix[i][k] = sCell.computeAvgExpr(data);
 				}
 			}
 		});
 	});
-	return {detectionMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
+	return {totalMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
 module.exports = {
