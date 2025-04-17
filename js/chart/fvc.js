@@ -77,11 +77,13 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 				meanMatrix[i][k] = average;
 				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
 				if (isSingleCell) {
-					let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
-						totalCount = m + nonExpressedCount;
-					totalMatrix[i][k] = totalCount;
 					expressionMatrix[i][k] = sCell.computeAvgExpr(data);
 				}
+			}
+			if (isSingleCell) {
+				let nonExpressedCount = groups[i].length - expressedGroupsOrGroups[i].length,
+					totalCount = m + nonExpressedCount;
+				totalMatrix[i][k] = totalCount;
 			}
 		});
 	});

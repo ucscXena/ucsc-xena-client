@@ -274,7 +274,7 @@ function dotplot({ chart, matrices: { meanMatrix, nNumberMatrix, expressionMatri
 					totalCount = totalMatrix?.[categoryIndex][featureIndex],
 					detectionValue = count / totalCount,
 					normalizedValue = (value - minMean) / range,
-					opacity = normalizedValue * (maxOpacity - minOpacity) + minOpacity,
+					opacity = isNaN(value) ? 0 : normalizedValue * (maxOpacity - minOpacity) + minOpacity,
 					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
 					// choose the metric for radius: detection rate for single cell data or normalized expression for bulk data
 					radiusMetric = isSingleCellData ? detectionValue : normalizedValue,
