@@ -14,7 +14,7 @@ var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
 import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
 	getScale, hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1,
-	studyList, userServerCohorts} from '../models/singlecell';
+	setChartType, studyList, userServerCohorts} from '../models/singlecell';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 var widgets = require('../columnWidgets');
@@ -287,8 +287,7 @@ var controls = actionPrefix({
 	'shadow': (state, shadow) => assoc(state, 'shadow', shadow),
 	chartMode: (state, mode) => assoc(state, 'chartMode', mode, 'chartY', {},
 		'chartX', {}, 'chartState', {}),
-	chartType: (state, chartType) =>
-		assocIn(state, ['chartState', 'chartType'], chartType),
+	chartType: (state, chartType) => setChartType(state, chartType),
 	chartNormalization: (state, i) =>
 		Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
 			assocIn(state, ['chartState', 'normalization', host, name], i)),

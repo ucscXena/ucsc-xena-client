@@ -1,4 +1,4 @@
-var {assoc, deepMerge, every, find, findValue, first,
+var {assoc, assocIn, deepMerge, every, find, findValue, first,
 	flatmap, get, getIn, identity, intersection, isArray, isEqual, keys, Let, map,
 	mapObject, memoize1, merge, min, max, mmap, object, omit, pairs, pick,
 	pluck, range, some, sorted, sortByI, updateIn, uniq, values} =
@@ -430,7 +430,23 @@ export var isLog = scale => get(scale, 0, '').indexOf('log') !== -1;
 
 export var defaultShadow = 0.01;
 
-export var getChartType = state => getIn(state, ['chartState', 'chartType'], 'dot');
+
+var chartTypeThreshold = 40;
+
+var defaultChartType = state =>
+	Let((codes = getIn(state, ['chartX', 'data', 'codes'], {}),
+			fields = getIn(state, ['chartY', 'data', 'field', 'field'], [])) =>
+		codes.length * fields.length > chartTypeThreshold ? 'dot' : 'boxplot');
+
+var chartTypeKey = state =>
+	JSON.stringify([getIn(state, ['chartY', 'field']),
+		getIn(state, ['chartX', 'field'])]);
+
+export var getChartType = state =>
+	getIn(state, ['chartType', chartTypeKey(state)], defaultChartType(state));
+
+export var setChartType = (state, chartType) =>
+	assocIn(state, ['chartType', chartTypeKey(state)], chartType);
 
 export var isBoxplot = state => state.chartMode !== 'dist' &&
 	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);

@@ -1,8 +1,8 @@
 var {assoc, assocIn, get, getIn, isArray, isEqual, Let} =
 	require('../underscore_ext').default;
-import {cellTypeValue, colorByMode, datasetCohort, expressionMode,  getSamples,
-	getDataSubType, hasColor, isBoxplot, phenoValue, probValue, sigPanelValue,
-	otherValue, probPanelValue} from '../models/singlecell';
+import {cellTypeValue, colorByMode, datasetCohort, expressionMode,
+	getChartType, getDataSubType, getSamples, hasColor, isBoxplot, phenoValue,
+	probValue, sigPanelValue, otherValue, probPanelValue} from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
@@ -99,7 +99,7 @@ export function chartPropsFromState(state0) {
 	return {
 		cohortSamples: getSamples(state),
 		subtitle: chartSubtitle(datasetCohort(state), getSamples(state)),
-		chartType: getIn(state, ['chartState', 'chartType'], 'dot'),
+		chartType: getChartType(state),
 		inverted: !isInverted(state) !== !inverted, // xor with boolean cast
 
 		ycodemap,
