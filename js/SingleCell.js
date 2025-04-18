@@ -39,6 +39,7 @@ import colorPicker from './views/colorPicker';
 import {chartTypeControl, normalizationControl, yExpressionControl} from
 	'./chart/chartControls';
 import statsView from './chart/statsView';
+import {xenaColor} from './xenaColor';
 var cellView = el(CellView);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -156,7 +157,8 @@ function mapSelect(availableMaps, selected, onChange) {
 		onChange}, ...mapOpts(opts));
 }
 
-// XXX update this enum to include colorBy
+var COLORBY = 0;
+var COLORBY2 = 1;
 var CHARTY = 2;
 var CHARTX = 3;
 
@@ -289,7 +291,7 @@ class MapTabs extends PureComponent {
 	}
 	onHideColorBy2 = () => {
 		this.setState({showColorBy2: false});
-		this.props.handlers.onColorByHandlers[1].onColorBy({mode: ''});
+		this.props.handlers.onColorByHandlers[COLORBY2].onColorBy({mode: ''});
 	}
 	onDataset = (...args) => {
 		if (!this.state.showedNext) {
@@ -331,7 +333,7 @@ class MapTabs extends PureComponent {
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
 			tabPanel({value, index: 2},
 				card(mapColor({key: datasetCohort(state), state,
-					handlers: onColorByHandlers[0]})),
+					handlers: onColorByHandlers[COLORBY]})),
 				!hasColorBy(state.colorBy) ? null :
 					!showColorBy2 && !hasColorBy(state.colorBy2) ?
 						div({className: styles.blendWith, onClick: onShowColorBy2},
@@ -343,7 +345,7 @@ class MapTabs extends PureComponent {
 							mapColor({key: datasetCohort(state2) + '2', state: state2,
 								label: 'Select data to blend with',
 								fieldPred: {type: 'float'},
-								handlers: onColorByHandlers[1]})))),
+								handlers: onColorByHandlers[COLORBY2]})))),
 			tabPanel({value, index: 3},
 				isDot(state) || isCodedVCoded(state) ?
 					invertAxes({onClick: onChartInverted}) :
@@ -433,16 +435,31 @@ var colorPickerButton = ({state, onShowColorPicker}) =>
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
-var legends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
-	isChartView(state) ? null :
+var mapLegends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	fragment(
 		span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
 		legend(state.colorBy, cellTypeMarkers(state),
-			   onColorByHandlers[0]),
+			   onColorByHandlers[COLORBY]),
 		...Let((state2 = colorBy2State(state)) => [
 			legendTitle(state2),
 			legend(state2.colorBy, false,
-				   onColorByHandlers[1])]));
+				   onColorByHandlers[COLORBY2])]));
+
+var setDotColor = state =>
+	isDot(state) ? updateIn(state, ['chartX', 'data', 'scale', ORDINAL.CUSTOM],
+		ord => mapObject(ord, () => xenaColor.BLUE_PRIMARY)) :
+	state;
+
+var chartLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+	fragment(
+		span(legendTitle(state),
+			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
+		legend(setDotColor(state).chartX, null, onColorByHandlers[CHARTX]));
+
+var legends = ({state, ...rest}) =>
+	!isChartView(state) ? mapLegends({state, ...rest}) :
+	isCodedVCoded(state) ? null :
+	chartLegend({state, ...rest});
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 			onRadius, onCloseColorPicker, onColor, ...handlers},
@@ -457,7 +474,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 				            data: state.colorBy.data}) :
 				null,
 			get(state.showMarkers, 'colorBy') ?
-				markers(handlers.onColorByHandlers[0].onMarkersClose,
+				markers(handlers.onColorByHandlers[COLORBY].onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
 			vizPanel({props: {state, onTooltip, onViewState, onShadow, onRadius}}),
@@ -716,7 +733,7 @@ var mergeScale = (state, key) =>
 		state);
 
 var mergeScales = state =>
-	mergeScale(mergeScale(state, 'colorBy'), 'colorBy2');
+	mergeScale(mergeScale(mergeScale(state, 'colorBy'), 'colorBy2'), 'chartX');
 
 var chartSelector = createSelector(
 	chartPropsFromState,

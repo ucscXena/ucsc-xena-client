@@ -432,13 +432,13 @@ var fvcChart = chartType => ({
 // two polymorphic calls in here, and not much else.
 function boxOrDotOrViolin({chartType = 'boxplot',
 		inverted, subtitle, yexpression, yfields, ydata, xlabel, ylabel,
-		ynorm, chartData}) {
+		ynorm, chartData, legend = true}) {
 
 	var {xCategories, groups, colors, matrices} = chartData;
 
 	var chartOptions = fvcOptions(chartType)({inverted, series:
 		xCategories.length, categories: yfields, xAxis: {categories: yfields},
-		xAxisTitle: xlabel, yAxis: {categories: xCategories}, yAxisTitle:
+		xAxisTitle: xlabel, legend, yAxis: {categories: xCategories}, yAxisTitle:
 		ylabel, yexpression, ynorm});
 
 	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});

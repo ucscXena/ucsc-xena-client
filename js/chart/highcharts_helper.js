@@ -385,7 +385,7 @@ var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 				trd('Q1', statsPrec(lower)),
 				trd('lower', statsPrec(lowerwhisker)))));
 
-function violinOptions({categories, series, xAxisTitle, yAxisTitle}) {
+function violinOptions({categories, series, xAxisTitle, yAxisTitle, legend}) {
 	return {
 		boost: {enabled: false},
 		chart: {
@@ -407,7 +407,8 @@ function violinOptions({categories, series, xAxisTitle, yAxisTitle}) {
 			margin: 5,
 			title: {text: xAxisTitle},
 			verticalAlign: 'middle',
-			layout: 'vertical'
+			layout: 'vertical',
+			enabled: legend
 		},
 		// violin no chart tile because both x and y axis are clearlly marked.
 		title: {text: undefined},
@@ -479,7 +480,7 @@ function violinOptions({categories, series, xAxisTitle, yAxisTitle}) {
 }
 
 // x categorical y float  boxplot
-function boxplotOptions({categories, xAxisTitle, yAxisTitle}) {
+function boxplotOptions({categories, xAxisTitle, yAxisTitle, legend}) {
 	return {
 		chart: {
 			zoomType: 'x',
@@ -492,7 +493,8 @@ function boxplotOptions({categories, xAxisTitle, yAxisTitle}) {
 			margin: 5,
 			title: {text: xAxisTitle},
 			verticalAlign: 'middle',
-			layout: 'vertical'
+			layout: 'vertical',
+			enabled: legend
 		},
 		// boxplot no chart tile because both x and y axis are clearlly marked.
 		title: {text: ''},

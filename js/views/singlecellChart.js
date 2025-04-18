@@ -46,11 +46,17 @@ var chartSubtitle = (cohort, cohortSamples) =>
 
 var LetIf = (v, f) => v && f(v);
 
+var applyHidden = (xdata, hidden) =>
+	hidden && hidden.length ?
+		Let((h = new Set(hidden)) => [xdata[0].map(v => h.has(v) ? NaN : v)]) :
+		xdata;
+
 export function computedProps(props) {
 	if (!props) {
 		return;
 	}
-	var {ydata, yexpression, ynorm, xdata} = props,
+	var {ydata, yexpression, ynorm, xhidden, xdata: xdataAll} = props,
+		xdata = applyHidden(xdataAll, xhidden),
 		xcolor = LetIf(props.xcolor, colorScale),
 		ycolor = colorScale(props.ycolor),
 		ynonexpressed = applyExpression(ydata, yexpression),
@@ -100,6 +106,7 @@ export function chartPropsFromState(state0) {
 		cohortSamples: getSamples(state),
 		subtitle: chartSubtitle(datasetCohort(state), getSamples(state)),
 		chartType: getChartType(state),
+		legend: false,
 		inverted: !isInverted(state) !== !inverted, // xor with boolean cast
 
 		ycodemap,
@@ -114,7 +121,8 @@ export function chartPropsFromState(state0) {
 		xdata: getIn(state, ['chartX', 'data', 'req', 'values']),
 		xcolor: getIn(state, ['chartX', 'data', 'scale']),
 		xfield: getIn(state, ['chartX', 'data', 'field', 'field']),
-		xlabel: axisTitle(state, 'chartX')
+		xlabel: axisTitle(state, 'chartX'),
+		xhidden: getIn(state, ['chartX', 'hidden'])
 	};
 }
 
