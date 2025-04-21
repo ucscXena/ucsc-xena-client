@@ -320,6 +320,7 @@ function columnChartOptions(categories, xAxisTitle, yAxisType, Y, showLegend) {
 
 	return {
 		chart: {zoomType: 'x'},
+		boost: {enabled: false},
 		legend: {
 			align: 'right',
 			verticalAlign: 'middle',
