@@ -21,7 +21,7 @@ var fragment = el(Fragment);
 var chip = el(Chip);
 
 var hasOtherOrScores = (state, {type, multi} = {}) =>
-	hasOther(state, {type}) ||
+	hasOther(state, type ? {type} : undefined) ||
 		multi && (hasTransferProb(state, {type}) || hasSignatureScore(state, {type}));
 
 var hasMode = {
