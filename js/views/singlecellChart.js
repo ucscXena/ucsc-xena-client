@@ -55,7 +55,9 @@ export function computedProps(props) {
 	if (!props) {
 		return;
 	}
-	var {ydata, yexpression, ynorm, xhidden, xdata: xdataAll} = props,
+	var {yhidden, ydata: ydataAll, yexpression, ynorm, xhidden,
+			xdata: xdataAll} = props,
+		ydata = applyHidden(ydataAll, yhidden),
 		xdata = applyHidden(xdataAll, xhidden),
 		xcolor = LetIf(props.xcolor, colorScale),
 		ycolor = colorScale(props.ycolor),
@@ -122,7 +124,8 @@ export function chartPropsFromState(state0) {
 		xcolor: getIn(state, ['chartX', 'data', 'scale']),
 		xfield: getIn(state, ['chartX', 'data', 'field', 'field']),
 		xlabel: axisTitle(state, 'chartX'),
-		xhidden: getIn(state, ['chartX', 'hidden'])
+		xhidden: getIn(state, ['chartX', 'hidden']),
+		yhidden: getIn(state, ['chartY', 'hidden'])
 	};
 }
 

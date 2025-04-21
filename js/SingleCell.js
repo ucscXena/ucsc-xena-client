@@ -450,16 +450,23 @@ var setDotColor = state =>
 		ord => mapObject(ord, () => xenaColor.BLUE_PRIMARY)) :
 	state;
 
-var chartLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+var floatVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	fragment(
 		span(legendTitle(state),
 			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
 		legend(setDotColor(state).chartX, null, onColorByHandlers[CHARTX]));
 
+var codedVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+	fragment(
+		span(legendTitle(state),
+			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
+		legend(state.chartY, null, onColorByHandlers[CHARTY]));
+
 var legends = ({state, ...rest}) =>
 	!isChartView(state) ? mapLegends({state, ...rest}) :
-	isCodedVCoded(state) ? null :
-	chartLegend({state, ...rest});
+	!hasColorBy(state.chartX) || !hasColorBy(state.chartY) ? null :
+	isCodedVCoded(state) ? codedVCodedLegend({state, ...rest}) :
+	floatVCodedLegend({state, ...rest});
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 			onRadius, onCloseColorPicker, onColor, ...handlers},

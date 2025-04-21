@@ -559,7 +559,7 @@ function codedVCodedData({xdata, ydata}) {
 		total = _.sum(yMargin),
 		xMargin = _.map(xbins, bin => bin.length),
 		xRatio = xMargin.map(count => count / total),
-		expected = jStat.outer(yMargin, xRatio),
+		expected = yMargin.length && jStat.outer(yMargin, xRatio),
 		observed =  _.map(ybins,
 			ybin => _.map(xbins, xbin => _.intersection(xbin, ybin).length));
 
@@ -571,7 +571,7 @@ function codedVCodedData({xdata, ydata}) {
 // version of pearson's chi-squared test is G-test, Likelihood-ratio test,
 // https://en.wikipedia.org/wiki/Likelihood-ratio_test
 function codedVCodedStats({expected, observed}) {
-	var dof = (observed.length - 1) * (observed[0].length - 1);
+	var dof = observed.length && (observed.length - 1) * (observed[0].length - 1);
 	if (dof) {
 		var chisquareStats = jStat(observed).subtract(expected).pow(2)
 			.map((v, i, j) => v / expected[i][j]).sum(true);
@@ -590,13 +590,13 @@ function computeCodedVCoded(params) {
 }
 
 function codedVCoded({xcodemap, ycodemap, ycolor,
-	xlabel, ylabel, subtitle, chartData}) {
+	xlabel, ylabel, subtitle, chartData, legend = true}) {
 
 	var {xbins, ybins, observed, xMargin} = chartData;
 
 	var chartOptions = highchartsHelper.columnChartOptions(
 		_.keys(xbins).map((v, i) => `${xcodemap[v]} (${xMargin[i]})`),
-		xlabel, 'Distribution', ylabel, true);
+		xlabel, 'Distribution', ylabel, legend);
 
 	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
 
