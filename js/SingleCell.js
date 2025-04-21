@@ -20,8 +20,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
 	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isDot, isLog, log2p1,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
-	setColor, setRadius
-	} from './models/singlecell';
+	setColor, setRadius, shouldSwapAxes, swapAxes} from './models/singlecell';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
 	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
@@ -460,12 +459,13 @@ var codedVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers
 	fragment(
 		span(legendTitle(state),
 			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
-		legend(state.chartY, null, onColorByHandlers[CHARTY]));
+		legend(state.chartY, null,
+			onColorByHandlers[shouldSwapAxes(state) ? CHARTX : CHARTY]));
 
 var legends = ({state, ...rest}) =>
 	!isChartView(state) ? mapLegends({state, ...rest}) :
 	!hasColorBy(state.chartX) || !hasColorBy(state.chartY) ? null :
-	isCodedVCoded(state) ? codedVCodedLegend({state, ...rest}) :
+	isCodedVCoded(state) ? codedVCodedLegend({state: swapAxes(state), ...rest}) :
 	floatVCodedLegend({state, ...rest});
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,

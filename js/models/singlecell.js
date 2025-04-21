@@ -461,3 +461,15 @@ export var expressionMode = state =>
 	isDot(state) && !someNegative(getIn(state, ['chartY', 'data'])) &&
 		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ?
 		'singleCell' : 'bulk';
+
+// 'inverted' setting has two subtleties. For dot plot we don't invert
+// axes because we can't plot coded v float. Instead we flop the chart by
+// passing 'inverted' to the renderer. For other plots we invert the axes
+// here.
+export var isInverted = state => getIn(state, ['chartState', 'inverted']);
+export var shouldSwapAxes = state =>
+	state.chartMode !== 'dist' && !isBoxplot(state) && isInverted(state);
+export var swapAxes = state =>
+	shouldSwapAxes(state) ?
+		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :
+		state;

@@ -1,8 +1,9 @@
-var {assoc, assocIn, get, getIn, isArray, isEqual, Let} =
+var {assocIn, get, getIn, isArray, isEqual, Let} =
 	require('../underscore_ext').default;
 import {cellTypeValue, colorByMode, datasetCohort, expressionMode,
-	getChartType, getDataSubType, getSamples, hasColor, isBoxplot, phenoValue,
-	probValue, sigPanelValue, otherValue, probPanelValue} from '../models/singlecell';
+	getChartType, getDataSubType, getSamples, hasColor, isInverted,
+	otherValue, phenoValue, probValue, probPanelValue, sigPanelValue, swapAxes} from
+	'../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
@@ -76,18 +77,6 @@ var getNormalizationValue = state =>
 		i = getIn(state, ['chartState', 'normalization', host, name], 0)) =>
 			normalizationOptions[i].value);
 
-// 'inverted' setting has two subtleties. For dot plot we don't invert
-// axes because we can't plot coded v float. Instead we flop the chart by
-// passing 'inverted' to the renderer. For other plots we invert the axes
-// here.
-// Additionally, for dot plot we default to inverted depending on cardinality
-// of the two axes, so when the user selects inverted we may already be inverted.
-// The desired inverted state is the default xor the user setting, as below.
-var isInverted = state => getIn(state, ['chartState', 'inverted']);
-var swapAxes = state =>
-	state.chartMode !== 'dist' && !isBoxplot(state) && isInverted(state) ?
-		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :
-		state;
 
 var hasData = state => state.chartMode === 'dist' ?
 	hasColor(state.chartY) :
@@ -97,6 +86,13 @@ export function chartPropsFromState(state0) {
 	if (!hasData(state0)) {
 		return;
 	}
+	// 'inverted' setting has two subtleties. For dot plot we don't invert axes
+	// because we can't plot coded v float. Instead we flop the chart by
+	// passing 'inverted' to the renderer. For other plots we invert the axes
+	// here.  Additionally, for dot plot we default to inverted depending on
+	// cardinality of the two axes, so when the user selects inverted we may
+	// already be inverted. The desired inverted state is the default xor the
+	// user setting, as below.
 	var state = swapAxes(state0),
 		ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
