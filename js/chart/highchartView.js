@@ -553,7 +553,7 @@ summary.add('boxplot', summaryBoxplot);
 summary.add('density', densityplot);
 
 function codedVCodedData({xdata, ydata}) {
-	var ybins = groupIndex(ydata[0]),
+	var ybins = groupIndexWithValue(ydata[0], xdata[0]),
 		xbins = groupIndexWithValue(xdata[0], ydata[0]),
 		yMargin = _.map(ybins, bin => bin.length),
 		total = _.sum(yMargin),
