@@ -255,8 +255,8 @@ var controls = actionPrefix({
 	colorScale: (state, key, scale) =>
 		Let(({field: {host, name, field}} = state[key]) =>
 			assocIn(state, ['settings', host, name, field, 'scale'], scale)),
-	customColor: (state, colors) =>
-		Let(({field: {host, name, field}, data: {codes}} = state.colorBy) =>
+	customColor: (state, axisField, colors) =>
+		Let(({field: {host, name, field}, data: {codes}} = state[axisField]) =>
 			assocIn(state, ['settings', host, name, field, 'scale'],
 				['ordinal', codes.length, colors])),
 	hidden: (state, key, codes) => assocIn(state, [key, 'hidden'], codes),

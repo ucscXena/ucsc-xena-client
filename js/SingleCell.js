@@ -420,6 +420,9 @@ var legendTitle = state =>
 	span({className: styles.legendTitle},
 		legendTitleMode[colorByMode(get(state, 'colorBy')) || null](state));
 
+var legendTitleAxis = (state, axis) =>
+	legendTitle(assoc(state, 'colorBy', get(state, axis)));
+
 var datasetCount = state =>
 	Let(({host, name} = JSON.parse(state.dataset.dsID)) =>
 		find(state.cohortDatasets[datasetCohort(state)][host], {name}).count);
@@ -428,19 +431,19 @@ var space = n => times(n, () => '\u00a0').join('');
 var datasetLabel = state =>
 	hasDataset(state) ? div(`${state.dataset.cohort} - ${state.dataset.label}${space(10)}${datasetCount(state)} cells/dots`) : null;
 
-var colorPickerButton = ({state, onShowColorPicker}) =>
+var colorPickerButton = ({state, onShowColorPicker, field}) =>
 	hasCodes(get(state, 'colorBy')) ?
-		iconButton({onClick: onShowColorPicker, color: 'secondary'},
+		iconButton({onClick: onShowColorPicker, color: 'secondary', 'data-field': field},
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
 var mapLegends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	fragment(
-		span(legendTitle(state), colorPickerButton({state, onShowColorPicker})),
+		span(legendTitleAxis(state, 'colorBy'), colorPickerButton({state, onShowColorPicker, field: 'colorBy'})),
 		legend(state.colorBy, cellTypeMarkers(state),
 			   onColorByHandlers[COLORBY]),
 		...Let((state2 = colorBy2State(state)) => [
-			legendTitle(state2),
+			legendTitleAxis(state2, 'colorBy'),
 			legend(state2.colorBy, false,
 				   onColorByHandlers[COLORBY2])]));
 
@@ -451,14 +454,14 @@ var setDotColor = state =>
 
 var floatVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	fragment(
-		span(legendTitle(state),
-			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
+		span(legendTitleAxis(state, 'chartX'),
+			isDot(state) ? null : colorPickerButton({state, onShowColorPicker, field: 'chartX'})),
 		legend(setDotColor(state).chartX, null, onColorByHandlers[CHARTX]));
 
 var codedVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
 	fragment(
-		span(legendTitle(state),
-			isDot(state) ? null : colorPickerButton({state, onShowColorPicker})),
+		span(legendTitleAxis(state, 'chartY'),
+			colorPickerButton({state, onShowColorPicker, field: shouldSwapAxes(state) ? 'chartX' : 'chartY'})),
 		legend(state.chartY, null,
 			onColorByHandlers[shouldSwapAxes(state) ? CHARTX : CHARTY]));
 
@@ -606,14 +609,14 @@ class SingleCellPage extends PureComponent {
 	onCancelLogin = origin => {
 		this.callback(['cancel-login', origin]);
 	}
-	onShowColorPicker = () => {
-		this.setState({showColorPicker: true});
+	onShowColorPicker = ev => {
+		this.setState({showColorPicker: ev.currentTarget.dataset.field});
 	}
 	onCloseColorPicker = () => {
 		this.setState({showColorPicker: false});
 	}
 	onColor = colors => {
-		this.callback(['customColor', colors]);
+		this.callback(['customColor', this.state.showColorPicker, colors]);
 	}
 	onShadow = (ev, shadow) => {
 		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
