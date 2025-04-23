@@ -481,7 +481,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 		div({className: styles.vizBody},
 			showColorPicker ?
 				colorPicker({onClose: onCloseColorPicker, onClick: onColor,
-				            data: state.colorBy.data}) :
+				            data: state[showColorPicker].data}) :
 				null,
 			get(state.showMarkers, 'colorBy') ?
 				markers(handlers.onColorByHandlers[COLORBY].onMarkersClose,
