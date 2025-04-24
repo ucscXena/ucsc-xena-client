@@ -743,7 +743,7 @@ var mergeScale = (state, key) =>
 		state);
 
 var mergeScales = state =>
-	mergeScale(mergeScale(mergeScale(state, 'colorBy'), 'colorBy2'), 'chartX');
+	['colorBy', 'colorBy2', 'chartX', 'chartY'].reduce(mergeScale, state);
 
 var chartSelector = createSelector(
 	chartPropsFromState,
