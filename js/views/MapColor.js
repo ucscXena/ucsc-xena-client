@@ -21,7 +21,7 @@ var fragment = el(Fragment);
 var chip = el(Chip);
 
 var hasOtherOrScores = (state, {type, multi} = {}) =>
-	hasOther(state, type ? {type} : undefined) ||
+	hasOther(state, type && {type}) ||
 		multi && (hasTransferProb(state, {type}) || hasSignatureScore(state, {type}));
 
 var hasMode = {
@@ -119,8 +119,8 @@ var otherOpts = (state, pred) =>
 var phenoItem = ({label, ...opt}) =>
 	menuItem({value: {mode: 'pheno', ...opt}}, label);
 
-var phenoOpts = (state, pred) =>
-	filter(state.defaultPhenotype[datasetCohort(state)] || [], pred)
+var phenoOpts = (state, {type} = {}) =>
+	filter(state.defaultPhenotype[datasetCohort(state)] || [], type && {type})
 		.map(phenoItem);
 
 /*
