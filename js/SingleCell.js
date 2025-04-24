@@ -20,7 +20,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
 	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isDot, isLog, log2p1,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
-	setColor, setRadius, shouldSwapAxes, swapAxes} from './models/singlecell';
+	setColor, setRadius, shouldSwapAxes} from './models/singlecell';
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
 	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
@@ -156,15 +156,17 @@ function mapSelect(availableMaps, selected, onChange) {
 		onChange}, ...mapOpts(opts));
 }
 
-var COLORBY = 0;
-var COLORBY2 = 1;
-var CHARTY = 2;
-var CHARTX = 3;
+// The legend and mapColor operate on state.colorBy. To operate on other
+// fields, this utility fn sets up handlers and colorBy for a given field,
+// before passing to legend or mapColor.
+var withField = fn =>
+	(field, {state, handlers: {onColorByHandlers, ...handlers}, ...rest}) =>
+		fn({field, state: assoc(state, 'colorBy', state[field]),
+		    handlers: {onColorByHandlers: onColorByHandlers[field],
+		               ...handlers}, ...rest});
 
-// XXX fix this overlay by passing a key, or passing the color state
-// as a different key.
-var overlayColorBy = (state, key) =>
-	assoc(state, 'colorBy', state[key]);
+var mapColorField = withField(({state, handlers: {onColorByHandlers}, ...rest}) =>
+	mapColor({state, handlers: onColorByHandlers, ...rest}));
 
 var chartSelect = el(class extends PureComponent {
 	displayName = 'chartSelect';
@@ -173,7 +175,7 @@ var chartSelect = el(class extends PureComponent {
 	}
 
 	render() {
-		var {props: {state, onChartMode, onColorByHandlers: handlers}} = this,
+		var {props: {state, onChartMode, onColorByHandlers}} = this,
 			{chartMode: mode = 'compare'} = state;
 
 		return (!datasetCohort(state) || hasDataset(state)) ? null :
@@ -184,24 +186,21 @@ var chartSelect = el(class extends PureComponent {
 					menuItem({value: 'dist'}, 'See a distribution')),
 				mode === 'dist' ?
 					card({className: styles.chartControl},
-						mapColor({label: 'Select a grouping',
+						mapColorField('chartY', {label: 'Select a grouping',
 						          key: `0${datasetCohort(state)}${mode}`,
 							fieldPred: {type: 'coded'}, none: false,
-							state: overlayColorBy(state, 'chartY'),
-							handlers: handlers[CHARTY]})) :
+							state, handlers: {onColorByHandlers}})) :
 				fragment(
 					card({className: styles.chartControl},
-						mapColor({label: 'Select a grouping',
+						mapColorField('chartX', {label: 'Select a grouping',
 						          key: `0${datasetCohort(state)}${mode}`,
 							fieldPred: {type: 'coded'}, none: false,
-							state: overlayColorBy(state, 'chartX'),
-							handlers: handlers[CHARTX]})),
+							state, handlers: {onColorByHandlers}})),
 					card({className: styles.chartControl},
-						mapColor({label: 'Select data',
+						mapColorField('chartY', {label: 'Select data',
 						          key: `1${datasetCohort(state)}${mode}`,
 							fieldPred: {multi: true}, none: false,
-							state: overlayColorBy(state, 'chartY'),
-							handlers: handlers[CHARTY]}))));
+							state, handlers: {onColorByHandlers}}))));
 	}
 });
 
@@ -224,16 +223,14 @@ var closeButton = onReset => iconButton({onClick: onReset}, icon('close'));
 var tabPanel = ({value, index}, ...children) =>
 	div({hidden: value !== index, className: styles.panel}, ...children);
 
-// overlay colorB2 onto colorBy, for rending subcomponents. Also, set color to
-// black if doing coded vs. float.
+// Set color to black if doing coded vs. float (map view).
 var blk = '#000000';
-var colorBy2State = state =>
-	Let(({colorBy, colorBy2} = state,
-		cb = getIn(colorBy, ['data', 'codes']) &&
-					getIn(colorBy2, ['field', 'field']) ?
-			updateIn(colorBy2, ['data', 'scale'], scale => setColor(scale, blk)) :
-			colorBy2) =>
-	assoc(state, 'colorBy', cb));
+var setBlack = state =>
+	Let(({colorBy, colorBy2} = state) =>
+		getIn(colorBy, ['data', 'codes']) && getIn(colorBy2, ['field', 'field']) ?
+			updateIn(state, ['colorBy2', 'data', 'scale'],
+				scale => setColor(scale, blk)) :
+			state);
 
 var imgDisplay = showImg => showImg ? {} : {style: {display: 'none'}};
 
@@ -290,7 +287,7 @@ class MapTabs extends PureComponent {
 	}
 	onHideColorBy2 = () => {
 		this.setState({showColorBy2: false});
-		this.props.handlers.onColorByHandlers[COLORBY2].onColorBy({mode: ''});
+		this.props.handlers.onColorByHandlers.colorBy2.onColorBy({mode: ''});
 	}
 	onDataset = (...args) => {
 		if (!this.state.showedNext) {
@@ -331,20 +328,20 @@ class MapTabs extends PureComponent {
 				imgControls({state, onOpacity, onVisible, onSegmentationVisible,
 					onChannel, onBackgroundOpacity, onBackgroundVisible})),
 			tabPanel({value, index: 2},
-				card(mapColor({key: datasetCohort(state), state,
-					handlers: onColorByHandlers[COLORBY]})),
+				card(mapColorField('colorBy', {key: datasetCohort(state), state,
+					handlers: {onColorByHandlers}})),
 				!hasColorBy(state.colorBy) ? null :
 					!showColorBy2 && !hasColorBy(state.colorBy2) ?
 						div({className: styles.blendWith, onClick: onShowColorBy2},
 							iconButton(icon('addCircle')),
 							label('Blend color with')) :
-					Let((state2 = colorBy2State(state)) =>
 						card({className: styles.colorBy2},
 							icon({onClick: onHideColorBy2}, 'close'),
-							mapColor({key: datasetCohort(state2) + '2', state: state2,
-								label: 'Select data to blend with',
-								fieldPred: {type: 'float'},
-								handlers: onColorByHandlers[COLORBY2]})))),
+							mapColorField('colorBy2',
+								{key: datasetCohort(state) + '2',
+								 state, label: 'Select data to blend with',
+								 fieldPred: {type: 'float'},
+								 handlers: {onColorByHandlers}}))),
 			tabPanel({value, index: 3},
 				isDot(state) || isCodedVCoded(state) ?
 					invertAxes({onClick: onChartInverted}) :
@@ -376,7 +373,8 @@ var showHideButtons = ({onHideAll, onShowAll}) =>
 var hasCodes = state => hasColorBy(state) && getIn(state, ['data', 'codes']);
 
 var gray = '#F0F0F0';
-var legend = (state, markers, {onCode, onShowAll, onHideAll, onMarkers}) => {
+var legend = ({colorBy: state}, markers, {onCode, onShowAll, onHideAll,
+               onMarkers}) => {
 	var codes = getIn(state, ['data', 'codes']),
 		codesInView = getIn(state, ['data', 'codesInView']),
 		valueType = codes ? 'coded' : 'float',
@@ -420,9 +418,6 @@ var legendTitle = state =>
 	span({className: styles.legendTitle},
 		legendTitleMode[colorByMode(get(state, 'colorBy')) || null](state));
 
-var legendTitleAxis = (state, axis) =>
-	legendTitle(assoc(state, 'colorBy', get(state, axis)));
-
 var datasetCount = state =>
 	Let(({host, name} = JSON.parse(state.dataset.dsID)) =>
 		find(state.cohortDatasets[datasetCohort(state)][host], {name}).count);
@@ -437,39 +432,43 @@ var colorPickerButton = ({state, onShowColorPicker, field}) =>
 			icon({style: {fontSize: '14px'}}, 'settings')) :
 		null;
 
-var mapLegends = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+var mapLegend = withField(({state, field, markers,
+                            handlers: {onShowColorPicker, onColorByHandlers}}) =>
+	[span(legendTitle(state),
+		colorPickerButton({state, onShowColorPicker, field})),
+		legend(state, markers, onColorByHandlers)]);
+
+var mapLegends = ({state, ...rest}) =>
 	fragment(
-		span(legendTitleAxis(state, 'colorBy'), colorPickerButton({state, onShowColorPicker, field: 'colorBy'})),
-		legend(state.colorBy, cellTypeMarkers(state),
-			   onColorByHandlers[COLORBY]),
-		...Let((state2 = colorBy2State(state)) => [
-			legendTitleAxis(state2, 'colorBy'),
-			legend(state2.colorBy, false,
-				   onColorByHandlers[COLORBY2])]));
+		...mapLegend('colorBy', {markers: cellTypeMarkers(state), state, ...rest}),
+		...mapLegend('colorBy2', {state: setBlack(state), ...rest}));
 
 var setDotColor = state =>
-	isDot(state) ? updateIn(state, ['chartX', 'data', 'scale', ORDINAL.CUSTOM],
+	isDot(state) ? updateIn(state, ['colorBy', 'data', 'scale', ORDINAL.CUSTOM],
 		ord => mapObject(ord, () => xenaColor.BLUE_PRIMARY)) :
 	state;
 
-var floatVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+var floatVCodedLegend = withField(({state, field, handlers: {onShowColorPicker,
+                                                             onColorByHandlers}}) =>
 	fragment(
-		span(legendTitleAxis(state, 'chartX'),
-			isDot(state) ? null : colorPickerButton({state, onShowColorPicker, field: 'chartX'})),
-		legend(setDotColor(state).chartX, null, onColorByHandlers[CHARTX]));
+		span(legendTitle(state),
+			isDot(state) ? null :
+				colorPickerButton({state, onShowColorPicker, field})),
+		legend(setDotColor(state), null, onColorByHandlers)));
 
-var codedVCodedLegend = ({state, handlers: {onShowColorPicker, onColorByHandlers}}) =>
+var codedVCodedLegend = withField(({state, field, handlers: {onShowColorPicker,
+                                                             onColorByHandlers}}) =>
 	fragment(
-		span(legendTitleAxis(state, 'chartY'),
-			colorPickerButton({state, onShowColorPicker, field: shouldSwapAxes(state) ? 'chartX' : 'chartY'})),
-		legend(state.chartY, null,
-			onColorByHandlers[shouldSwapAxes(state) ? CHARTX : CHARTY]));
+		span(legendTitle(state), colorPickerButton({state, onShowColorPicker, field})),
+		legend(state, null, onColorByHandlers)));
 
 var legends = ({state, ...rest}) =>
 	!isChartView(state) ? mapLegends({state, ...rest}) :
 	!hasColorBy(state.chartX) || !hasColorBy(state.chartY) ? null :
-	isCodedVCoded(state) ? codedVCodedLegend({state: swapAxes(state), ...rest}) :
-	floatVCodedLegend({state, ...rest});
+	isCodedVCoded(state) ?
+		codedVCodedLegend(shouldSwapAxes(state) ? 'chartX' : 'chartY',
+		                  {state, ...rest}) :
+	floatVCodedLegend('chartX', {state, ...rest});
 
 var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 			onRadius, onCloseColorPicker, onColor, ...handlers},
@@ -484,7 +483,7 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 				            data: state[showColorPicker].data}) :
 				null,
 			get(state.showMarkers, 'colorBy') ?
-				markers(handlers.onColorByHandlers[COLORBY].onMarkersClose,
+				markers(handlers.onColorByHandlers.colorBy.onMarkersClose,
 				        cellTypeValue(state)) :
 				null,
 			vizPanel({props: {state, onTooltip, onViewState, onShadow, onRadius}}),
@@ -504,7 +503,7 @@ class SingleCellPage extends PureComponent {
 		this.state = {highlight: undefined, showColorPicker: false};
 
 		this.onColorByHandlers =
-			['colorBy', 'colorBy2', 'chartY', 'chartX'].map(key => ({
+			object(['colorBy', 'colorBy2', 'chartY', 'chartX'].map(key => ([key, {
 				onColorBy: colorBy => this.colorByKey(key, colorBy),
 				onScale: (ev, params) => this.scaleKey(key, params),
 				onCode: ev => this.codeKey(key, ev),
@@ -514,7 +513,7 @@ class SingleCellPage extends PureComponent {
 				// this creates handlers for both.
 				onMarkers: () => this.markersKey(key),
 				onMarkersClose: () => this.markersCloseKey(key)
-			}));
+			}])));
 
 		this.handlers = pick(this, (v, k) => k.startsWith('on'));
 	}
