@@ -19,7 +19,8 @@ var to16BinStr = arr => arrays.ab2str(Uint16Array.from(arr).buffer);
 var from16BinStr = str => Array.from(new Uint16Array(arrays.str2ab(str)));
 
 // ab2str requires even byte count, so amend the length if necessary.
-var even = arr => arr.length % 2 === 0 ? arr : Uint8Array.from([...Array.from(arr), 0]);
+var even = arr => arr.length % 2 === 0 ? arr :
+	new Uint8Array(arr.length + 1).set(arr, 0);
 
 // Note these returned typed arrays, while the above return js arrays. The
 // above are for sparse data types which we don't hold in state as typed.

@@ -5,7 +5,6 @@ var {userServers, setCohort, fetchSamples,
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 var {remapFields} = require('../models/searchSamples');
-var {fetchInlineState} = require('../inlineState');
 import {make, mount, compose} from './utils';
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
@@ -36,12 +35,8 @@ var zoomHelpClose = state =>
 			['notifications', 'zoomHelp'], true);
 
 var setLoadingState = (state, params) =>
-	_.any(['bookmark', 'inlineState', 'columns'], p => _.get(params, p)) ?
+	_.any(['bookmark', 'columns'], p => _.get(params, p)) ?
 		_.assoc(state, 'loadPending', true) : state;
-
-function fetchState(serverBus) {
-	serverBus.next(['inlineState', fetchInlineState()]);
-}
 
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
@@ -85,11 +80,8 @@ var controls = {
 	},
 	'init-post!': (serverBus, state, newState, pathname, params = {}) => {
 		var bookmark = _.get(params, 'bookmark'),
-			cohort = columnsParam.cohort(params.columns),
-			inlineState = _.get(params, 'inlineState');
-		if (inlineState) {
-			fetchState(serverBus);
-		} else if (bookmark) {
+			cohort = columnsParam.cohort(params.columns);
+		if (bookmark) {
 			fetchBookmark(serverBus, bookmark);
 		} else if (cohort) {
 			fetchCohortData(serverBus, newState.spreadsheet);

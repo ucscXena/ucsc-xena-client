@@ -9,6 +9,7 @@ var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
 var controlRunner = require('./controlRunner').default;
+var {fetchInlineState, hasInlineState} = require('./inlineState');
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I
 // suspect.
@@ -100,9 +101,10 @@ function connect({
 
 var {Observable: {of}} = Rx;
 module.exports = function(args) {
-	var saved = sessionStorage.xena;
+	var init = hasInlineState() ? fetchInlineState() :
+		of(sessionStorage.xena).flatMap(s => s ? parse(s) : of(null));
 
-	of(saved).flatMap(s => s ? parse(s) : of(null)).subscribe(
+	init.subscribe(
 		savedState => connect({...args, savedState}),
 		savedState => connect({...args, savedState})); // pass error as state
 };

@@ -24,7 +24,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 import Integrations from './views/Integrations';
 var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
 	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
-	times, uniq, updateIn, values, without} = require('./underscore_ext').default;
+	uniq, updateIn, values, without} = require('./underscore_ext').default;
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
 import {singlecellChart, computedProps, chartPropsFromState} from
@@ -39,6 +39,7 @@ import {chartTypeControl, normalizationControl, yExpressionControl} from
 	'./chart/chartControls';
 import statsView from './chart/statsView';
 import {xenaColor} from './xenaColor';
+import {serialize} from './serialize';
 var cellView = el(CellView);
 var button = el(Button);
 var accordion = el(Accordion);
@@ -56,6 +57,16 @@ var muiThemeProvider = el(MuiThemeProvider);
 var imgControls = el(ImgControls);
 var tooltip = el(Tooltip);
 var card = el(Card);
+
+var sendState = stateIn =>
+	Let((listener = ev => {
+		if (ev.data.type === 'xenaRequestState') {
+			var saved = assoc(stateIn, 'isPopup', true);
+			var state = serialize(saved);
+			ev.source.postMessage({type: 'xenaResponseState', state}, "*");
+			window.removeEventListener('message', listener);
+		}
+	}) => listener);
 
 var firstMatch = (el, selector) =>
 	el.matches(selector) ? el :
@@ -422,9 +433,10 @@ var datasetCount = state =>
 	Let(({host, name} = JSON.parse(state.dataset.dsID)) =>
 		find(state.cohortDatasets[datasetCohort(state)][host], {name}).count);
 
-var space = n => times(n, () => '\u00a0').join('');
 var datasetLabel = state =>
-	hasDataset(state) ? div(`${state.dataset.cohort} - ${state.dataset.label}${space(10)}${datasetCount(state)} cells/dots`) : null;
+	hasDataset(state) ? div({className: styles.dataset},
+		div(`${state.dataset.cohort} - ${state.dataset.label}`),
+		div(`${datasetCount(state)} cells/dots`)) : null;
 
 var colorPickerButton = ({state, onShowColorPicker, field}) =>
 	hasCodes(get(state, 'colorBy')) ?
@@ -470,14 +482,14 @@ var legends = ({state, ...rest}) =>
 		                  {state, ...rest}) :
 	floatVCodedLegend('chartX', {state, ...rest});
 
-var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
+var viz = ({handlers: {onReset, onPopout, onTooltip, onViewState, onCode, onShadow,
 			onRadius, onCloseColorPicker, onColor, ...handlers},
 		showColorPicker, props: {state}}) =>
 	div(
 		{className: styles.vizPage},
-		h2(integrationLabel(state), closeButton(onReset)),
+		h2({className: styles.title}, integrationLabel(state), closeButton(onReset)),
 		datasetLabel(state),
-		div({className: styles.vizBody},
+		div({id: 'vizBody', className: styles.vizBody},
 			showColorPicker ?
 				colorPicker({onClose: onCloseColorPicker, onClick: onColor,
 				            data: state[showColorPicker].data}) :
@@ -487,6 +499,9 @@ var viz = ({handlers: {onReset, onTooltip, onViewState, onCode, onShadow,
 				        cellTypeValue(state)) :
 				null,
 			vizPanel({props: {state, onTooltip, onViewState, onShadow, onRadius}}),
+			hasDataset(state) || showChart(state) ?
+				iconButton({onClick: onPopout, className: styles.popout},
+					icon('open_in_new')) : null,
 			div({className: styles.sidebar},
 				mapTabs({state, handlers}),
 				legends({state, handlers}))));
@@ -645,13 +660,30 @@ class SingleCellPage extends PureComponent {
 	onChartYexp = (_, v) => {
 		this.callback(['chartYExpression', v]);
 	}
+	onPopout = () => {
+		var {getState} = this.props;
+		var viz = document.getElementById('vizBody');
+		var {width, height} = viz.firstElementChild.getBoundingClientRect();
+
+		window.addEventListener('message', sendState(getState()));
+		window.open('/singlecell/?inline', null, `popup=true,left=100,top=200,width=${width},height=${height}`);
+	}
 
 	componentDidMount() {
 		const {getState, onImport, state: {isPublic}} = this.props,
+			{isPopup} = getState(),
 			{onNavigate} = this;
 
-		// nested render to different DOM tree
-		nav({isPublic, getState, onImport, onNavigate, activeLink: 'singlecell'});
+		if (isPopup) {
+			// footer is rendered independently, so delete it here. Also
+			// delete the padding set in xena.css.
+			document.getElementById('footer').remove();
+			document.getElementById('body').style.paddingBottom = '0';
+		} else {
+			// nested render to different DOM tree
+			// XXX should filter state if we active download / bookmarks here.
+			nav({isPublic, getState, onImport, onNavigate, activeLink: 'singlecell'});
+		}
 	}
 
 	render() {
@@ -838,5 +870,13 @@ var theme = outer => createTheme(outer, {
 	}
 });
 
-export default ({state: {singlecell: state}, ...rest}) =>
-	muiThemeProvider({theme}, singleCellPage({state: selector(state), ...rest}));
+// cache state w/o generating a new function on each render.
+var getState = Let((state = undefined, get = () => state) =>
+	next => {
+		state = next;
+		return get;
+	});
+
+export default ({state, ...rest}) =>
+	muiThemeProvider({theme}, singleCellPage({state: selector(state.singlecell),
+	                                          getState: getState(state), ...rest}));

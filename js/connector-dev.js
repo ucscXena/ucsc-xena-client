@@ -11,6 +11,7 @@ var LZ = require('./lz-string');
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
+var {fetchInlineState, hasInlineState} = require('./inlineState');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -152,12 +153,19 @@ function connect({
 
 var {Observable: {of}} = Rx;
 module.exports = function(args) {
-	var saved = sessionStorage.debugSession;
+	var onError = err => {
+		console.warn("Unable to load saved debug session", err);
+		connect({...args, savedState: null});
+	};
 
-	of(saved).flatMap(s => s ? parse(s) : of(null)).subscribe(
-		savedState => connect({...args, savedState}),
-		err => {
-			console.warn("Unable to load saved debug session", err);
-			connect({...args, savedState: null});
-		});
+	if (hasInlineState()) {
+		fetchInlineState().subscribe(
+			initialState => connect({...args, savedState: null, initialState}),
+			onError);
+	} else {
+		of(sessionStorage.debugSession).flatMap(s => s ? parse(s) : of(null))
+		.subscribe(
+			savedState => connect({...args, savedState}),
+			onError);
+	}
 };

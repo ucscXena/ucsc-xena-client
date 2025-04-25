@@ -298,7 +298,8 @@ var controls = actionPrefix({
 var resetIntegration = (state = {}, params) =>
 	// If user clicked link to get here, drop the state. However, if
 	// the click was a login, don't drop state.
-	params.navigate === 'navigate' && !params.code ? reset(state) : state;
+	params.navigate === 'navigate' && !params.code && !params.inlineState ?
+		reset(state) : state;
 
 var setParamStudy = (state, params) =>
 	params.study ? assoc(state, 'integration', params.study, 'enter', true) : state;

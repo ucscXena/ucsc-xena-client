@@ -146,7 +146,6 @@ var controls = {
 							getNotifications()) :
 						bookmark)),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
-	inlineState: (state, newState) => resetLoadPending(newState),
 	samples: (state, resp) => {
 		var fieldMatches = _.getIn(state, ['spreadsheet', 'fieldMatches']),
 			maySetLoading = !state.loadPending || fieldMatches ? setLoading : _.identity,

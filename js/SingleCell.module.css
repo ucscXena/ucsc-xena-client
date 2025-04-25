@@ -25,6 +25,7 @@
 
 .vizBody {
 	display: flex;
+	position: relative;
 }
 
 .panel > :nth-child(1) {
@@ -44,8 +45,41 @@
 	align-items: center !important;
 }
 
-.vizBody > :nth-child(2) {
-	width: 300px;
+@value sidebar-width: 300px;
+
+.popout {
+	display: block;
+	position: absolute;
+	top: 0;
+	transform: translateY(-100%);
+	right: sidebar-width;
+	padding: 4px;
+}
+
+.title {
+	margin-right: sidebar-width;
+}
+
+.dataset {
+	margin-right: calc(sidebar-width + 40px);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 1rem; /* minimum space between elements */
+}
+
+.dataset > :nth-child(1) {
+  flex: 1 1 0;
+  min-width: 0; /* allows wrapping */
+}
+
+.dataset > :nth-child(2) {
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.sidebar {
+	width: sidebar-width;
 }
 
 .sidebar > * {
