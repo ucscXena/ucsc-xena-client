@@ -3,7 +3,7 @@ import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {br, div, el, img, label, span} from '../chart/react-hyper.js';
 var {get, getIn, identity, indexOf, Let, max, memoize1, min,
-	pick, pluck} = require('../underscore_ext').default;
+	omit, pick, pluck} = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
 import {OrbitView, OrthographicView} from 'deck.gl';
@@ -322,7 +322,7 @@ export class Map extends PureComponent {
 			this.setState({scale: null});
 		}
 		if (viewState) {
-			this.props.onViewState(viewState);
+			this.props.onViewState(omit(viewState, 'transitionDuration', 'transitionInterpolator'));
 		}
 	}
 	findSample = memoize1((samples, id) => indexOf(samples, id, true));
