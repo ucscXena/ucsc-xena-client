@@ -25,7 +25,7 @@ var toU8 = ({length, str}) => new Uint8Array(arrays.str2ab(str)).slice(0, length
 var replacer = (key, x) =>
 	x === undefined ? {[type]: 'undefined'} :
 	x !== x ? {[type]: 'NaN'} :
-	x && x.proxied ? {[type]: 'hfc', data: x.proxied} :
+	x && x.proxied ? {[type]: 'hfc', data: x.proxied, 'private': x.hasPrivateSamples} :
 	x instanceof Float32Array ? {[type]: 'Float32Array', data: fromTyped(x)} :
 	x instanceof Uint32Array ? {[type]: 'Uint32Array', data: fromTyped(x)} :
 	x instanceof Uint16Array ? {[type]: 'Uint16Array', data: fromTyped(x)} :
@@ -49,7 +49,6 @@ var getReviver = (hfcs, undefs) =>
 
 export var serialize = x => JSON.stringify(x, replacer);
 
-// XXX set hasPrivateSamples from the state.
 export var deserialize = data =>
 	Let((hfcs = [], undefs = [],
 		 state = JSON.parse(data, getReviver(hfcs, undefs)),
@@ -57,7 +56,7 @@ export var deserialize = data =>
 		zipArray(wasms).map(modules => {
 			modules.forEach((module, i) => {
 				var [obj, key] = hfcs[i];
-				obj[key] = hfcSync(module, obj[key].data, false);
+				obj[key] = hfcSync(module, obj[key].data, obj[key].private);
 			});
 			undefs.forEach(([obj, key]) => obj[key] = undefined);
 			return state;
