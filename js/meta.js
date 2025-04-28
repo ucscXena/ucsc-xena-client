@@ -24,4 +24,4 @@ var patterns = [
 ];
 
 
-module.exports = _.find(patterns, ([p]) => navigator.platform.match(p))[1];
+export default _.find(patterns, ([p]) => navigator.platform.match(p))[1];

@@ -24,7 +24,7 @@ var _ = require('./underscore_ext').default;
 var {servers: {localHub}} = require('./defaultServers');
 import * as store from './hiddenOpts';
 import Rx from './rx';
-var meta = require('./meta');
+import meta from './meta';
 var BookmarkMenu = require('./views/BookmarkMenu');
 import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
 import {xenaColor} from './xenaColor';

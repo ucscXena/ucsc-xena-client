@@ -3,7 +3,7 @@ var Tooltip = require('../views/Tooltip');
 import PureComponent from '../PureComponent';
 var React = require('react');
 var {rxEvents} = require('../react-utils');
-var meta = require('../meta');
+import meta from '../meta';
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
 

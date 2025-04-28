@@ -2,7 +2,7 @@ import PureComponent from '../PureComponent';
 import {Backdrop, Box, Icon, IconButton, Link, Paper, Typography} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
-var meta = require('../meta');
+import meta from '../meta';
 var classNames = require('classnames');
 import {xenaColor} from '../xenaColor';
 
