@@ -158,7 +158,8 @@ module.exports = {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
 			'fs': 'pdfkit/js/virtual-fs.js',
-			'txml/txml': 'txml/dist/txml'
+			'txml/txml': 'txml/dist/txml',
+			'./connector': path.resolve(__dirname, 'js/connector-dev.js')
 		},
 		symlinks: false,
 		extensions: ['.js', '.jsx', '.json']

@@ -23,7 +23,7 @@ import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
 var {initialState} = require('./initialState');
 
-const connector = require('./connector');
+import connector from './connector'; // see webpack alias for this import
 const createStore = require('./store');
 const xenaWasm = require('./xenaWasm');
 

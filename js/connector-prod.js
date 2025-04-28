@@ -100,7 +100,7 @@ function connect({
 };
 
 var {Observable: {of}} = Rx;
-module.exports = function(args) {
+export default function(args) {
 	var init = hasInlineState() ? fetchInlineState() :
 		of(sessionStorage.xena).flatMap(s => s ? parse(s) : of(null));
 

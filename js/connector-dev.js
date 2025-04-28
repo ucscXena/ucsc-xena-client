@@ -152,7 +152,7 @@ function connect({
 };
 
 var {Observable: {of}} = Rx;
-module.exports = function(args) {
+export default function(args) {
 	var onError = err => {
 		console.warn("Unable to load saved debug session", err);
 		connect({...args, savedState: null});

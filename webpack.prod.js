@@ -1,6 +1,7 @@
 /*global require: false, module: false, process: false */
-var webpack = require('webpack');
+//var webpack = require('webpack');
 var config = require('./webpack.config');
+var path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -10,6 +11,7 @@ delete config.entry.docs;              // Remove docs from production build.
 config.mode = 'production';
 config.output.filename = "[name].[chunkhash].js";
 config.output.chunkFilename = "[chunkhash].bundle.js";
+config.resolve.alias['./connector'] = path.resolve(__dirname, 'js/connector-prod.js');
 console.log(config.optimization);
 config.optimization = {
 	minimizer: [
