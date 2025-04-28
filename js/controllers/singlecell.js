@@ -1,6 +1,6 @@
 import query from './query';
 import {make, mount, compose} from './utils';
-var fetch = require('../fieldFetch');
+import fetch from '../fieldFetch';
 var {samplesQuery} = require('./common');
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
 	datasetMetadata, fetchDefaultStudy} =

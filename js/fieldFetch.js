@@ -21,4 +21,4 @@ xenaFetch.add('SV-mutation', mutationVector.fetch);
 fetch.add('xena', xenaFetch);
 fetch.add('empty', () => Rx.Observable.of(null, Rx.Scheduler.asap));
 
-module.exports = fetch;
+export default fetch;

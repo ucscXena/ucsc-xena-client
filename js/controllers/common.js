@@ -5,7 +5,7 @@ var Rx = require('../rx').default;
 var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
-var fetch = require('../fieldFetch');
+import fetch from '../fieldFetch';
 var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
 var {servers: allServers, publicServers} = require('../defaultServers');
