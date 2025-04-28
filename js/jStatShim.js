@@ -34,4 +34,4 @@ jStat.rank = function (arr) {
 	return ranks;
 };
 
-module.exports = jStat;
+export default jStat;
