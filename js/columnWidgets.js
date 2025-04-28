@@ -6,21 +6,20 @@ var fieldTypeOrSamplesSelector = (id, x) => id === 'samples' ? 'samples' : x.fie
 var columnFieldTypeOrSamplesSelector = x => x.id === 'samples' ? 'samples' : x.column.fieldType;
 var columnFieldTypeSelector = x => x.column.fieldType;
 
-var widget = {
-	cmp: multi(fieldTypeSelector),
-	index: multi(x => x),
-	data: multi(fieldTypeSelector),
-	transform: multi(fieldTypeSelector),
-	avg: multi(fieldTypeSelector),
-	download: multi(columnFieldTypeSelector),
-    specialDownload: multi(columnFieldTypeSelector),
-	column: multi(columnFieldTypeOrSamplesSelector),
-	legend: multi(columnFieldTypeOrSamplesSelector),
-	pdf: multi(fieldTypeOrSamplesSelector),
-};
+const cmp = multi(fieldTypeSelector);
+const index = multi(x => x);
+const data = multi(fieldTypeSelector);
+const transform = multi(fieldTypeSelector);
+const avg = multi(fieldTypeSelector);
+const download = multi(columnFieldTypeSelector);
+const specialDownload = multi(columnFieldTypeSelector);
+const column = multi(columnFieldTypeOrSamplesSelector);
+const legend = multi(columnFieldTypeOrSamplesSelector);
+const pdf = multi(fieldTypeOrSamplesSelector);
 
-widget.index.dflt = () => null;
-widget.avg.dflt = () => null;
-widget.data.dflt = (column, data) => data;
+index.dflt = () => null;
+avg.dflt = () => null;
+data.dflt = (column, data) => data;
 
-module.exports = widget;
+module.exports = {cmp, index, data, transform, avg, download, specialDownload,
+	column, legend, pdf};
