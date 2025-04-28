@@ -3,7 +3,7 @@ var _ = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
-var LZ = require('./lz-string');
+import LZ from './lz-string';
 import urlParams from './urlParams';
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
