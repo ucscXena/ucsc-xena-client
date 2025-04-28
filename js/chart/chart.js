@@ -30,7 +30,7 @@ import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptio
 import applyTransforms from './applyTransforms';
 
 // Styles
-var compStyles = require('./chart.module.css');
+import compStyles from "./chart.module.css";
 
 var accordionDetails = el(AccordionDetails);
 var box = el(Box);

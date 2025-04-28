@@ -25,7 +25,7 @@ var classNames = require('classnames');
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./ColumnAdd.module.css');
+import compStyles from "./ColumnAdd.module.css";
 
 class ColumnAdd extends React.Component {
 	onClick = () => {

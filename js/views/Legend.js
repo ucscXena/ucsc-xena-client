@@ -4,7 +4,8 @@ import {Typography} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
 
 // Styles
-var compStyles = require('./Legend.module.css');
+import compStyles from "./Legend.module.css";
+
 var classNames = require('classnames');
 
 var nodata = {

@@ -27,7 +27,8 @@ var {encodeObject} = require('./util').default;
 import PureComponent from './PureComponent';
 
 // Styles
-var styles = require('./hubPage.module.css');
+import styles from "./hubPage.module.css";
+
 var sxHubItem = {
 	gap: 16,
 	'&:hover': {

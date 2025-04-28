@@ -21,7 +21,7 @@ var {drawSamples} = require('../drawSamples');
 import ZoomCarriage from './ZoomCarriage';
 
 // Styles
-var compStyles = require('./SampleZoomIndicator.module.css');
+import compStyles from "./SampleZoomIndicator.module.css";
 
 function noZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});

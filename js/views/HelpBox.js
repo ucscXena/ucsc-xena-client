@@ -36,7 +36,7 @@ var React = require('react');
 var classNames = require('classnames');
 
 // Styles
-var compStyles = require('./HelpBox.module.css');
+import compStyles from "./HelpBox.module.css";
 
 // XXX move this comment
 // Setup for help box displayed to right of item being highlighted (with row marker). 27.5 used in width calculations

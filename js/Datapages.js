@@ -20,7 +20,7 @@ var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext').default;
 var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
 var {parseDsID} = require('./xenaQuery');
-var styles = require('./Datapages.module.css');
+import styles from "./Datapages.module.css";
 import nav from './nav';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');

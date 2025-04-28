@@ -13,7 +13,7 @@ var classNames = require('classnames');
 var ColumnAdd = require('../views/ColumnAdd');
 
 // Styles
-var compStyles = require('./addColumnAdd.module.css');
+import compStyles from "./addColumnAdd.module.css";
 
 var hoverClass = (index, hover) =>
 	index === hover ? compStyles.hoverLeft :

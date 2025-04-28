@@ -13,7 +13,8 @@ var React = require('react');
 var {Portal} = require('react-overlays');
 
 // Styles
-var compStyles = require('./Crosshair.module.css');
+import compStyles from "./Crosshair.module.css";
+
 var classNames = require('classnames');
 import pickerCursor from './colorize-24px.svg';
 

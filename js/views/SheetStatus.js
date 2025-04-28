@@ -17,7 +17,7 @@ import {xenaColor} from '../xenaColor';
 
 // Styles
 var classNames = require('classnames');
-var compStyles = require('./SheetStatus.module.css');
+import compStyles from "./SheetStatus.module.css";
 
 class SheetStatus extends React.Component {
 

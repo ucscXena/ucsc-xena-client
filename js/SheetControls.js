@@ -19,7 +19,8 @@ import XActionButton from './views/XActionButton';
 import {xenaColor} from './xenaColor';
 
 // Styles
-var compStyles = require('./SheetControls.module.css');
+import compStyles from "./SheetControls.module.css";
+
 var classNames = require('classnames');
 var sxActionButton = {
 	letterSpacing: '0.75px',

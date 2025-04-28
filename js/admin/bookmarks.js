@@ -5,7 +5,7 @@ var main = window.document.getElementById('main');
 var {allParameters} = require('../util').default;
 var {sortBy} = require('../underscore_ext').default;
 
-var compStyles = require('./bookmarks.module.css');
+import compStyles from "./bookmarks.module.css";
 
 class Weekly extends Component {
 	state = {weeks: null};

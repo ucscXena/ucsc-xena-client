@@ -8,7 +8,7 @@ var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
 import nav from '../nav';
-var styles = require('./TranscriptPage.module.css');
+import styles from "./TranscriptPage.module.css";
 var {StateError} = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
 import spinner from '../ajax-loader.gif';

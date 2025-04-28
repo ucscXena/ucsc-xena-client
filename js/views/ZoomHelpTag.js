@@ -13,7 +13,7 @@ var {Portal} = require('react-overlays');
 var columnZoom = require('../columnZoom');
 
 // Styles
-var compStyles = require('./ZoomHelpTag.module.css');
+import compStyles from "./ZoomHelpTag.module.css";
 
 // zoom text when user has pressed mouse down but has not yet moved the mouse
 var defaultText = 'Drag to zoom';

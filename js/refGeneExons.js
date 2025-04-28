@@ -13,7 +13,7 @@ var util = require('./util').default;
 var {chromPositionFromScreen} = require('./exonLayout');
 var {isoluminant} = require('./colorScales');
 import PureComponent from './PureComponent';
-var styles = require('./refGeneExons.module.css');
+import styles from "./refGeneExons.module.css";
 import {getGeneMode} from './models/columns';
 
 // annotate an interval with cds status

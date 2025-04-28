@@ -14,7 +14,8 @@ import {xenaColor} from '../xenaColor';
 var React = require('react');
 
 // Styles
-var compStyles = require('./ZoomCarriage.module.css');
+import compStyles from "./ZoomCarriage.module.css";
+
 var classNames = require('classnames');
 
 class ZoomCarriage extends PureComponent {

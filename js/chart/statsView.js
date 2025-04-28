@@ -4,7 +4,7 @@ import {el} from './react-hyper';
 import {Button, Typography } from '@material-ui/core';
 var button = el(Button);
 var typography = el(Typography);
-var compStyles = require('./chart.module.css'); // XXX prune this for stats
+import compStyles from "./chart.module.css"; // XXX prune this for stats
 
 export default el(class extends PureComponent {
 	state = {}

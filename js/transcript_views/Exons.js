@@ -1,7 +1,7 @@
 var React = require('react');
 var _ = require('../underscore_ext').default;
 
-var styles = require('./Exons.module.css');
+import styles from "./Exons.module.css";
 
 var width = 700;
 

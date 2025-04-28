@@ -13,7 +13,7 @@ var ReactDOM = require('react-dom');
 import {xenaTheme} from './xenaTheme';
 
 // Styles
-var compStyles = require('./footer.module.css');
+import compStyles from "./footer.module.css";
 
 class Footer extends React.Component {
 	render() {

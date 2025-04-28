@@ -22,7 +22,8 @@ import {hidden} from '../nav';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./BookmarkMenu.module.css');
+import compStyles from "./BookmarkMenu.module.css";
+
 var sxHelpLink = {
 	display: 'flex',
 	justifyContent: 'flex-end',

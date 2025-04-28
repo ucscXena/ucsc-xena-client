@@ -17,7 +17,8 @@ import {xenaColor} from './xenaColor';
 import {fromBitmap, union, removeRows, isSet, bitCount} from './models/bitmap';
 
 // Styles
-var compStyles = require('./AppControls.module.css');
+import compStyles from "./AppControls.module.css";
+
 var sxControlBar = {
 	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
 	display: 'flex',

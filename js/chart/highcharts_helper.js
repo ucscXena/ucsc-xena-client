@@ -1,5 +1,5 @@
 var _ = require('../underscore_ext').default;
-var styles = require('./highchartView.module.css');
+import styles from "./highchartView.module.css";
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';
 import {xenaColor} from '../xenaColor';

@@ -10,7 +10,7 @@ var jStat = require('../jStatShim');
 import {isSet, bitCount} from '../models/bitmap';
 import multi from '../multi';
 import {div, el} from './react-hyper';
-var compStyles = require('./highchartView.module.css');
+import compStyles from "./highchartView.module.css";
 
 import {kde} from '../models/kde';
 var fvc = require('./fvc');

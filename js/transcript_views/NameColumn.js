@@ -2,7 +2,7 @@ var React = require('react');
 import {colorScale} from '../colorScales';
 var {contrastColor} = require('../color_helper').default;
 import '../../css/transcript_css/nameColumn.css';
-var styles = require('./NameColumn.module.css');
+import styles from "./NameColumn.module.css";
 
 class NameColumn extends React.PureComponent {
 	render() {

@@ -7,7 +7,8 @@ var classNames = require('classnames');
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./Tooltip.module.css');
+import compStyles from "./Tooltip.module.css";
+
 var sxTooltip = {
 	borderBottom: `1px solid ${xenaColor.BLACK_6}`,
 };

@@ -7,7 +7,7 @@ var formControl = el(FormControl);
 var textField = el(TextField);
 
 // XXX move to different file?
-var compStyles = require('./chart.module.css');
+import compStyles from "./chart.module.css";
 
 var {reject} = require('../underscore_ext').default;
 

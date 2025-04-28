@@ -3,7 +3,7 @@ import React from 'react';
 import CanvasDrawing2 from '../CanvasDrawing2';
 
 //// Styles
-var compStyles = require('./BandLegend.module.css');
+import compStyles from "./BandLegend.module.css";
 
 function draw(vg, opts) {
 	var {range: {min, max}, colorScale, width, zoom: {height}} = opts,

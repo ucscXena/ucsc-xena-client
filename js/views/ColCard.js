@@ -24,7 +24,8 @@ var CardAvatar = require('./CardAvatar');
 import XColumnDivider from './XColumnDivider';
 
 // Styles
-var compStyles = require('./ColCard.module.css');
+import compStyles from "./ColCard.module.css";
+
 var sxColCardHeader = {
 	'&&': {
 		gap: 16,

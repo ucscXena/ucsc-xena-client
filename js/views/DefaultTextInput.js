@@ -11,7 +11,7 @@ const React = require('react');
 var {rxEvents} = require('../react-utils');
 
 // Comp styles
-var compStyles = require('./DefaultTextInput.module.css');
+import compStyles from "./DefaultTextInput.module.css";
 
 class DefaultTextInput extends PureComponent {
 	state = {value: this.props.value.user, focused: false};

@@ -12,7 +12,7 @@ var React = require('react');
 var _ = require('../underscore_ext').default;
 
 // Styles
-var compStyles = require('./XRadioMeta.module.css');
+import compStyles from "./XRadioMeta.module.css";
 
 class XRadioMeta extends React.Component {
 	render() {

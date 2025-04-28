@@ -7,7 +7,8 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 
 // Styles
-var compStyles = require('./CanvasDrawing.module.css');
+import compStyles from "./CanvasDrawing.module.css";
+
 var classNames = require('classnames');
 
 class CanvasDrawing extends React.Component {

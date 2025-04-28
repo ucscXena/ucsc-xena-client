@@ -39,7 +39,7 @@ var iconButton = el(IconButton);
 var menuItem = el(MenuItem);
 var select = el(TextField);
 
-var styles = require('./ChartWizard.module.css');
+import styles from "./ChartWizard.module.css";
 var sxFormControl = {'& .MuiFormControl-root': {width: 392}};
 var sxModeLabel = {alignItems: 'center', display: 'grid', gridTemplateColumns: '100px auto'};
 var sxModes = {display: 'flex', flexDirection: 'column'};
