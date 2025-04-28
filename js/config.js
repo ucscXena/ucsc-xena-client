@@ -1,2 +1,2 @@
 /*global config: false */
-module.exports = config;
+export default config;

@@ -26,7 +26,7 @@ var gaEvents = require('../gaEvents');
 import crosshair from './cursor.png';
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
-var config = require('../config');
+import config from '../config';
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 import {setUserCodes} from '../models/denseMatrix';
 import {isChrom, getGeneMode} from '../models/columns';
