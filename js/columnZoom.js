@@ -319,4 +319,4 @@ var zoomText = column =>
 	`Zoomed to ${lt1Txt(zoomPct(column))}%` : '';
 
 
-module.exports = {zoomText, ...zoom};
+export default {zoomText, ...zoom};

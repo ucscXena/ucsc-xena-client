@@ -10,7 +10,7 @@
 var React = require('react');
 import {Typography} from '@material-ui/core';
 var {Portal} = require('react-overlays');
-var columnZoom = require('../columnZoom');
+import columnZoom from '../columnZoom';
 
 // Styles
 import compStyles from "./ZoomHelpTag.module.css";

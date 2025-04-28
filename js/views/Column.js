@@ -7,7 +7,7 @@ var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
-var columnZoom = require('../columnZoom');
+import columnZoom from '../columnZoom';
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 import spinner from '../ajax-loader.gif';
 var mutationVector = require('../models/mutationVector');

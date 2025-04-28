@@ -9,7 +9,7 @@ var _ = require('./underscore_ext').default;
 import {drawRefGeneExons} from './refGeneExons';
 import {showPosition, annotationHeight, positionHeight} from './views/Column';
 import vgcanvas from './vgcanvas';
-import {zoomText} from './columnZoom';
+import columnZoom from './columnZoom';
 
 var totalWidth = cols =>
 	(cols.length - 1) * styles.column.margin +
@@ -93,7 +93,7 @@ var download = state => {
 			offsets = getOffsets(columns);
 
 		columns.forEach((column, i) => {
-			var zoom = zoomText(column).toUpperCase();
+			var zoom = columnZoom.zoomText(column).toUpperCase();
 
 			vg.translate(offsets[i], 0, () => {
 				drawColumnLabel(vg, column);
