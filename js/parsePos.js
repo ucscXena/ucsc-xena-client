@@ -2,7 +2,7 @@
 var _ = require('./underscore_ext').default;
 var unicode = require('./unicode_utils');
 import chromInfo from './chromInfo';
-var centromere = require('./centromere');
+import centromere from './centromere';
 
 var toInt = x => parseInt(x, 10);
 var clip = (len, x) => x < 1 ? 1 : (x > len ? len : x);
