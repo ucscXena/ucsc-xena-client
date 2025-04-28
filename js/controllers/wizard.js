@@ -106,7 +106,7 @@ var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, wizardData, cachePolicy, 'wizard');
 
 var invalidateCohorts = Let(({any} = matchKeys) =>
-	function (serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['cohortMeta']);
 		invalidatePath(serverBus, ['cohortPreferred']);
 		invalidatePath(serverBus, ['cohortPhenotype']);
@@ -117,7 +117,7 @@ var invalidateCohorts = Let(({any} = matchKeys) =>
 	});
 
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['serverCohorts', localHub]);
 		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
 		invalidatePath(serverBus, ['cohortFeatures', any, localHub, any]);

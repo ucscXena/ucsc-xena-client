@@ -50,9 +50,9 @@ class Week extends Component {
 		var {list} = this.state,
 			{week} = this.props;
 		return (
-			<div>
-				<h2>Bookkmarks for week of {week.split(/ /)[0]}</h2>
-				{list ? (
+            <div>
+                <h2>Bookkmarks for week of {week.split(/ /)[0]}</h2>
+                {list ? (
 					<ul className={compStyles.bookmarks}>
 						{list.map(b => (
 							<li key={b.id}>
@@ -62,11 +62,12 @@ class Week extends Component {
 								<span>{b.lastUse}</span>
 							</li>))}
 					</ul>) : <span>Loading...</span>}
-				<br/>
-				<a href={`${window.location.origin}/bookmarks/`}>
+                <br/>
+                <a href={`${window.location.origin}/bookmarks/`}>
 					All bookmarks
 				</a>
-			</div>);
+            </div>
+        );
 	}
 }
 

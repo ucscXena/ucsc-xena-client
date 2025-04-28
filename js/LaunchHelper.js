@@ -172,7 +172,7 @@ var launch = () => {
 // XXX Note that we re-render on every change of the wrapped
 // component. Maybe should put dialog in a separate component to
 // avoid re-rendering it.
-var wrap = Comp => class extends PureComponent {
+var wrap = Comp => (class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
 	constructor(props) {
@@ -257,7 +257,7 @@ var wrap = Comp => class extends PureComponent {
 				</Dialog>
 			</Comp>);
 	}
-};
+});
 
 var wrapLaunchHelper = (shouldMount, Comp) => {
 	var Wrapper = wrap(Comp),

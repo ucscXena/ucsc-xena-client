@@ -255,7 +255,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		uniq = _.without(_.uniq(avg), NaN),
 		scale = colorScale(color),
 		[,,,, origin] = color,
-		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
+		colorfn = v => RGBToHex(...(v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin))),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
 	return {columnValues: avg, maySplit: true, ...partFn(avg, uniq, colorfn)};
 }

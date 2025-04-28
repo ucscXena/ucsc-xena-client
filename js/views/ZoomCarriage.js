@@ -43,6 +43,6 @@ class ZoomCarriage extends PureComponent {
 					 style={{top: carriageEnd, transform: this.getRotation(lowerAngle), width: lowerLine}} sx={{borderColor: xenaColor.BLACK_24}}/>
 			</div>);
 	}
-};
+}
 
 export default ZoomCarriage;

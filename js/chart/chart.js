@@ -223,7 +223,7 @@ function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 var selectedMetrics = ({avgState, pctState, ycolumn}, yavg) =>
 	_.pick(yavg,
 		_.get(avgOptions[avgState[ycolumn]], 'label'),
-		...pctRange[_.get(pctOptions[pctState[ycolumn]], 'label')] || []);
+		...(pctRange[_.get(pctOptions[pctState[ycolumn]], 'label')] || []));
 
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
@@ -262,7 +262,7 @@ function scatterProps({data, columns}, params) {
 
 		// see km.js:segmentedVals(). This is a work-around for
 		// trend-amplitude scales. We should deprecate them.
-		scale = v => RGBToHex(...v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin));
+		scale = v => RGBToHex(...(v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin)));
 		sdata = _.getIn(data, [colorColumn, 'avg', 'geneValues', 0]);
 	} else {
 		let color = _.getIn(columns, [colorColumn, 'colors', 0]);

@@ -482,18 +482,18 @@ var DatasetPage = wrapLaunchHelper(
 				type = TYPE_NULL, status, loader, count} = meta;
 
 			return (
-				<DatapagesContainer>
-					{children /* LaunchHelper */}
-					<div className={styles.sidebar}>
+                <DatapagesContainer>
+                    {children /* LaunchHelper */}
+                    <div className={styles.sidebar}>
 						<Button onClick={this.onViz}>Visualize</Button>
 						{canDelete(meta, host) ?
 							<DeleteButton callback={callback} name={name} label={label}/> : null}
 					</div>
-					<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
-					<h3>hub: {host}{badge}</h3>
-					{headerValue(longTitle)}
-					{markdownValue(githubDescripton) || htmlValue(description)}
-					{setKey(flatten([
+                    <h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
+                    <h3>hub: {host}{badge}</h3>
+                    {headerValue(longTitle)}
+                    {markdownValue(githubDescripton) || htmlValue(description)}
+                    {setKey(flatten([
 						dataPair('cohort', cohort, toCohortLink(this.onCohort, hubParams)),
 						dataPair('dataset ID', name),
 						getStatus(status, loader),
@@ -513,7 +513,7 @@ var DatasetPage = wrapLaunchHelper(
 							dataPair('raw data', url, toLink)),
 						dataPair('wrangling', wranglingProcedure, toHTML),
 						dataPair('input data format', FORMAT_MAPPING[type])]))}
-					{status === 'loaded' ?
+                    {status === 'loaded' ?
 						<span className={styles.tableControls}>
 							{type === 'genomicMatrix' ? probeCount : null}
 							{type === 'genomicMatrix' ?
@@ -527,8 +527,9 @@ var DatasetPage = wrapLaunchHelper(
 								href={'?' + encodeObject({host, dataset, allSamples: true, ...hubParams})}
 								onClick={this.onSamples} underline='hover'>All Samples</Link>
 						</span> : null}
-					{dataMethod(meta)(meta, data)}
-				</DatapagesContainer>);
+                    {dataMethod(meta)(meta, data)}
+                </DatapagesContainer>
+            );
 		}
 });
 

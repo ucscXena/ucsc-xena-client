@@ -152,9 +152,9 @@ class BookmarkMenu extends React.Component {
 			recentBookmarks = getRecent();
 
 		return (
-			<StylesProvider generateClassName={createGenerateClassName({seed: 'Bookmark'})}>
-				<Button onClick={this.onClick}>Bookmark</Button>
-				<Menu
+            <StylesProvider generateClassName={createGenerateClassName({seed: 'Bookmark'})}>
+                <Button onClick={this.onClick}>Bookmark</Button>
+                <Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
 					getContentAnchorEl={null}
@@ -198,7 +198,7 @@ class BookmarkMenu extends React.Component {
 					<input className={compStyles.bookmarkInput} readOnly={true} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
-				<Menu
+                <Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
 					getContentAnchorEl={null}
@@ -210,7 +210,8 @@ class BookmarkMenu extends React.Component {
 						</MenuItem>
 					))}
 				</Menu>
-			</StylesProvider>);
+            </StylesProvider>
+        );
 	}
 }
 

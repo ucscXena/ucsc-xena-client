@@ -52,6 +52,6 @@ class SampleZoomIndicator extends PureComponent {
 				</ColCard>
 			</div>);
 	}
-};
+}
 
 export default SampleZoomIndicator;

@@ -61,7 +61,7 @@ function getPreferredExpression(props) {
 	}
 }
 
-var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Component {
+var getSpreadsheetContainer = (Column, Spreadsheet) => (class extends React.Component {
 	static displayName = 'SpreadsheetContainer';
 
 	state = {
@@ -235,6 +235,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						tumorMap={cohortTumorMap}/>))}
 			</Spreadsheet>);
 	}
-};
+});
 
 module.exports = {getSpreadsheetContainer};
