@@ -1,7 +1,7 @@
 
 var _ = require('./underscore_ext').default;
 var unicode = require('./unicode_utils');
-var chromInfo = require('./chromInfo');
+import chromInfo from './chromInfo';
 var centromere = require('./centromere');
 
 var toInt = x => parseInt(x, 10);

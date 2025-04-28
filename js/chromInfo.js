@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	hg18: require('./data/chromInfo_hg18.json'),
 	hg19: require('./data/chromInfo_hg19.json'),
 	GRCh37: require('./data/chromInfo_hg19.json'),
