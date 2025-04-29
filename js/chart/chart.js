@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 var {RGBToHex} = require ('../color_helper').default;
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import gaEvents from '../gaEvents.js';
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';

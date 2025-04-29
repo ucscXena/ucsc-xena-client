@@ -1,5 +1,5 @@
 import './base';
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import './plotDenseMatrix';
 import './plotMutationVector';
 import './plotSegmented';

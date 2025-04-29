@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {contrastColor, greyHEX} = require('./color_helper').default;
 import { impact, getSNVEffect } from './models/mutationVector.js';
 var labelFont = 12;

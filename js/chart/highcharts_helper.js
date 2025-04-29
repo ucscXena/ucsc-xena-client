@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import styles from "./highchartView.module.css";
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';

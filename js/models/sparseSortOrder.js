@@ -1,7 +1,7 @@
 // Utility to sort sparse data & generate a dense representation of
 // the order.
 
-var {Let, range} = require('../underscore_ext').default;
+import { Let, range } from '../underscore_ext.js';
 
 var newArr = n => new Float32Array(n);
 // mutating array 'set' that returns the array

@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 function getNotifications() {
 	var nj = localStorage.xenaNotifications || '{}',

@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // transcribed from wikipedia.
 function LCSLength(X, Y) {

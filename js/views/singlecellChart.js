@@ -1,5 +1,4 @@
-var {assocIn, get, getIn, isArray, isEqual, Let} =
-	require('../underscore_ext').default;
+import { assocIn, get, getIn, isArray, isEqual, Let } from '../underscore_ext.js';
 import {cellTypeValue, colorByMode, datasetCohort, expressionMode,
 	getChartType, getDataSubType, getSamples, hasColor, isInverted,
 	otherValue, phenoValue, probValue, probPanelValue, sigPanelValue, swapAxes} from

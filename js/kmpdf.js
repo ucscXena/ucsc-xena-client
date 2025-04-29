@@ -6,7 +6,8 @@
 // port of KmPlot to pdf is a compromise.
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
+
 import { linear, linearTicks } from './scale.js';
 
 var margin = {top: 20, right: 30, bottom: 30, left: 50};

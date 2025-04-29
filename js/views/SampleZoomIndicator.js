@@ -14,7 +14,8 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 
 // App dependencies
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
+
 import CanvasDrawing from '../CanvasDrawing.js';
 import ColCard from './ColCard.js';
 import { drawSamples } from '../drawSamples.js';

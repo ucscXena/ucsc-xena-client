@@ -1,4 +1,6 @@
-var {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} = require('../underscore_ext').default;
+import {flatmap, fmap, getIn, groupBy, identity, Let, map, matchKeys, pick,
+	updateIn} from '../underscore_ext.js';
+
 import xenaQuery from '../xenaQuery';
 var {servers: {localHub}} = require('../defaultServers');
 import {ignoredType, isPhenotype} from '../models/dataType';

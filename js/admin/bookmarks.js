@@ -3,7 +3,7 @@ var ReactDOM = require('react-dom');
 var Rx = require('../rx').default;
 var main = window.document.getElementById('main');
 var {allParameters} = require('../util').default;
-var {sortBy} = require('../underscore_ext').default;
+import { sortBy } from '../underscore_ext.js';
 
 import compStyles from "./bookmarks.module.css";
 

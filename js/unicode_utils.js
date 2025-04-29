@@ -1,4 +1,4 @@
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 function lookupWidechar(i) {
 	if (i >= 0xFF01 && i <= 0xFF53) {

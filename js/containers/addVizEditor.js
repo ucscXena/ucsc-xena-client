@@ -1,6 +1,6 @@
 var React = require('react');
 import VizSettings from '../views/VizSettings.js';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 var vizSettingsState = ['defaultNormalization', 'colorClass', 'vizSettings', 'valueType', 'fieldType'];
 function vizSettingsSelector(appState, columnId) {

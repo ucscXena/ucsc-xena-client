@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {el} from './react-hyper';
 import {Button, Typography } from '@material-ui/core';
 var button = el(Button);

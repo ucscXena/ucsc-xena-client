@@ -3,7 +3,7 @@ import {Slider, Checkbox, FormControlLabel} from '@material-ui/core';
 import {div, el, span} from '../chart/react-hyper';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutosuggestInput from '../views/XAutosuggestInput';
-var {getIn, Let, pluck, sorted} = require('../underscore_ext').default;
+import { getIn, Let, pluck, sorted } from '../underscore_ext.js';
 import styles from './ImgControls.module.css';
 import {hasImage, layerColors, segmentedColor} from '../models/singlecell';
 var {RGBToHex} = require('../color_helper').default;

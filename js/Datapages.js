@@ -15,9 +15,11 @@ import {
 	Typography
 } from '@material-ui/core';
 const React = require('react');
-var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
-	contains, get, updateIn, range, Let, pick,
-	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext').default;
+
+import {Let, contains, flatmap, flatten, get, getIn, groupBy, identity, keys,
+	map, mapObject, mmap, partitionN, pick, range, sortBy, sum, uniq, updateIn,
+	values, zip} from './underscore_ext.js';
+
 var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
 import xenaQuery from './xenaQuery';
 var {parseDsID} = xenaQuery;

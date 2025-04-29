@@ -1,6 +1,6 @@
 var React = require('react');
 import gaEvents from '../gaEvents.js';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import getLabel from '../getLabel.js';
 import { supportsEdit } from '../models/fieldSpec.js';
 var {addCommas} = require('../util').default;

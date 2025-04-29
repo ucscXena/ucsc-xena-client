@@ -1,4 +1,6 @@
-var {assocIn, dissoc, find, findIndexDefault, getIn, identity, isArray, isEqual, last, Let, matchKeys, matchPath, updateIn} = require('../underscore_ext').default;
+import {assocIn, dissoc, find, findIndexDefault, getIn, identity, isArray,
+	isEqual, last, Let, matchKeys, matchPath, updateIn} from '../underscore_ext.js';
+
 import {make, compose} from './utils';
 import {nextAuth} from '../models/auth';
 import Rx from '../rx';

@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 var {parse} = require('./searchParser');
 import {setUserCodes} from './denseMatrix';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');

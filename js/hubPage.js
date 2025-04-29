@@ -18,7 +18,7 @@ var Rx = require('./rx').default;
 
 import xenaQuery from './xenaQuery';
 var {logout, testHost, testLogin} = xenaQuery;
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import { parseServer, getHubParams } from './hubParams.js';
 import nav from './nav';

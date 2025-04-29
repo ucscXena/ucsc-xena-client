@@ -10,7 +10,7 @@ import * as colorScales from '../colorScales';
 import {defaultShadow, hasColor, isOrdinal, layerColors, segmentedColor} from
 	'../models/singlecell';
 import {debounce} from '../rx';
-var {get, getIn, identity, Let, pluck} = require('../underscore_ext').default;
+import { get, getIn, identity, Let, pluck } from '../underscore_ext.js';
 import highlightLayer from './highlightLayer';
 
 var deckGL = el(DeckGL);

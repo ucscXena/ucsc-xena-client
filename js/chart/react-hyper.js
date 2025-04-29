@@ -1,5 +1,5 @@
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);
 // Render tag with list of children, and optional props as first argument.

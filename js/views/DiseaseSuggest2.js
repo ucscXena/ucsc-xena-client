@@ -4,7 +4,7 @@ import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {Box} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import lcs from '../lcs.js';
 import XAutosuggestInput from './XAutosuggestInput';
 

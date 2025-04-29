@@ -2,7 +2,7 @@ import PureComponent from '../PureComponent';
 
 import {Icon, IconButton} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import CohortOrDisease from '../views/CohortOrDisease.js';
 import VariableSelect from '../views/VariableSelect.js';
 import GhostVariableSelect from '../views/GhostVariableSelect.js';

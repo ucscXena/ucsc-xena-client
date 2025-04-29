@@ -10,7 +10,7 @@ import PureComponent from '../PureComponent';
 import {xenaTheme} from '../xenaTheme';
 import authDialog from '../Auth';
 import {nextAuth, isAuthPending} from '../models/auth';
-var {isEqual, Let} = require('../underscore_ext').default;
+import { isEqual, Let } from '../underscore_ext.js';
 
 import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
@@ -66,7 +66,7 @@ export class PageContainer extends PureComponent {
 				</div>
 			</MuiThemeProvider>;
 	}
-};
+}
 
 if (process.env.NODE_ENV !== 'production') {
 	PageContainer.getDerivedStateFromError = error => ({error});

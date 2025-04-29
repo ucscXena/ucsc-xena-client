@@ -4,7 +4,7 @@ import './pdfMutationVector.js';
 import './pdfDenseMatrix.js';
 import './pdfSegmented.js';
 import './pdfSamples.js';
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import {drawRefGeneExons} from './refGeneExons';
 import {showPosition, annotationHeight, positionHeight} from './views/Column';
 import vgcanvas from './vgcanvas';

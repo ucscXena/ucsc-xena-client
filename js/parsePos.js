@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import * as unicode from './unicode_utils.js';
 import chromInfo from './chromInfo';
 import centromere from './centromere';
@@ -37,4 +37,4 @@ export default function (text, assembly) {
 		}
 		return {chrom, baseStart, baseEnd, hasCoord: pos[3] !== undefined};
 	}
-};
+}

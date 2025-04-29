@@ -3,7 +3,8 @@
 // Also handles serialization of binary objects, and conversion of plain
 // js to binary objects (in the case of migrating from old schema).
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
+
 import * as arrays from './arrays.js';
 import {hfcSync, hfcCompress} from './hfc';
 var wasm = require('ucsc-xena-wasm');

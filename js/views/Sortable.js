@@ -15,7 +15,7 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Rx = require('../rx').default;
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 require('./Sortable.css');
 
 var skip = 1; // Don't allow sort of <skip> elements on the left

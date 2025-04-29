@@ -1,5 +1,5 @@
 
-var _  = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // Ad hoc polymorphism, a bit like clojure's multimethods: a way to dispatch
 // based on any criteria (instead of just on 'this').

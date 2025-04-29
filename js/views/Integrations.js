@@ -1,4 +1,4 @@
-var {identity, Let, merge, updateIn} = require('../underscore_ext').default;
+import { identity, Let, merge, updateIn } from '../underscore_ext.js';
 
 import styles from './Integrations.module.css';
 import {tableLayout} from './muiTable';

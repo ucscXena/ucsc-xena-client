@@ -22,9 +22,11 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
 	setColor, setRadius, shouldSwapAxes} from './models/singlecell';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
-	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
-	uniq, updateIn, values, without} = require('./underscore_ext').default;
+
+import {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
+	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI, uniq,
+	updateIn, values, without} from './underscore_ext.js';
+
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
 import {singlecellChart, computedProps, chartPropsFromState} from

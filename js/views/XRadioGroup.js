@@ -18,7 +18,7 @@
 // Core dependencies, components
 import {Box, FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import XFormControl from './XFormControl';
 import XFormLabel from './XFormLabel';
 import XRadioMeta from './XRadioMeta.js';

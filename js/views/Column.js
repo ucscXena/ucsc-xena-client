@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 var util = require('../util').default;
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import DefaultTextInput from './DefaultTextInput.js';
 import DragSelect from './DragSelect.js';
 import SpreadSheetHighlight from '../SpreadSheetHighlight.js';

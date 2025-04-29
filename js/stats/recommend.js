@@ -1,5 +1,5 @@
 
-var {sortBy} = require('../underscore_ext').default;
+import { sortBy } from '../underscore_ext.js';
 var Minhash = require('minhash/src/minhash');
 var rawProbemapHashes = require('json-loader!./probemapMinHashes');
 var rawCohortHashes = require('json-loader!./cohortMinHashes');

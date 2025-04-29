@@ -1,6 +1,6 @@
 
 import LZ from './lz-string';
-var {uniq} = require('./underscore_ext').default;
+import { uniq } from './underscore_ext.js';
 import { compactState, expandState } from './compactData.js';
 import migrateState from './migrateState.js';
 import { schemaCheckThrow } from './schemaCheck.js';

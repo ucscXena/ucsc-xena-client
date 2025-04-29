@@ -3,7 +3,7 @@ import PureComponent from './PureComponent';
 var React = require('react');
 import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import * as widgets from './columnWidgets.js';
 var classNames = require('classnames');
 import gaEvents from './gaEvents.js';

@@ -8,7 +8,7 @@ import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 import xenaQuery from '../xenaQuery';
 var {matchPartialField, sparseDataMatchPartialField, refGene} = xenaQuery;
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import { rxEvents } from '../react-utils.js';
 var limit = 8;
 

@@ -1,4 +1,4 @@
-var {get, getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn} = require('./underscore_ext').default;
+import { get, getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn } from './underscore_ext.js';
 import { hasBookmark, resetBookmarkLocation, getBookmark } from './bookmark.js';
 import { hasInlineState, resetInlineStateLocation } from './inlineState.js';
 import { hubParams as getHubParams } from './hubParams.js';

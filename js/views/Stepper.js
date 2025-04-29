@@ -20,7 +20,7 @@
 // Core dependencies, components
 import {AppBar, Box, Step, StepLabel, Stepper as MuiStepper} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {xenaColor} from '../xenaColor';
 
 // Styles

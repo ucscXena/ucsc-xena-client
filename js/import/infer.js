@@ -1,5 +1,5 @@
 
-var {getIn} = require('../underscore_ext').default;
+import { getIn } from '../underscore_ext.js';
 import * as recommend from '../stats/recommend.js';
 
 var getMatches = list => {

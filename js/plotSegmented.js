@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');

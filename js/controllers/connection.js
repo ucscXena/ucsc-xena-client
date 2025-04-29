@@ -1,5 +1,5 @@
 var Rx = require('../rx').default;
-var {Let, get, getIn, isEqual} = require('../underscore_ext').default;
+import { Let, get, getIn, isEqual } from '../underscore_ext.js';
 var {servers} = require('../defaultServers');
 import xenaQuery from '../xenaQuery';
 var {testStatus} = xenaQuery;

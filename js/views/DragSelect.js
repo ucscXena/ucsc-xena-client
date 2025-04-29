@@ -1,6 +1,6 @@
 var React = require('react');
 var Rx = require('../rx').default;
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 var styles = {
 	wrapper: {

@@ -1,7 +1,8 @@
 
 // Domain logic for mutation datasets.
 
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
+
 import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
 var Rx = require('../rx').default;

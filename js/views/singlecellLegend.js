@@ -6,7 +6,7 @@ import BandLegend from './BandLegend.js';
 import {el, span} from '../chart/react-hyper';
 import {colorScale} from '../colorScales';
 import {cmpCodes} from '../models/singlecell';
-var {first, get, last, Let} = require('../underscore_ext').default;
+import { first, get, last, Let } from '../underscore_ext.js';
 
 var legend = el(Legend);
 var bandLegend = el(BandLegend); //eslint-disable-line no-unused-vars

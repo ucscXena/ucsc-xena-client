@@ -10,7 +10,7 @@
 import { chromRangeFromScreen } from './exonLayout.js';
 
 import multi from './multi.js';
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // Selectors
 var directionSelector = ({direction}) => direction;

@@ -1,6 +1,6 @@
 var React = require('react');
 import {TextField} from '@material-ui/core';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import { rxEvents } from '../react-utils.js';
 
 var isValid = _.curry((min, max, value) => {

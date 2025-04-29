@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 import {Backdrop, Box, Icon, IconButton, Link, Paper, Typography} from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import meta from '../meta';
 var classNames = require('classnames');
 import {xenaColor} from '../xenaColor';

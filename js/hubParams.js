@@ -1,6 +1,6 @@
 
 var util = require('./util').default;
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {defaultServers} = require('./defaultServers');
 
 function parseServer(s) {

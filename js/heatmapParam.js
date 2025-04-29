@@ -1,5 +1,7 @@
 var {allParameters} = require('./util').default;
-var {flatmap, get, getIn, groupBy, identity, isArray, isBoolean, isObject, isString, Let, mapObject, pick} = require('./underscore_ext').default;
+
+import {flatmap, get, getIn, groupBy, identity, isArray, isBoolean, isObject,
+	isString, Let, mapObject, pick} from './underscore_ext.js';
 
 import {parse} from './models/searchParser';
 

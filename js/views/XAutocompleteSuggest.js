@@ -10,7 +10,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import {Box, Checkbox, Chip, Icon, List, Paper} from '@material-ui/core';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import React, {forwardRef, useCallback, useEffect, useRef, useState} from 'react';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import XAutosuggestInput from './XAutosuggestInput';
 import XColumnDivider from './XColumnDivider';
 import XFormControl from './XFormControl';

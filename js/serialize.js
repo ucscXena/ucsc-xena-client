@@ -2,7 +2,7 @@ import * as arrays from './arrays.js';
 var wasm = require('ucsc-xena-wasm');
 import {hfcSync} from './hfc';
 
-var {Let, times} = require('./underscore_ext').default;
+import { Let, times } from './underscore_ext.js';
 var Rx = require('./rx').default;
 var {Observable: {bindCallback, zipArray}} = Rx;
 

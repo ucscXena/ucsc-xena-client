@@ -20,7 +20,7 @@ import {
 } from '@material-ui/core';
 var React = require('react');
 var ReactDOM = require('react-dom');
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {servers: {localHub}} = require('./defaultServers');
 import * as store from './hiddenOpts';
 import Rx from './rx';

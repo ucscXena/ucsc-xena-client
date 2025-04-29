@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import {colorScale} from './colorScales';
 
 var labelFont = 12;

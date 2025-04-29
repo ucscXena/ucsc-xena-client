@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 const React = require('react');
 import {Box, Link} from '@material-ui/core';
 import NameColumn from './NameColumn.js';

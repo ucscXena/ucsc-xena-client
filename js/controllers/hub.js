@@ -1,5 +1,6 @@
-var {Let, assocIn, dissoc, deepMerge, get, identity,
-	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
+import {assocIn, deepMerge, dissoc, get, identity, Let, matchKeys, pick,
+	pluck, uniq, updateIn} from '../underscore_ext.js';
+
 import {make, mount, compose} from './utils';
 import xenaQuery from '../xenaQuery';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN, datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList, datasetSamples, sparseDataExamples, segmentDataExamples} = xenaQuery;

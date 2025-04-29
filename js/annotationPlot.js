@@ -1,7 +1,7 @@
 // deprecated. Was used to draw ga4gh annotations.
 /*global require: false, module: false */
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 var {matches} = require('static-interval-tree');
 import { pxTransformEach } from './layoutPlot.js';
 

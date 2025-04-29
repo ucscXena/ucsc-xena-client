@@ -2,7 +2,7 @@ import * as dataUtils from './dataUtils.js';
 import * as highchartsHelper from './highcharts_helper.js';
 import * as sCell from './singleCell.js';
 import { isSet } from '../models/bitmap.js';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 var BOXLEN = 5;
 

@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 import {Box} from '@material-ui/core';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import XAutocompleteSuggest from './XAutocompleteSuggest';
 import XRadioGroup from './XRadioGroup.js';
 import GeneSuggest from './GeneSuggest.js';

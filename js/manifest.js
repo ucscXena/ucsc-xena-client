@@ -1,5 +1,5 @@
 
-var {isString, isArray, isObject} = require('./underscore_ext').default;
+import { isString, isArray, isObject } from './underscore_ext.js';
 
 
 var schemaCheck = data =>

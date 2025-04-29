@@ -13,7 +13,7 @@ import {
 	Typography
 } from '@material-ui/core';
 var React = require('react');
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 var Rx = require('../rx').default;
 import { createBookmark, getRecent, setRecent } from '../bookmark.js';
 import gaEvents from '../gaEvents.js';

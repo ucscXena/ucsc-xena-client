@@ -12,7 +12,7 @@ import {
 	Typography
 } from '@material-ui/core';
 import PureComponent from './PureComponent';
-var {map, pick, mapObject, getIn, get} = require('./underscore_ext').default;
+import { map, pick, mapObject, getIn, get } from './underscore_ext.js';
 var platform = require('platform');
 var Rx = require('./rx').default;
 

@@ -18,7 +18,7 @@ import {
 	RadioGroup,
 	TextField
 } from '@material-ui/core';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {v, suitableColumns, canDraw, boxOrDotOrViolinXDatasets, boxOrDotOrViolinYDatasets,
 	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';

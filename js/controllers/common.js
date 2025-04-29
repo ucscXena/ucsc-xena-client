@@ -3,7 +3,7 @@
 
 var Rx = require('../rx').default;
 import xenaQuery from '../xenaQuery';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import { reifyErrors, collectResults } from './errors.js';
 import fetch from '../fieldFetch';
 import * as kmModel from '../models/km.js';

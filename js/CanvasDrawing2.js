@@ -1,7 +1,8 @@
 // React component to manages redrawing a canvas element.
 
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
+
 import vgcanvas from './vgcanvas.js';
 var React = require('react');
 var ReactDOM = require('react-dom');

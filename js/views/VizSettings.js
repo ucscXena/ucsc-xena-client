@@ -32,7 +32,8 @@
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
 
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
+
 var React = require('react');
 var ReactDOM = require('react-dom');
 var {Row, Col} = require("react-material-responsive-grid");

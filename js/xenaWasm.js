@@ -1,5 +1,5 @@
 var wasm = require('ucsc-xena-wasm');
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {rgb: rgbFromHex} = require('./color_helper').default;
 import {categoryMore} from './colorScales';
 
@@ -20,7 +20,7 @@ function allocArrayAsType(type, arr) {
 	var ret = Module._malloc(arr.length * t.BYTES_PER_ELEMENT);
 	t.set(arr, ret / t.BYTES_PER_ELEMENT);
 	return ret;
-};
+}
 
 // Take a typed array & copy it into the heap
 export function allocArray(arr, M = Module) {
@@ -28,7 +28,7 @@ export function allocArray(arr, M = Module) {
 	u8 = new Uint8Array(arr.buffer);
 	M.HEAPU8.set(u8, addr);
 	return addr;
-};
+}
 
 var pointerSize = 4;
 

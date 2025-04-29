@@ -7,7 +7,7 @@ import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
-var {Let, assocIn, copyStr, getIn, has, iterable} = require('../underscore_ext').default;
+import { Let, assocIn, copyStr, getIn, has, iterable } from '../underscore_ext.js';
 import backPressure from '../import/backPressure';
 import chunkReader from '../import/chunkReader';
 require('./html5-formdata-polyfill'); // for safari

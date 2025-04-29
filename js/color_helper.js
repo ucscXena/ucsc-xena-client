@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 //http://www.javascripter.net/faq/hextorgb.htm
 var cutHex = function (h) {return (h.charAt(0) === "#") ? h.substring(1, 7) : h;};
@@ -22,11 +22,11 @@ var hexToRGB = function(hex, a = 1) {
 function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length === 1 ? "0" + hex : hex;
-};
+}
 
 function RGBToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-};
+}
 
 var colorStr = c => 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 

@@ -4,9 +4,11 @@ import fetch from '../fieldFetch';
 import { samplesQuery } from './common.js';
 import xenaQuery from '../xenaQuery';
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList, datasetMetadata, fetchDefaultStudy} = xenaQuery;
-var {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
-	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
-	uniq, updateIn} = require('../underscore_ext').default;
+
+import {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
+	Let, map, merge, max as _max, min as _min, object, pairs, pluck, pick,
+	range, uniq, updateIn} from '../underscore_ext.js';
+
 import { userServers } from './common.js';
 var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;

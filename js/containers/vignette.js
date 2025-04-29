@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 var React = require('react');
 
 export var createVignette = (steps, Component) => (class extends PureComponent {

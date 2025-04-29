@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 import * as highchartsHelper from './highcharts_helper.js';

@@ -2,7 +2,7 @@
 var demo = require('../docs/schema');
 var {toHTML, css} = require('schema-shorthand').html;
 var main = document.getElementById('main');
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 var docs = _.map(demo, s => toHTML(s, demo)).join('<br>');
 var page =

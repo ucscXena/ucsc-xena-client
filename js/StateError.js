@@ -10,7 +10,7 @@ import {
 	IconButton,
 	Typography
 } from '@material-ui/core';
-var {contains} = require('./underscore_ext').default;
+import { contains } from './underscore_ext.js';
 import {xenaColor} from './xenaColor';
 
 // Styles

@@ -1,6 +1,6 @@
 
 var Rx = require('./rx').default;
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import { getErrorProps, logError } from './errors.js';
 
 export default function () {
@@ -44,4 +44,4 @@ export default function () {
 		serverCh,
 		serverBus
 	};
-};
+}

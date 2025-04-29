@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var {defaultServers, enabledServers} = require('./defaultServers');
 import { getNotifications } from './notifications.js';
 

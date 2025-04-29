@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import fieldFetch from '../fieldFetch';
 var Rx = require('../rx').default;
 import xenaQuery from '../xenaQuery';

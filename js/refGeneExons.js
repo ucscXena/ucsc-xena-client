@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Rx = require('./rx').default;

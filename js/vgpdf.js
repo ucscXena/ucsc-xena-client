@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // XXX Warning: opacity other than 1 is not interpreted correctly.
 var style = function (c) {
@@ -227,4 +227,4 @@ export default function(doc, vgw, vgh) {
 		width,
 		mirror
 	};
-};
+}

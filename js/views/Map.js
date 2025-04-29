@@ -2,8 +2,7 @@ import {Icon, IconButton, Slider} from '@material-ui/core';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
 import {br, div, el, img, label, span} from '../chart/react-hyper.js';
-var {get, getIn, identity, indexOf, Let, max, memoize1, min,
-	omit, pick, pluck} = require('../underscore_ext').default;
+import { get, getIn, identity, indexOf, Let, max, memoize1, min, omit, pick, pluck } from '../underscore_ext.js';
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
 import {OrbitView, OrthographicView} from 'deck.gl';

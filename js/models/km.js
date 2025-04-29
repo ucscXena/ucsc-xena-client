@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import multi from '../multi.js';
 import { colorScale } from '../colorScales.js';
 import * as km from '../km.js'; // move km down?

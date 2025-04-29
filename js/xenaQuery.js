@@ -4,7 +4,8 @@
 import {concatBins, parse} from './binpackJSON';
 import {hfcCompress} from './hfc';
 var Rx = require('./rx').default;
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
+import _u from './underscore_ext.js'; // for partial() placeholder
 import { permuteCase, permuteBitCount, prefixBitLimit } from './permuteCase.js';
 // Load all query files as a map of strings.
 import * as qs from './loadXenaQueries';
@@ -181,7 +182,7 @@ function alignMatches(input, matches) {
 }
 
 function splitExon(s) {
-	return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
+	return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _u, 10));
 }
 
 function refGeneAttrs(row) {

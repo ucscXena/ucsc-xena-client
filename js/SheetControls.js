@@ -11,7 +11,7 @@
 // Core dependencies, components
 import {Box, Paper, Tooltip} from '@material-ui/core';
 var React = require('react');
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // App dependencies
 import SheetStatus from './views/SheetStatus.js';

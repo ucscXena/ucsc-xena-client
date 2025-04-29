@@ -14,7 +14,7 @@ import {
 } from '@material-ui/core';
 import React from 'react';
 import nav from '../nav';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import * as DefaultServers from '../defaultServers';
 import loader from './loader.gif';
 const { servers: { localHub } } = DefaultServers;

@@ -3,7 +3,7 @@
 
 var spLen = 3; // size of intronic region to draw between exons
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // reverse layout if on negative strand.
 var reverseIf = (strand, arr) =>

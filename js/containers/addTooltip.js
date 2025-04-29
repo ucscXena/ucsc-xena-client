@@ -4,7 +4,7 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 import { rxEvents } from '../react-utils.js';
 import meta from '../meta';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 var Rx = require('../rx').default;
 
 function addTooltip(Component) {

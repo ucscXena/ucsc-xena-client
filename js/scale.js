@@ -1,5 +1,5 @@
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 // We could use d3 for scale & ticks. Avoiding it here because
 // of wanting to minimize dependencies, it's more than we need,

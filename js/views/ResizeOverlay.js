@@ -1,7 +1,7 @@
 
 var React = require('react');
 var Resizable = require('react-resizable').Resizable;
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 // Styles
 require('./ResizeOverlay.css');

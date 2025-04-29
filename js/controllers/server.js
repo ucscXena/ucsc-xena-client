@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {computeSettings, matchDatasetFields} from '../models/columns';
 import { searchSamples } from '../models/searchSamples.js';
 import { resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering } from './common.js';

@@ -1,5 +1,5 @@
 import { drawSamples } from './drawSamples.js';
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import * as widgets from './columnWidgets.js';
 
 function pdf(id, column, vg, state, i) {

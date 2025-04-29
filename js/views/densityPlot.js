@@ -1,6 +1,6 @@
 // light-weight svg density plot
 import {el} from '../chart/react-hyper';
-var {Let, merge, mmap, partitionN, range} = require('../underscore_ext').default;
+import { Let, merge, mmap, partitionN, range } from '../underscore_ext.js';
 var svg = el('svg');
 var path = el('path');
 

@@ -1,5 +1,4 @@
-var {assocIn, dissoc, get, getIn, merge, Let, updateIn}
-	= require('../underscore_ext').default;
+import { assocIn, dissoc, get, getIn, merge, Let, updateIn } from '../underscore_ext.js';
 // auth required for state path
 
 // {_authRequired: {

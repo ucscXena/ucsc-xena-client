@@ -3,7 +3,7 @@
 // regions without any exons. These are not, strictly speaking, 'introns',
 // but intronic regions in every transcript.
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // Create a group with one exon
 var initGroup = exon => ({

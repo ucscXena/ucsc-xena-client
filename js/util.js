@@ -1,5 +1,6 @@
 
-var {flatmap, apply, map, first, zip, times, isArray, constant, mapObject, groupBy} = require('./underscore_ext').default;
+import {apply, constant, first, flatmap, groupBy, isArray, map, mapObject,
+	times, zip} from './underscore_ext.js';
 
 function expandArrays(v, k) {
 	if (isArray(v)) {

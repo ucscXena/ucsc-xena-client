@@ -1,5 +1,5 @@
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 var {min, max, floor} = Math;
 

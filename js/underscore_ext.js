@@ -1,6 +1,6 @@
-
-var _ = require('underscore');
+import _ from 'underscore';
 var ehmutable = require('ehmutable');
+ehmutable.init(_);
 import defer from './defer.js';
 // react fiber code creates data structures with cycles, which breaks
 // this fast equality check. Need to modify it to check for cycles
@@ -8,10 +8,11 @@ import defer from './defer.js';
 // react elements.
 //var fastDeepEqual = require('fast-deep-equal');
 
-var slice = Array.prototype.slice;
+export {defer};
+export const {get, assoc, conj, dissoc, getIn, assocIn, assocInAll, updateIn}
+	= ehmutable;
 
-_.mixin({defer: defer});    // override underscore defer
-_.mixin(ehmutable.init(_)); // add immutable methods
+var slice = Array.prototype.slice;
 
 function fmap(m, fn) {
 	var x = {};
@@ -35,11 +36,11 @@ function concat(...arrs) {
 }
 
 function pluckPaths(paths, obj) {
-	return _.fmap(paths, _.partial(_.getIn, obj));
+	return fmap(paths, _.partial(getIn, obj));
 }
 
 function pluckPathsArray(paths, obj) {
-	return _.map(paths, _.partial(_.getIn, obj));
+	return _.map(paths, _.partial(getIn, obj));
 }
 
 function partitionN(arr, n, step, pad) {
@@ -464,10 +465,10 @@ var mergable = o => _.isObject(o) && !_.isFunction(o);
 
 function deepMerge1(a, b) {
 	_.keys(b).forEach(k => {
-		var ak = _.get(a, k),
+		var ak = get(a, k),
 			v = mergable(ak) && mergable(b[k]) ?
 				deepMerge1(ak, b[k]) : b[k];
-		a = _.assoc(a, k, v);
+		a = assoc(a, k, v);
 	});
 	return a;
 }
@@ -495,12 +496,17 @@ var copyStr = str => (' ' + str).slice(1);
 //
 //// tack on an iterator namespace. We should probably find a better
 //// functional methods library that supports iterators.
-_.iterable = {
+export const iterable = {
 	map: imap,
 	repeat
 };
 
-_.mixin({
+const flatmap = _.compose(_.partial(_.flatten, _, 1), _.map);
+const merge = (...args) => _.extend.apply(null, [{}].concat(args));
+const sum = arr => _.reduce(arr, (x, y) => x + y, 0);
+const Let = f => f();
+
+export {
 	anyRange,
 	apply,
 	array,
@@ -515,20 +521,20 @@ _.mixin({
 	findIndexDefault,
 	findLastIndexDefault,
 	findValue,
-	flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
+	flatmap,
 	fmap,
 	fmapMemoize1,
 	groupByConsec,
 	insert,
 	intersection,
-//	isEqual: fastDeepEqual,
+	//	isEqual: fastDeepEqual,
 	listSetsEqual,
 	matchKeys,
 	matchPath,
 	maxWith,
 	mean,
 	memoize1,
-	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
+	merge,
 	mmap,
 	negate,
 	objectFn,
@@ -542,17 +548,18 @@ _.mixin({
 	splice,
 	sorted,
 	spy,
-	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
+	sum,
 	transpose,
 	union,
-	uniq: unique,
+	unique as uniq,
 	unique,
 	uniquify,
 	withoutIndex,
 	valToStr,
 	// This inscrutable method allows one to write a 'let' expression via
 	// es6 default arguments, e.g. _.Let((x = 5, y = x + 2) => x + y) === 12
-	Let: f => f()
-});
+	Let
+};
 
-export default _;
+export * from 'underscore';
+export default _; // need for _.partial()

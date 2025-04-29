@@ -3,7 +3,7 @@ var React = require('react');
 import { getSpreadsheetContainer } from './SpreadsheetContainer.js';
 import ChartView from '../chart/ChartView.js';
 import Column from '../views/Column';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import { rxEvents } from '../react-utils.js';
 var Rx = require('../rx').default;
 
