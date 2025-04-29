@@ -18,7 +18,7 @@ module.exports = {
 	load: function (host, files, always) {
 		return Rx.Observable.ajax(update(host, files, always ? {always: true} : {}));
 	},
-	delete: function (host, files) {
+	deleteDataset: function (host, files) {
 		return Rx.Observable.ajax(update(host, files, {delete: true}));
 	}
 };

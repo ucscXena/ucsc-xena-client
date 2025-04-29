@@ -4,7 +4,7 @@ import {make, mount, compose} from './utils';
 import xenaQuery from '../xenaQuery';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN, datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList, datasetSamples, sparseDataExamples, segmentDataExamples} = xenaQuery;
 var {servers: {localHub}, serverS3url} = require('../defaultServers');
-var {delete: deleteDataset} = require('../xenaAdmin');
+var {deleteDataset} = require('../xenaAdmin');
 var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx').default;
