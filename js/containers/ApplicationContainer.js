@@ -16,7 +16,6 @@ var addLegend = require('./addLegend');
 var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
 var Application = require('../Application');
-//import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
 import wrapLaunchHelper from '../LaunchHelper';
 var migrateState = require('../migrateState');
@@ -147,12 +146,11 @@ class ApplicationContainer extends PureComponent {
 			{pickSamples} = this.state,
 			{stateError} = state,
 			computedState = selector(state),
-			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
+			{spreadsheet: {mode}, loadPending} = computedState,
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,
-//				ties: TiesContainer,
-			}[open ? 'ties' : mode];
+			}[mode];
 		return (
 			<Application
 					onReset={this.onReset}

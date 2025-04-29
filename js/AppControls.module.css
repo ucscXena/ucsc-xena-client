@@ -31,16 +31,6 @@
 	white-space: nowrap;
 }
 
-.ties span {
-	background: linear-gradient(to bottom right, red, yellow, blue, orange);
-	-webkit-text-fill-color: transparent;
-	-webkit-background-clip: text;
-	animation-duration: 2s;
-	animation-name: spin;
-	animation-iteration-count: infinite;
-	animation-timing-function: linear;
-}
-
 @keyframes spin {
 	from {
 		transform: rotate(0);

@@ -151,11 +151,6 @@ var spreadsheetSelector = selector =>
 
 //
 
-var supportsTies = state => _.getIn(state, ['cohort', 'name'], '').indexOf('TCGA') === 0;
-
-var tiesSelector = state =>
-	_.assoc(state, 'tiesEnabled', supportsTies(state));
-
 var pickUserServers = (obj, servers) => _.pick(obj, userServers({servers}));
 
 var cohortsSelector = createSelector(
@@ -203,7 +198,7 @@ var setWizardProps = selector => state =>
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => tiesSelector(kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state)))))))));
+var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
 
 // This seems odd. Surely there's a better test?

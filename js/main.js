@@ -17,7 +17,6 @@ import singlecellController from './controllers/singlecell';
 import transcriptController from './controllers/transcripts';
 import importController from './controllers/import';
 import authController from './controllers/auth';
-//import tiesController from './controllers/ties';
 import PageContainer from './containers/PageContainer';
 import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
@@ -67,10 +66,6 @@ if (module.hot) {
 		let newModule = require('./controllers/import').default;
 		_.extend(importController, newModule);
 	});
-//	module.hot.accept('./controllers/ties', () => {
-//		let newModule = require('./controllers/ties');
-//		_.extend(tiesController, newModule);
-//	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});
@@ -81,7 +76,7 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // controllers run in the opposite order as listed in compose().
-const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController);
 
 xenaWasm.loaded.then(() => {
 	connector({...store, initialState, controller, main, Page: PageContainer,
