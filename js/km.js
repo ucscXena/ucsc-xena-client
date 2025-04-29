@@ -1,9 +1,9 @@
 /*eslint-disable camelcase */
 
-var jStat = require('jStat').jStat,
-	_ = require('./underscore_ext').default,
-	linearAlgebra = require('linear-algebra')(),
-	Matrix = linearAlgebra.Matrix;
+var jStat = require('jStat').jStat;
+var _ = require('./underscore_ext').default;
+var linearAlgebra = require('linear-algebra')();
+var Matrix = linearAlgebra.Matrix;
 
 var reduce = _.reduce,
 	map = _.map,
