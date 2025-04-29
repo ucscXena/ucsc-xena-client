@@ -691,7 +691,9 @@ var fetchJSON = url =>
 	}).map(xhr => xhr.response)
 	.catch(() => Rx.Observable.of({}, Rx.Scheduler.asap));
 
-module.exports = {
+// XXX Would like to make this named exports, but need a plan for
+// handling the dynamic queryPosts build.
+export default {
 	...queryPosts,
 
 	// derived query posts

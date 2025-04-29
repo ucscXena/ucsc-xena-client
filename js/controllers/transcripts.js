@@ -1,6 +1,6 @@
 
 var _ = require('../underscore_ext').default;
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 var Rx = require('../rx').default;
 
 // the expression dataset and phenodataset must be on the same host

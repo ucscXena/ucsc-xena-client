@@ -1,5 +1,5 @@
 import multi from '../multi';
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 var {Observable, Scheduler} = require('../rx').default;
 var _ = require('../underscore_ext').default;
 import parsePos from '../parsePos';

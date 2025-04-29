@@ -2,7 +2,7 @@
 // Helper methods needed by multiple controllers.
 
 var Rx = require('../rx').default;
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
 import fetch from '../fieldFetch';

@@ -16,7 +16,8 @@ import {
 var React = require('react');
 var Rx = require('./rx').default;
 
-var {logout, testHost, testLogin} = require('./xenaQuery');
+import xenaQuery from './xenaQuery';
+var {logout, testHost, testLogin} = xenaQuery;
 var _ = require('./underscore_ext').default;
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 var {parseServer, getHubParams} = require('./hubParams');

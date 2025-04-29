@@ -1,6 +1,7 @@
 var React = require('react');
 import {MenuItem} from '@material-ui/core';
-var {parseDsID} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {parseDsID} = xenaQuery;
 
 var getAbout = (onClick, dsID, root, text) => {
     var [host, dataset] = parseDsID(dsID);

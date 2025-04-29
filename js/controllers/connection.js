@@ -1,7 +1,8 @@
 var Rx = require('../rx').default;
 var {Let, get, getIn, isEqual} = require('../underscore_ext').default;
 var {servers} = require('../defaultServers');
-var {testStatus} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {testStatus} = xenaQuery;
 
 var {localHub} = servers;
 var {interval, never, of} = Rx.Observable;

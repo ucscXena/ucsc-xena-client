@@ -1,9 +1,8 @@
 var {Let, assocIn, dissoc, deepMerge, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
 import {make, mount, compose} from './utils';
-var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
-	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
-	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN, datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList, datasetSamples, sparseDataExamples, segmentDataExamples} = xenaQuery;
 var {servers: {localHub}, serverS3url} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers} = require('./common');

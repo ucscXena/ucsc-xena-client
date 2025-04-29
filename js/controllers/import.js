@@ -1,7 +1,8 @@
 var Rx = require('../rx').default;
 import { make, mount, compose } from './utils';
 var {servers} = require('../defaultServers');
-var {cohortSummary, probemapList, datasetStatus} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {cohortSummary, probemapList, datasetStatus} = xenaQuery;
 var {Let, assoc, assocIn, assocInAll, get, getIn, has, isArray, last, object, pluck, updateIn } = require('../underscore_ext').default;
 import Worker from 'worker-loader!./import-worker';
 

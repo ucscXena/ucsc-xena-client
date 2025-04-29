@@ -11,7 +11,7 @@ var {parseBookmark} = require('../bookmark');
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
 import {defaultState as chartDefaultState} from '../chart/utils';
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 import {fromBitmap} from '../models/bitmap';
 
 function fetchBookmark(serverBus, bookmark) {

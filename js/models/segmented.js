@@ -3,7 +3,7 @@
 
 var _ = require('../underscore_ext').default;
 var widgets = require('../columnWidgets');
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 var Rx = require('../rx').default;
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');

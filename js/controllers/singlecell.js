@@ -2,9 +2,8 @@ import query from './query';
 import {make, mount, compose} from './utils';
 import fetch from '../fieldFetch';
 var {samplesQuery} = require('./common');
-var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
-	datasetMetadata, fetchDefaultStudy} =
-	require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList, datasetMetadata, fetchDefaultStudy} = xenaQuery;
 var {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
 	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
 	uniq, updateIn} = require('../underscore_ext').default;

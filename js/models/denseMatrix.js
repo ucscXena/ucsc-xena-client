@@ -1,7 +1,7 @@
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
 var {find} = _;
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 import * as heatmapColors from '../heatmapColors';
 var widgets = require('../columnWidgets');
 var {categoryMore} = require('../colorScales');

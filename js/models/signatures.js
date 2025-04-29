@@ -1,7 +1,8 @@
 var _ = require('../underscore_ext').default;
 import fieldFetch from '../fieldFetch';
 var Rx = require('../rx').default;
-var {datasetProbeSignature, datasetGeneSignature} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {datasetProbeSignature, datasetGeneSignature} = xenaQuery;
 import {isSet, listToBitmap, setBit} from './bitmap';
 import {toArrays} from './denseMatrix';
 

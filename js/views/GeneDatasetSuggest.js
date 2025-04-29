@@ -6,7 +6,8 @@ var {identity, isEqual, isObject, memoize1, mmap} =
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
 var {rxEvents} = require('../react-utils');
-var {matchPartialField} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {matchPartialField} = xenaQuery;
 import {el} from '../chart/react-hyper';
 
 var xAutosuggestInput = el(XAutosuggestInput);
