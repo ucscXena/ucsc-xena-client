@@ -8,7 +8,7 @@ import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
 import PureComponent from '../PureComponent';
-var {applyExpression} = require('../chart/singleCell');
+import { applyExpression } from '../chart/singleCell.js';
 import applyTransforms from '../chart/applyTransforms';
 import spinner from '../ajax-loader.gif';
 import {normalizationOptions} from '../chart/chartControls';

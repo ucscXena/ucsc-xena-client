@@ -101,4 +101,4 @@ function apply(state) {
 	return setVersion(toDo.reduce((prev, fn) => fn(prev), state));
 }
 
-module.exports = apply;
+export default apply;

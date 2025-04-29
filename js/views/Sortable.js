@@ -175,4 +175,4 @@ class Sortable extends PureComponent {
     }
 }
 
-module.exports = Sortable;
+export default Sortable;

@@ -3,7 +3,7 @@ import PureComponent from './PureComponent';
 var React = require('react');
 import {Box} from '@material-ui/core';
 require('react-resizable/css/styles.css');
-var getColumns = require('./views/Columns');
+import getColumns from './views/Columns.js';
 import SampleZoomIndicator from './views/SampleZoomIndicator';
 
 // Styles
@@ -28,4 +28,4 @@ var getSpreadsheet = columnsWrapper => {
 	};
 };
 
-module.exports = getSpreadsheet;
+export default getSpreadsheet;

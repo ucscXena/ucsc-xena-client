@@ -15,9 +15,9 @@ import {
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
-var {createBookmark, getRecent, setRecent} = require('../bookmark');
-var gaEvents = require('../gaEvents');
-var {compactState} = require('../compactData');
+import { createBookmark, getRecent, setRecent } from '../bookmark.js';
+import gaEvents from '../gaEvents.js';
+import { compactState } from '../compactData.js';
 import {hidden} from '../nav';
 import {xenaColor} from '../xenaColor';
 
@@ -216,4 +216,4 @@ class BookmarkMenu extends React.Component {
 	}
 }
 
-module.exports = BookmarkMenu;
+export default BookmarkMenu;

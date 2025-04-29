@@ -52,7 +52,7 @@ import {
 	TextField,
 	Typography,
 } from '@material-ui/core';
-var {categoryMore} = require("../colorScales");
+import { categoryMore } from '../colorScales.js';
 import {xenaColor} from '../xenaColor';
 import {xenaTheme} from '../xenaTheme';
 
@@ -764,4 +764,4 @@ class VizSettings extends React.Component {
 	}
 }
 
-module.exports = VizSettings;
+export default VizSettings;

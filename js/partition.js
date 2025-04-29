@@ -45,8 +45,4 @@ function offsets(n, sep, sizes) {
 	});
 }
 
-module.exports = {
-	bysize,
-	equally,
-	offsets
-};
+export { bysize, equally, offsets };

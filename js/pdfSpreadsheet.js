@@ -1,10 +1,9 @@
-var styles = require('./spreadsheetStyles');
-var widgets = require('./columnWidgets');
-
-require('./pdfMutationVector');
-require('./pdfDenseMatrix');
-require('./pdfSegmented');
-require('./pdfSamples');
+import * as styles from './spreadsheetStyles.js';
+import * as widgets from './columnWidgets.js';
+import './pdfMutationVector.js';
+import './pdfDenseMatrix.js';
+import './pdfSegmented.js';
+import './pdfSamples.js';
 var _ = require('./underscore_ext').default;
 import {drawRefGeneExons} from './refGeneExons';
 import {showPosition, annotationHeight, positionHeight} from './views/Column';

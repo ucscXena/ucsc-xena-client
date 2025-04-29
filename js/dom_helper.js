@@ -122,19 +122,4 @@ function loadingCircle() {
 	return div;
 }
 
-module.exports = {
-	elt,
-	hrefLink,
-	labelValueNode,
-	valueNode,
-	sectionNode,
-	stripHTML,
-	stripScripts,
-	tableCreate,
-	setTableCellValue,
-	queryStringToJSON,
-	JSONToqueryString,
-	stringToDOM,
-	append,
-	loadingCircle
-};
+export { elt, hrefLink, labelValueNode, valueNode, sectionNode, stripHTML, stripScripts, tableCreate, setTableCellValue, queryStringToJSON, JSONToqueryString, stringToDOM, append, loadingCircle };

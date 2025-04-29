@@ -493,12 +493,4 @@ function canPickSamples(columns, data, index, samples, columnOrder, id, si) {
 	return canSubsort && sortable(columns[id], data[id], index[id], samples, si);
 }
 
-module.exports = {
-	searchSamples,
-	treeToString,
-	remapFields,
-	pickSamplesFilter,
-	canPickSamples,
-	parse,
-	invert
-};
+export { searchSamples, treeToString, remapFields, pickSamplesFilter, canPickSamples, parse, invert };

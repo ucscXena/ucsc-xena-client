@@ -4,7 +4,7 @@
 // js to binary objects (in the case of migrating from old schema).
 
 var _ = require('./underscore_ext').default;
-var arrays = require('./arrays');
+import * as arrays from './arrays.js';
 import {hfcSync, hfcCompress} from './hfc';
 var wasm = require('ucsc-xena-wasm');
 import {listToBitmap} from './models/bitmap';
@@ -264,7 +264,4 @@ var expandState = state =>
 		expandSamples(reorderSamples(expandSurvival(expandData(state)))) :
 		of(state);
 
-module.exports = {
-	compactState,
-	expandState
-};
+export { compactState, expandState };

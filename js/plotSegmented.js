@@ -3,13 +3,13 @@ var _ = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');
-var BandLegend = require('./views/BandLegend');
-var {rxEvents} = require('./react-utils');
-var widgets = require('./columnWidgets');
+import BandLegend from './views/BandLegend.js';
+import { rxEvents } from './react-utils.js';
+import * as widgets from './columnWidgets.js';
 var util = require('./util').default;
-var CanvasDrawing = require('./CanvasDrawing');
-var {drawSegmented, toYPx} = require('./drawSegmented');
-var {chromPositionFromScreen} = require('./exonLayout');
+import CanvasDrawing from './CanvasDrawing.js';
+import { drawSegmented, toYPx } from './drawSegmented.js';
+import { chromPositionFromScreen } from './exonLayout.js';
 import {colorScale} from './colorScales';
 
 // Since there are multiple components in the file we have to use hot

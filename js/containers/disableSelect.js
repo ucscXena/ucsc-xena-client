@@ -21,4 +21,4 @@ function disableSelect(Component) {
 	};
 }
 
-module.exports = disableSelect;
+export default disableSelect;

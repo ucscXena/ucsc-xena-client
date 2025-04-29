@@ -2,30 +2,32 @@ import PureComponent from '../PureComponent';
 var util = require('../util').default;
 var React = require('react');
 var _ = require('../underscore_ext').default;
-var DefaultTextInput = require('./DefaultTextInput');
-var DragSelect = require('./DragSelect');
-var SpreadSheetHighlight = require('../SpreadSheetHighlight');
-var ResizeOverlay = require('./ResizeOverlay');
-var widgets = require('../columnWidgets');
+import DefaultTextInput from './DefaultTextInput.js';
+import DragSelect from './DragSelect.js';
+import SpreadSheetHighlight from '../SpreadSheetHighlight.js';
+import ResizeOverlay from './ResizeOverlay.js';
+import * as widgets from '../columnWidgets.js';
 import columnZoom from '../columnZoom';
-var aboutDatasetMenu = require('./aboutDatasetMenu');
+import aboutDatasetMenu from './aboutDatasetMenu.js';
 import spinner from '../ajax-loader.gif';
-var mutationVector = require('../models/mutationVector');
+import * as mutationVector from '../models/mutationVector.js';
+
 //var ValidatedInput = require('./ValidatedInput');
-var Crosshair = require('./Crosshair');
-var parsePos = require('../parsePos');
-var {categoryMore} = require('../colorScales');
+import Crosshair from './Crosshair.js';
+
+import parsePos from '../parsePos.js';
+import { categoryMore } from '../colorScales.js';
 var {publicServers} = require('../defaultServers');
 import {Box, Divider, Icon, IconButton, Menu, MenuItem, Tooltip} from '@material-ui/core';
-var ColCard = require('./ColCard');
-var {ChromPosition} = require('../ChromPosition');
+import ColCard from './ColCard.js';
+import { ChromPosition } from '../ChromPosition.js';
 import RefGeneAnnotation from '../refGeneExons';
 import {GeneLabelAnnotation, geneLableFont} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
-var gaEvents = require('../gaEvents');
+import gaEvents from '../gaEvents.js';
 import crosshair from './cursor.png';
-var ZoomHelpTag = require('./ZoomHelpTag');
-var ZoomOverlay = require('./ZoomOverlay');
+import ZoomHelpTag from './ZoomHelpTag.js';
+import ZoomOverlay from './ZoomOverlay.js';
 import config from '../config';
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 import {setUserCodes} from '../models/denseMatrix';
@@ -371,7 +373,7 @@ var showGeneLabel = column =>
 	(column.fieldType === 'geneProbes' &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon');
 
-	// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
+// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
 // annotation or sample zoom), offset x, offset y, samples height
 // Select mapped to: direction, data start and data end
 var zoomTranslateSelection = (props, selection, zone) => {

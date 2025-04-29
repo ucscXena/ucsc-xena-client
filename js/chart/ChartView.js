@@ -21,4 +21,4 @@ class ChartView extends PureComponent {
 	}
 }
 
-module.exports = ChartView;
+export default ChartView;

@@ -20,11 +20,11 @@ import authController from './controllers/auth';
 import PageContainer from './containers/PageContainer';
 import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
-var {initialState} = require('./initialState');
+import { initialState } from './initialState.js';
 
 import connector from './connector'; // see webpack alias for this import
-const createStore = require('./store');
-const xenaWasm = require('./xenaWasm');
+import createStore from './store.js';
+import * as xenaWasm from './xenaWasm.js';
 
 // Hot load controllers. Note that hot loading won't work if one of the methods
 // is captured in a closure or variable which we can't access.  References to

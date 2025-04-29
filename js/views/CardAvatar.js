@@ -57,4 +57,4 @@ class CardAvatar extends React.Component {
 	}
 }
 
-module.exports = CardAvatar;
+export default CardAvatar;

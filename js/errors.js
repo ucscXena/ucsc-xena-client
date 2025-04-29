@@ -42,9 +42,4 @@ function logError(err) {
 }
 
 
-module.exports = {
-	CompositeError,
-	compositeError,
-	getErrorProps,
-	logError
-};
+export { CompositeError, compositeError, getErrorProps, logError };

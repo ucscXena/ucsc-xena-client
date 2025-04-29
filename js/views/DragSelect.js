@@ -86,4 +86,4 @@ class DragSelect extends React.Component {
 	}
 }
 
-module.exports = DragSelect;
+export default DragSelect;

@@ -27,4 +27,4 @@ class NameColumn extends React.PureComponent {
 	}
 }
 
-module.exports = NameColumn;
+export default NameColumn;

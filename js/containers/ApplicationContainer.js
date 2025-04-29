@@ -1,25 +1,27 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
-var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
-var ChartView = require('../chart/ChartView');
+import { getSpreadsheetContainer } from './SpreadsheetContainer.js';
+import ChartView from '../chart/ChartView.js';
 import Column from '../views/Column';
 var _ = require('../underscore_ext').default;
-var {rxEvents} = require('../react-utils');
+import { rxEvents } from '../react-utils.js';
 var Rx = require('../rx').default;
+
 // Spreadsheet options
-var addTooltip = require('./addTooltip');
-var addWizardColumns = require('./addWizardColumns');
-var addVizEditor = require('./addVizEditor');
-var makeSortable = require('./makeSortable');
-var addColumnAdd = require('./addColumnAdd');
-var addLegend = require('./addLegend');
-var addHelp = require('./addHelp');
-var getSpreadsheet = require('../Spreadsheet');
-var Application = require('../Application');
-var {schemaCheckThrow} = require('../schemaCheck');
+import addTooltip from './addTooltip.js';
+
+import addWizardColumns from './addWizardColumns.js';
+import addVizEditor from './addVizEditor.js';
+import makeSortable from './makeSortable.js';
+import addColumnAdd from './addColumnAdd.js';
+import addLegend from './addLegend.js';
+import addHelp from './addHelp.js';
+import getSpreadsheet from '../Spreadsheet.js';
+import Application from '../Application.js';
+import { schemaCheckThrow } from '../schemaCheck.js';
 import wrapLaunchHelper from '../LaunchHelper';
-var migrateState = require('../migrateState');
-var {expandState} = require('../compactData');
+import migrateState from '../migrateState.js';
+import { expandState } from '../compactData.js';
 import selector from '../appSelector';
 
 function getFieldFormat(uuid, columns, data) {

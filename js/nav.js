@@ -25,7 +25,7 @@ var {servers: {localHub}} = require('./defaultServers');
 import * as store from './hiddenOpts';
 import Rx from './rx';
 import meta from './meta';
-var BookmarkMenu = require('./views/BookmarkMenu');
+import BookmarkMenu from './views/BookmarkMenu.js';
 import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
 import {xenaColor} from './xenaColor';
 import {xenaNavTheme} from "./xenaThemeNav";

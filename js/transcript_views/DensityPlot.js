@@ -79,4 +79,4 @@ class DensityPlot extends React.PureComponent {
  	}
 }
 
-module.exports = {DensityPlot, bottomColor, topColor, plotWidth};
+export { DensityPlot, bottomColor, topColor, plotWidth };

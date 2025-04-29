@@ -59,8 +59,4 @@ function allExons(transcripts) {
 			_.mmap(exonStarts, exonEnds, (start, end) => ({start, end})));
 }
 
-module.exports = {
-	allExons,
-	exonGroups,
-	intronRegions
-};
+export { allExons, exonGroups, intronRegions };

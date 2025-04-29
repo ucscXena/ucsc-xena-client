@@ -278,6 +278,5 @@ function vgcanvas(el, vgw, vgh) {
 		translate,
 		drawRectangles
 	};
-};
-
-module.exports = vgcanvas;
+}
+export default vgcanvas;

@@ -33,4 +33,4 @@ var getColumns = wrapperFn => {
 	};
 };
 
-module.exports = getColumns;
+export default getColumns;

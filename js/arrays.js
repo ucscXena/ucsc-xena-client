@@ -28,7 +28,4 @@ function str2ab(str) {
 	return buf;
 }
 
-module.exports = {
-	ab2str,
-	str2ab
-};
+export { ab2str, str2ab };

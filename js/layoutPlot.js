@@ -97,8 +97,4 @@ function pxTransformFlatmap(layout, fn) {
 	return res;
 }
 
-module.exports = {
-	pxTransformInterval,
-	pxTransformEach,
-	pxTransformFlatmap
-};
+export { pxTransformInterval, pxTransformEach, pxTransformFlatmap };

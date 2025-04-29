@@ -889,15 +889,4 @@ function standardDeviation(values, avg) {
 	return Math.sqrt(squareDiffSum / count);
 }
 
-module.exports = {
-	chartOptions,
-	densityChart,
-	standardDeviation,
-	average,
-	columnChartOptions,
-	boxplotOptions,
-	dotOptions,
-	violinOptions,
-	scatterChart,
-	addSeriesToColumn
-};
+export { chartOptions, densityChart, standardDeviation, average, columnChartOptions, boxplotOptions, dotOptions, violinOptions, scatterChart, addSeriesToColumn };

@@ -14,7 +14,8 @@ var React = require('react');
 var _ = require('./underscore_ext').default;
 
 // App dependencies
-var SheetStatus = require('./views/SheetStatus');
+import SheetStatus from './views/SheetStatus.js';
+
 import XActionButton from './views/XActionButton';
 import {xenaColor} from './xenaColor';
 

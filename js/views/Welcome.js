@@ -93,4 +93,4 @@ class Welcome extends Component {
 	}
 }
 
-module.exports = Welcome;
+export default Welcome;

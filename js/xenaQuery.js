@@ -5,7 +5,7 @@ import {concatBins, parse} from './binpackJSON';
 import {hfcCompress} from './hfc';
 var Rx = require('./rx').default;
 var _ = require('./underscore_ext').default;
-var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
+import { permuteCase, permuteBitCount, prefixBitLimit } from './permuteCase.js';
 // Load all query files as a map of strings.
 import * as qs from './loadXenaQueries';
 var wasm = require('ucsc-xena-wasm');

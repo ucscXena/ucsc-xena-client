@@ -57,4 +57,4 @@ class BandLegend extends React.Component {
 	}
 }
 
-module.exports = BandLegend;
+export default BandLegend;

@@ -34,4 +34,4 @@ class XRadioMeta extends React.Component {
 	}
 }
 
-module.exports = XRadioMeta;
+export default XRadioMeta;

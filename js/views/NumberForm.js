@@ -1,7 +1,7 @@
 var React = require('react');
 import {TextField} from '@material-ui/core';
 var _ = require('../underscore_ext').default;
-var {rxEvents} = require('../react-utils');
+import { rxEvents } from '../react-utils.js';
 
 var isValid = _.curry((min, max, value) => {
 	var v = value.trim(),
@@ -66,4 +66,4 @@ class NumberForm extends React.Component {
 	}
 }
 
-module.exports = NumberForm;
+export default NumberForm;

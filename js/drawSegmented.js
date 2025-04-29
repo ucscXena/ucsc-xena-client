@@ -230,11 +230,5 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 };
 
 
-module.exports = {
-	findRegions,
-	drawSegmented: drawSegmentedByMethod(drawImgSegmentsPixel),
-	radius,
-	minVariantHeight,
-	toYPx,
-	labelFont
-};
+const drawSegmented = drawSegmentedByMethod(drawImgSegmentsPixel);
+export { findRegions, drawSegmented, radius, minVariantHeight, toYPx, labelFont };

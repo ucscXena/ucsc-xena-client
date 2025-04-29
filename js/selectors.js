@@ -8,4 +8,4 @@ function createFmapSelector(selector, resultFn) {
 	return state => resultFunc(selector(state));
 }
 
-module.exports = {createFmapSelector};
+export { createFmapSelector };

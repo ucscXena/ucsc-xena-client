@@ -5,7 +5,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import {Box} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
-var lcs = require('../lcs');
+import lcs from '../lcs.js';
 import XAutosuggestInput from './XAutosuggestInput';
 
 // Styles
@@ -218,4 +218,4 @@ class DiseaseSuggest extends PureComponent {
 	}
 }
 
-module.exports = DiseaseSuggest;
+export default DiseaseSuggest;

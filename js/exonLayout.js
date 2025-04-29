@@ -181,7 +181,7 @@ function chromRangeFromScreen(layout, start, end) {
 	return layout.reversed ?
 		[toPos(px0r, chrN, end), toPos(px0, chrNr, start)] :
 		[toPos(px0, chrN, start), toPos(px0r, chrNr, end)];
-};
+}
 
 // This isn't precisely correct, but should be good enough. Gives us roughly
 // the coordinate in the middle of the pixel.
@@ -191,16 +191,7 @@ var chromPositionFromScreen = (layout, x) =>
 // closed coord len
 var chrlen = ([s, e]) => e - s + 1;
 
-module.exports = {
-	chromLayout,
-	intronLayout,
-	screenLayout: toScreen,
-	baseLen,
-	pxLen,
-	layout,
-	pad,
-	zoomCount: (layout, start, end) =>
-		_.sum(applyClip(layout.chrom, {start, end}).map(chrlen)),
-	chromPositionFromScreen,
-	chromRangeFromScreen
-};
+const zoomCount = (layout, start, end) =>
+    _.sum(applyClip(layout.chrom, {start, end}).map(chrlen));
+
+export { chromLayout, intronLayout, toScreen as screenLayout, baseLen, pxLen, layout, pad, zoomCount, chromPositionFromScreen, chromRangeFromScreen };

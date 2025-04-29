@@ -1,4 +1,4 @@
-var {mapToBitmap} = require('../models/bitmap');
+import { mapToBitmap } from '../models/bitmap.js';
 var _ = require('../underscore_ext').default;
 
 /**
@@ -44,8 +44,4 @@ function computePctExpr(expressedCount, totalCount) {
 	return expressedCount / totalCount;
 }
 
-module.exports = {
-	applyExpression,
-	computeAvgExpr,
-	computePctExpr,
-};
+export { applyExpression, computeAvgExpr, computePctExpr };

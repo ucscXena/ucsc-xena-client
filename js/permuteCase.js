@@ -31,8 +31,4 @@ var prefixBitLimit = _.curry((n, str) => {
 	return str.slice(0, l);
 });
 
-module.exports =  {
-	prefixBitLimit,
-	permuteCase,
-	permuteBitCount
-};
+export { prefixBitLimit, permuteCase, permuteBitCount };

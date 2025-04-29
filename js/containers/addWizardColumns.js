@@ -3,10 +3,10 @@ import PureComponent from '../PureComponent';
 import {Icon, IconButton} from '@material-ui/core';
 var React = require('react');
 var _ = require('../underscore_ext').default;
-var CohortOrDisease = require('../views/CohortOrDisease');
-var VariableSelect = require('../views/VariableSelect');
-var GhostVariableSelect = require('../views/GhostVariableSelect');
-var getStepperState = require('./getStepperState');
+import CohortOrDisease from '../views/CohortOrDisease.js';
+import VariableSelect from '../views/VariableSelect.js';
+import GhostVariableSelect from '../views/GhostVariableSelect.js';
+import getStepperState from './getStepperState.js';
 var uuid = require('../uuid');
 var Rx = require('../rx').default;
 import {computeSettings, typeWidth} from '../models/columns';
@@ -241,4 +241,4 @@ function addWizardColumns(Component) {
 	};
 }
 
-module.exports = addWizardColumns;
+export default addWizardColumns;

@@ -1,7 +1,7 @@
 
 var _ = require('underscore');
 var ehmutable = require('ehmutable');
-var defer = require('./defer');
+import defer from './defer.js';
 // react fiber code creates data structures with cycles, which breaks
 // this fast equality check. Need to modify it to check for cycles
 // (potentially defeating the performance boost) or add special handling of

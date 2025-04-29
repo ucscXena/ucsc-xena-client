@@ -1,5 +1,5 @@
 import {FormControl, MenuItem, TextField} from '@material-ui/core';
-var {el, label, textNode} = require('./react-hyper');
+import { el, label, textNode } from './react-hyper.js';
 var {get} = require('../underscore_ext').default;
 
 var menuItem = el(MenuItem);

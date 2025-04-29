@@ -102,4 +102,4 @@ var drawSamples = (vg, props) => {
 	});
 };
 
-module.exports = {drawSamples, stripeHeight};
+export { drawSamples, stripeHeight };

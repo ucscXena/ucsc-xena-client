@@ -61,4 +61,4 @@ class ZoomHelpTag extends React.Component {
 	}
 }
 
-module.exports = ZoomHelpTag;
+export default ZoomHelpTag;

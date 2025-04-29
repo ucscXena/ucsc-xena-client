@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
 var {RGBToHex} = require ('../color_helper').default;
 var _ = require('../underscore_ext').default;
-var gaEvents = require('../gaEvents');
+import gaEvents from '../gaEvents.js';
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
 import statsView from './statsView';
@@ -21,8 +21,8 @@ import {
 import {div, el, fragment, label, textNode} from './react-hyper';
 import * as colorScales from '../colorScales';
 import classNames from 'classnames';
-var {applyExpression} = require('./singleCell');
-var {reOrderFields} = require('../models/denseMatrix');
+import { applyExpression } from './singleCell.js';
+import { reOrderFields } from '../models/denseMatrix.js';
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
 import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,

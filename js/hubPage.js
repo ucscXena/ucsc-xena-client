@@ -1,5 +1,5 @@
 
-require('./base');
+import './base.js';
 import {
 	Box,
 	Button,
@@ -20,7 +20,7 @@ import xenaQuery from './xenaQuery';
 var {logout, testHost, testLogin} = xenaQuery;
 var _ = require('./underscore_ext').default;
 var {servers: {localHub}, serverNames} = require('./defaultServers');
-var {parseServer, getHubParams} = require('./hubParams');
+import { parseServer, getHubParams } from './hubParams.js';
 import nav from './nav';
 import XTypography, {XTypographyVariants} from './views/XTypography';
 import {xenaColor} from './xenaColor';

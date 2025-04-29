@@ -1,8 +1,8 @@
 var React = require('react');
-var gaEvents = require('../gaEvents');
+import gaEvents from '../gaEvents.js';
 var _ = require('../underscore_ext').default;
-var getLabel = require('../getLabel');
-var {supportsEdit} = require('../models/fieldSpec');
+import getLabel from '../getLabel.js';
+import { supportsEdit } from '../models/fieldSpec.js';
 var {addCommas} = require('../util').default;
 import {canPickSamples, pickSamplesFilter} from '../models/searchSamples';
 
@@ -237,4 +237,4 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => (class extends React.Comp
 	}
 });
 
-module.exports = {getSpreadsheetContainer};
+export { getSpreadsheetContainer };

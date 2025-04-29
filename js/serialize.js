@@ -1,4 +1,4 @@
-var arrays = require('./arrays');
+import * as arrays from './arrays.js';
 var wasm = require('ucsc-xena-wasm');
 import {hfcSync} from './hfc';
 

@@ -57,12 +57,4 @@ const steps = [
 
 const NONE_STR = 'None of these';
 
-module.exports = {
-	dataTypeOptions: dataTypesOpts,
-	dataSubType,
-	steps,
-	NONE_STR,
-	DATA_TYPE,
-	FILE_FORMAT,
-	PAGES,
-};
+export { dataTypesOpts as dataTypeOptions, dataSubType, steps, NONE_STR, DATA_TYPE, FILE_FORMAT, PAGES };

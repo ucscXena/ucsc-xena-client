@@ -1,3 +1,2 @@
-module.exports = {
-	ActionCreators: require('redux-devtools-instrument').ActionCreators
-};
+const ActionCreators = require('redux-devtools-instrument').ActionCreators;
+export { ActionCreators };

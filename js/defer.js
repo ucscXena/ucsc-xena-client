@@ -34,4 +34,4 @@ if (hasPostMessage) {
 	window.addEventListener("message", handleMessage, false);
 }
 
-module.exports = hasPostMessage ? setZeroTimeout : _.defer;
+export default hasPostMessage ? setZeroTimeout : _.defer;

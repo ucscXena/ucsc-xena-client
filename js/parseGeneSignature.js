@@ -21,4 +21,4 @@ function parse(str) {
 	return;
 }
 
-module.exports = parse;
+export default parse;

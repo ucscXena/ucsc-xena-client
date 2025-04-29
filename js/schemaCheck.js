@@ -29,12 +29,11 @@ var schemaCheck = state =>
 				isNumber(zoom.height)))) &&
 	state;
 
-module.exports = {
-	schemaCheck,
-	schemaCheckThrow: state => {
-		if (!schemaCheck(state)) {
-			throw new Error('invalid state schema');
-		}
-		return state;
-	}
+const schemaCheckThrow = state => {
+    if (!schemaCheck(state)) {
+        throw new Error('invalid state schema');
+    }
+    return state;
 };
+
+export { schemaCheck, schemaCheckThrow };

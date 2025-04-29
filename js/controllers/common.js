@@ -4,16 +4,17 @@
 var Rx = require('../rx').default;
 import xenaQuery from '../xenaQuery';
 var _ = require('../underscore_ext').default;
-var {reifyErrors, collectResults} = require('./errors');
+import { reifyErrors, collectResults } from './errors.js';
 import fetch from '../fieldFetch';
-var kmModel = require('../models/km');
-var {signatureField} = require('../models/fieldSpec');
+import * as kmModel from '../models/km.js';
+import { signatureField } from '../models/fieldSpec.js';
 var {servers: allServers, publicServers} = require('../defaultServers');
-var gaEvents = require('../gaEvents');
+import gaEvents from '../gaEvents.js';
 import {userServers} from '../models/servers';
 import {hfc} from '../hfc';
+
 // pick up signature fetch
-require('../models/signatures');
+import '../models/signatures.js';
 
 import Worker from 'worker-loader!./cluster-worker';
 
@@ -248,16 +249,4 @@ function fetchSurvival(serverBus, state) {
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
-module.exports = {
-	fetchCohortData,
-	fetchColumnData,
-	fetchClustering,
-	fetchDatasets,
-	fetchSamples,
-	fetchSurvival,
-	resetZoom,
-	samplesQuery,
-	setCohort,
-	userServers,
-	datasetQuery
-};
+export { fetchCohortData, fetchColumnData, fetchClustering, fetchDatasets, fetchSamples, fetchSurvival, resetZoom, samplesQuery, setCohort, userServers, datasetQuery };

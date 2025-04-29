@@ -2,7 +2,7 @@ import PureComponent from '../PureComponent';
 var _ = require('../underscore_ext').default;
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
-var highchartsHelper =  require ('./highcharts_helper');
+import * as highchartsHelper from './highcharts_helper.js';
 require('highcharts/modules/boost')(Highcharts);
 require('highcharts/modules/heatmap')(Highcharts);
 import {xenaColor} from '../xenaColor';
@@ -13,8 +13,8 @@ import {div, el} from './react-hyper';
 import compStyles from "./highchartView.module.css";
 
 import {kde} from '../models/kde';
-var fvc = require('./fvc');
-var {groupValues} = require('./dataUtils');
+import * as fvc from './fvc.js';
+import { groupValues } from './dataUtils.js';
 var defaultColor = xenaColor.BLUE_PRIMARY;
 
 // Implement a custom 'legendRadius' to override the marker.radius

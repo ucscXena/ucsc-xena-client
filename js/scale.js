@@ -49,7 +49,4 @@ function linearTicks(start, end) {
 	return _.range(Math.ceil(low / t), Math.floor(high / t) + 1).map(i => i * t);
 }
 
-module.exports = {
-	linear: linear,
-	linearTicks: linearTicks
-};
+export { linear, linearTicks };

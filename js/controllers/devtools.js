@@ -152,7 +152,4 @@ function createDevTools(children) {
 	return DevTools;
 }
 
-module.exports = {
-	instrument,
-	createDevTools
-};
+export { instrument, createDevTools };

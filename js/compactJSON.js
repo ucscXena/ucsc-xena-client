@@ -96,4 +96,4 @@ function parse(x) {
 	return resolve(refd);
 }
 
-module.exports = {stringify, parse};
+export { stringify, parse };

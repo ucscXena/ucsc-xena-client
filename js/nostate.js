@@ -1,5 +1,5 @@
 
-module.exports = storageKey => {
+export default storageKey => {
 	var reset = location.hash === '#nostate',
 		hasStorage = sessionStorage && sessionStorage[storageKey];
 

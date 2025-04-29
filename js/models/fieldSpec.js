@@ -21,8 +21,4 @@ var signatureField = (fieldName, opts) => ({
 	...opts
 });
 
-module.exports = {
-	setFieldType,
-	signatureField,
-	supportsEdit
-};
+export { setFieldType, signatureField, supportsEdit };

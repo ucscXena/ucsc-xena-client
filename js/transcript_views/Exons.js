@@ -115,8 +115,4 @@ class Exons extends React.PureComponent {
 	}
 }
 
-module.exports = {
-	Exons,
-	box,
-	renderExon
-};
+export { Exons, box, renderExon };

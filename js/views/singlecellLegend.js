@@ -1,7 +1,8 @@
 // singlecell legend
 
-var Legend = require('./Legend');
-var BandLegend = require('./BandLegend');
+import Legend from './Legend.js';
+
+import BandLegend from './BandLegend.js';
 import {el, span} from '../chart/react-hyper';
 import {colorScale} from '../colorScales';
 import {cmpCodes} from '../models/singlecell';

@@ -1,8 +1,8 @@
 
-var Tooltip = require('../views/Tooltip');
+import Tooltip from '../views/Tooltip.js';
 import PureComponent from '../PureComponent';
 var React = require('react');
-var {rxEvents} = require('../react-utils');
+import { rxEvents } from '../react-utils.js';
 import meta from '../meta';
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
@@ -54,4 +54,4 @@ function addTooltip(Component) {
 	};
 }
 
-module.exports = addTooltip;
+export default addTooltip;

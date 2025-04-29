@@ -4,7 +4,7 @@ var {publicServers} = require('./defaultServers');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
-module.exports = createSelector(
+export default createSelector(
 		state => _.pluck(state.columns, 'dsID'),
 		state => state.hasPrivateSamples,
 		(dsIDs, hasPrivateSamples) =>

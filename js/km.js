@@ -249,7 +249,4 @@ function logranktest (allGroupsRes, groupsTte, groupsEv) {
 }
 
 
-module.exports = {
-	compute: compute,
-	logranktest: logranktest
-};
+export { compute, logranktest };

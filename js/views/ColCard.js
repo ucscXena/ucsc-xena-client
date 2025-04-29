@@ -20,7 +20,8 @@ import {xenaColor} from '../xenaColor';
 var classNames = require('classnames');
 
 // App dependencies
-var CardAvatar = require('./CardAvatar');
+import CardAvatar from './CardAvatar.js';
+
 import XColumnDivider from './XColumnDivider';
 
 // Styles
@@ -81,4 +82,4 @@ class ColCard extends React.Component {
 	}
 }
 
-module.exports = ColCard;
+export default ColCard;

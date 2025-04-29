@@ -1,5 +1,5 @@
 var _ = require('./underscore_ext').default;
-var xenaWasm = require('./xenaWasm');
+import * as xenaWasm from './xenaWasm.js';
 
 /*eslint-disable no-unused-vars */
 // [bin dictionary]

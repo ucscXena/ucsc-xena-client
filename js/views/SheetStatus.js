@@ -35,4 +35,4 @@ class SheetStatus extends React.Component {
 	}
 }
 
-module.exports = SheetStatus;
+export default SheetStatus;

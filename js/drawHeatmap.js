@@ -1,9 +1,9 @@
 
 var _ = require('./underscore_ext').default;
-var partition = require('./partition');
+import * as partition from './partition.js';
 import {colorScale} from './colorScales';
 var colorHelper = require('./color_helper').default;
-var xenaWasm = require('./xenaWasm');
+import * as xenaWasm from './xenaWasm.js';
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin

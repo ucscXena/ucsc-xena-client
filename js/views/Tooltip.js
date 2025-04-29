@@ -158,4 +158,4 @@ class Tooltip extends PureComponent {
 	}
 }
 
-module.exports = Tooltip;
+export default Tooltip;

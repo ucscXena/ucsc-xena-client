@@ -1,13 +1,13 @@
 import query from './query';
 import {make, mount, compose} from './utils';
 import fetch from '../fieldFetch';
-var {samplesQuery} = require('./common');
+import { samplesQuery } from './common.js';
 import xenaQuery from '../xenaQuery';
 var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList, datasetMetadata, fetchDefaultStudy} = xenaQuery;
 var {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
 	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
 	uniq, updateIn} = require('../underscore_ext').default;
-var {userServers} = require('./common');
+import { userServers } from './common.js';
 var Rx = require('../rx').default;
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
@@ -16,7 +16,7 @@ import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
 	setChartType, studyList, userServerCohorts} from '../models/singlecell';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
-var widgets = require('../columnWidgets');
+import * as widgets from '../columnWidgets.js';
 import {isPhenotype} from '../models/dataType';
 
 // Number of image layers in display

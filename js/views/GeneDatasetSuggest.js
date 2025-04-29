@@ -5,7 +5,7 @@ var {identity, isEqual, isObject, memoize1, mmap} =
 	require('../underscore_ext').default;
 import XAutosuggestInput from './XAutosuggestInput';
 var {Observable, Scheduler} = require('../rx').default;
-var {rxEvents} = require('../react-utils');
+import { rxEvents } from '../react-utils.js';
 import xenaQuery from '../xenaQuery';
 var {matchPartialField} = xenaQuery;
 import {el} from '../chart/react-hyper';

@@ -2,15 +2,15 @@
 // Domain logic for mutation datasets.
 
 var _ = require('../underscore_ext').default;
-var widgets = require('../columnWidgets');
+import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
 var Rx = require('../rx').default;
-var exonLayout = require('../exonLayout');
+import * as exonLayout from '../exonLayout.js';
 var intervalTree = require('static-interval-tree');
-var {pxTransformInterval} = require('../layoutPlot');
+import { pxTransformInterval } from '../layoutPlot.js';
 var {hexToRGB, colorStr} = require('../color_helper').default;
 var jStat = require('jStat').jStat;
-var parsePos = require('../parsePos');
+import parsePos from '../parsePos.js';
 import sortOrder from './sparseSortOrder';
 
 //function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
@@ -677,15 +677,4 @@ widgets.data.add('SV', sortOrder(cmp));
 widgets.transform.add('SV', svDataToDisplay);
 widgets.download.add('SV', download);
 
-module.exports = {
-	features,
-	chromFromAlt,
-	posFromAlt,
-	structuralVariantClass,
-	joinedVariantDirection,
-	chromColorGB,
-	SNVPvalue,
-	fetch,
-	impact,
-	getSNVEffect
-};
+export { features, chromFromAlt, posFromAlt, structuralVariantClass, joinedVariantDirection, chromColorGB, SNVPvalue, fetch, impact, getSNVEffect };

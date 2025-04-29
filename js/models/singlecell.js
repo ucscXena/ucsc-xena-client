@@ -3,8 +3,8 @@ var {assoc, assocIn, deepMerge, every, find, findValue, first,
 	mapObject, memoize1, merge, min, max, mmap, object, omit, pairs, pick,
 	pluck, range, some, sorted, sortByI, updateIn, uniq, values} =
 	require('../underscore_ext').default;
-var {userServers} = require('./servers');
-var {categoryMore} = require('../colorScales');
+import { userServers } from './servers.js';
+import { categoryMore } from '../colorScales.js';
 
 var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
 

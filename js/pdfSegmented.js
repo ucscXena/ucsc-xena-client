@@ -1,6 +1,6 @@
-var {drawSegmented} = require('./drawSegmented.js');
+import { drawSegmented } from './drawSegmented.js';
 var _ = require('./underscore_ext').default;
-var widgets = require('./columnWidgets');
+import * as widgets from './columnWidgets.js';
 
 var pdf = (id, column, vg, state, i) => {
 	let {zoom, samples} = state,

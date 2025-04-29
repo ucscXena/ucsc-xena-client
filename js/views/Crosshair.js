@@ -112,5 +112,5 @@ class Crosshair extends PureComponent {
 	}
 }
 
-module.exports = Crosshair;
+export default Crosshair;
 

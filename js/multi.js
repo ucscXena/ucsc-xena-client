@@ -40,4 +40,4 @@ function multi(dispatchfn, arity) {
 	return fn;
 }
 
-module.exports = multi;
+export default multi;

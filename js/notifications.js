@@ -19,8 +19,4 @@ function disableNotification(notes, note) {
 	return _.assoc(notes, note, true);
 }
 
-module.exports = {
-	getNotifications,
-	disableNotification,
-	setNotifications
-};
+export { getNotifications, disableNotification, setNotifications };

@@ -1,6 +1,6 @@
-var {drawMutations, drawSV} = require('./drawMutations');
+import { drawMutations, drawSV } from './drawMutations.js';
 var _ = require('./underscore_ext').default;
-var widgets = require('./columnWidgets');
+import * as widgets from './columnWidgets.js';
 
 var pdf = _.curry((draw, id, column, vg, state, i) => {
 	let {zoom} = state,

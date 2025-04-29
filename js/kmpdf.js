@@ -7,7 +7,7 @@
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
 var _ = require('./underscore_ext').default;
-var {linear, linearTicks} = require('./scale');
+import { linear, linearTicks } from './scale.js';
 
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
 var bounds = x => [0, _.max(x)];
@@ -164,6 +164,5 @@ function download({colors, labels, curves}) {
 			document.body.removeChild(a);
 		});
 	});
-};
-
-module.exports = download;
+}
+export default download;

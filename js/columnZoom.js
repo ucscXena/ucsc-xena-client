@@ -7,8 +7,9 @@
 
 
 // Dependencies
-var {chromRangeFromScreen} = require('./exonLayout');
-var multi = require('./multi');
+import { chromRangeFromScreen } from './exonLayout.js';
+
+import multi from './multi.js';
 var _ = require('./underscore_ext').default;
 
 // Selectors

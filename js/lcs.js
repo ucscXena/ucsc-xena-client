@@ -23,4 +23,4 @@ function LCSLength(X, Y) {
     return C[m][n];
 }
 
-module.exports = LCSLength;
+export default LCSLength;

@@ -11,11 +11,12 @@
 //
 // We introduce a new 'labels' call that allocates a context for a set of textCenteredPushRight
 // calls, and render via React when the context exits.
-var vgcanvas = require('./vgcanvas');
+import vgcanvas from './vgcanvas.js';
+
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-module.exports = (el, vgw, vgh, labelEl) => ({
+export default (el, vgw, vgh, labelEl) => ({
 	...vgcanvas(el, vgw, vgh),
 	clip(x, y, width, height, cb) {
 		cb();

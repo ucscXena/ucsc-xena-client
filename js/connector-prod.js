@@ -5,11 +5,11 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 import LZ from './lz-string';
 import urlParams from './urlParams';
-var {compactState, expandState} = require('./compactData');
-var migrateState = require('./migrateState');
-var {schemaCheckThrow} = require('./schemaCheck');
+import { compactState, expandState } from './compactData.js';
+import migrateState from './migrateState.js';
+import { schemaCheckThrow } from './schemaCheck.js';
 var controlRunner = require('./controlRunner').default;
-var {fetchInlineState, hasInlineState} = require('./inlineState');
+import { fetchInlineState, hasInlineState } from './inlineState.js';
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I
 // suspect.
@@ -97,7 +97,7 @@ function connect({
 	// Kick things off.
 	uiBus.next(['init', ...urlParams()]);
 	return dom;
-};
+}
 
 var {Observable: {of}} = Rx;
 export default function(args) {
@@ -107,4 +107,4 @@ export default function(args) {
 	init.subscribe(
 		savedState => connect({...args, savedState}),
 		savedState => connect({...args, savedState})); // pass error as state
-};
+}

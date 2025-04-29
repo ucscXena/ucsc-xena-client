@@ -1,7 +1,7 @@
 var _ = require('../underscore_ext').default;
-var multi = require('../multi');
-var {colorScale} = require('../colorScales');
-var km = require('../km'); // move km down?
+import multi from '../multi.js';
+import { colorScale } from '../colorScales.js';
+import * as km from '../km.js'; // move km down?
 var {RGBToHex} = require('../color_helper').default;
 //var {segmentAverage} = require('./segmented');
 
@@ -442,4 +442,4 @@ function pickSurvivalVars(cohortFeatures, user) {
 			'patient', _.getIn(user, [`patient`], patient));
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};
+export { makeGroups, pickSurvivalVars, survivalOptions, getSplits };

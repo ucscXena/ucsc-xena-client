@@ -1,5 +1,5 @@
 
-var multi = require('./multi');
+import multi from './multi.js';
 
 var fieldTypeSelector = x => x.fieldType;
 var fieldTypeOrSamplesSelector = (id, x) => id === 'samples' ? 'samples' : x.fieldType;
@@ -21,5 +21,4 @@ index.dflt = () => null;
 avg.dflt = () => null;
 data.dflt = (column, data) => data;
 
-module.exports = {cmp, index, data, transform, avg, download, specialDownload,
-	column, legend, pdf};
+export { cmp, index, data, transform, avg, download, specialDownload, column, legend, pdf };

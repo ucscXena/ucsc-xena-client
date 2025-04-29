@@ -1,4 +1,4 @@
-require('./base');
+import './base.js';
 import {
 	Box,
 	Button,
@@ -24,13 +24,13 @@ var {parseDsID} = xenaQuery;
 import styles from "./Datapages.module.css";
 import nav from './nav';
 var showdown = require('showdown');
-var {stripHTML} = require('./dom_helper');
+import { stripHTML } from './dom_helper.js';
 import treehouseImg from '../images/Treehouse.jpg';
-var {rxEvents} = require('./react-utils');
+import { rxEvents } from './react-utils.js';
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import {defaultHost} from './urlParams';
 var {encodeObject, urlParams} = require('./util').default;
-var {getHubParams} = require('./hubParams');
+import { getHubParams } from './hubParams.js';
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
 import {xenaTheme} from './xenaTheme';

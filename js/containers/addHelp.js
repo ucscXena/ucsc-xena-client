@@ -1,6 +1,6 @@
 
 var React = require('react');
-var HelpBox = require('../views/HelpBox');
+import HelpBox from '../views/HelpBox.js';
 import compStyles from "./addHelp.module.css";
 //old text:  The left-most column is used for the initial row sort. In case of a tie, the value in the next column to the right is used to break the tie.
 var columnHelp = onClose => (
@@ -47,4 +47,4 @@ function addHelp(Component) {
 	};
 }
 
-module.exports = addHelp;
+export default addHelp;

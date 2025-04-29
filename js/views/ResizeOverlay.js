@@ -66,4 +66,4 @@ class ResizeOverlay extends React.Component {
 	}
 }
 
-module.exports = ResizeOverlay;
+export default ResizeOverlay;

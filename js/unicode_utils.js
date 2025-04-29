@@ -19,6 +19,4 @@ function normalize(s) {
 	return mapString(s, stripUnicode);
 }
 
-module.exports = {
-	normalize
-};
+export { normalize };

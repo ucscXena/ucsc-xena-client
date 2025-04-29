@@ -1,14 +1,16 @@
 
 var _ = require('./underscore_ext').default;
 var {createSelectorCreator, defaultMemoize} = require('reselect');
-var {createFmapSelector} = require('./selectors');
-var widgets = require('./columnWidgets');
-var km = require('./models/km');
-var {searchSamples} = require('./models/searchSamples');
-var isPublicSelector = require('./isPublicSelector');
+import { createFmapSelector } from './selectors.js';
+import * as widgets from './columnWidgets.js';
+import * as km from './models/km.js';
+import { searchSamples } from './models/searchSamples.js';
+import isPublicSelector from './isPublicSelector.js';
+
 // XXX should move userServers, or maybe put it in a selector
-var {userServers} = require('./controllers/common');
-var {fradixSortL16$64} = require('./xenaWasm');
+import { userServers } from './controllers/common.js';
+
+import { fradixSortL16$64 } from './xenaWasm.js';
 import {defaultWidth} from './controllers/ui';
 
 var minWidth = defaultWidth(0);

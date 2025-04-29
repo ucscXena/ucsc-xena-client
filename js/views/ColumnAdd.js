@@ -62,4 +62,4 @@ class ColumnAdd extends React.Component {
 	}
 }
 
-module.exports = ColumnAdd;
+export default ColumnAdd;

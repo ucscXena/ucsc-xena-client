@@ -18,12 +18,12 @@ var React = require('react');
 import {el, div, h1, h3, label, span} from './chart/react-hyper';
 import {xenaColor} from './xenaColor';
 
-var Axis = require('./Axis');
-var {linear, linearTicks} = require('./scale');
-var pdf = require('./kmpdf');
-var NumberForm = require('./views/NumberForm');
-var {survivalOptions, getSplits} = require('./models/km');
-var gaEvents = require('./gaEvents');
+import Axis from './Axis.js';
+import { linear, linearTicks } from './scale.js';
+import pdf from './kmpdf.js';
+import NumberForm from './views/NumberForm.js';
+import { survivalOptions, getSplits } from './models/km.js';
+import gaEvents from './gaEvents.js';
 
 // Styles
 import kmStyle from './km.module.css';

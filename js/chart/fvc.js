@@ -1,7 +1,7 @@
-var dataUtils = require('./dataUtils');
-var highchartsHelper = require('./highcharts_helper');
-var sCell = require('./singleCell');
-var {isSet} = require('../models/bitmap');
+import * as dataUtils from './dataUtils.js';
+import * as highchartsHelper from './highcharts_helper.js';
+import * as sCell from './singleCell.js';
+import { isSet } from '../models/bitmap.js';
 var _ = require('../underscore_ext').default;
 
 var BOXLEN = 5;
@@ -90,6 +90,4 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 	return {totalMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
-module.exports = {
-	getMatrices
-};
+export { getMatrices };

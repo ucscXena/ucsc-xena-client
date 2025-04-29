@@ -36,5 +36,5 @@ class XFormLabel extends React.Component {
 	}
 }
 
-module.exports = XFormLabel;
+export default XFormLabel;
 

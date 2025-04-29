@@ -21,7 +21,7 @@ var React = require('react');
 var _ = require('../underscore_ext').default;
 import XFormControl from './XFormControl';
 import XFormLabel from './XFormLabel';
-var XRadioMeta = require('./XRadioMeta');
+import XRadioMeta from './XRadioMeta.js';
 
 class XRadioGroup extends React.Component {
 	onChange = (event) => {
@@ -47,4 +47,4 @@ class XRadioGroup extends React.Component {
 	}
 }
 
-module.exports = XRadioGroup;
+export default XRadioGroup;

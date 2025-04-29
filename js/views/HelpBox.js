@@ -79,4 +79,4 @@ class HelpBox extends React.Component {
 	}
 }
 
-module.exports = HelpBox;
+export default HelpBox;

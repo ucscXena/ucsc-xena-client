@@ -13,4 +13,4 @@ function aboutDatasetMenu(onClick, dsID, root = '..') {
 	return dsID ? getAbout(onClick, dsID, root, 'About') : null;
 }
 
-module.exports = aboutDatasetMenu;
+export default aboutDatasetMenu;

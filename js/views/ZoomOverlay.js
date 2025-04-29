@@ -53,4 +53,4 @@ class ZoomOverlay extends React.Component {
 	}
 }
 
-module.exports = ZoomOverlay;
+export default ZoomOverlay;

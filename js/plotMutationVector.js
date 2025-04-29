@@ -2,14 +2,24 @@ var _ = require('./underscore_ext').default;
 var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');
-var Legend = require('./views/Legend');
-var {rxEvents} = require('./react-utils');
-var widgets = require('./columnWidgets');
+import Legend from './views/Legend.js';
+import { rxEvents } from './react-utils.js';
+import * as widgets from './columnWidgets.js';
 var util = require('./util').default;
-var CanvasDrawing = require('./CanvasDrawing');
-var mv = require('./models/mutationVector');
-var {drawSV, drawMutations, radius, toYPx, toYPxSubRow, minVariantHeight, splitRows} = require('./drawMutations');
-var {chromPositionFromScreen} = require('./exonLayout');
+import CanvasDrawing from './CanvasDrawing.js';
+import * as mv from './models/mutationVector.js';
+
+import {
+    drawSV,
+    drawMutations,
+    radius,
+    toYPx,
+    toYPxSubRow,
+    minVariantHeight,
+    splitRows,
+} from './drawMutations.js';
+
+import { chromPositionFromScreen } from './exonLayout.js';
 
 // Since there are multiple components in the file we have to use hot
 // explicitly.

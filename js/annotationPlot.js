@@ -3,7 +3,7 @@
 
 var _ = require('underscore');
 var {matches} = require('static-interval-tree');
-var {pxTransformEach} = require('./layoutPlot');
+import { pxTransformEach } from './layoutPlot.js';
 
 // Draw annotations on one or more evenly sized horizontal bands,
 // each band representing one set of values. E.g. two bands
@@ -53,7 +53,4 @@ function drawFloatBands(vg, bands, color, layout) {
 }
 
 
-module.exports = {
-	drawBands: drawBands,
-	drawFloatBands: drawFloatBands
-};
+export { drawBands, drawFloatBands };

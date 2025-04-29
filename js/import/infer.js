@@ -1,6 +1,6 @@
 
 var {getIn} = require('../underscore_ext').default;
-var recommend = require('../stats/recommend');
+import * as recommend from '../stats/recommend.js';
 
 var getMatches = list => {
 	var probes = recommend.probemap(list),

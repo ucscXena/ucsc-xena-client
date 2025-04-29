@@ -2,7 +2,7 @@
 
 
 var _ = require('./underscore_ext').default;
-var vgcanvas = require('./vgcanvas');
+import vgcanvas from './vgcanvas.js';
 var React = require('react');
 var ReactDOM = require('react-dom');
 

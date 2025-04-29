@@ -1,6 +1,6 @@
 
 var _ = require('./underscore_ext').default;
-var unicode = require('./unicode_utils');
+import * as unicode from './unicode_utils.js';
 import chromInfo from './chromInfo';
 import centromere from './centromere';
 
@@ -8,7 +8,7 @@ var toInt = x => parseInt(x, 10);
 var clip = (len, x) => x < 1 ? 1 : (x > len ? len : x);
 var M = 1000 * 1000;
 
-module.exports = function (text, assembly) {
+export default function (text, assembly) {
 	// strip spaces, cvt to lower, match chr1:2-chr3:4 format
 	text = unicode.normalize(text).replace(/ /g, '').toLowerCase();
 	var pos = text.match(/^(chr[0-9xyXY]+)([pq]?)(:([0-9,]+)(-([0-9,]+))?)?$/);

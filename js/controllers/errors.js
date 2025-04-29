@@ -28,8 +28,6 @@ var collectResults = _.curry((filter, arr, selector) => {
 		Rx.Observable.of(response);
 });
 
-module.exports = {
-	reifyErrors,
-	collectResults: collectResults(true),
-	collectAlignedResults: collectResults(false)
-};
+const _collectResults = collectResults(true);
+const collectAlignedResults = collectResults(false);
+export { reifyErrors, _collectResults as collectResults, collectAlignedResults };

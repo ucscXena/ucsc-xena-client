@@ -14,6 +14,4 @@ var rxEvents = (comp, ...args) => {
 	return ev;
 };
 
-module.exports = {
-	rxEvents
-};
+export { rxEvents };

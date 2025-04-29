@@ -2,16 +2,16 @@
 // Domain logic for segmented datasets.
 
 var _ = require('../underscore_ext').default;
-var widgets = require('../columnWidgets');
+import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
 var Rx = require('../rx').default;
-var exonLayout = require('../exonLayout');
+import * as exonLayout from '../exonLayout.js';
 var intervalTree = require('static-interval-tree');
-var {pxTransformInterval} = require('../layoutPlot');
+import { pxTransformInterval } from '../layoutPlot.js';
 import * as heatmapColors from '../heatmapColors';
-var parsePos = require('../parsePos');
+import parsePos from '../parsePos.js';
 import sortOrder from './sparseSortOrder';
-var {fastats} = require('../xenaWasm');
+import { fastats } from '../xenaWasm.js';
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 	var inData = new Set(valsInData),
@@ -309,6 +309,4 @@ widgets.avg.add('segmented', averageSegments);
 widgets.download.add('segmented', download);
 widgets.specialDownload.add('segmented', downloadOneSampleOneRow);
 
-module.exports = {
-	fetch
-};
+export { fetch };

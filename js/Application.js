@@ -9,7 +9,7 @@ var _ = require('./underscore_ext').default;
 import Welcome from './containers/WelcomeContainer';
 import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
-var gaEvents = require('./gaEvents');
+import gaEvents from './gaEvents.js';
 //var Perf = require('react-dom/lib/ReactPerf');
 
 function clearZoom(samples, zoom) {
@@ -134,4 +134,4 @@ class Application extends PureComponent {
 	}
 }
 
-module.exports = Application;
+export default Application;

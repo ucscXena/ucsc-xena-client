@@ -1,19 +1,21 @@
 var _ = require('../underscore_ext').default;
 const React = require('react');
 import {Box, Link} from '@material-ui/core';
-const NameColumn = require('./NameColumn');
+import NameColumn from './NameColumn.js';
+
 // const {Exons} = require('./Exons');
-const ExonsOnly = require('./ExonsOnly');
-var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
-const GeneSuggest = require('../views/GeneSuggest');
-var {linearTicks} = require('../scale');
+import ExonsOnly from './ExonsOnly.js';
+
+import { DensityPlot, bottomColor, topColor, plotWidth } from './DensityPlot.js';
+import GeneSuggest from '../views/GeneSuggest.js';
+import { linearTicks } from '../scale.js';
 import nav from '../nav';
 import styles from "./TranscriptPage.module.css";
-var {StateError} = require('../StateError');
-var {schemaCheckThrow} = require('../schemaCheck');
+import { StateError } from '../StateError.js';
+import { schemaCheckThrow } from '../schemaCheck.js';
 import spinner from '../ajax-loader.gif';
-var migrateState = require('../migrateState');
-var {expandState} = require('../compactData');
+import migrateState from '../migrateState.js';
+import { expandState } from '../compactData.js';
 var Rx = require('../rx').default;
 
 function getStatusView(status, onReload) {

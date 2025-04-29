@@ -1,5 +1,5 @@
 var _ = require('../underscore_ext').default;
-var {fastats} = require('../xenaWasm');
+import { fastats } from '../xenaWasm.js';
 import {v} from './utils.js';
 
 var expMethods = {

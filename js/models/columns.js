@@ -5,7 +5,7 @@ var _ = require('../underscore_ext').default;
 import parsePos from '../parsePos';
 import parseInput from '../parseInput';
 import parseGeneSignature from '../parseGeneSignature';
-var {signatureField} = require('../models/fieldSpec');
+import { signatureField } from './fieldSpec.js';
 import {defaultColorClass} from '../heatmapColors';
 
 // XXX duplicated in VariableSelect.

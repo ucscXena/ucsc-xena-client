@@ -15,9 +15,9 @@ var React = require('react');
 
 // App dependencies
 var _ = require('../underscore_ext').default;
-var CanvasDrawing = require('../CanvasDrawing');
-var ColCard = require('./ColCard');
-var {drawSamples} = require('../drawSamples');
+import CanvasDrawing from '../CanvasDrawing.js';
+import ColCard from './ColCard.js';
+import { drawSamples } from '../drawSamples.js';
 import ZoomCarriage from './ZoomCarriage';
 
 // Styles
