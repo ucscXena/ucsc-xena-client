@@ -7,7 +7,7 @@ var style = function (c) {
 			c;
 };
 
-module.exports = function (doc, vgw, vgh) {
+export default function(doc, vgw, vgh) {
 	var fontFamily = 'Helvetica',
 
 		notImplemented = () => console.log('Not implemented'),

@@ -122,10 +122,12 @@ function lineGroup(vg, {g, xScale, yScale}) {
 var size = {height: 500, width: 500};
 
 function download({colors, labels, curves}) {
-	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
-		var PDFDocument = require('pdfkit');
-		var blobStream = require('blob-stream');
-		var vgpdf = require('./vgpdf');
+	Promise.all([import('pdfkit'), import('blob-stream'), import('./vgpdf')
+	]).then(([pdfkitModule, blobStreamModule, vgpdfModule]) => {
+		const PDFDocument = pdfkitModule.default;
+		const blobStream = blobStreamModule.default;
+		const vgpdf = vgpdfModule.default;
+
 		var height = size.height - margin.top - margin.bottom,
 			width = size.width - margin.left - margin.right,
 			xdomain = bounds(_.pluck(_.flatten(curves), 't')),
