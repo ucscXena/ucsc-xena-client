@@ -3,7 +3,6 @@
 
 import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
-//var {compositeError} = require('../errors');
 
 // Put error object on stream, extending with context.
 function reifyErrors(obs, context) {

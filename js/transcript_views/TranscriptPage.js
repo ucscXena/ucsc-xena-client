@@ -2,10 +2,7 @@ import * as _ from '../underscore_ext.js';
 const React = require('react');
 import {Box, Link} from '@material-ui/core';
 import NameColumn from './NameColumn.js';
-
-// const {Exons} = require('./Exons');
 import ExonsOnly from './ExonsOnly.js';
-
 import { DensityPlot, bottomColor, topColor, plotWidth } from './DensityPlot.js';
 import GeneSuggest from '../views/GeneSuggest.js';
 import { linearTicks } from '../scale.js';

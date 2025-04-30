@@ -6,7 +6,7 @@ import XAutosuggestInput from '../views/XAutosuggestInput';
 import { getIn, Let, pluck, sorted } from '../underscore_ext.js';
 import styles from './ImgControls.module.css';
 import {hasImage, layerColors, segmentedColor} from '../models/singlecell';
-var {RGBToHex} = require('../color_helper').default;
+import { RGBToHex } from '../color_helper.js';
 
 var autocomplete = el(Autocomplete);
 var formControlLabel = el(FormControlLabel);

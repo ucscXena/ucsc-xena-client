@@ -39,32 +39,39 @@ import * as xenaWasm from './xenaWasm.js';
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		let newModule = require('./controllers/ui').default;
-		_.extend(uiController, newModule);
+		import('./controllers/ui').then(newModule => {
+			_.extend(uiController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/server', () => {
-		let newModule = require('./controllers/server').default;
-		_.extend(serverController, newModule);
+		import('./controllers/server').then(newModule => {
+			_.extend(serverController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/hub', () => {
-		let newModule = require('./controllers/hub').default;
-		_.extend(hubController, newModule);
+		import('./controllers/hub').then(newModule => {
+			_.extend(hubController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/wizard', () => {
-		let newModule = require('./controllers/wizard').default;
-		_.extend(wizardController, newModule);
+		import('./controllers/wizard').then(newModule => {
+			_.extend(wizardController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/singlecell', () => {
-		let newModule = require('./controllers/singlecell').default;
-		_.extend(singlecellController, newModule);
+		import('./controllers/singlecell').then(newModule => {
+			_.extend(singlecellController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/transcripts', () => {
-		let newModule = require('./controllers/transcripts').default;
-		_.extend(transcriptController, newModule);
+		import('./controllers/transcripts').then(newModule => {
+			_.extend(transcriptController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/import', () => {
-		let newModule = require('./controllers/import').default;
-		_.extend(importController, newModule);
+		import('./controllers/import').then(newModule => {
+			_.extend(importController, newModule.default);
+		});
 	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});

@@ -10,7 +10,7 @@ const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
 import { Let, assocIn, copyStr, getIn, has, iterable } from '../underscore_ext.js';
 import backPressure from '../import/backPressure';
 import chunkReader from '../import/chunkReader';
-require('./html5-formdata-polyfill'); // for safari
+import './html5-formdata-polyfill'; // for safari
 
 const referenceHost = 'https://reference.xenahubs.net';
 

@@ -5,7 +5,7 @@ import { resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering
 import { getNotifications } from '../notifications.js';
 import {make, mount, compose} from './utils';
 import Rx from '../rx';
-var uuid = require('../uuid');
+import uuid from '../uuid.js';
 import * as widgets from '../columnWidgets.js';
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);

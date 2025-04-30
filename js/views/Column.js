@@ -11,10 +11,7 @@ import columnZoom from '../columnZoom';
 import aboutDatasetMenu from './aboutDatasetMenu.js';
 import spinner from '../ajax-loader.gif';
 import * as mutationVector from '../models/mutationVector.js';
-
-//var ValidatedInput = require('./ValidatedInput');
 import Crosshair from './Crosshair.js';
-
 import parsePos from '../parsePos.js';
 import { categoryMore } from '../colorScales.js';
 import {publicServers} from '../defaultServers';

@@ -234,14 +234,14 @@ var {controller: fetchController, invalidatePath} =
 // ['dataset', localHub, *]
 // ['cohortDatasets', *, localHub]
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	(function(serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['cohorts', localHub]);
 		invalidatePath(serverBus, ['hubMeta', localHub]);
 		invalidatePath(serverBus, ['samples', localHub, any]);
 		invalidatePath(serverBus, ['identifiers', localHub, any]);
 		invalidatePath(serverBus, ['dataset', localHub, any]);
 		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
-	}));
+	});
 
 var controls = {
 	'localStatus-post!': invalidateLocalHub,

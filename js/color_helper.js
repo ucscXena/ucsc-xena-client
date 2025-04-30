@@ -116,13 +116,4 @@ function RGBtoHSV(r, g, b) {
 	};
 }
 
-export default {
-    hexToRGB,
-    RGBToHex,
-    colorStr,
-    greyHEX,
-    contrastColor,
-    rgb,
-    HSVtoRGB,
-    RGBtoHSV
-};
+export { hexToRGB, RGBToHex, colorStr, greyHEX, contrastColor, rgb, HSVtoRGB, RGBtoHSV };

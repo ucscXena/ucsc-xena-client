@@ -1,6 +1,6 @@
 
 import * as _ from './underscore_ext.js';
-var colorHelper = require('./color_helper').default;
+import * as colorHelper from './color_helper.js';
 var labelMargin = 1; // left & right margin
 var labelFont = 12;
 

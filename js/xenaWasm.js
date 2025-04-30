@@ -1,6 +1,6 @@
 var wasm = require('ucsc-xena-wasm');
 import * as _ from './underscore_ext.js';
-var {rgb: rgbFromHex} = require('./color_helper').default;
+import { rgb as rgbFromHex } from './color_helper.js';
 import {categoryMore} from './colorScales';
 
 export var Module;

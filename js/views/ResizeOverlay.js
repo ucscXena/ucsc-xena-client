@@ -4,7 +4,7 @@ var Resizable = require('react-resizable').Resizable;
 import * as _ from '../underscore_ext.js';
 
 // Styles
-require('./ResizeOverlay.css');
+import './ResizeOverlay.css';
 
 var max = (x, y) => x > y ? x : y;
 var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});

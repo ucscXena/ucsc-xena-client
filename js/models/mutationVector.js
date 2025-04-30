@@ -9,7 +9,7 @@ import Rx from '../rx';
 import * as exonLayout from '../exonLayout.js';
 var intervalTree = require('static-interval-tree');
 import { pxTransformInterval } from '../layoutPlot.js';
-var {hexToRGB, colorStr} = require('../color_helper').default;
+import { hexToRGB, colorStr } from '../color_helper.js';
 var jStat = require('jStat').jStat;
 import parsePos from '../parsePos.js';
 import sortOrder from './sparseSortOrder';

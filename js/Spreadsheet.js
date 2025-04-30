@@ -7,7 +7,7 @@ import getColumns from './views/Columns.js';
 import SampleZoomIndicator from './views/SampleZoomIndicator';
 
 // Styles
-require('./Columns.css'); // XXX switch to js styles
+import './Columns.css'; // XXX switch to js styles
 
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);

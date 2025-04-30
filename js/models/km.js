@@ -2,8 +2,7 @@ import * as _ from '../underscore_ext.js';
 import multi from '../multi.js';
 import { colorScale } from '../colorScales.js';
 import * as km from '../km.js'; // move km down?
-var {RGBToHex} = require('../color_helper').default;
-//var {segmentAverage} = require('./segmented');
+import { RGBToHex } from '../color_helper.js';
 
 var MAX = 10; // max number of groups to display.
 

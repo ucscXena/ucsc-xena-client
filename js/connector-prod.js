@@ -8,7 +8,7 @@ import urlParams from './urlParams';
 import { compactState, expandState } from './compactData.js';
 import migrateState from './migrateState.js';
 import { schemaCheckThrow } from './schemaCheck.js';
-var controlRunner = require('./controlRunner').default;
+import controlRunner from './controlRunner';
 import { fetchInlineState, hasInlineState } from './inlineState.js';
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I

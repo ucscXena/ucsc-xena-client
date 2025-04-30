@@ -16,7 +16,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
-require('./Sortable.css');
+import './Sortable.css';
 
 var skip = 1; // Don't allow sort of <skip> elements on the left
 

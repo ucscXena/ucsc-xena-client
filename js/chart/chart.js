@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var {RGBToHex} = require ('../color_helper').default;
+import { RGBToHex } from '../color_helper.js';
 import * as _ from '../underscore_ext.js';
 import gaEvents from '../gaEvents.js';
 import multi from '../multi';

@@ -7,7 +7,7 @@ import CohortOrDisease from '../views/CohortOrDisease.js';
 import VariableSelect from '../views/VariableSelect.js';
 import GhostVariableSelect from '../views/GhostVariableSelect.js';
 import getStepperState from './getStepperState.js';
-var uuid = require('../uuid');
+import uuid from '../uuid.js';
 import Rx from '../rx';
 import {computeSettings, typeWidth} from '../models/columns';
 

@@ -1,6 +1,6 @@
 var React = require('react');
 import {colorScale} from '../colorScales';
-var {contrastColor} = require('../color_helper').default;
+import { contrastColor } from '../color_helper.js';
 import '../../css/transcript_css/nameColumn.css';
 import styles from "./NameColumn.module.css";
 

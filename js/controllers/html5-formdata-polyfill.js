@@ -99,4 +99,4 @@
         }
         this.__append(part);
     };
-})(this || self);
+})(typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {});

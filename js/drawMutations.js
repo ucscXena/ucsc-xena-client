@@ -1,6 +1,6 @@
 
 import * as _ from './underscore_ext.js';
-var {contrastColor, greyHEX} = require('./color_helper').default;
+import { contrastColor, greyHEX } from './color_helper.js';
 import { impact, getSNVEffect } from './models/mutationVector.js';
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
