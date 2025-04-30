@@ -8,7 +8,7 @@ import VariableSelect from '../views/VariableSelect.js';
 import GhostVariableSelect from '../views/GhostVariableSelect.js';
 import getStepperState from './getStepperState.js';
 var uuid = require('../uuid');
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import {computeSettings, typeWidth} from '../models/columns';
 
 // Configuration for first and second variable select cards that are displayed during wizard.

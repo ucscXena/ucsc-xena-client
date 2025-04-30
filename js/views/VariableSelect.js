@@ -10,7 +10,8 @@ import { rxEvents } from '../react-utils.js';
 import parsePos from '../parsePos.js';
 import { ignoredType, isPhenotype } from '../models/dataType.js';
 import {matchDatasetFields} from '../models/columns';
-var {Observable, Scheduler} = require('../rx').default;
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
 import {getOpts} from '../columnsParam';
 var {servers} = require('../defaultServers');
 

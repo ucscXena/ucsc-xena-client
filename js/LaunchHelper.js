@@ -14,7 +14,7 @@ import {
 import PureComponent from './PureComponent';
 import { map, pick, mapObject, getIn, get } from './underscore_ext.js';
 var platform = require('platform');
-var Rx = require('./rx').default;
+import Rx from './rx';
 
 // Styles
 import styles from './LaunchHelper.module.css';

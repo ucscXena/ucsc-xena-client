@@ -1,6 +1,6 @@
 
 import * as _ from './underscore_ext.js';
-var Rx = require('./rx').default;
+import Rx from './rx';
 import * as widgets from './columnWidgets.js';
 var util = require('./util').default;
 import PureComponent from './PureComponent';

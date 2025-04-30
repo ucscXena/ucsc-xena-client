@@ -5,7 +5,7 @@ import * as _ from '../underscore_ext.js';
 
 import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import * as exonLayout from '../exonLayout.js';
 var intervalTree = require('static-interval-tree');
 import { pxTransformInterval } from '../layoutPlot.js';

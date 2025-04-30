@@ -5,7 +5,7 @@ import ChartView from '../chart/ChartView.js';
 import Column from '../views/Column';
 import * as _ from '../underscore_ext.js';
 import { rxEvents } from '../react-utils.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 
 // Spreadsheet options
 import addTooltip from './addTooltip.js';

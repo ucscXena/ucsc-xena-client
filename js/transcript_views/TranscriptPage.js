@@ -16,7 +16,7 @@ import { schemaCheckThrow } from '../schemaCheck.js';
 import spinner from '../ajax-loader.gif';
 import migrateState from '../migrateState.js';
 import { expandState } from '../compactData.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {

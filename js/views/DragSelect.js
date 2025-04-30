@@ -1,5 +1,5 @@
 var React = require('react');
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
 
 var styles = {

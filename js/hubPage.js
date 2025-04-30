@@ -14,7 +14,7 @@ import {
 	Typography
 } from '@material-ui/core';
 var React = require('react');
-var Rx = require('./rx').default;
+import Rx from './rx';
 
 import xenaQuery from './xenaQuery';
 var {logout, testHost, testLogin} = xenaQuery;

@@ -4,7 +4,8 @@ import { uniq } from './underscore_ext.js';
 import { compactState, expandState } from './compactData.js';
 import migrateState from './migrateState.js';
 import { schemaCheckThrow } from './schemaCheck.js';
-var {Observable: {of}} = require('./rx').default;
+import Rx from './rx';
+const {Observable: {of}} = Rx;
 
 var version = 1;
 

@@ -1,5 +1,5 @@
 var wasm = require('ucsc-xena-wasm');
-var Rx = require('./rx').default;
+import Rx from './rx';
 import {allocArray, allocStrings, getArrayPtrField} from './xenaWasm';
 
 function hfcSet(Module, data) {

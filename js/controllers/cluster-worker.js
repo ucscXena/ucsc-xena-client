@@ -1,7 +1,7 @@
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
 import { getIn, map } from '../underscore_ext.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 
 var {fromEvent} = Rx.Observable;
 

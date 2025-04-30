@@ -1,6 +1,7 @@
 import multi from '../multi';
 import xenaQuery from '../xenaQuery';
-var {Observable, Scheduler} = require('../rx').default;
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
 import * as _ from '../underscore_ext.js';
 import parsePos from '../parsePos';
 import parseInput from '../parseInput';

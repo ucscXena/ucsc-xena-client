@@ -1,5 +1,5 @@
 
-var Rx = require('./rx').default;
+import Rx from './rx';
 import {deserialize} from './serialize';
 
 const hasInlineState = () => location.search.match(/^\?inline/) && window.opener;

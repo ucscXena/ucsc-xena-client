@@ -3,7 +3,7 @@ import multi from './multi.js';
 import * as denseMatrix from './models/denseMatrix.js';
 import * as mutationVector from './models/mutationVector.js';
 import * as segmented from './models/segmented.js';
-var Rx = require('./rx').default;
+import Rx from './rx';
 
 var fetch = multi((settings, samples) => samples.length > 0 ? settings.fetchType : 'empty');
 

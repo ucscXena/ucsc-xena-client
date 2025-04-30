@@ -1,7 +1,7 @@
 
 // Utilities for handling errors in async actions.
 
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
 //var {compositeError} = require('../errors');
 

@@ -14,7 +14,7 @@ import {
 } from '@material-ui/core';
 var React = require('react');
 import * as _ from '../underscore_ext.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import { createBookmark, getRecent, setRecent } from '../bookmark.js';
 import gaEvents from '../gaEvents.js';
 import { compactState } from '../compactData.js';

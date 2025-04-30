@@ -1,5 +1,5 @@
 var {servers} = require('../defaultServers');
-var Rx = require('../rx').default;
+import Rx from '../rx';
 var {ajax, create, defer, empty, from, fromEvent, of, zip} = Rx.Observable;
 var EMPTY = empty();
 var {asap} = Rx.Scheduler;

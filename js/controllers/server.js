@@ -4,7 +4,7 @@ import { searchSamples } from '../models/searchSamples.js';
 import { resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering } from './common.js';
 import { getNotifications } from '../notifications.js';
 import {make, mount, compose} from './utils';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 var uuid = require('../uuid');
 import * as widgets from '../columnWidgets.js';
 

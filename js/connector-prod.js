@@ -1,6 +1,6 @@
 
 import * as _ from './underscore_ext.js';
-var Rx = require('./rx').default;
+import Rx from './rx';
 var React = require('react');
 var ReactDOM = require('react-dom');
 import LZ from './lz-string';

@@ -1,7 +1,7 @@
 
 import * as _ from '../underscore_ext.js';
 import xenaQuery from '../xenaQuery';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 
 // the expression dataset and phenodataset must be on the same host
 var expressionHost = 'https://kidsfirst.xenahubs.net';

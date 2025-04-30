@@ -2,7 +2,7 @@ import {compose, make} from './utils';
 import {nextAuth, resetAuthRequired, setAuthError,
 	setAuthPending, setAuthRequired} from '../models/auth';
 import { assocIn, pick } from '../underscore_ext.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 var {ajax} = Rx.Observable;
 var {encodeObject} = require('../util.js').default;
 

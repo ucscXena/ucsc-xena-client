@@ -10,7 +10,7 @@ import {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
 	range, uniq, updateIn} from '../underscore_ext.js';
 
 import { userServers } from './common.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
 import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,

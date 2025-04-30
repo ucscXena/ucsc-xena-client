@@ -8,7 +8,7 @@ var {servers: {localHub}, serverS3url} = require('../defaultServers');
 import { deleteDataset } from '../xenaAdmin.js';
 import { userServers } from './common.js';
 import { ignoredType } from '../models/dataType.js';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import {isAuthPending} from '../models/auth';

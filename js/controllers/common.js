@@ -1,7 +1,7 @@
 
 // Helper methods needed by multiple controllers.
 
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import xenaQuery from '../xenaQuery';
 import * as _ from '../underscore_ext.js';
 import { reifyErrors, collectResults } from './errors.js';

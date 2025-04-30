@@ -20,7 +20,8 @@ import {Let, contains, flatmap, flatten, get, getIn, groupBy, identity, keys,
 	map, mapObject, mmap, partitionN, pick, range, sortBy, sum, uniq, updateIn,
 	values, zip} from './underscore_ext.js';
 
-var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
+import Rx from './rx';
+const {Observable: {from}, Scheduler: {animationFrame}} = Rx;
 import xenaQuery from './xenaQuery';
 var {parseDsID} = xenaQuery;
 import styles from "./Datapages.module.css";

@@ -9,7 +9,7 @@ import * as arrays from './arrays.js';
 import {hfcSync, hfcCompress} from './hfc';
 var wasm = require('ucsc-xena-wasm');
 import {listToBitmap} from './models/bitmap';
-var Rx = require('./rx').default;
+import Rx from './rx';
 
 var {Observable: {from, of, zipArray}} = Rx;
 

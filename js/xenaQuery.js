@@ -3,7 +3,7 @@
 
 import {concatBins, parse} from './binpackJSON';
 import {hfcCompress} from './hfc';
-var Rx = require('./rx').default;
+import Rx from './rx';
 import * as _ from './underscore_ext.js';
 import _u from './underscore_ext.js'; // for partial() placeholder
 import { permuteCase, permuteBitCount, prefixBitLimit } from './permuteCase.js';

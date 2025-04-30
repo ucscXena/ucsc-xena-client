@@ -4,7 +4,7 @@ import {flatmap, fmap, getIn, groupBy, identity, Let, map, matchKeys, pick,
 import xenaQuery from '../xenaQuery';
 var {servers: {localHub}} = require('../defaultServers');
 import {ignoredType, isPhenotype} from '../models/dataType';
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import { userServers } from './common.js';
 import {make, compose} from './utils';
 import query from './query';

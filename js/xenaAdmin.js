@@ -1,5 +1,5 @@
 /*global define: false */
-var Rx = require('./rx').default;
+import Rx from './rx';
 var {encodeObject} = require('./util').default;
 import { isArray, merge } from './underscore_ext.js';
 

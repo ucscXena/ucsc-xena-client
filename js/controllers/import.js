@@ -1,4 +1,4 @@
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import { make, mount, compose } from './utils';
 var {servers} = require('../defaultServers');
 import xenaQuery from '../xenaQuery';

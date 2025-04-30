@@ -14,7 +14,7 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Rx = require('../rx').default;
+import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
 require('./Sortable.css');
 

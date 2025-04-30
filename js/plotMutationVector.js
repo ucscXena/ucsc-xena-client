@@ -1,5 +1,5 @@
 import * as _ from './underscore_ext.js';
-var Rx = require('./rx').default;
+import Rx from './rx';
 import PureComponent from './PureComponent';
 var React = require('react');
 import Legend from './views/Legend.js';

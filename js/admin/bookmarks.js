@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 var ReactDOM = require('react-dom');
-var Rx = require('../rx').default;
+import Rx from '../rx';
 var main = window.document.getElementById('main');
 var {allParameters} = require('../util').default;
 import { sortBy } from '../underscore_ext.js';

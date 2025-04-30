@@ -1,5 +1,5 @@
 
-var Rx = require('./rx').default;
+import Rx from './rx';
 import * as _ from './underscore_ext.js';
 import { getErrorProps, logError } from './errors.js';
 
