@@ -2,7 +2,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 import vgcanvas from './vgcanvas.js';
-var {addCommas} = require('./util').default;
+import { addCommas } from './util.js';
 
 var labelHeight = 12;
 var font = 10;

@@ -35,7 +35,7 @@ var replacer = (key, x) =>
 // We can't instantiate hfc because they're async, or undefined because
 // JSON.parse doesn't allow it. So, track them here & fix up after parse.
 var getReviver = (hfcs, undefs) =>
-	function reviver(key, x) {
+	(function reviver(key, x) {
 		return !(x && x[type]) ? x :
 			x[type] === 'undefined' ? (undefs.push([this, key]), x) :
 			x[type] === 'hfc' ? (hfcs.push([this, key]), x) :
@@ -45,7 +45,7 @@ var getReviver = (hfcs, undefs) =>
 			x[type] === 'Uint16Array' ? toU16(x.data) :
 			x[type] === 'Uint8Array' ? toU8(x.data) :
 			x;
-	};
+	});
 
 export var serialize = x => JSON.stringify(x, replacer);
 

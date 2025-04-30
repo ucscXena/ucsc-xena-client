@@ -25,7 +25,7 @@ import { parseServer, getHubParams } from './hubParams.js';
 import nav from './nav';
 import XTypography, {XTypographyVariants} from './views/XTypography';
 import {xenaColor} from './xenaColor';
-var {encodeObject} = require('./util').default;
+import { encodeObject } from './util.js';
 import PureComponent from './PureComponent';
 
 // Styles

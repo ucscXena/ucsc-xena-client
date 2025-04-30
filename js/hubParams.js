@@ -1,5 +1,5 @@
 
-var util = require('./util').default;
+import * as util from './util.js';
 import * as _ from './underscore_ext.js';
 import {defaultServers} from './defaultServers';
 

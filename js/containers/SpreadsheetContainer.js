@@ -3,7 +3,7 @@ import gaEvents from '../gaEvents.js';
 import * as _ from '../underscore_ext.js';
 import getLabel from '../getLabel.js';
 import { supportsEdit } from '../models/fieldSpec.js';
-var {addCommas} = require('../util').default;
+import { addCommas } from '../util.js';
 import {canPickSamples, pickSamplesFilter} from '../models/searchSamples';
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {

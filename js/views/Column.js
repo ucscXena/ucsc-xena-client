@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var util = require('../util').default;
+import * as util from '../util.js';
 var React = require('react');
 import * as _ from '../underscore_ext.js';
 import DefaultTextInput from './DefaultTextInput.js';

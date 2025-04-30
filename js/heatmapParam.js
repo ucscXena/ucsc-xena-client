@@ -1,4 +1,4 @@
-var {allParameters} = require('./util').default;
+import { allParameters } from './util.js';
 
 import {flatmap, get, getIn, groupBy, identity, isArray, isBoolean, isObject,
 	isString, Let, mapObject, pick} from './underscore_ext.js';

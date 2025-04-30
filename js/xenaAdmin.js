@@ -1,6 +1,6 @@
 /*global define: false */
 import Rx from './rx';
-var {encodeObject} = require('./util').default;
+import { encodeObject } from './util.js';
 import { isArray, merge } from './underscore_ext.js';
 
 function update(host, files, flags) {

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 var ReactDOM = require('react-dom');
 import Rx from '../rx';
 var main = window.document.getElementById('main');
-var {allParameters} = require('../util').default;
+import { allParameters } from '../util.js';
 import { sortBy } from '../underscore_ext.js';
 
 import compStyles from "./bookmarks.module.css";

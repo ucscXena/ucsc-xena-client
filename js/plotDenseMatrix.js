@@ -3,7 +3,7 @@ import * as _ from './underscore_ext.js';
 import Rx from './rx';
 import * as widgets from './columnWidgets.js';
 import {colorScale} from './colorScales';
-var util = require('./util').default;
+import * as util from './util.js';
 import Legend from './views/Legend.js';
 import BandLegend from './views/BandLegend.js';
 import PureComponent from './PureComponent';

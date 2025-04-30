@@ -5,7 +5,7 @@ var React = require('react');
 import Legend from './views/Legend.js';
 import { rxEvents } from './react-utils.js';
 import * as widgets from './columnWidgets.js';
-var util = require('./util').default;
+import * as util from './util.js';
 import CanvasDrawing from './CanvasDrawing.js';
 import * as mv from './models/mutationVector.js';
 

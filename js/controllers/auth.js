@@ -4,7 +4,7 @@ import {nextAuth, resetAuthRequired, setAuthError,
 import { assocIn, pick } from '../underscore_ext.js';
 import Rx from '../rx';
 var {ajax} = Rx.Observable;
-var {encodeObject} = require('../util.js').default;
+import {encodeObject} from '../util.js';
 
 var mergeError = /.*-merge-data-error$/;
 var is403 = ([, err]) => err.status === 403;

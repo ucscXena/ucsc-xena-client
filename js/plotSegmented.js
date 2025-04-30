@@ -6,7 +6,7 @@ var React = require('react');
 import BandLegend from './views/BandLegend.js';
 import { rxEvents } from './react-utils.js';
 import * as widgets from './columnWidgets.js';
-var util = require('./util').default;
+import * as util from './util.js';
 import CanvasDrawing from './CanvasDrawing.js';
 import { drawSegmented, toYPx } from './drawSegmented.js';
 import { chromPositionFromScreen } from './exonLayout.js';

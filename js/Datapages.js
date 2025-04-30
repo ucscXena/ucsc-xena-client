@@ -33,7 +33,7 @@ import { rxEvents } from './react-utils.js';
 import {servers, serverNames} from './defaultServers';
 const {localHub} = servers;
 import {defaultHost} from './urlParams';
-var {encodeObject, urlParams} = require('./util').default;
+import { encodeObject, urlParams } from './util.js';
 import { getHubParams } from './hubParams.js';
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';

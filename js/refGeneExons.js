@@ -9,7 +9,7 @@ import * as layoutPlot from './layoutPlot.js';
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
 import { rxEvents } from './react-utils.js';
-var util = require('./util').default;
+import * as util from './util.js';
 import { chromPositionFromScreen } from './exonLayout.js';
 import { isoluminant } from './colorScales.js';
 import PureComponent from './PureComponent';

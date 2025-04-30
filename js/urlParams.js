@@ -2,7 +2,7 @@ import { get, getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn } from '
 import { hasBookmark, resetBookmarkLocation, getBookmark } from './bookmark.js';
 import { hasInlineState, resetInlineStateLocation } from './inlineState.js';
 import { hubParams as getHubParams } from './hubParams.js';
-var {allParameters} = require('./util').default;
+import { allParameters } from './util.js';
 import {columnsParam} from './columnsParam';
 import {heatmapParam} from './heatmapParam';
 
