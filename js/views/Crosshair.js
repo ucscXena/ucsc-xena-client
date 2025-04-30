@@ -9,13 +9,13 @@
 // Core dependencies, components
 import PureComponent from '../PureComponent';
 
-var React = require('react');
-var {Portal} = require('react-overlays');
+import React from 'react';
+import { Portal } from 'react-overlays';
 
 // Styles
 import compStyles from "./Crosshair.module.css";
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 import pickerCursor from './colorize-24px.svg';
 
 var frozen = (props, state) => !props.interactive || state.frozen;

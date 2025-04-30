@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 
 var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);

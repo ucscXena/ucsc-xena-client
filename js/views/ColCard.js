@@ -13,11 +13,12 @@
  */
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box, Card, CardHeader, Icon, Typography} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 // App dependencies
 import CardAvatar from './CardAvatar.js';

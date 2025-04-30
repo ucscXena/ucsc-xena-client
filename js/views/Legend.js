@@ -1,12 +1,12 @@
 
-var React = require('react');
+import React from 'react';
 import {Typography} from '@material-ui/core';
 import * as _ from '../underscore_ext.js';
 
 // Styles
 import compStyles from "./Legend.module.css";
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 var nodata = {
 	text: "null: no data",

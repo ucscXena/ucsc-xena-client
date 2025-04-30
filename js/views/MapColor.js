@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var {Fragment} = require('react');
+import { Fragment } from 'react';
 
 import {assoc, assocIn, concat, contains, every, filter, find, flatmap, get,
 	getIn, identity, insert, isEqual, keys, last, Let, mapObject, max, omit,

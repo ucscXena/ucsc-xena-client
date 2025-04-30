@@ -19,9 +19,10 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box, Typography} from '@material-ui/core';
-var classNames = require('classnames');
+import classNames from 'classnames';
 import {xenaColor} from '../xenaColor';
 
 // Styles

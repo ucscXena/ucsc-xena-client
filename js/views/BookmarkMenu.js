@@ -12,7 +12,7 @@ import {
 	Tooltip,
 	Typography
 } from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 import Rx from '../rx';
 import { createBookmark, getRecent, setRecent } from '../bookmark.js';

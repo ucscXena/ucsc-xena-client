@@ -1,5 +1,5 @@
 import * as _ from './underscore_ext.js';
-var {createSelectorCreator, defaultMemoize} = require('reselect');
+import { createSelectorCreator, defaultMemoize } from 'reselect';
 import {publicServers} from './defaultServers';
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);

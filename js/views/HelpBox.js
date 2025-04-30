@@ -32,8 +32,8 @@
 
 // Core dependencies, components
 import {Button, Typography} from '@material-ui/core';
-var React = require('react');
-var classNames = require('classnames');
+import React from 'react';
+import classNames from 'classnames';
 
 // Styles
 import compStyles from "./HelpBox.module.css";

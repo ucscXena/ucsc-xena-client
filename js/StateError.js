@@ -1,5 +1,5 @@
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import {
 	Box,
 	Dialog,

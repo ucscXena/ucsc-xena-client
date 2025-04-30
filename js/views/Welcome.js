@@ -11,7 +11,8 @@
 
 
 // Core dependencies, components
-var classNames = require('classnames');
+import classNames from 'classnames';
+
 import {Box, Icon, IconButton, SvgIcon, Typography} from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import React, { Component } from 'react';

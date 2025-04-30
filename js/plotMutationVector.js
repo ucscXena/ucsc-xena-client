@@ -1,7 +1,7 @@
 import * as _ from './underscore_ext.js';
 import Rx from './rx';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import Legend from './views/Legend.js';
 import { rxEvents } from './react-utils.js';
 import * as widgets from './columnWidgets.js';

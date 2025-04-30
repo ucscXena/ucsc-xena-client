@@ -13,7 +13,7 @@ import {
 	Typography
 } from '@material-ui/core';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 // XXX move this file out of chart directory
 import {el, div, h1, h3, label, span} from './chart/react-hyper';
 import {xenaColor} from './xenaColor';

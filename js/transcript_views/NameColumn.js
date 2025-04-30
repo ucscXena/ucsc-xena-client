@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import {colorScale} from '../colorScales';
 import { contrastColor } from '../color_helper.js';
 import '../../css/transcript_css/nameColumn.css';

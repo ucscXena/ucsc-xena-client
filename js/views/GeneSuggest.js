@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
 import {CloseRounded, SearchRounded} from '@material-ui/icons';
 import Autocomplete from '@material-ui/lab/Autocomplete';

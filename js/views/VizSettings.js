@@ -34,9 +34,9 @@
 
 import * as _ from '../underscore_ext.js';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var {Row, Col} = require("react-material-responsive-grid");
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Row, Col } from 'react-material-responsive-grid';
 import {
 	Box,
 	Button,

@@ -8,7 +8,7 @@
 
 // Core dependencies, components
 import {Box, Divider, Typography} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 
 // Styles

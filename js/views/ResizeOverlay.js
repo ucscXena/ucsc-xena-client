@@ -1,6 +1,6 @@
 
-var React = require('react');
-var Resizable = require('react-resizable').Resizable;
+import React from 'react';
+import { Resizable } from 'react-resizable';
 import * as _ from '../underscore_ext.js';
 
 // Styles

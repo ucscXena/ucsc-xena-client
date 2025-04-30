@@ -10,13 +10,14 @@
 
 // Core dependencies, components
 import {Box, Typography} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var classNames = require('classnames');
+import classNames from 'classnames';
+
 import compStyles from "./SheetStatus.module.css";
 
 class SheetStatus extends React.Component {

@@ -4,13 +4,13 @@
 import * as _ from './underscore_ext.js';
 
 import vgmixed from './vgmixed.js';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 // Styles
 import compStyles from "./CanvasDrawing.module.css";
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 class CanvasDrawing extends React.Component {
 	UNSAFE_componentWillReceiveProps(newProps) {//eslint-disable-line camelcase

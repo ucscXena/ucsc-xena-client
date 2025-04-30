@@ -9,7 +9,7 @@ import _u from './underscore_ext.js'; // for partial() placeholder
 import { permuteCase, permuteBitCount, prefixBitLimit } from './permuteCase.js';
 // Load all query files as a map of strings.
 import * as qs from './loadXenaQueries';
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';

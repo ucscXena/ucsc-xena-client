@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import { getSpreadsheetContainer } from './SpreadsheetContainer.js';
 import ChartView from '../chart/ChartView.js';
 import Column from '../views/Column';

@@ -699,7 +699,7 @@ class SingleCellPage extends PureComponent {
 
 var singleCellPage = el(SingleCellPage);
 
-var {createSelectorCreator, defaultMemoize} = require('reselect');
+import { createSelectorCreator, defaultMemoize } from 'reselect';
 var createSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 var dataDist = (data, min, max, n = 100) =>

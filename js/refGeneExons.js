@@ -1,9 +1,9 @@
 
 import * as _ from './underscore_ext.js';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import Rx from './rx';
-var intervalTree = require('static-interval-tree');
+import intervalTree from 'static-interval-tree';
 import vgcanvas from './vgcanvas.js';
 import * as layoutPlot from './layoutPlot.js';
 var {matches, index} = intervalTree;

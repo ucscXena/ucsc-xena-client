@@ -19,7 +19,7 @@
 
 // Core dependencies, components
 import {AppBar, Box, Step, StepLabel, Stepper as MuiStepper} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 import {xenaColor} from '../xenaColor';
 

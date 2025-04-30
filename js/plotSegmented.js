@@ -2,7 +2,7 @@
 import * as _ from './underscore_ext.js';
 import Rx from './rx';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import BandLegend from './views/BandLegend.js';
 import { rxEvents } from './react-utils.js';
 import * as widgets from './columnWidgets.js';

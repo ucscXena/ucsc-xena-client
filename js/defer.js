@@ -2,7 +2,8 @@
 // Adapted from http://dbaron.org/log/20100309-faster-timeouts
 // as suggested by mozilla's MDN.
 
-var _ = require('underscore');
+import _ from 'underscore';
+
 var timeouts = [],
 	args = [],
 	messageName = "zero-timeout-message",

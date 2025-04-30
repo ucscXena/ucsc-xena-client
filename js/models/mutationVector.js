@@ -7,10 +7,10 @@ import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
 import Rx from '../rx';
 import * as exonLayout from '../exonLayout.js';
-var intervalTree = require('static-interval-tree');
+import intervalTree from 'static-interval-tree';
 import { pxTransformInterval } from '../layoutPlot.js';
 import { hexToRGB, colorStr } from '../color_helper.js';
-var jStat = require('jStat').jStat;
+import { jStat } from 'jStat';
 import parsePos from '../parsePos.js';
 import sortOrder from './sparseSortOrder';
 

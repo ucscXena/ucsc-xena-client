@@ -7,7 +7,7 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
-const React = require('react');
+import React from 'react';
 import { rxEvents } from '../react-utils.js';
 
 // Comp styles

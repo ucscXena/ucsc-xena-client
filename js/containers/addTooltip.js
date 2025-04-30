@@ -1,7 +1,7 @@
 
 import Tooltip from '../views/Tooltip.js';
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import { rxEvents } from '../react-utils.js';
 import meta from '../meta';
 import * as _ from '../underscore_ext.js';

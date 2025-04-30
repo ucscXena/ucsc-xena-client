@@ -1,4 +1,4 @@
-var jStat = require('jStat').jStat;
+import { jStat } from 'jStat';
 
 function valCounts(arr) {
 	var counts = new Map();

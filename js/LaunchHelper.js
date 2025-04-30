@@ -13,7 +13,7 @@ import {
 } from '@material-ui/core';
 import PureComponent from './PureComponent';
 import { map, pick, mapObject, getIn, get } from './underscore_ext.js';
-var platform = require('platform');
+import platform from 'platform';
 import Rx from './rx';
 
 // Styles

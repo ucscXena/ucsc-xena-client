@@ -7,8 +7,9 @@
 
 
 // Core dependencies, components
-var React = require('react');
-var classNames = require('classnames');
+import React from 'react';
+
+import classNames from 'classnames';
 
 // Styles
 import compStyles from "./ZoomOverlay.module.css";

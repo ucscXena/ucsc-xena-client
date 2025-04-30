@@ -10,7 +10,7 @@
 
 // Core dependencies, components
 import {Box, Paper, Tooltip} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 import * as _ from './underscore_ext.js';
 
 // App dependencies
@@ -22,7 +22,7 @@ import {xenaColor} from './xenaColor';
 // Styles
 import compStyles from "./SheetControls.module.css";
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 var sxActionButton = {
 	letterSpacing: '0.75px',
 	lineHeight: '24px',

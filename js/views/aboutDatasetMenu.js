@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import {MenuItem} from '@material-ui/core';
 import xenaQuery from '../xenaQuery';
 var {parseDsID} = xenaQuery;

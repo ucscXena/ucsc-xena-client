@@ -11,12 +11,12 @@ import PureComponent from '../PureComponent';
 import {Box} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
-var React = require('react');
+import React from 'react';
 
 // Styles
 import compStyles from "./ZoomCarriage.module.css";
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 class ZoomCarriage extends PureComponent {
 

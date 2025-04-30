@@ -1,6 +1,6 @@
 
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import Welcome from '../views/Welcome.js';
 
 var links = [

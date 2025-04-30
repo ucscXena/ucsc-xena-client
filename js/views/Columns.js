@@ -3,7 +3,7 @@ import PureComponent from '../PureComponent';
 import {Box} from '@material-ui/core';
 import { omit } from '../underscore_ext.js';
 
-var React = require('react');
+import React from 'react';
 
 class ColumnsWrapper extends React.Component {
 	render() {

@@ -1,6 +1,6 @@
 
 import * as _ from './underscore_ext.js';
-var {createSelectorCreator, defaultMemoize} = require('reselect');
+import { createSelectorCreator, defaultMemoize } from 'reselect';
 import { createFmapSelector } from './selectors.js';
 import * as widgets from './columnWidgets.js';
 import * as km from './models/km.js';

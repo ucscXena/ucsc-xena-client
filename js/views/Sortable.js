@@ -12,8 +12,8 @@
 // should re-render the component with the childen in the new order.
 
 import PureComponent from '../PureComponent';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import Rx from '../rx';
 import * as _ from '../underscore_ext.js';
 import './Sortable.css';

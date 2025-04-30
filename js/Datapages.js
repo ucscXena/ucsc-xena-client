@@ -14,7 +14,7 @@ import {
 	MuiThemeProvider,
 	Typography
 } from '@material-ui/core';
-const React = require('react');
+import React from 'react';
 
 import {Let, contains, flatmap, flatten, get, getIn, groupBy, identity, keys,
 	map, mapObject, mmap, partitionN, pick, range, sortBy, sum, uniq, updateIn,
@@ -26,7 +26,7 @@ import xenaQuery from './xenaQuery';
 var {parseDsID} = xenaQuery;
 import styles from "./Datapages.module.css";
 import nav from './nav';
-var showdown = require('showdown');
+import showdown from 'showdown';
 import { stripHTML } from './dom_helper.js';
 import treehouseImg from '../images/Treehouse.jpg';
 import { rxEvents } from './react-utils.js';

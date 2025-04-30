@@ -1,2 +1,2 @@
-const ActionCreators = require('redux-devtools-instrument').ActionCreators;
+import { ActionCreators } from 'redux-devtools-instrument';
 export { ActionCreators };

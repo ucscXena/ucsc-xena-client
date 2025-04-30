@@ -7,7 +7,7 @@ import * as _ from './underscore_ext.js';
 
 import * as arrays from './arrays.js';
 import {hfcSync, hfcCompress} from './hfc';
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 import {listToBitmap} from './models/bitmap';
 import Rx from './rx';
 

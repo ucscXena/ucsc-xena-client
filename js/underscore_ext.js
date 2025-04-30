@@ -1,5 +1,5 @@
 import _ from 'underscore';
-var ehmutable = require('ehmutable');
+import ehmutable from 'ehmutable';
 ehmutable.init(_);
 import defer from './defer.js';
 // react fiber code creates data structures with cycles, which breaks

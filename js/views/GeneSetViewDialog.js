@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import {Box, Dialog, DialogContent, DialogTitle, Icon, IconButton, Typography} from '@material-ui/core';
 import Iframe from "react-iframe";
 import PureComponent from '../PureComponent';

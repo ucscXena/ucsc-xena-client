@@ -18,8 +18,8 @@ import {
 	MuiThemeProvider,
 	StylesProvider
 } from '@material-ui/core';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import * as _ from './underscore_ext.js';
 import {servers} from './defaultServers';
 const {localHub} = servers;

@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 import * as _ from '../underscore_ext.js';
-var Highcharts = require('highcharts/highstock');
+import Highcharts from 'highcharts/highstock';
 require('highcharts/highcharts-more')(Highcharts);
 import * as highchartsHelper from './highcharts_helper.js';
 require('highcharts/modules/boost')(Highcharts);

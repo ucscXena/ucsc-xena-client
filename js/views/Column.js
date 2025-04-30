@@ -1,6 +1,6 @@
 import PureComponent from '../PureComponent';
 import * as util from '../util.js';
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 import DefaultTextInput from './DefaultTextInput.js';
 import DragSelect from './DragSelect.js';

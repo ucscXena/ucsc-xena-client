@@ -1,11 +1,11 @@
 import {AppBar, Box, Divider, Icon, IconButton, Tooltip, Typography} from '@material-ui/core';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
 import * as _ from './underscore_ext.js';
 import * as widgets from './columnWidgets.js';
-var classNames = require('classnames');
+import classNames from 'classnames';
 import gaEvents from './gaEvents.js';
 import { signatureField } from './models/fieldSpec.js';
 import { invert, searchSamples } from './models/searchSamples.js';

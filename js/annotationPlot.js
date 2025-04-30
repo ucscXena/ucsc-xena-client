@@ -2,7 +2,7 @@
 /*global require: false, module: false */
 
 import * as _ from './underscore_ext.js';
-var {matches} = require('static-interval-tree');
+import { matches } from 'static-interval-tree';
 import { pxTransformEach } from './layoutPlot.js';
 
 // Draw annotations on one or more evenly sized horizontal bands,

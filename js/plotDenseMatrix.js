@@ -7,7 +7,7 @@ import * as util from './util.js';
 import Legend from './views/Legend.js';
 import BandLegend from './views/BandLegend.js';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import CanvasDrawing from './CanvasDrawing.js';
 import { rxEvents } from './react-utils.js';
 import { drawHeatmap } from './drawHeatmap.js';

@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import VizSettings from '../views/VizSettings.js';
 import * as _ from '../underscore_ext.js';
 

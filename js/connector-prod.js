@@ -1,8 +1,8 @@
 
 import * as _ from './underscore_ext.js';
 import Rx from './rx';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import LZ from './lz-string';
 import urlParams from './urlParams';
 import { compactState, expandState } from './compactData.js';

@@ -1,8 +1,8 @@
 
 import { sortBy } from '../underscore_ext.js';
-var Minhash = require('minhash/src/minhash');
-var rawProbemapHashes = require('json-loader!./probemapMinHashes');
-var rawCohortHashes = require('json-loader!./cohortMinHashes');
+import Minhash from 'minhash/src/minhash';
+import rawProbemapHashes from 'json-loader!./probemapMinHashes';
+import rawCohortHashes from 'json-loader!./cohortMinHashes';
 
 var inflate = list => list.map(
 	({name, hash}) => {

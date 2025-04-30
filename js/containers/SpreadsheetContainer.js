@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import gaEvents from '../gaEvents.js';
 import * as _ from '../underscore_ext.js';
 import getLabel from '../getLabel.js';

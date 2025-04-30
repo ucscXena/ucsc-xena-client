@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 import { allExons, exonGroups, intronRegions } from '../findIntrons.js';
 import { box, renderExon } from './Exons.js';

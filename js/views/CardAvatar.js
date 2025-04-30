@@ -13,7 +13,8 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 

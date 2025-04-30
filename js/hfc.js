@@ -1,4 +1,4 @@
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 import Rx from './rx';
 import {allocArray, allocStrings, getArrayPtrField} from './xenaWasm';
 

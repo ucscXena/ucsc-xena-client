@@ -4,7 +4,7 @@ import Rx from './rx';
 import * as widgets from './columnWidgets.js';
 import * as util from './util.js';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import CanvasDrawing from './CanvasDrawing.js';
 import { rxEvents } from './react-utils.js';
 import { drawSamples } from './drawSamples.js';

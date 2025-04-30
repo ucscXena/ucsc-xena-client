@@ -4,8 +4,8 @@
 import * as _ from './underscore_ext.js';
 
 import vgcanvas from './vgcanvas.js';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 // This is a quick hack to work around the very different styling requirements
 // of BandLegend, vs. the other canvas elements we have. Here we never change

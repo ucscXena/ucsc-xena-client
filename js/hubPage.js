@@ -13,7 +13,7 @@ import {
 	ListItem,
 	Typography
 } from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 import Rx from './rx';
 
 import xenaQuery from './xenaQuery';

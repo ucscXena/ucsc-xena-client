@@ -1,5 +1,5 @@
 
-var React = require('react');
+import React from 'react';
 import PureComponent from './PureComponent';
 import { getIn } from './underscore_ext.js';
 

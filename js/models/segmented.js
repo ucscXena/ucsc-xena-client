@@ -7,7 +7,7 @@ import * as widgets from '../columnWidgets.js';
 import xenaQuery from '../xenaQuery';
 import Rx from '../rx';
 import * as exonLayout from '../exonLayout.js';
-var intervalTree = require('static-interval-tree');
+import intervalTree from 'static-interval-tree';
 import { pxTransformInterval } from '../layoutPlot.js';
 import * as heatmapColors from '../heatmapColors';
 import parsePos from '../parsePos.js';

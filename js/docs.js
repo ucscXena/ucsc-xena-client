@@ -1,6 +1,7 @@
 
 import demo from '../docs/schema';
-var {toHTML, css} = require('schema-shorthand').html;
+import {html} from 'schema-shorthand';
+var {toHTML, css} = html;
 var main = document.getElementById('main');
 import * as _ from './underscore_ext.js';
 

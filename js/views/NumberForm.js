@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import {TextField} from '@material-ui/core';
 import * as _ from '../underscore_ext.js';
 import { rxEvents } from '../react-utils.js';

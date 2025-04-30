@@ -1,5 +1,5 @@
 
-var {Component} = require('react');
+import { Component } from 'react';
 import { isEqual } from './underscore_ext.js';
 
 var logDiff, logTime; //eslint-disable-line no-unused-vars

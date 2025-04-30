@@ -1,8 +1,10 @@
 /*eslint-disable camelcase */
 
-var jStat = require('jStat').jStat;
+import { jStat } from 'jStat';
+
 import * as _ from './underscore_ext.js';
-var linearAlgebra = require('linear-algebra')();
+import linearAlgebraFn from 'linear-algebra';
+var linearAlgebra = linearAlgebraFn();
 var Matrix = linearAlgebra.Matrix;
 
 var reduce = _.reduce,

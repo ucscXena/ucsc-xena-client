@@ -1,8 +1,8 @@
 
-var React = require('react');
+import React from 'react';
 import * as _ from '../underscore_ext.js';
 import styles from "./DensityPlot.module.css";
-var sc = require('science');
+import sc from 'science';
 
 const plotHeight = 35;
 const plotWidth = 200;

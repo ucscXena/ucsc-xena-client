@@ -1,5 +1,5 @@
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
 import * as _ from '../underscore_ext.js';
 import XAutocompleteSuggest from './XAutocompleteSuggest';

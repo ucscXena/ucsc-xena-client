@@ -1,5 +1,5 @@
 import * as arrays from './arrays.js';
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 import {hfcSync} from './hfc';
 
 import { Let, times } from './underscore_ext.js';

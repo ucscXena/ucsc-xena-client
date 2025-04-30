@@ -13,7 +13,7 @@
 
 // Core dependencies, components
 import {Box, Typography} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
 import CardAvatar from './CardAvatar.js';

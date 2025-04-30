@@ -1,8 +1,8 @@
 
 import * as _ from './underscore_ext.js';
 import Rx from './rx';
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { createDevTools } from './controllers/devtools.js';
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';

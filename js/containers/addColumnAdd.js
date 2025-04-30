@@ -8,8 +8,8 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
-var React = require('react');
-var classNames = require('classnames');
+import React from 'react';
+import classNames from 'classnames';
 import ColumnAdd from '../views/ColumnAdd.js';
 
 // Styles

@@ -1,6 +1,6 @@
 
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 import vgcanvas from './vgcanvas.js';
 import { addCommas } from './util.js';
 

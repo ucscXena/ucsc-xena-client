@@ -7,9 +7,10 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Typography} from '@material-ui/core';
-var {Portal} = require('react-overlays');
+import { Portal } from 'react-overlays';
 import columnZoom from '../columnZoom';
 
 // Styles

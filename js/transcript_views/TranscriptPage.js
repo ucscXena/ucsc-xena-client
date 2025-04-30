@@ -1,5 +1,5 @@
 import * as _ from '../underscore_ext.js';
-const React = require('react');
+import React from 'react';
 import {Box, Link} from '@material-ui/core';
 import NameColumn from './NameColumn.js';
 import ExonsOnly from './ExonsOnly.js';

@@ -11,7 +11,7 @@
 
 // Core dependencies
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
 import * as _ from '../underscore_ext.js';

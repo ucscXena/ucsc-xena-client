@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-var ReactDOM = require('react-dom');
+import ReactDOM from 'react-dom';
 import Rx from '../rx';
 var main = window.document.getElementById('main');
 import { allParameters } from '../util.js';
