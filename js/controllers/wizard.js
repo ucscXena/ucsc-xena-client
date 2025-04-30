@@ -2,7 +2,8 @@ import {flatmap, fmap, getIn, groupBy, identity, Let, map, matchKeys, pick,
 	updateIn} from '../underscore_ext.js';
 
 import xenaQuery from '../xenaQuery';
-var {servers: {localHub}} = require('../defaultServers');
+import {servers} from '../defaultServers';
+const {localHub} = servers;
 import {ignoredType, isPhenotype} from '../models/dataType';
 import Rx from '../rx';
 import { userServers } from './common.js';

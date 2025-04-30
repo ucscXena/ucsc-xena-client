@@ -9,7 +9,7 @@ var fs = require('fs');
 import {Minhash} from 'minhash';
 var _ = require('underscore');
 
-var {publicServers, enabledServers} = require('../defaultServers');
+import {publicServers, enabledServers} from '../defaultServers';
 var enabledPublicServers = _.intersection(publicServers, enabledServers);
 
 var allCohortsQuery = `

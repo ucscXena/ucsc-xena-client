@@ -1,4 +1,4 @@
-var {servers} = require('../defaultServers');
+import {servers} from '../defaultServers';
 import Rx from '../rx';
 var {ajax, create, defer, empty, from, fromEvent, of, zip} = Rx.Observable;
 var EMPTY = empty();

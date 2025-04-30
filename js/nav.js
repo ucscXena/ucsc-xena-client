@@ -21,7 +21,8 @@ import {
 var React = require('react');
 var ReactDOM = require('react-dom');
 import * as _ from './underscore_ext.js';
-var {servers: {localHub}} = require('./defaultServers');
+import {servers} from './defaultServers';
+const {localHub} = servers;
 import * as store from './hiddenOpts';
 import Rx from './rx';
 import meta from './meta';

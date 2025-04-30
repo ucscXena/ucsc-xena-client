@@ -17,7 +17,7 @@ import Crosshair from './Crosshair.js';
 
 import parsePos from '../parsePos.js';
 import { categoryMore } from '../colorScales.js';
-var {publicServers} = require('../defaultServers');
+import {publicServers} from '../defaultServers';
 import {Box, Divider, Icon, IconButton, Menu, MenuItem, Tooltip} from '@material-ui/core';
 import ColCard from './ColCard.js';
 import { ChromPosition } from '../ChromPosition.js';

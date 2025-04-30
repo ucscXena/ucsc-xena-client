@@ -1,7 +1,7 @@
 
 var util = require('./util').default;
 import * as _ from './underscore_ext.js';
-var {defaultServers} = require('./defaultServers');
+import {defaultServers} from './defaultServers';
 
 function parseServer(s) {
 	// XXX should throw or otherwise indicate parse error on no match

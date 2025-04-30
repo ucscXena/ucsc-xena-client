@@ -13,7 +13,7 @@ import {matchDatasetFields} from '../models/columns';
 import Rx from '../rx';
 const {Observable, Scheduler} = Rx;
 import {getOpts} from '../columnsParam';
-var {servers} = require('../defaultServers');
+import {servers} from '../defaultServers';
 
 // Styles
 var sxSuggestForm = {

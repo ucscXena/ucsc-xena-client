@@ -4,7 +4,8 @@ import {assocIn, deepMerge, dissoc, get, identity, Let, matchKeys, pick,
 import {make, mount, compose} from './utils';
 import xenaQuery from '../xenaQuery';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN, datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList, datasetSamples, sparseDataExamples, segmentDataExamples} = xenaQuery;
-var {servers: {localHub}, serverS3url} = require('../defaultServers');
+import {servers, serverS3url} from '../defaultServers';
+const {localHub} = servers;
 import { deleteDataset } from '../xenaAdmin.js';
 import { userServers } from './common.js';
 import { ignoredType } from '../models/dataType.js';

@@ -1,6 +1,6 @@
 import Rx from '../rx';
 import { Let, get, getIn, isEqual } from '../underscore_ext.js';
-var {servers} = require('../defaultServers');
+import {servers} from '../defaultServers';
 import xenaQuery from '../xenaQuery';
 var {testStatus} = xenaQuery;
 

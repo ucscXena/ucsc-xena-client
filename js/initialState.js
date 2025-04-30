@@ -1,5 +1,5 @@
 import * as _ from './underscore_ext.js';
-var {defaultServers, enabledServers} = require('./defaultServers');
+import {defaultServers, enabledServers} from './defaultServers';
 import { getNotifications } from './notifications.js';
 
 var defaultServerState = _.object(defaultServers,

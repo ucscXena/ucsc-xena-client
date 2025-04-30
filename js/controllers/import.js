@@ -1,6 +1,6 @@
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
-var {servers} = require('../defaultServers');
+import {servers} from '../defaultServers';
 import xenaQuery from '../xenaQuery';
 var {cohortSummary, probemapList, datasetStatus} = xenaQuery;
 

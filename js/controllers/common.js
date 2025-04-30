@@ -8,7 +8,7 @@ import { reifyErrors, collectResults } from './errors.js';
 import fetch from '../fieldFetch';
 import * as kmModel from '../models/km.js';
 import { signatureField } from '../models/fieldSpec.js';
-var {servers: allServers, publicServers} = require('../defaultServers');
+import {servers as allServers, publicServers} from '../defaultServers';
 import gaEvents from '../gaEvents.js';
 import {userServers} from '../models/servers';
 import {hfc} from '../hfc';
