@@ -1,6 +1,7 @@
 import * as _ from '../underscore_ext.js';
 import React from 'react';
 import {Box, Link} from '@material-ui/core';
+import WarningIcon from '@material-ui/icons/Warning';
 import NameColumn from './NameColumn.js';
 import ExonsOnly from './ExonsOnly.js';
 import { DensityPlot, bottomColor, topColor, plotWidth } from './DensityPlot.js';
@@ -25,10 +26,11 @@ function getStatusView(status, onReload) {
 	if (status === 'error') {
 		return (
 			<div className={styles.status}>
-				<i onClick={onReload}
-				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={`material-icons ${styles.errorIcon}`}>warning</i>
+				<WarningIcon
+					onClick={onReload}
+					title="Error loading data. Click to reload."
+					aria-hidden="true"
+					className={styles.errorIcon}/>
 			</div>);
 	}
 	return null;

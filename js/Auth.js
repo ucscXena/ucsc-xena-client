@@ -1,7 +1,7 @@
 import {Button, Dialog, DialogActions, DialogContent, Link}
 	from '@material-ui/core';
 
-import {Error} from '@material-ui/icons';
+import Error from '@material-ui/icons/Error';
 
 import {el, br, span} from './chart/react-hyper';
 

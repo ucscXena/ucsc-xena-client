@@ -1,5 +1,6 @@
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import PureComponent from '../PureComponent';
 import { identity, isEqual, isObject, memoize1, mmap } from '../underscore_ext.js';
 import XAutosuggestInput from './XAutosuggestInput';

@@ -1,6 +1,7 @@
 
 import PureComponent from '../PureComponent';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {Box} from '@material-ui/core';
 import React from 'react';

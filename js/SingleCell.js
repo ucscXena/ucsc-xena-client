@@ -14,7 +14,7 @@ import {Map as CellView} from './views/Map';
 import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
-import {ExpandMore} from '@material-ui/icons';
+import ExpandMore from '@material-ui/icons/ExpandMore';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
