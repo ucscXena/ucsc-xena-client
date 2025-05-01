@@ -150,16 +150,17 @@ module.exports = {
 	},
 	plugins: htmlPlugin.concat([]),
 	resolve: {
-		// pdfkit exports es6 modules, which webpack will prefer by default, but
-		// getting them to build correctly is extremely complicated. So, we configure
-		// webpack to prefer commonjs modules ('main').
-		mainFields: ['browser', 'main', 'module'],
+		mainFields: ['browser', 'module', 'main'],
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
-			'fs': 'pdfkit/js/virtual-fs.js',
+			// resolve this completely so the pdfkit alias doesn't break it.
+			'fs': require.resolve('pdfkit/js/virtual-fs.js'),
 			'txml/txml': 'txml/dist/txml',
-			'./connector': path.resolve(__dirname, 'js/connector-dev.js')
+			'./connector': path.resolve(__dirname, 'js/connector-dev.js'),
+			// pdfkit 'module' import is broken. Alias it directly to the
+			// 'main' import.
+			'pdfkit': 'pdfkit/js/pdfkit.js'
 		},
 		symlinks: false,
 		extensions: ['.js', '.jsx', '.json']
