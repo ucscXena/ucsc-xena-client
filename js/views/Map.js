@@ -5,7 +5,7 @@ import {br, div, el, img, label, span} from '../chart/react-hyper.js';
 import { get, getIn, identity, indexOf, Let, max, memoize1, min, omit, pick, pluck } from '../underscore_ext.js';
 import * as colorScales from '../colorScales';
 import spinner from '../ajax-loader.gif';
-import {OrbitView, OrthographicView} from 'deck.gl';
+import {OrbitView, OrthographicView} from '@deck.gl/core';
 import {pointCloudLayer} from '../PointCloudLayer';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
