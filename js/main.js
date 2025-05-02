@@ -1,10 +1,5 @@
 import './base';
 import * as _ from './underscore_ext.js';
-import './plotDenseMatrix';
-import './plotMutationVector';
-import './plotSegmented';
-import './plotSamples';
-import './ChromPosition';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';

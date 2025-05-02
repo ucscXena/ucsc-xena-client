@@ -5,6 +5,11 @@ import {Box} from '@material-ui/core';
 import 'react-resizable/css/styles.css';
 import getColumns from './views/Columns.js';
 import SampleZoomIndicator from './views/SampleZoomIndicator';
+// register spreadsheet methods
+import './plotDenseMatrix';
+import './plotMutationVector';
+import './plotSegmented';
+import './plotSamples';
 
 // Styles
 import './Columns.css'; // XXX switch to js styles

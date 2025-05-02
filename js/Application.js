@@ -7,7 +7,6 @@ import SheetControls from './SheetControls';
 import {StateError} from'./StateError';
 import * as _ from './underscore_ext.js';
 import Welcome from './containers/WelcomeContainer';
-import '../css/index.css'; // Root styles file (reset, xena global styles)
 import nav from './nav';
 import gaEvents from './gaEvents.js';
 //var Perf = require('react-dom/lib/ReactPerf');
