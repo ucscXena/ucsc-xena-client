@@ -15,9 +15,8 @@ function getParameterByName(name) {
 url = getParameterByName("GALAXY_URL");
 toolId = getParameterByName("tool_id");
 
-module.exports = {
-	fromGalaxy: function () {
-		return !!url; // coerce to boolean
-	},
-	download: send
+const fromGalaxy = function () {
+    return !!url; // coerce to boolean
 };
+
+export { fromGalaxy, send as download };

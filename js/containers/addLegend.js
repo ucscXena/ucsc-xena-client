@@ -1,8 +1,8 @@
 
 import PureComponent from '../PureComponent';
-var React = require('react');
-var widgets = require('../columnWidgets');
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import * as widgets from '../columnWidgets.js';
+import * as _ from '../underscore_ext.js';
 
 // XXX doing layout here.
 // XXX we could push width down into widgets.legend, but would
@@ -34,4 +34,4 @@ function addLegend(Component) {
 	};
 }
 
-module.exports = addLegend;
+export default addLegend;

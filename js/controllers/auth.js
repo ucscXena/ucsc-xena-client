@@ -1,10 +1,10 @@
 import {compose, make} from './utils';
 import {nextAuth, resetAuthRequired, setAuthError,
 	setAuthPending, setAuthRequired} from '../models/auth';
-var {assocIn, pick} = require('../underscore_ext').default;
-var Rx = require('../rx').default;
+import { assocIn, pick } from '../underscore_ext.js';
+import Rx from '../rx';
 var {ajax} = Rx.Observable;
-var {encodeObject} = require('../util.js').default;
+import {encodeObject} from '../util.js';
 
 var mergeError = /.*-merge-data-error$/;
 var is403 = ([, err]) => err.status === 403;

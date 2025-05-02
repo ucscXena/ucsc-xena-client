@@ -1,15 +1,16 @@
 import query from './query';
 import {make, mount, compose} from './utils';
-var fetch = require('../fieldFetch');
-var {samplesQuery} = require('./common');
-var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList,
-	datasetMetadata, fetchDefaultStudy} =
-	require('../xenaQuery');
-var {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
-	Let, map, merge, max: _max, min: _min, object, pairs, pluck, pick, range,
-	uniq, updateIn} = require('../underscore_ext').default;
-var {userServers} = require('./common');
-var Rx = require('../rx').default;
+import fetch from '../fieldFetch';
+import { samplesQuery } from './common.js';
+import xenaQuery from '../xenaQuery';
+var {allCohorts: fetchAllCohorts, allFieldMetadata, cohortMaxSamples, datasetList, datasetMetadata, fetchDefaultStudy} = xenaQuery;
+
+import {assoc, assocIn, findIndex, get, getIn, identity, intersection, isArray,
+	Let, map, merge, max as _max, min as _min, object, pairs, pluck, pick,
+	range, uniq, updateIn} from '../underscore_ext.js';
+
+import { userServers } from './common.js';
+import Rx from '../rx';
 var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
 import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
@@ -17,7 +18,7 @@ import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
 	setChartType, studyList, userServerCohorts} from '../models/singlecell';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
-var widgets = require('../columnWidgets');
+import * as widgets from '../columnWidgets.js';
 import {isPhenotype} from '../models/dataType';
 
 // Number of image layers in display

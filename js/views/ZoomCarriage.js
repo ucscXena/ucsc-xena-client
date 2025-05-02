@@ -11,11 +11,12 @@ import PureComponent from '../PureComponent';
 import {Box} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
-var React = require('react');
+import React from 'react';
 
 // Styles
-var compStyles = require('./ZoomCarriage.module.css');
-var classNames = require('classnames');
+import compStyles from "./ZoomCarriage.module.css";
+
+import classNames from 'classnames';
 
 class ZoomCarriage extends PureComponent {
 
@@ -43,6 +44,6 @@ class ZoomCarriage extends PureComponent {
 					 style={{top: carriageEnd, transform: this.getRotation(lowerAngle), width: lowerLine}} sx={{borderColor: xenaColor.BLACK_24}}/>
 			</div>);
 	}
-};
+}
 
 export default ZoomCarriage;

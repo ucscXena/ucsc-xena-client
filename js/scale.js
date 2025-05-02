@@ -1,5 +1,5 @@
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 // We could use d3 for scale & ticks. Avoiding it here because
 // of wanting to minimize dependencies, it's more than we need,
@@ -49,7 +49,4 @@ function linearTicks(start, end) {
 	return _.range(Math.ceil(low / t), Math.floor(high / t) + 1).map(i => i * t);
 }
 
-module.exports = {
-	linear: linear,
-	linearTicks: linearTicks
-};
+export { linear, linearTicks };

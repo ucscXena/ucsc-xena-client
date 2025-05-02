@@ -1,9 +1,9 @@
-var React = require('react');
-var gaEvents = require('../gaEvents');
-var _ = require('../underscore_ext').default;
-var getLabel = require('../getLabel');
-var {supportsEdit} = require('../models/fieldSpec');
-var {addCommas} = require('../util').default;
+import React from 'react';
+import gaEvents from '../gaEvents.js';
+import * as _ from '../underscore_ext.js';
+import getLabel from '../getLabel.js';
+import { supportsEdit } from '../models/fieldSpec.js';
+import { addCommas } from '../util.js';
 import {canPickSamples, pickSamplesFilter} from '../models/searchSamples';
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
@@ -61,7 +61,7 @@ function getPreferredExpression(props) {
 	}
 }
 
-var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Component {
+var getSpreadsheetContainer = (Column, Spreadsheet) => (class extends React.Component {
 	static displayName = 'SpreadsheetContainer';
 
 	state = {
@@ -235,6 +235,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						tumorMap={cohortTumorMap}/>))}
 			</Spreadsheet>);
 	}
-};
+});
 
-module.exports = {getSpreadsheetContainer};
+export { getSpreadsheetContainer };

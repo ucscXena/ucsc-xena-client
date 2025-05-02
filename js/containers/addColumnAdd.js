@@ -8,12 +8,12 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
-var React = require('react');
-var classNames = require('classnames');
-var ColumnAdd = require('../views/ColumnAdd');
+import React from 'react';
+import classNames from 'classnames';
+import ColumnAdd from '../views/ColumnAdd.js';
 
 // Styles
-var compStyles = require('./addColumnAdd.module.css');
+import compStyles from "./addColumnAdd.module.css";
 
 var hoverClass = (index, hover) =>
 	index === hover ? compStyles.hoverLeft :
@@ -66,4 +66,4 @@ function addColumnAdd(Component) {
 	};
 }
 
-module.exports = addColumnAdd;
+export default addColumnAdd;

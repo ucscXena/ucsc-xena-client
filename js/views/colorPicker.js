@@ -3,7 +3,7 @@ import {Button, Dialog, DialogActions, DialogContent,
 import {el, span} from '../chart/react-hyper';
 import {tableLayout} from './muiTable';
 import {colorScale, categoryMore as colors} from '../colorScales';
-var {assoc, Let, range} = require('../underscore_ext').default;
+import { assoc, Let, range } from '../underscore_ext.js';
 import {cmpCodes} from '../models/singlecell';
 
 var button = el(Button);

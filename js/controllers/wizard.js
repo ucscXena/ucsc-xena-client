@@ -1,9 +1,12 @@
-var {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} = require('../underscore_ext').default;
-var xenaQuery = require('../xenaQuery');
-var {servers: {localHub}} = require('../defaultServers');
+import {flatmap, fmap, getIn, groupBy, identity, Let, map, matchKeys, pick,
+	updateIn} from '../underscore_ext.js';
+
+import xenaQuery from '../xenaQuery';
+import {servers} from '../defaultServers';
+const {localHub} = servers;
 import {ignoredType, isPhenotype} from '../models/dataType';
-var Rx = require('../rx').default;
-var {userServers} = require('./common');
+import Rx from '../rx';
+import { userServers } from './common.js';
 import {make, compose} from './utils';
 import query from './query';
 
@@ -106,7 +109,7 @@ var {controller: fetchController, invalidatePath} =
 	query(fetchMethods, wizardData, cachePolicy, 'wizard');
 
 var invalidateCohorts = Let(({any} = matchKeys) =>
-	function (serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['cohortMeta']);
 		invalidatePath(serverBus, ['cohortPreferred']);
 		invalidatePath(serverBus, ['cohortPhenotype']);
@@ -117,7 +120,7 @@ var invalidateCohorts = Let(({any} = matchKeys) =>
 	});
 
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['serverCohorts', localHub]);
 		invalidatePath(serverBus, ['cohortDatasets', any, localHub]);
 		invalidatePath(serverBus, ['cohortFeatures', any, localHub, any]);

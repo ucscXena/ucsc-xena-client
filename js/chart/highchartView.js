@@ -1,20 +1,20 @@
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
-var Highcharts = require('highcharts/highstock');
+import * as _ from '../underscore_ext.js';
+import Highcharts from 'highcharts/highstock';
 require('highcharts/highcharts-more')(Highcharts);
-var highchartsHelper =  require ('./highcharts_helper');
+import * as highchartsHelper from './highcharts_helper.js';
 require('highcharts/modules/boost')(Highcharts);
 require('highcharts/modules/heatmap')(Highcharts);
 import {xenaColor} from '../xenaColor';
-var jStat = require('../jStatShim');
+import jStat from '../jStatShim';
 import {isSet, bitCount} from '../models/bitmap';
 import multi from '../multi';
 import {div, el} from './react-hyper';
-var compStyles = require('./highchartView.module.css');
+import compStyles from "./highchartView.module.css";
 
 import {kde} from '../models/kde';
-var fvc = require('./fvc');
-var {groupValues} = require('./dataUtils');
+import * as fvc from './fvc.js';
+import { groupValues } from './dataUtils.js';
 var defaultColor = xenaColor.BLUE_PRIMARY;
 
 // Implement a custom 'legendRadius' to override the marker.radius

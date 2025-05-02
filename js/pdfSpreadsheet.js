@@ -1,15 +1,14 @@
-var styles = require('./spreadsheetStyles');
-var widgets = require('./columnWidgets');
-
-require('./pdfMutationVector');
-require('./pdfDenseMatrix');
-require('./pdfSegmented');
-require('./pdfSamples');
-var _ = require('./underscore_ext').default;
+import * as styles from './spreadsheetStyles.js';
+import * as widgets from './columnWidgets.js';
+import './pdfMutationVector.js';
+import './pdfDenseMatrix.js';
+import './pdfSegmented.js';
+import './pdfSamples.js';
+import * as _ from './underscore_ext.js';
 import {drawRefGeneExons} from './refGeneExons';
 import {showPosition, annotationHeight, positionHeight} from './views/Column';
 import vgcanvas from './vgcanvas';
-import {zoomText} from './columnZoom';
+import columnZoom from './columnZoom';
 
 var totalWidth = cols =>
 	(cols.length - 1) * styles.column.margin +
@@ -74,10 +73,11 @@ function drawColumnLabel(vg, column) {
 
 
 var download = state => {
-	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
-		var PDFDocument = require('pdfkit');
-		var blobStream = require('blob-stream');
-		var vgpdf = require('./vgpdf');
+	Promise.all([ import('pdfkit'), import('blob-stream'), import('./vgpdf')
+	]).then(([pdfkitModule, blobStreamModule, vgpdfModule]) => {
+		const PDFDocument = pdfkitModule.default;
+		const blobStream = blobStreamModule.default;
+		const vgpdf = vgpdfModule.default;
 		let columns = state.columnOrder.map(id => state.columns[id]),
 			data = state.data,
 			width = totalWidth(columns),
@@ -93,7 +93,7 @@ var download = state => {
 			offsets = getOffsets(columns);
 
 		columns.forEach((column, i) => {
-			var zoom = zoomText(column).toUpperCase();
+			var zoom = columnZoom.zoomText(column).toUpperCase();
 
 			vg.translate(offsets[i], 0, () => {
 				drawColumnLabel(vg, column);

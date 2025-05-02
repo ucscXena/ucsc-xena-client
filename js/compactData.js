@@ -3,12 +3,13 @@
 // Also handles serialization of binary objects, and conversion of plain
 // js to binary objects (in the case of migrating from old schema).
 
-var _ = require('./underscore_ext').default;
-var arrays = require('./arrays');
+import * as _ from './underscore_ext.js';
+
+import * as arrays from './arrays.js';
 import {hfcSync, hfcCompress} from './hfc';
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 import {listToBitmap} from './models/bitmap';
-var Rx = require('./rx').default;
+import Rx from './rx';
 
 var {Observable: {from, of, zipArray}} = Rx;
 
@@ -264,7 +265,4 @@ var expandState = state =>
 		expandSamples(reorderSamples(expandSurvival(expandData(state)))) :
 		of(state);
 
-module.exports = {
-	compactState,
-	expandState
-};
+export { compactState, expandState };

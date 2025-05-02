@@ -1,10 +1,5 @@
 import './base';
-var _ = require('./underscore_ext').default;
-import './plotDenseMatrix';
-import './plotMutationVector';
-import './plotSegmented';
-import './plotSamples';
-import './ChromPosition';
+import * as _ from './underscore_ext.js';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';
@@ -17,15 +12,14 @@ import singlecellController from './controllers/singlecell';
 import transcriptController from './controllers/transcripts';
 import importController from './controllers/import';
 import authController from './controllers/auth';
-//import tiesController from './controllers/ties';
 import PageContainer from './containers/PageContainer';
 import { compose } from './controllers/utils';
 import connectionController from './controllers/connection';
-var {initialState} = require('./initialState');
+import { initialState } from './initialState.js';
 
-const connector = require('./connector');
-const createStore = require('./store');
-const xenaWasm = require('./xenaWasm');
+import connector from './connector'; // see webpack alias for this import
+import createStore from './store.js';
+import * as xenaWasm from './xenaWasm.js';
 
 // Hot load controllers. Note that hot loading won't work if one of the methods
 // is captured in a closure or variable which we can't access.  References to
@@ -40,37 +34,40 @@ const xenaWasm = require('./xenaWasm');
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		let newModule = require('./controllers/ui').default;
-		_.extend(uiController, newModule);
+		import('./controllers/ui').then(newModule => {
+			_.extend(uiController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/server', () => {
-		let newModule = require('./controllers/server').default;
-		_.extend(serverController, newModule);
+		import('./controllers/server').then(newModule => {
+			_.extend(serverController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/hub', () => {
-		let newModule = require('./controllers/hub').default;
-		_.extend(hubController, newModule);
+		import('./controllers/hub').then(newModule => {
+			_.extend(hubController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/wizard', () => {
-		let newModule = require('./controllers/wizard').default;
-		_.extend(wizardController, newModule);
+		import('./controllers/wizard').then(newModule => {
+			_.extend(wizardController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/singlecell', () => {
-		let newModule = require('./controllers/singlecell').default;
-		_.extend(singlecellController, newModule);
+		import('./controllers/singlecell').then(newModule => {
+			_.extend(singlecellController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/transcripts', () => {
-		let newModule = require('./controllers/transcripts').default;
-		_.extend(transcriptController, newModule);
+		import('./controllers/transcripts').then(newModule => {
+			_.extend(transcriptController, newModule.default);
+		});
 	});
 	module.hot.accept('./controllers/import', () => {
-		let newModule = require('./controllers/import').default;
-		_.extend(importController, newModule);
+		import('./controllers/import').then(newModule => {
+			_.extend(importController, newModule.default);
+		});
 	});
-//	module.hot.accept('./controllers/ties', () => {
-//		let newModule = require('./controllers/ties');
-//		_.extend(tiesController, newModule);
-//	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});
@@ -81,7 +78,7 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // controllers run in the opposite order as listed in compose().
-const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), authController, hubController, serverController, wizardController, singlecellController, uiController, transcriptController, importController);
 
 xenaWasm.loaded.then(() => {
 	connector({...store, initialState, controller, main, Page: PageContainer,

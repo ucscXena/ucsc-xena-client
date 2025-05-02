@@ -1,15 +1,15 @@
 import {FormControl, MenuItem, TextField} from '@material-ui/core';
-var {el, label, textNode} = require('./react-hyper');
-var {get} = require('../underscore_ext').default;
+import { el, label, textNode } from './react-hyper.js';
+import { get } from '../underscore_ext.js';
 
 var menuItem = el(MenuItem);
 var formControl = el(FormControl);
 var textField = el(TextField);
 
 // XXX move to different file?
-var compStyles = require('./chart.module.css');
+import compStyles from "./chart.module.css";
 
-var {reject} = require('../underscore_ext').default;
+import { reject } from '../underscore_ext.js';
 
 export var selectProps = {
 	className: compStyles.formControl,

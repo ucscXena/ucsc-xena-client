@@ -1,9 +1,9 @@
 
-var multi = require('./multi');
-var denseMatrix = require('./models/denseMatrix');
-var mutationVector = require('./models/mutationVector');
-var segmented = require('./models/segmented');
-var Rx = require('./rx').default;
+import multi from './multi.js';
+import * as denseMatrix from './models/denseMatrix.js';
+import * as mutationVector from './models/mutationVector.js';
+import * as segmented from './models/segmented.js';
+import Rx from './rx';
 
 var fetch = multi((settings, samples) => samples.length > 0 ? settings.fetchType : 'empty');
 
@@ -21,4 +21,4 @@ xenaFetch.add('SV-mutation', mutationVector.fetch);
 fetch.add('xena', xenaFetch);
 fetch.add('empty', () => Rx.Observable.of(null, Rx.Scheduler.asap));
 
-module.exports = fetch;
+export default fetch;

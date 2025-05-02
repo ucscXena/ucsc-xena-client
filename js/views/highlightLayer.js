@@ -1,4 +1,4 @@
-import {IconLayer} from 'deck.gl';
+import {IconLayer} from '@deck.gl/layers';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import locationOn from './locationon.png';
 

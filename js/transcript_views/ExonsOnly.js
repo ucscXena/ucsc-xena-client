@@ -1,8 +1,8 @@
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var {allExons, exonGroups, intronRegions} = require('../findIntrons');
-var {box, renderExon} = require('./Exons');
-var styles = require('./Exons.module.css');
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import { allExons, exonGroups, intronRegions } from '../findIntrons.js';
+import { box, renderExon } from './Exons.js';
+import styles from "./Exons.module.css";
 
 const width = 700;
 const padding = 5;
@@ -147,4 +147,4 @@ class ExonsOnly extends React.PureComponent {
 	}
 }
 
-module.exports = ExonsOnly;
+export default ExonsOnly;

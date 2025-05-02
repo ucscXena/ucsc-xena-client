@@ -1,9 +1,8 @@
-var _ = require('../underscore_ext').default;
-var multi = require('../multi');
-var {colorScale} = require('../colorScales');
-var km = require('../km'); // move km down?
-var {RGBToHex} = require('../color_helper').default;
-//var {segmentAverage} = require('./segmented');
+import * as _ from '../underscore_ext.js';
+import multi from '../multi.js';
+import { colorScale } from '../colorScales.js';
+import * as km from '../km.js'; // move km down?
+import { RGBToHex } from '../color_helper.js';
 
 var MAX = 10; // max number of groups to display.
 
@@ -255,7 +254,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		uniq = _.without(_.uniq(avg), NaN),
 		scale = colorScale(color),
 		[,,,, origin] = color,
-		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
+		colorfn = v => RGBToHex(...(v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin))),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
 	return {columnValues: avg, maySplit: true, ...partFn(avg, uniq, colorfn)};
 }
@@ -442,4 +441,4 @@ function pickSurvivalVars(cohortFeatures, user) {
 			'patient', _.getIn(user, [`patient`], patient));
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};
+export { makeGroups, pickSurvivalVars, survivalOptions, getSplits };

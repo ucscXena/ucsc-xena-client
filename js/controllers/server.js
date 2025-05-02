@@ -1,12 +1,12 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {computeSettings, matchDatasetFields} from '../models/columns';
-var {searchSamples} = require('../models/searchSamples');
-var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
-var {getNotifications} = require('../notifications');
+import { searchSamples } from '../models/searchSamples.js';
+import { resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering } from './common.js';
+import { getNotifications } from '../notifications.js';
 import {make, mount, compose} from './utils';
-var Rx = require('../rx').default;
-var uuid = require('../uuid');
-var widgets = require('../columnWidgets');
+import Rx from '../rx';
+import uuid from '../uuid.js';
+import * as widgets from '../columnWidgets.js';
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 

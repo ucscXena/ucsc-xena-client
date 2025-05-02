@@ -1,8 +1,8 @@
 
 // Pick color scales based on metadata
 
-var _ = require('underscore');
-var multi = require('./multi');
+import * as _ from './underscore_ext.js';
+import multi from './multi.js';
 
 var isNumber = _.isNumber;
 

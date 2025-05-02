@@ -1,5 +1,5 @@
 
-var {isString, isArray, isObject, isBoolean, isNumber, Let} = require('./underscore_ext').default;
+import { isString, isArray, isObject, isBoolean, isNumber, Let } from './underscore_ext.js';
 
 var optBoolean = v => v === undefined || isBoolean(v);
 var optObject = o => o === undefined || isObject(o);
@@ -29,12 +29,11 @@ var schemaCheck = state =>
 				isNumber(zoom.height)))) &&
 	state;
 
-module.exports = {
-	schemaCheck,
-	schemaCheckThrow: state => {
-		if (!schemaCheck(state)) {
-			throw new Error('invalid state schema');
-		}
-		return state;
-	}
+const schemaCheckThrow = state => {
+    if (!schemaCheck(state)) {
+        throw new Error('invalid state schema');
+    }
+    return state;
 };
+
+export { schemaCheck, schemaCheckThrow };

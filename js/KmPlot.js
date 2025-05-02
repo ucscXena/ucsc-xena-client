@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import {
 	Box,
 	Dialog,
@@ -13,17 +13,17 @@ import {
 	Typography
 } from '@material-ui/core';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 // XXX move this file out of chart directory
 import {el, div, h1, h3, label, span} from './chart/react-hyper';
 import {xenaColor} from './xenaColor';
 
-var Axis = require('./Axis');
-var {linear, linearTicks} = require('./scale');
-var pdf = require('./kmpdf');
-var NumberForm = require('./views/NumberForm');
-var {survivalOptions, getSplits} = require('./models/km');
-var gaEvents = require('./gaEvents');
+import Axis from './Axis.js';
+import { linear, linearTicks } from './scale.js';
+import pdf from './kmpdf.js';
+import NumberForm from './views/NumberForm.js';
+import { survivalOptions, getSplits } from './models/km.js';
+import gaEvents from './gaEvents.js';
 
 // Styles
 import kmStyle from './km.module.css';

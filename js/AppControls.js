@@ -1,14 +1,14 @@
-import {AppBar, Box, Button, Divider, Icon, IconButton, Tooltip, Typography} from '@material-ui/core';
+import {AppBar, Box, Divider, Icon, IconButton, Tooltip, Typography} from '@material-ui/core';
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
-var _ = require('./underscore_ext').default;
-var widgets = require('./columnWidgets');
-var classNames = require('classnames');
-var gaEvents = require('./gaEvents');
-var {signatureField} = require('./models/fieldSpec');
-var {invert, searchSamples} = require('./models/searchSamples');
+import * as _ from './underscore_ext.js';
+import * as widgets from './columnWidgets.js';
+import classNames from 'classnames';
+import gaEvents from './gaEvents.js';
+import { signatureField } from './models/fieldSpec.js';
+import { invert, searchSamples } from './models/searchSamples.js';
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
@@ -17,7 +17,8 @@ import {xenaColor} from './xenaColor';
 import {fromBitmap, union, removeRows, isSet, bitCount} from './models/bitmap';
 
 // Styles
-var compStyles = require('./AppControls.module.css');
+import compStyles from "./AppControls.module.css";
+
 var sxControlBar = {
 	borderBottom: `1px solid ${xenaColor.BLACK_12}`,
 	display: 'flex',
@@ -98,20 +99,9 @@ var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}) =>
 	);
 };
 
-var BasicSearch = ({onTies, tiesEnabled, ...searchProps}) => (
+var BasicSearch = ({...searchProps}) => (
 	<>
 		<SampleSearch {...searchProps}/>
-		{tiesEnabled && <IconButton onClick={onTies} className={compStyles.ties}><Icon>toys</Icon></IconButton>}
-	</>);
-
-var TiesSearch = () => (
-	<Typography component='span' variant='subtitle2'>Pathology Report Search and Filter by TIES</Typography>
-);
-
-var TiesActions = ({onTies, onTiesColumn}) => (
-	<>
-		<Button onClick={onTiesColumn}>Create filtered column</Button>
-		<IconButton edge='end' onClick={onTies}><Icon>close</Icon></IconButton>
 	</>);
 
 function getFilterColumn(title, samples, matches, exprs, opts = {}) {
@@ -189,16 +179,6 @@ export class AppControls extends PureComponent {
 		});
 	};
 
-	onTiesColumn = () => {
-		const {appState: {ties: {filter, docs}, cohortSamples, survival: {patient}}, callback} = this.props,
-			pindex = patient.data.req.values[0],
-			pcodes = patient.data.codes,
-			keep = new Set(Object.keys(filter).filter(k => filter[k]).map(i => docs[i].patient)),
-			matching = cohortSamples.filter((s, i) => keep.has(pcodes[pindex[i]]));
-		callback(['add-column', 0, getFilterColumn('TIES selection', matching)]); // XXX broken
-		callback(['ties-dismiss']);
-	};
-
 	onMode = () => {
 		var {callback, appState: {mode}} = this.props;
 		gaEvents('spreadsheet', 'mode', modeEvent[mode]);
@@ -227,11 +207,6 @@ export class AppControls extends PureComponent {
 	onCohortSelect = (value) => {
 		this.props.callback(['cohort', value]);
 	};
-
-    onTies = () => {
-		var {appState: {ties}} = this.props;
-        this.props.callback([_.get(ties, 'open') ? 'ties-dismiss' : 'ties-open']);
-    };
 
 	onDownload = () => {
 		var {sampleFormat} = this.props,
@@ -265,14 +240,13 @@ export class AppControls extends PureComponent {
 
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, showWelcome,
-					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
+					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches},
 				onReset, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples,
 			matches = samplesMatched ? bitCount(samplesMatched) : samples.length,
 			{onMap, onPdf, onDownload, onShowWelcome} = this,
 			onMode = anyCanDraw(this.props.appState) ? this.onMode : undefined,
-			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
 			disablePDF = showChartWizard(this.props.appState),
 			sampleFilter = _.get(cohort, 'sampleFilter'),
@@ -303,37 +277,32 @@ export class AppControls extends PureComponent {
 						</Box>
 						<Divider flexItem orientation='vertical' />
 						<Box sx={{...sxFlex, ...sxControlTools, paddingRight: 16}}>
-								{tiesOpen ?
-									<TiesSearch {...{onTies: this.onTies}}/> :
-									<BasicSearch {...{
-										value: sampleSearch,
-										sampleFilter,
-										oldSearch,
-										selection: sampleSearchSelection,
-										matches,
-										offsets: allMatches.offsets,
-										onHighlightSelect,
-										sampleCount: samples.length,
-										history: searchHistory || [],
-										onHistory: this.onSearchHistory,
-										onFilter: this.onFilter,
-										onIntersection: this.onIntersection,
-										onZoom: this.onFilterZoom,
-										onCreateColumn: this.onFilterColumn,
-										pickSamples: pickSamples,
-										onPickSamples: this.onPickSamples,
-										onChange: onHighlightChange,
-										mode,
-										onResetSampleFilter: this.onResetSampleFilter,
-										cohort,
-										callback,
-										onTies: this.onTies,
-										tiesEnabled: false}}/>}
+						<BasicSearch {...{
+							value: sampleSearch,
+							sampleFilter,
+							oldSearch,
+							selection: sampleSearchSelection,
+							matches,
+							offsets: allMatches.offsets,
+							onHighlightSelect,
+							sampleCount: samples.length,
+							history: searchHistory || [],
+							onHistory: this.onSearchHistory,
+							onFilter: this.onFilter,
+							onIntersection: this.onIntersection,
+							onZoom: this.onFilterZoom,
+							onCreateColumn: this.onFilterColumn,
+							pickSamples: pickSamples,
+							onPickSamples: this.onPickSamples,
+							onChange: onHighlightChange,
+							mode,
+							onResetSampleFilter: this.onResetSampleFilter,
+							cohort,
+							callback}}/>
 							</Box>
 						<Divider flexItem orientation='vertical' />
 						<Box sx={{...sxFlex, ...sxControlTools, justifyContent: 'flex-end'}}>
-							{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-								<Actions {...{onMap, onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
+							<Actions {...{onMap, onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>
 						</Box>
 					</Box>
 					<Divider flexItem orientation='vertical'/>

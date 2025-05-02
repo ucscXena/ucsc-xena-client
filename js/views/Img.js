@@ -2,7 +2,8 @@ import PureComponent from '../PureComponent';
 import {el} from '../chart/react-hyper';
 import DeckGL from '@deck.gl/react';
 import {DataFilterExtension} from '@deck.gl/extensions';
-import {BitmapLayer, /*ScatterplotLayer, */OrthographicView} from 'deck.gl';
+import {OrthographicView} from '@deck.gl/core';
+import {BitmapLayer} from '@deck.gl/layers';
 import {scatterplotLayer} from '../ScatterplotLayer';
 import {COORDINATE_SYSTEM} from '@deck.gl/core';
 import {TileLayer} from '@deck.gl/geo-layers';
@@ -10,7 +11,7 @@ import * as colorScales from '../colorScales';
 import {defaultShadow, hasColor, isOrdinal, layerColors, segmentedColor} from
 	'../models/singlecell';
 import {debounce} from '../rx';
-var {get, getIn, identity, Let, pluck} = require('../underscore_ext').default;
+import { get, getIn, identity, Let, pluck } from '../underscore_ext.js';
 import highlightLayer from './highlightLayer';
 
 var deckGL = el(DeckGL);

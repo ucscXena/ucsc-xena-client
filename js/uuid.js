@@ -8,4 +8,4 @@ function uuid() {
 	});
 }
 
-module.exports = uuid;
+export default uuid;

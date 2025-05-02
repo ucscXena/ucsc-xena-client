@@ -1,10 +1,12 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 var download = () => {
-	require.ensure(['pdfkit', 'svg-to-pdfkit', 'blob-stream'], () => {
-		var PDFDocument = require('pdfkit');
-		var blobStream = require('blob-stream');
-		var SVGtoPDF = require('svg-to-pdfkit');
+	Promise.all([import('pdfkit'), import('svg-to-pdfkit'), import('blob-stream')
+	]).then(([pdfkitModule, SVGtoPDFModule, blobStreamModule]) => {
+		const PDFDocument = pdfkitModule.default;
+		const blobStream = blobStreamModule.default;
+		const SVGtoPDF = SVGtoPDFModule.default;
+
 		var svg = document.getElementsByClassName('highcharts-root')[0],
 			r = svg.getBoundingClientRect(),
 			doc = new PDFDocument({compress: false, size: [r.width, r.height]}),

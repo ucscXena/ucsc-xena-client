@@ -1,9 +1,9 @@
 
-var Rx = require('./rx').default;
-var _ = require('./underscore_ext').default;
-var {getErrorProps, logError} = require('./errors');
+import Rx from './rx';
+import * as _ from './underscore_ext.js';
+import { getErrorProps, logError } from './errors.js';
 
-module.exports = function () {
+export default function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
 	// responses.  To do that, we have to allocate somewhere. We can manage it by
 	// doing using a unique tag for the type of request, and using groupBy, then
@@ -44,4 +44,4 @@ module.exports = function () {
 		serverCh,
 		serverBus
 	};
-};
+}

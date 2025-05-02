@@ -1,4 +1,4 @@
-require('./base');
+import './base.js';
 import {
 	Box,
 	Button,
@@ -14,22 +14,27 @@ import {
 	MuiThemeProvider,
 	Typography
 } from '@material-ui/core';
-const React = require('react');
-var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
-	contains, get, updateIn, range, Let, pick,
-	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext').default;
-var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
-var {parseDsID} = require('./xenaQuery');
-var styles = require('./Datapages.module.css');
+import React from 'react';
+
+import {Let, contains, flatmap, flatten, get, getIn, groupBy, identity, keys,
+	map, mapObject, mmap, partitionN, pick, range, sortBy, sum, uniq, updateIn,
+	values, zip} from './underscore_ext.js';
+
+import Rx from './rx';
+const {Observable: {from}, Scheduler: {animationFrame}} = Rx;
+import xenaQuery from './xenaQuery';
+var {parseDsID} = xenaQuery;
+import styles from "./Datapages.module.css";
 import nav from './nav';
-var showdown = require('showdown');
-var {stripHTML} = require('./dom_helper');
+import showdown from 'showdown';
+import { stripHTML } from './dom_helper.js';
 import treehouseImg from '../images/Treehouse.jpg';
-var {rxEvents} = require('./react-utils');
-var {servers: {localHub}, serverNames} = require('./defaultServers');
+import { rxEvents } from './react-utils.js';
+import {servers, serverNames} from './defaultServers';
+const {localHub} = servers;
 import {defaultHost} from './urlParams';
-var {encodeObject, urlParams} = require('./util').default;
-var {getHubParams} = require('./hubParams');
+import { encodeObject, urlParams } from './util.js';
+import { getHubParams } from './hubParams.js';
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
 import {xenaTheme} from './xenaTheme';
@@ -482,18 +487,18 @@ var DatasetPage = wrapLaunchHelper(
 				type = TYPE_NULL, status, loader, count} = meta;
 
 			return (
-				<DatapagesContainer>
-					{children /* LaunchHelper */}
-					<div className={styles.sidebar}>
+                <DatapagesContainer>
+                    {children /* LaunchHelper */}
+                    <div className={styles.sidebar}>
 						<Button onClick={this.onViz}>Visualize</Button>
 						{canDelete(meta, host) ?
 							<DeleteButton callback={callback} name={name} label={label}/> : null}
 					</div>
-					<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
-					<h3>hub: {host}{badge}</h3>
-					{headerValue(longTitle)}
-					{markdownValue(githubDescripton) || htmlValue(description)}
-					{setKey(flatten([
+                    <h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
+                    <h3>hub: {host}{badge}</h3>
+                    {headerValue(longTitle)}
+                    {markdownValue(githubDescripton) || htmlValue(description)}
+                    {setKey(flatten([
 						dataPair('cohort', cohort, toCohortLink(this.onCohort, hubParams)),
 						dataPair('dataset ID', name),
 						getStatus(status, loader),
@@ -513,7 +518,7 @@ var DatasetPage = wrapLaunchHelper(
 							dataPair('raw data', url, toLink)),
 						dataPair('wrangling', wranglingProcedure, toHTML),
 						dataPair('input data format', FORMAT_MAPPING[type])]))}
-					{status === 'loaded' ?
+                    {status === 'loaded' ?
 						<span className={styles.tableControls}>
 							{type === 'genomicMatrix' ? probeCount : null}
 							{type === 'genomicMatrix' ?
@@ -527,8 +532,9 @@ var DatasetPage = wrapLaunchHelper(
 								href={'?' + encodeObject({host, dataset, allSamples: true, ...hubParams})}
 								onClick={this.onSamples} underline='hover'>All Samples</Link>
 						</span> : null}
-					{dataMethod(meta)(meta, data)}
-				</DatapagesContainer>);
+                    {dataMethod(meta)(meta, data)}
+                </DatapagesContainer>
+            );
 		}
 });
 

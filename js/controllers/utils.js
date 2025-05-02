@@ -1,4 +1,4 @@
-var {identity, updateIn, getIn} = require('../underscore_ext').default;
+import { identity, updateIn, getIn } from '../underscore_ext.js';
 
 var make = controls => ({
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),

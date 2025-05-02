@@ -32,11 +32,11 @@
 
 // Core dependencies, components
 import {Button, Typography} from '@material-ui/core';
-var React = require('react');
-var classNames = require('classnames');
+import React from 'react';
+import classNames from 'classnames';
 
 // Styles
-var compStyles = require('./HelpBox.module.css');
+import compStyles from "./HelpBox.module.css";
 
 // XXX move this comment
 // Setup for help box displayed to right of item being highlighted (with row marker). 27.5 used in width calculations
@@ -79,4 +79,4 @@ class HelpBox extends React.Component {
 	}
 }
 
-module.exports = HelpBox;
+export default HelpBox;

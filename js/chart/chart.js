@@ -1,7 +1,7 @@
 import PureComponent from '../PureComponent';
-var {RGBToHex} = require ('../color_helper').default;
-var _ = require('../underscore_ext').default;
-var gaEvents = require('../gaEvents');
+import { RGBToHex } from '../color_helper.js';
+import * as _ from '../underscore_ext.js';
+import gaEvents from '../gaEvents.js';
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
 import statsView from './statsView';
@@ -21,8 +21,8 @@ import {
 import {div, el, fragment, label, textNode} from './react-hyper';
 import * as colorScales from '../colorScales';
 import classNames from 'classnames';
-var {applyExpression} = require('./singleCell');
-var {reOrderFields} = require('../models/denseMatrix');
+import { applyExpression } from './singleCell.js';
+import { reOrderFields } from '../models/denseMatrix.js';
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
 import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,
@@ -30,7 +30,7 @@ import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptio
 import applyTransforms from './applyTransforms';
 
 // Styles
-var compStyles = require('./chart.module.css');
+import compStyles from "./chart.module.css";
 
 var accordionDetails = el(AccordionDetails);
 var box = el(Box);
@@ -223,7 +223,7 @@ function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 var selectedMetrics = ({avgState, pctState, ycolumn}, yavg) =>
 	_.pick(yavg,
 		_.get(avgOptions[avgState[ycolumn]], 'label'),
-		...pctRange[_.get(pctOptions[pctState[ycolumn]], 'label')] || []);
+		...(pctRange[_.get(pctOptions[pctState[ycolumn]], 'label')] || []));
 
 var closeButton = onClose =>
 	iconButton({className: compStyles.chartViewButton, onClick: onClose}, icon('close'));
@@ -262,7 +262,7 @@ function scatterProps({data, columns}, params) {
 
 		// see km.js:segmentedVals(). This is a work-around for
 		// trend-amplitude scales. We should deprecate them.
-		scale = v => RGBToHex(...v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin));
+		scale = v => RGBToHex(...(v < origin ? s.lookup(0, origin - v) : s.lookup(1, v - origin)));
 		sdata = _.getIn(data, [colorColumn, 'avg', 'geneValues', 0]);
 	} else {
 		let color = _.getIn(columns, [colorColumn, 'colors', 0]);

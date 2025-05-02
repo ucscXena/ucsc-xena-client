@@ -8,11 +8,11 @@
 
 // Core dependencies, components
 import {Box, Divider, Typography} from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import * as _ from '../underscore_ext.js';
 
 // Styles
-var compStyles = require('./XRadioMeta.module.css');
+import compStyles from "./XRadioMeta.module.css";
 
 class XRadioMeta extends React.Component {
 	render() {
@@ -34,4 +34,4 @@ class XRadioMeta extends React.Component {
 	}
 }
 
-module.exports = XRadioMeta;
+export default XRadioMeta;

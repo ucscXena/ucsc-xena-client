@@ -32,10 +32,11 @@ import {
 	CircularProgress,
 	Typography
 } from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
-var CardAvatar = require('./CardAvatar');
+import CardAvatar from './CardAvatar.js';
+
 import XColumnDivider from './XColumnDivider';
 
 // Template variables
@@ -172,7 +173,4 @@ class WizardCard extends React.Component {
 	}
 }
 
-module.exports = {
-	WizardCard,
-	WIZARD_CARD_MAX_HEIGHT
-};
+export { WizardCard, WIZARD_CARD_MAX_HEIGHT };

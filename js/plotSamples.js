@@ -1,13 +1,13 @@
 
-var _ = require('./underscore_ext').default;
-var Rx = require('./rx').default;
-var widgets = require('./columnWidgets');
-var util = require('./util').default;
+import * as _ from './underscore_ext.js';
+import Rx from './rx';
+import * as widgets from './columnWidgets.js';
+import * as util from './util.js';
 import PureComponent from './PureComponent';
-var React = require('react');
-var CanvasDrawing = require('./CanvasDrawing');
-var {rxEvents} = require('./react-utils');
-var {drawSamples} = require('./drawSamples');
+import React from 'react';
+import CanvasDrawing from './CanvasDrawing.js';
+import { rxEvents } from './react-utils.js';
+import { drawSamples } from './drawSamples.js';
 
 // Since there are multiple components in the file we have to use hot
 // explicitly.

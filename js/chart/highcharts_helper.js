@@ -1,5 +1,5 @@
-var _ = require('../underscore_ext').default;
-var styles = require('./highchartView.module.css');
+import * as _ from '../underscore_ext.js';
+import styles from "./highchartView.module.css";
 import ReactDOMServer from 'react-dom/server';
 import {div, table, tr, td, tbody, b} from './react-hyper';
 import {xenaColor} from '../xenaColor';
@@ -889,15 +889,4 @@ function standardDeviation(values, avg) {
 	return Math.sqrt(squareDiffSum / count);
 }
 
-module.exports = {
-	chartOptions,
-	densityChart,
-	standardDeviation,
-	average,
-	columnChartOptions,
-	boxplotOptions,
-	dotOptions,
-	violinOptions,
-	scatterChart,
-	addSeriesToColumn
-};
+export { chartOptions, densityChart, standardDeviation, average, columnChartOptions, boxplotOptions, dotOptions, violinOptions, scatterChart, addSeriesToColumn };

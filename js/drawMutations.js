@@ -1,7 +1,7 @@
 
-var _ = require('./underscore_ext').default;
-var {contrastColor, greyHEX} = require('./color_helper').default;
-var {impact, getSNVEffect} = require('./models/mutationVector');
+import * as _ from './underscore_ext.js';
+import { contrastColor, greyHEX } from './color_helper.js';
+import { impact, getSNVEffect } from './models/mutationVector.js';
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
@@ -177,4 +177,4 @@ var drawWithBackground = _.curry((draw, vg, props) => {
 var drawMutations = drawWithBackground(drawImpactNodes);
 var drawSV = drawWithBackground(drawSVNodes);
 
-module.exports = {drawMutations, drawSV, splitRows, radius, minVariantHeight, toYPx, toYPxSubRow, labelFont};
+export { drawMutations, drawSV, splitRows, radius, minVariantHeight, toYPx, toYPxSubRow, labelFont };

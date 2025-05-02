@@ -1,8 +1,8 @@
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var vgcanvas = require('./vgcanvas');
-var {addCommas} = require('./util').default;
+import React from 'react';
+import ReactDOM from 'react-dom';
+import vgcanvas from './vgcanvas.js';
+import { addCommas } from './util.js';
 
 var labelHeight = 12;
 var font = 10;
@@ -129,4 +129,4 @@ class ChromPosition extends React.Component {
 	}
 }
 
-module.exports = {ChromPosition, abrev};
+export { ChromPosition, abrev };

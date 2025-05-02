@@ -14,7 +14,7 @@ import {Map as CellView} from './views/Map';
 import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme, Icon,
 	IconButton, ListSubheader, MenuItem, MuiThemeProvider, Tab,
 	Tabs, Tooltip} from '@material-ui/core';
-import {ExpandMore} from '@material-ui/icons';
+import ExpandMore from '@material-ui/icons/ExpandMore';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
@@ -22,9 +22,11 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
 	setColor, setRadius, shouldSwapAxes} from './models/singlecell';
 import Integrations from './views/Integrations';
-var {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
-	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI,
-	uniq, updateIn, values, without} = require('./underscore_ext').default;
+
+import {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
+	isEqual, keys, Let, mapObject, merge, object, pick, range, sortByI, uniq,
+	updateIn, values, without} from './underscore_ext.js';
+
 import {kde} from './models/kde';
 import singlecellLegend from './views/singlecellLegend';
 import {singlecellChart, computedProps, chartPropsFromState} from
@@ -697,7 +699,7 @@ class SingleCellPage extends PureComponent {
 
 var singleCellPage = el(SingleCellPage);
 
-var {createSelectorCreator, defaultMemoize} = require('reselect');
+import { createSelectorCreator, defaultMemoize } from 'reselect';
 var createSelector = createSelectorCreator(defaultMemoize, isEqual);
 
 var dataDist = (data, min, max, n = 100) =>

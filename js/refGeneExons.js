@@ -1,19 +1,19 @@
 
-var _ = require('./underscore_ext').default;
-var React = require('react');
-var ReactDOM = require('react-dom');
-var Rx = require('./rx').default;
-var intervalTree = require('static-interval-tree');
-var vgcanvas = require('./vgcanvas');
-var layoutPlot = require('./layoutPlot');
+import * as _ from './underscore_ext.js';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Rx from './rx';
+import intervalTree from 'static-interval-tree';
+import vgcanvas from './vgcanvas.js';
+import * as layoutPlot from './layoutPlot.js';
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
-var {rxEvents} = require('./react-utils');
-var util = require('./util').default;
-var {chromPositionFromScreen} = require('./exonLayout');
-var {isoluminant} = require('./colorScales');
+import { rxEvents } from './react-utils.js';
+import * as util from './util.js';
+import { chromPositionFromScreen } from './exonLayout.js';
+import { isoluminant } from './colorScales.js';
 import PureComponent from './PureComponent';
-var styles = require('./refGeneExons.module.css');
+import styles from "./refGeneExons.module.css";
 import {getGeneMode} from './models/columns';
 
 // annotate an interval with cds status

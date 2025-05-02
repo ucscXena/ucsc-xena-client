@@ -6,8 +6,9 @@
 // port of KmPlot to pdf is a compromise.
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
-var _ = require('./underscore_ext').default;
-var {linear, linearTicks} = require('./scale');
+import * as _ from './underscore_ext.js';
+
+import { linear, linearTicks } from './scale.js';
 
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
 var bounds = x => [0, _.max(x)];
@@ -122,10 +123,12 @@ function lineGroup(vg, {g, xScale, yScale}) {
 var size = {height: 500, width: 500};
 
 function download({colors, labels, curves}) {
-	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
-		var PDFDocument = require('pdfkit');
-		var blobStream = require('blob-stream');
-		var vgpdf = require('./vgpdf');
+	Promise.all([import('pdfkit'), import('blob-stream'), import('./vgpdf')
+	]).then(([pdfkitModule, blobStreamModule, vgpdfModule]) => {
+		const PDFDocument = pdfkitModule.default;
+		const blobStream = blobStreamModule.default;
+		const vgpdf = vgpdfModule.default;
+
 		var height = size.height - margin.top - margin.bottom,
 			width = size.width - margin.left - margin.right,
 			xdomain = bounds(_.pluck(_.flatten(curves), 't')),
@@ -162,6 +165,5 @@ function download({colors, labels, curves}) {
 			document.body.removeChild(a);
 		});
 	});
-};
-
-module.exports = download;
+}
+export default download;

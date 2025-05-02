@@ -1,10 +1,11 @@
 // React component to manages redrawing a canvas element.
 
 
-var _ = require('./underscore_ext').default;
-var vgcanvas = require('./vgcanvas');
-var React = require('react');
-var ReactDOM = require('react-dom');
+import * as _ from './underscore_ext.js';
+
+import vgcanvas from './vgcanvas.js';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 // This is a quick hack to work around the very different styling requirements
 // of BandLegend, vs. the other canvas elements we have. Here we never change

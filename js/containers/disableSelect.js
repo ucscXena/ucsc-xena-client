@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 
 
 function disableSelect(Component) {
@@ -21,4 +21,4 @@ function disableSelect(Component) {
 	};
 }
 
-module.exports = disableSelect;
+export default disableSelect;

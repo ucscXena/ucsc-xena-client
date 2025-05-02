@@ -1,11 +1,12 @@
 import multi from '../multi';
-var xenaQuery = require('../xenaQuery');
-var {Observable, Scheduler} = require('../rx').default;
-var _ = require('../underscore_ext').default;
+import xenaQuery from '../xenaQuery';
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
+import * as _ from '../underscore_ext.js';
 import parsePos from '../parsePos';
 import parseInput from '../parseInput';
 import parseGeneSignature from '../parseGeneSignature';
-var {signatureField} = require('../models/fieldSpec');
+import { signatureField } from './fieldSpec.js';
 import {defaultColorClass} from '../heatmapColors';
 
 // XXX duplicated in VariableSelect.

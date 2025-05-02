@@ -12,9 +12,9 @@ import {
 	Typography
 } from '@material-ui/core';
 import PureComponent from './PureComponent';
-var {map, pick, mapObject, getIn, get} = require('./underscore_ext').default;
-var platform = require('platform');
-var Rx = require('./rx').default;
+import { map, pick, mapObject, getIn, get } from './underscore_ext.js';
+import platform from 'platform';
+import Rx from './rx';
 
 // Styles
 import styles from './LaunchHelper.module.css';
@@ -172,7 +172,7 @@ var launch = () => {
 // XXX Note that we re-render on every change of the wrapped
 // component. Maybe should put dialog in a separate component to
 // avoid re-rendering it.
-var wrap = Comp => class extends PureComponent {
+var wrap = Comp => (class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
 	constructor(props) {
@@ -257,7 +257,7 @@ var wrap = Comp => class extends PureComponent {
 				</Dialog>
 			</Comp>);
 	}
-};
+});
 
 var wrapLaunchHelper = (shouldMount, Comp) => {
 	var Wrapper = wrap(Comp),

@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // Partition n bins (e.g. pixels) proportional to sizes,
 // distributing bins that won't evenly divide.
@@ -35,7 +35,7 @@ function offsets(n, sep, sizes) {
 	}
 	parts = fn(n - cut, sizes);
 	offset = 0;
-	return _(parts).map(function (size) {
+	return parts.map(function (size) {
 		var ret = {
 			start: offset,
 			size: size
@@ -45,8 +45,4 @@ function offsets(n, sep, sizes) {
 	});
 }
 
-module.exports = {
-	bysize,
-	equally,
-	offsets
-};
+export { bysize, equally, offsets };

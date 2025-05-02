@@ -18,7 +18,7 @@
 // to do a linear search with _.isEqual, or use a hashing method, or use better
 // underlying data structures (i.e. not plain js).
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 
 var isRef = x => _.has(x, '$ref');
@@ -96,4 +96,4 @@ function parse(x) {
 	return resolve(refd);
 }
 
-module.exports = {stringify, parse};
+export { stringify, parse };

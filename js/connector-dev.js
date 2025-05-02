@@ -1,17 +1,17 @@
 
-var _ = require('./underscore_ext').default;
-var Rx = require('./rx').default;
-var React = require('react');
-var ReactDOM = require('react-dom');
-let {createDevTools} = require('./controllers/devtools');
+import * as _ from './underscore_ext.js';
+import Rx from './rx';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createDevTools } from './controllers/devtools.js';
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 import urlParams from './urlParams';
-var LZ = require('./lz-string');
-var {compactState, expandState} = require('./compactData');
-var migrateState = require('./migrateState');
-var {schemaCheckThrow} = require('./schemaCheck');
-var {fetchInlineState, hasInlineState} = require('./inlineState');
+import LZ from './lz-string';
+import { compactState, expandState } from './compactData.js';
+import migrateState from './migrateState.js';
+import { schemaCheckThrow } from './schemaCheck.js';
+import { fetchInlineState, hasInlineState } from './inlineState.js';
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -149,10 +149,10 @@ function connect({
 	// setting hubs, for example.
 	uiBus.next(['init', ...urlParams()]);
 	return dom;
-};
+}
 
 var {Observable: {of}} = Rx;
-module.exports = function(args) {
+export default function(args) {
 	var onError = err => {
 		console.warn("Unable to load saved debug session", err);
 		connect({...args, savedState: null});
@@ -168,4 +168,4 @@ module.exports = function(args) {
 			savedState => connect({...args, savedState}),
 			onError);
 	}
-};
+}

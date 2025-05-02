@@ -1,14 +1,15 @@
-var {Let, assocIn, dissoc, deepMerge, get, identity,
-	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
+import {assocIn, deepMerge, dissoc, get, identity, Let, matchKeys, pick,
+	pluck, uniq, updateIn} from '../underscore_ext.js';
+
 import {make, mount, compose} from './utils';
-var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
-	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
-	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
-var {servers: {localHub}, serverS3url} = require('../defaultServers');
-var {delete: deleteDataset} = require('../xenaAdmin');
-var {userServers} = require('./common');
-var {ignoredType} = require('../models/dataType');
-var Rx = require('../rx').default;
+import xenaQuery from '../xenaQuery';
+var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN, datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList, datasetSamples, sparseDataExamples, segmentDataExamples} = xenaQuery;
+import {servers, serverS3url} from '../defaultServers';
+const {localHub} = servers;
+import { deleteDataset } from '../xenaAdmin.js';
+import { userServers } from './common.js';
+import { ignoredType } from '../models/dataType.js';
+import Rx from '../rx';
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import {isAuthPending} from '../models/auth';
@@ -233,7 +234,7 @@ var {controller: fetchController, invalidatePath} =
 // ['dataset', localHub, *]
 // ['cohortDatasets', *, localHub]
 var invalidateLocalHub = Let(({any} = matchKeys) =>
-	function (serverBus) {
+	function(serverBus) {
 		invalidatePath(serverBus, ['cohorts', localHub]);
 		invalidatePath(serverBus, ['hubMeta', localHub]);
 		invalidatePath(serverBus, ['samples', localHub, any]);

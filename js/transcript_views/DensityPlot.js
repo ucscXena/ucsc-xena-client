@@ -1,8 +1,8 @@
 
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var styles = require('./DensityPlot.module.css');
-var sc = require('science');
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import styles from "./DensityPlot.module.css";
+import sc from 'science';
 
 const plotHeight = 35;
 const plotWidth = 200;
@@ -79,4 +79,4 @@ class DensityPlot extends React.PureComponent {
  	}
 }
 
-module.exports = {DensityPlot, bottomColor, topColor, plotWidth};
+export { DensityPlot, bottomColor, topColor, plotWidth };

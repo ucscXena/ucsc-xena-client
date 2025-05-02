@@ -1,9 +1,9 @@
 /*global ga: false */
 
-var config = require('./config');
+import config from './config';
 
 var dispatch = (window.ga && config.ga_id) ?
 	(...args) => window.ga('send', 'event', ...args) :
 	(...args) => console.log('event', ...args);
 
-module.exports = dispatch;
+export default dispatch;

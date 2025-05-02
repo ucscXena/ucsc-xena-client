@@ -1,15 +1,15 @@
 
-var _ = require('./underscore_ext').default;
-var Rx = require('./rx').default;
-var React = require('react');
-var ReactDOM = require('react-dom');
-var LZ = require('./lz-string');
+import * as _ from './underscore_ext.js';
+import Rx from './rx';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import LZ from './lz-string';
 import urlParams from './urlParams';
-var {compactState, expandState} = require('./compactData');
-var migrateState = require('./migrateState');
-var {schemaCheckThrow} = require('./schemaCheck');
-var controlRunner = require('./controlRunner').default;
-var {fetchInlineState, hasInlineState} = require('./inlineState');
+import { compactState, expandState } from './compactData.js';
+import migrateState from './migrateState.js';
+import { schemaCheckThrow } from './schemaCheck.js';
+import controlRunner from './controlRunner';
+import { fetchInlineState, hasInlineState } from './inlineState.js';
 
 // XXX The history mechanism is unusable. Should be operating ui channel, I
 // suspect.
@@ -97,14 +97,14 @@ function connect({
 	// Kick things off.
 	uiBus.next(['init', ...urlParams()]);
 	return dom;
-};
+}
 
 var {Observable: {of}} = Rx;
-module.exports = function(args) {
+export default function(args) {
 	var init = hasInlineState() ? fetchInlineState() :
 		of(sessionStorage.xena).flatMap(s => s ? parse(s) : of(null));
 
 	init.subscribe(
 		savedState => connect({...args, savedState}),
 		savedState => connect({...args, savedState})); // pass error as state
-};
+}

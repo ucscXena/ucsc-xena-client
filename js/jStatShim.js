@@ -1,4 +1,4 @@
-var jStat = require('jStat').jStat;
+import { jStat } from 'jStat';
 
 function valCounts(arr) {
 	var counts = new Map();
@@ -34,4 +34,4 @@ jStat.rank = function (arr) {
 	return ranks;
 };
 
-module.exports = jStat;
+export default jStat;

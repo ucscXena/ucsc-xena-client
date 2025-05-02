@@ -1,10 +1,11 @@
 
-var LZ = require('./lz-string');
-var {uniq} = require('./underscore_ext').default;
-var {compactState, expandState} = require('./compactData');
-var migrateState = require('./migrateState');
-var {schemaCheckThrow} = require('./schemaCheck');
-var {Observable: {of}} = require('./rx').default;
+import LZ from './lz-string';
+import { uniq } from './underscore_ext.js';
+import { compactState, expandState } from './compactData.js';
+import migrateState from './migrateState.js';
+import { schemaCheckThrow } from './schemaCheck.js';
+import Rx from './rx';
+const {Observable: {of}} = Rx;
 
 var version = 1;
 
@@ -33,15 +34,10 @@ function setRecent(id) {
 		JSON.stringify(uniq([{id, time}].concat(recent), e => e.id).slice(0, 15));
 }
 
-module.exports = {
-	version,
-	hasBookmark: () => location.search.match(/^\?bookmark=/),
-	getBookmark: () => location.search.replace(/^\?bookmark=(_?[0-9a-z]+)/, '$1'),
-	resetBookmarkLocation: () => history.replaceState({}, 'UCSC Xena',
-			location.pathname + location.search.replace(/\?bookmark=(_?[0-9a-z]+)/, '')),
-	createBookmark: stringify,
-	// Need to add version check & merge of state + bookmark.
-	parseBookmark: parse,
-	getRecent,
-	setRecent
-};
+const hasBookmark = () => location.search.match(/^\?bookmark=/);
+const getBookmark = () => location.search.replace(/^\?bookmark=(_?[0-9a-z]+)/, '$1');
+
+const resetBookmarkLocation = () => history.replaceState({}, 'UCSC Xena',
+        location.pathname + location.search.replace(/\?bookmark=(_?[0-9a-z]+)/, ''));
+
+export { version, hasBookmark, getBookmark, resetBookmarkLocation, stringify as createBookmark, parse as parseBookmark, getRecent, setRecent };

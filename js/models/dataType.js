@@ -5,7 +5,4 @@ var phenoPat = /^phenotype/i;
 var isPhenotype = ({type, dataSubType}) => type === 'clinicalMatrix' &&
 		(!dataSubType || dataSubType.match(phenoPat));
 
-module.exports = {
-	ignoredType,
-	isPhenotype
-};
+export { ignoredType, isPhenotype };

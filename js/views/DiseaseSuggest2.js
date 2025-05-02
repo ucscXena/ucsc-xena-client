@@ -1,11 +1,12 @@
 
 import PureComponent from '../PureComponent';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {Box} from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var lcs = require('../lcs');
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import lcs from '../lcs.js';
 import XAutosuggestInput from './XAutosuggestInput';
 
 // Styles
@@ -218,4 +219,4 @@ class DiseaseSuggest extends PureComponent {
 	}
 }
 
-module.exports = DiseaseSuggest;
+export default DiseaseSuggest;

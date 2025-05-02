@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
-var ReactDOM = require('react-dom');
-var Rx = require('../rx').default;
+import ReactDOM from 'react-dom';
+import Rx from '../rx';
 var main = window.document.getElementById('main');
-var {allParameters} = require('../util').default;
-var {sortBy} = require('../underscore_ext').default;
+import { allParameters } from '../util.js';
+import { sortBy } from '../underscore_ext.js';
 
-var compStyles = require('./bookmarks.module.css');
+import compStyles from "./bookmarks.module.css";
 
 class Weekly extends Component {
 	state = {weeks: null};
@@ -50,9 +50,9 @@ class Week extends Component {
 		var {list} = this.state,
 			{week} = this.props;
 		return (
-			<div>
-				<h2>Bookkmarks for week of {week.split(/ /)[0]}</h2>
-				{list ? (
+            <div>
+                <h2>Bookkmarks for week of {week.split(/ /)[0]}</h2>
+                {list ? (
 					<ul className={compStyles.bookmarks}>
 						{list.map(b => (
 							<li key={b.id}>
@@ -62,11 +62,12 @@ class Week extends Component {
 								<span>{b.lastUse}</span>
 							</li>))}
 					</ul>) : <span>Loading...</span>}
-				<br/>
-				<a href={`${window.location.origin}/bookmarks/`}>
+                <br/>
+                <a href={`${window.location.origin}/bookmarks/`}>
 					All bookmarks
 				</a>
-			</div>);
+            </div>
+        );
 	}
 }
 

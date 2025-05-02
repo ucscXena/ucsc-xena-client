@@ -1,7 +1,7 @@
 
-var React = require('react');
-var _ = require('./underscore_ext').default;
-var vgcanvas = require('./vgcanvas');
+import React from 'react';
+import * as _ from './underscore_ext.js';
+import vgcanvas from './vgcanvas.js';
 import {isSet} from './models/bitmap';
 
 var tickWidth = 5,
@@ -88,4 +88,4 @@ class SpreadSheetHighlight extends React.Component {
 	}
 }
 
-module.exports = SpreadSheetHighlight;
+export default SpreadSheetHighlight;

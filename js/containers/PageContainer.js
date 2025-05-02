@@ -1,16 +1,17 @@
+import '../../css/index.css'; // Root styles file (reset, xena global styles)
 import {CssBaseline, MuiThemeProvider} from '@material-ui/core';
 import React from 'react';
-import Application from './ApplicationContainer';
+import Application from './deferApplicationContainer';
 import Hub from '../hubPage';
 import Datapages from '../Datapages';
 import Transcripts from '../transcript_views/TranscriptPage';
 import ImportPage from '../import/ImportPage';
-import SingleCell from '../SingleCell';
+import SingleCell from '../deferSingleCell';
 import PureComponent from '../PureComponent';
 import {xenaTheme} from '../xenaTheme';
 import authDialog from '../Auth';
 import {nextAuth, isAuthPending} from '../models/auth';
-var {isEqual, Let} = require('../underscore_ext').default;
+import { isEqual, Let } from '../underscore_ext.js';
 
 import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
@@ -66,7 +67,7 @@ export class PageContainer extends PureComponent {
 				</div>
 			</MuiThemeProvider>;
 	}
-};
+}
 
 if (process.env.NODE_ENV !== 'production') {
 	PageContainer.getDerivedStateFromError = error => ({error});

@@ -1,8 +1,10 @@
 import PureComponent from '../PureComponent';
-var {Fragment} = require('react');
-var {assoc, assocIn, concat, contains, every, filter, find, flatmap, get, getIn,
-	identity, insert, isEqual, keys, last, Let, mapObject, max, omit, pick, pluck,
-	sortByI, splice} = require('../underscore_ext').default;
+import { Fragment } from 'react';
+
+import {assoc, assocIn, concat, contains, every, filter, find, flatmap, get,
+	getIn, identity, insert, isEqual, keys, last, Let, mapObject, max, omit,
+	pick, pluck, sortByI, splice} from '../underscore_ext.js';
+
 import {Chip, ListSubheader, MenuItem, Slider} from '@material-ui/core';
 import {el, div, label} from '../chart/react-hyper';
 import {cellTypeValue, datasetCohort, getDataSubType, hasCellType,

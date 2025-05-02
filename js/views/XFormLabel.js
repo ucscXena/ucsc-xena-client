@@ -8,7 +8,7 @@
 
 // Core dependencies, components
 import {Box, FormLabel} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
 import {xenaColor} from '../xenaColor';
@@ -36,5 +36,5 @@ class XFormLabel extends React.Component {
 	}
 }
 
-module.exports = XFormLabel;
+export default XFormLabel;
 

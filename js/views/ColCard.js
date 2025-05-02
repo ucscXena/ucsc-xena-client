@@ -13,18 +13,21 @@
  */
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box, Card, CardHeader, Icon, Typography} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 // App dependencies
-var CardAvatar = require('./CardAvatar');
+import CardAvatar from './CardAvatar.js';
+
 import XColumnDivider from './XColumnDivider';
 
 // Styles
-var compStyles = require('./ColCard.module.css');
+import compStyles from "./ColCard.module.css";
+
 var sxColCardHeader = {
 	'&&': {
 		gap: 16,
@@ -80,4 +83,4 @@ class ColCard extends React.Component {
 	}
 }
 
-module.exports = ColCard;
+export default ColCard;

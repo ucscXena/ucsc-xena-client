@@ -7,11 +7,11 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
-const React = require('react');
-var {rxEvents} = require('../react-utils');
+import React from 'react';
+import { rxEvents } from '../react-utils.js';
 
 // Comp styles
-var compStyles = require('./DefaultTextInput.module.css');
+import compStyles from "./DefaultTextInput.module.css";
 
 class DefaultTextInput extends PureComponent {
 	state = {value: this.props.value.user, focused: false};
@@ -88,4 +88,4 @@ class DefaultTextInput extends PureComponent {
 	}
 }
 
-module.exports = DefaultTextInput;
+export default DefaultTextInput;

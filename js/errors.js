@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 // properities of Error objects which we want to serialize.
 var errorProps = ['name', 'message', 'context', 'status'];
@@ -42,9 +42,4 @@ function logError(err) {
 }
 
 
-module.exports = {
-	CompositeError,
-	compositeError,
-	getErrorProps,
-	logError
-};
+export { CompositeError, compositeError, getErrorProps, logError };

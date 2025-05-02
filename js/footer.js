@@ -7,13 +7,14 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box, ThemeProvider, Typography} from '@material-ui/core';
-var ReactDOM = require('react-dom');
+import ReactDOM from 'react-dom';
 import {xenaTheme} from './xenaTheme';
 
 // Styles
-var compStyles = require('./footer.module.css');
+import compStyles from "./footer.module.css";
 
 class Footer extends React.Component {
 	render() {

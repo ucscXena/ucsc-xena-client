@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 export var setBit = (bitmap, i) => bitmap[~~(i / 8)] |= 1 << i % 8;
 export var isSet = (bitmap, i) => bitmap[~~(i / 8)] & (1 << i % 8);

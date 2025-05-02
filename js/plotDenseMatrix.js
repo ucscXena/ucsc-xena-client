@@ -1,16 +1,16 @@
 
-var _ = require('./underscore_ext').default;
-var Rx = require('./rx').default;
-var widgets = require('./columnWidgets');
+import * as _ from './underscore_ext.js';
+import Rx from './rx';
+import * as widgets from './columnWidgets.js';
 import {colorScale} from './colorScales';
-var util = require('./util').default;
-var Legend = require('./views/Legend');
-var BandLegend = require('./views/BandLegend');
+import * as util from './util.js';
+import Legend from './views/Legend.js';
+import BandLegend from './views/BandLegend.js';
 import PureComponent from './PureComponent';
-var React = require('react');
-var CanvasDrawing = require('./CanvasDrawing');
-var {rxEvents} = require('./react-utils');
-var {drawHeatmap} = require('./drawHeatmap');
+import React from 'react';
+import CanvasDrawing from './CanvasDrawing.js';
+import { rxEvents } from './react-utils.js';
+import { drawHeatmap } from './drawHeatmap.js';
 
 // Since there are multiple components in the file we have to use hot
 // explicitly.

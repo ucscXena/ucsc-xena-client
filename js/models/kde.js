@@ -1,4 +1,4 @@
-var sc = require('science');
+import sc from 'science';
 
 var nrd = sc.stats.bandwidth.nrd;
 var variance = sc.stats.variance;

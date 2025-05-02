@@ -3,7 +3,8 @@
 //
 
 
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
+
 var INIT_ACTION = {type: '@@INIT'};
 var identity = state => state;
 var notImplemented = (state, ac) => {
@@ -152,7 +153,4 @@ function createDevTools(children) {
 	return DevTools;
 }
 
-module.exports = {
-	instrument,
-	createDevTools
-};
+export { instrument, createDevTools };

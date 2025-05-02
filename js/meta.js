@@ -1,5 +1,5 @@
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 // Using a modifier works differently on different os.
 // On OSX, ctrl-click will do browser context menu, so
@@ -24,4 +24,4 @@ var patterns = [
 ];
 
 
-module.exports = _.find(patterns, ([p]) => navigator.platform.match(p))[1];
+export default _.find(patterns, ([p]) => navigator.platform.match(p))[1];

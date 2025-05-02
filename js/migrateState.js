@@ -10,9 +10,11 @@
 
 var version = 5; // XXX duplicated in store.js?
 
-var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString,
-	updateIn, without} = require('./underscore_ext').default;
-var {servers: {localHub, oldLocalHub}} = require('./defaultServers');
+import {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick,
+	isString, updateIn, without} from './underscore_ext.js';
+
+import {servers} from './defaultServers';
+const {localHub, oldLocalHub} = servers;
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
@@ -101,4 +103,4 @@ function apply(state) {
 	return setVersion(toDo.reduce((prev, fn) => fn(prev), state));
 }
 
-module.exports = apply;
+export default apply;

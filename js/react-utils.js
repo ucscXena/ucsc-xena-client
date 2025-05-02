@@ -1,5 +1,5 @@
-var _ = require('./underscore_ext').default;
-var Rx = require('./rx').default;
+import * as _ from './underscore_ext.js';
+import Rx from './rx';
 
 // XXX Should also do a takeUntil componentWillUnmount, perhaps
 // via rx-react.
@@ -14,6 +14,4 @@ var rxEvents = (comp, ...args) => {
 	return ev;
 };
 
-module.exports = {
-	rxEvents
-};
+export { rxEvents };

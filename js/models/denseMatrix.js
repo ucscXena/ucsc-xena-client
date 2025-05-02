@@ -1,15 +1,15 @@
-var _ = require('../underscore_ext').default;
-var Rx = require('../rx').default;
+import * as _ from '../underscore_ext.js';
+import Rx from '../rx';
 var {find} = _;
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 import * as heatmapColors from '../heatmapColors';
-var widgets = require('../columnWidgets');
-var {categoryMore} = require('../colorScales');
-var parsePos = require('../parsePos');
-var exonLayout = require('../exonLayout');
+import * as widgets from '../columnWidgets.js';
+import { categoryMore } from '../colorScales.js';
+import parsePos from '../parsePos.js';
+import * as exonLayout from '../exonLayout.js';
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
-var {fastats} = require('../xenaWasm');
+import { fastats } from '../xenaWasm.js';
 
 // sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
 // known issue: tie break
@@ -380,13 +380,4 @@ widgets.transform.add('clinical', reorderFieldsTransform(dataToHeatmap));
 
 widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 
-module.exports = {
-	fetch,
-	fetchGeneOrChromProbes,
-	fetchGene,
-	fetchFeature,
-	getCustomColor,
-	toArrays,
-	setUserCodes,
-	reOrderFields
-};
+export { fetch, fetchGeneOrChromProbes, fetchGene, fetchFeature, getCustomColor, toArrays, setUserCodes, reOrderFields };

@@ -1,4 +1,4 @@
-import _ from './underscore_ext';
+import * as _ from './underscore_ext';
 
 // binpack json encodes as json, but puts binary objects verbatum into a
 // preceding buffer. Back references in the json point to the binary

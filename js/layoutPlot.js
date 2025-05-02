@@ -1,5 +1,5 @@
 
-var _ = require('underscore');
+import * as _ from './underscore_ext.js';
 
 var {min, max, floor} = Math;
 
@@ -97,8 +97,4 @@ function pxTransformFlatmap(layout, fn) {
 	return res;
 }
 
-module.exports = {
-	pxTransformInterval,
-	pxTransformEach,
-	pxTransformFlatmap
-};
+export { pxTransformInterval, pxTransformEach, pxTransformFlatmap };

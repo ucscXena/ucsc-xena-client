@@ -1,8 +1,8 @@
 
 // color scale variants
 
-var _ = require('underscore');
-var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper').default;
+import * as _ from './underscore_ext.js';
+import { rgb, RGBToHex, RGBtoHSV, HSVtoRGB } from './color_helper.js';
 
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [

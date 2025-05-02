@@ -1,6 +1,6 @@
 
-var _ = require('./underscore_ext').default;
-var colorHelper = require('./color_helper').default;
+import * as _ from './underscore_ext.js';
+import * as colorHelper from './color_helper.js';
 var labelMargin = 1; // left & right margin
 var labelFont = 12;
 
@@ -102,4 +102,4 @@ var drawSamples = (vg, props) => {
 	});
 };
 
-module.exports = {drawSamples, stripeHeight};
+export { drawSamples, stripeHeight };

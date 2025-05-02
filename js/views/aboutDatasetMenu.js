@@ -1,6 +1,7 @@
-var React = require('react');
+import React from 'react';
 import {MenuItem} from '@material-ui/core';
-var {parseDsID} = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
+var {parseDsID} = xenaQuery;
 
 var getAbout = (onClick, dsID, root, text) => {
     var [host, dataset] = parseDsID(dsID);
@@ -12,4 +13,4 @@ function aboutDatasetMenu(onClick, dsID, root = '..') {
 	return dsID ? getAbout(onClick, dsID, root, 'About') : null;
 }
 
-module.exports = aboutDatasetMenu;
+export default aboutDatasetMenu;

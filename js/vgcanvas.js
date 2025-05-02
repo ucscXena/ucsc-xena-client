@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 var style = function (c) {
 	if (_.isArray(c)) {
@@ -149,7 +149,7 @@ function vgcanvas(el, vgw, vgh, opts = {}) {
 
 		cutLine = function (text, font, width) {
 			var words = text.split(' ');
-			return _(words).reduce(function (acc, w) {
+			return words.reduce(function (acc, w) {
 				var line = acc[acc.length - 1];
 				if (line && textWidth(font, line + " " + w) < width) {
 					acc[acc.length - 1] += " " + w;
@@ -182,7 +182,7 @@ function vgcanvas(el, vgw, vgh, opts = {}) {
 			ctx.save();
 			ctx.translate(x, y + height);
 			ctx.rotate(-Math.PI / 2);
-			_(lines).each(function (line, i) {
+			lines.forEach(function (line, i) {
 				text(height - textWidth(font, line) - 1, off + i * h + h + i * s - s, c, font, line);
 			});
 			ctx.restore();
@@ -190,10 +190,8 @@ function vgcanvas(el, vgw, vgh, opts = {}) {
 
 		makeRange = function (start, end, count) {
 			var d = (end - start) / (count - 1);
-			return _(0).chain()
-				.range(count)
-				.map(function (i) { return Math.round(start + d * i); })
-				.value();
+			return _.range(count)
+				.map(function (i) { return Math.round(start + d * i); });
 		},
 
 		makeColorGradient = function (start, end, count) {
@@ -278,6 +276,5 @@ function vgcanvas(el, vgw, vgh, opts = {}) {
 		translate,
 		drawRectangles
 	};
-};
-
-module.exports = vgcanvas;
+}
+export default vgcanvas;

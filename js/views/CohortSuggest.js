@@ -1,8 +1,9 @@
 import React from 'react';
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import XAutosuggestInput from './XAutosuggestInput';
 
 var COHORT_UNASSIGNED = '(unassigned)';

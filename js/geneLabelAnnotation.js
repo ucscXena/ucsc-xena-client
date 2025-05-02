@@ -1,7 +1,7 @@
 
-var React = require('react');
+import React from 'react';
 import PureComponent from './PureComponent';
-var {getIn} = require('./underscore_ext').default;
+import { getIn } from './underscore_ext.js';
 
 var geneLableFont = 12;
 var maxLane = 5;

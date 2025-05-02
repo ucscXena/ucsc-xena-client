@@ -1,9 +1,9 @@
-var arrays = require('./arrays');
-var wasm = require('ucsc-xena-wasm');
+import * as arrays from './arrays.js';
+import wasm from 'ucsc-xena-wasm';
 import {hfcSync} from './hfc';
 
-var {Let, times} = require('./underscore_ext').default;
-var Rx = require('./rx').default;
+import { Let, times } from './underscore_ext.js';
+import Rx from './rx';
 var {Observable: {bindCallback, zipArray}} = Rx;
 
 var type = '__type';

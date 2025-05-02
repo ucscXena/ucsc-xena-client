@@ -1,9 +1,11 @@
 /*eslint-disable camelcase */
 
-var jStat = require('jStat').jStat,
-	_ = require('./underscore_ext').default,
-	linearAlgebra = require('linear-algebra')(),
-	Matrix = linearAlgebra.Matrix;
+import { jStat } from 'jStat';
+
+import * as _ from './underscore_ext.js';
+import linearAlgebraFn from 'linear-algebra';
+var linearAlgebra = linearAlgebraFn();
+var Matrix = linearAlgebra.Matrix;
 
 var reduce = _.reduce,
 	map = _.map,
@@ -249,7 +251,4 @@ function logranktest (allGroupsRes, groupsTte, groupsEv) {
 }
 
 
-module.exports = {
-	compute: compute,
-	logranktest: logranktest
-};
+export { compute, logranktest };

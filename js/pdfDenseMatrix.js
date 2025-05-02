@@ -1,6 +1,6 @@
-var {drawHeatmap} = require('./drawHeatmap');
-var _ = require('./underscore_ext').default;
-var widgets = require('./columnWidgets');
+import { drawHeatmap } from './drawHeatmap.js';
+import * as _ from './underscore_ext.js';
+import * as widgets from './columnWidgets.js';
 
 function pdf(id, column, vg, state) {
 	let {samples, zoom} = state,

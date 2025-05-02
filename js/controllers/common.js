@@ -1,19 +1,20 @@
 
 // Helper methods needed by multiple controllers.
 
-var Rx = require('../rx').default;
-var xenaQuery = require('../xenaQuery');
-var _ = require('../underscore_ext').default;
-var {reifyErrors, collectResults} = require('./errors');
-var fetch = require('../fieldFetch');
-var kmModel = require('../models/km');
-var {signatureField} = require('../models/fieldSpec');
-var {servers: allServers, publicServers} = require('../defaultServers');
-var gaEvents = require('../gaEvents');
+import Rx from '../rx';
+import xenaQuery from '../xenaQuery';
+import * as _ from '../underscore_ext.js';
+import { reifyErrors, collectResults } from './errors.js';
+import fetch from '../fieldFetch';
+import * as kmModel from '../models/km.js';
+import { signatureField } from '../models/fieldSpec.js';
+import {servers as allServers, publicServers} from '../defaultServers';
+import gaEvents from '../gaEvents.js';
 import {userServers} from '../models/servers';
 import {hfc} from '../hfc';
+
 // pick up signature fetch
-require('../models/signatures');
+import '../models/signatures.js';
 
 import Worker from 'worker-loader!./cluster-worker';
 
@@ -248,16 +249,4 @@ function fetchSurvival(serverBus, state) {
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
-module.exports = {
-	fetchCohortData,
-	fetchColumnData,
-	fetchClustering,
-	fetchDatasets,
-	fetchSamples,
-	fetchSurvival,
-	resetZoom,
-	samplesQuery,
-	setCohort,
-	userServers,
-	datasetQuery
-};
+export { fetchCohortData, fetchColumnData, fetchClustering, fetchDatasets, fetchSamples, fetchSurvival, resetZoom, samplesQuery, setCohort, userServers, datasetQuery };

@@ -1,16 +1,17 @@
 
 // Domain logic for mutation datasets.
 
-var _ = require('../underscore_ext').default;
-var widgets = require('../columnWidgets');
-var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx').default;
-var exonLayout = require('../exonLayout');
-var intervalTree = require('static-interval-tree');
-var {pxTransformInterval} = require('../layoutPlot');
-var {hexToRGB, colorStr} = require('../color_helper').default;
-var jStat = require('jStat').jStat;
-var parsePos = require('../parsePos');
+import * as _ from '../underscore_ext.js';
+
+import * as widgets from '../columnWidgets.js';
+import xenaQuery from '../xenaQuery';
+import Rx from '../rx';
+import * as exonLayout from '../exonLayout.js';
+import intervalTree from 'static-interval-tree';
+import { pxTransformInterval } from '../layoutPlot.js';
+import { hexToRGB, colorStr } from '../color_helper.js';
+import { jStat } from 'jStat';
+import parsePos from '../parsePos.js';
 import sortOrder from './sparseSortOrder';
 
 //function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
@@ -677,15 +678,4 @@ widgets.data.add('SV', sortOrder(cmp));
 widgets.transform.add('SV', svDataToDisplay);
 widgets.download.add('SV', download);
 
-module.exports = {
-	features,
-	chromFromAlt,
-	posFromAlt,
-	structuralVariantClass,
-	joinedVariantDirection,
-	chromColorGB,
-	SNVPvalue,
-	fetch,
-	impact,
-	getSNVEffect
-};
+export { features, chromFromAlt, posFromAlt, structuralVariantClass, joinedVariantDirection, chromColorGB, SNVPvalue, fetch, impact, getSNVEffect };

@@ -1,14 +1,14 @@
 import PureComponent from '../PureComponent';
 
 import {Icon, IconButton} from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var CohortOrDisease = require('../views/CohortOrDisease');
-var VariableSelect = require('../views/VariableSelect');
-var GhostVariableSelect = require('../views/GhostVariableSelect');
-var getStepperState = require('./getStepperState');
-var uuid = require('../uuid');
-var Rx = require('../rx').default;
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import CohortOrDisease from '../views/CohortOrDisease.js';
+import VariableSelect from '../views/VariableSelect.js';
+import GhostVariableSelect from '../views/GhostVariableSelect.js';
+import getStepperState from './getStepperState.js';
+import uuid from '../uuid.js';
+import Rx from '../rx';
 import {computeSettings, typeWidth} from '../models/columns';
 
 // Configuration for first and second variable select cards that are displayed during wizard.
@@ -241,4 +241,4 @@ function addWizardColumns(Component) {
 	};
 }
 
-module.exports = addWizardColumns;
+export default addWizardColumns;

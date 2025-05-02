@@ -1,7 +1,7 @@
 
-var util = require('./util').default;
-var _ = require('./underscore_ext').default;
-var {defaultServers} = require('./defaultServers');
+import * as util from './util.js';
+import * as _ from './underscore_ext.js';
+import {defaultServers} from './defaultServers';
 
 function parseServer(s) {
 	// XXX should throw or otherwise indicate parse error on no match
@@ -27,11 +27,9 @@ var getHubParams = state =>
 		removeHub: _.difference(defaultServers, hubs)
 	}));
 
+const hubParams = () => _.map(util.allParameters().hub, parseServer);
+
 // normalize: add http[s]? add port? Do standard replacements?
 // What are our standard replacements?
 
-module.exports = {
-	hubParams: () => _.map(util.allParameters().hub, parseServer),
-	getHubParams,
-	parseServer
-};
+export { hubParams, getHubParams, parseServer };

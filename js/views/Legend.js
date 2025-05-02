@@ -1,11 +1,12 @@
 
-var React = require('react');
+import React from 'react';
 import {Typography} from '@material-ui/core';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 // Styles
-var compStyles = require('./Legend.module.css');
-var classNames = require('classnames');
+import compStyles from "./Legend.module.css";
+
+import classNames from 'classnames';
 
 var nodata = {
 	text: "null: no data",
@@ -66,4 +67,4 @@ class Legend extends React.Component {
 	}
 }
 
-module.exports = Legend;
+export default Legend;

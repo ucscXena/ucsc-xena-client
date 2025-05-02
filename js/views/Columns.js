@@ -1,9 +1,9 @@
 
 import PureComponent from '../PureComponent';
 import {Box} from '@material-ui/core';
-var {omit} = require('../underscore_ext').default;
+import { omit } from '../underscore_ext.js';
 
-var React = require('react');
+import React from 'react';
 
 class ColumnsWrapper extends React.Component {
 	render() {
@@ -33,4 +33,4 @@ var getColumns = wrapperFn => {
 	};
 };
 
-module.exports = getColumns;
+export default getColumns;

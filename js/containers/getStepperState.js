@@ -1,7 +1,7 @@
 
 // maybe should put this in appSelector
 
-module.exports = ({cohort, columnOrder}) => {
+export default ({cohort, columnOrder}) => {
 	if (cohort == null) {
 		return 'COHORT';
 	}

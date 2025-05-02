@@ -3,12 +3,13 @@
 
 import {concatBins, parse} from './binpackJSON';
 import {hfcCompress} from './hfc';
-var Rx = require('./rx').default;
-var _ = require('./underscore_ext').default;
-var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
+import Rx from './rx';
+import * as _ from './underscore_ext.js';
+import _u from './underscore_ext.js'; // for partial() placeholder
+import { permuteCase, permuteBitCount, prefixBitLimit } from './permuteCase.js';
 // Load all query files as a map of strings.
 import * as qs from './loadXenaQueries';
-var wasm = require('ucsc-xena-wasm');
+import wasm from 'ucsc-xena-wasm';
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';
@@ -181,7 +182,7 @@ function alignMatches(input, matches) {
 }
 
 function splitExon(s) {
-	return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
+	return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _u, 10));
 }
 
 function refGeneAttrs(row) {
@@ -691,7 +692,9 @@ var fetchJSON = url =>
 	}).map(xhr => xhr.response)
 	.catch(() => Rx.Observable.of({}, Rx.Scheduler.asap));
 
-module.exports = {
+// XXX Would like to make this named exports, but need a plan for
+// handling the dynamic queryPosts build.
+export default {
 	...queryPosts,
 
 	// derived query posts

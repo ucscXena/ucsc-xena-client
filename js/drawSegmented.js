@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 import {colorScale} from './colorScales';
 
 var labelFont = 12;
@@ -230,11 +230,5 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 };
 
 
-module.exports = {
-	findRegions,
-	drawSegmented: drawSegmentedByMethod(drawImgSegmentsPixel),
-	radius,
-	minVariantHeight,
-	toYPx,
-	labelFont
-};
+const drawSegmented = drawSegmentedByMethod(drawImgSegmentsPixel);
+export { findRegions, drawSegmented, radius, minVariantHeight, toYPx, labelFont };

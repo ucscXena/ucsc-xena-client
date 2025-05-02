@@ -19,13 +19,14 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box, Typography} from '@material-ui/core';
-var classNames = require('classnames');
+import classNames from 'classnames';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./ColumnAdd.module.css');
+import compStyles from "./ColumnAdd.module.css";
 
 class ColumnAdd extends React.Component {
 	onClick = () => {
@@ -62,4 +63,4 @@ class ColumnAdd extends React.Component {
 	}
 }
 
-module.exports = ColumnAdd;
+export default ColumnAdd;

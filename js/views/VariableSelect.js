@@ -1,18 +1,19 @@
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import XAutocompleteSuggest from './XAutocompleteSuggest';
-var XRadioGroup = require('./XRadioGroup');
-var GeneSuggest = require('./GeneSuggest');
-var {WizardCard} = require('./WizardCard');
-var {rxEvents} = require('../react-utils');
-var parsePos = require('../parsePos');
-var {ignoredType, isPhenotype} = require('../models/dataType');
+import XRadioGroup from './XRadioGroup.js';
+import GeneSuggest from './GeneSuggest.js';
+import { WizardCard } from './WizardCard.js';
+import { rxEvents } from '../react-utils.js';
+import parsePos from '../parsePos.js';
+import { ignoredType, isPhenotype } from '../models/dataType.js';
 import {matchDatasetFields} from '../models/columns';
-var {Observable, Scheduler} = require('../rx').default;
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
 import {getOpts} from '../columnsParam';
-var {servers} = require('../defaultServers');
+import {servers} from '../defaultServers';
 
 // Styles
 var sxSuggestForm = {
@@ -506,4 +507,4 @@ class LoadingNotice extends React.Component {
 	}
 }
 
-module.exports = LoadingNotice;
+export default LoadingNotice;

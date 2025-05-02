@@ -11,8 +11,8 @@ import {
 	Tooltip
 } from '@material-ui/core';
 import PureComponent from '../PureComponent';
-var React = require('react');
-var Rx = require('../rx').default;
+import React from 'react';
+import Rx from '../rx';
 import {createVignette} from '../containers/vignette';
 import HelpBox from '../views/HelpBox';
 import {xenaColor} from '../xenaColor';

@@ -1,7 +1,7 @@
-var React = require('react');
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import * as _ from '../underscore_ext.js';
 
-var styles = require('./Exons.module.css');
+import styles from "./Exons.module.css";
 
 var width = 700;
 
@@ -115,8 +115,4 @@ class Exons extends React.PureComponent {
 	}
 }
 
-module.exports = {
-	Exons,
-	box,
-	renderExon
-};
+export { Exons, box, renderExon };

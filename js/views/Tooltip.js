@@ -1,13 +1,14 @@
 import PureComponent from '../PureComponent';
 import {Backdrop, Box, Icon, IconButton, Link, Paper, Typography} from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var meta = require('../meta');
-var classNames = require('classnames');
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import meta from '../meta';
+import classNames from 'classnames';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./Tooltip.module.css');
+import compStyles from "./Tooltip.module.css";
+
 var sxTooltip = {
 	borderBottom: `1px solid ${xenaColor.BLACK_6}`,
 };
@@ -157,4 +158,4 @@ class Tooltip extends PureComponent {
 	}
 }
 
-module.exports = Tooltip;
+export default Tooltip;

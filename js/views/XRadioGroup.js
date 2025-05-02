@@ -17,11 +17,11 @@
 
 // Core dependencies, components
 import {Box, FormControlLabel, Radio, RadioGroup} from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import * as _ from '../underscore_ext.js';
 import XFormControl from './XFormControl';
 import XFormLabel from './XFormLabel';
-var XRadioMeta = require('./XRadioMeta');
+import XRadioMeta from './XRadioMeta.js';
 
 class XRadioGroup extends React.Component {
 	onChange = (event) => {
@@ -47,4 +47,4 @@ class XRadioGroup extends React.Component {
 	}
 }
 
-module.exports = XRadioGroup;
+export default XRadioGroup;

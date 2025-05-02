@@ -1,10 +1,11 @@
-var {assoc, assocIn, deepMerge, every, find, findValue, first,
-	flatmap, get, getIn, identity, intersection, isArray, isEqual, keys, Let, map,
+import {assoc, assocIn, deepMerge, every, find, findValue, first, flatmap,
+	get, getIn, identity, intersection, isArray, isEqual, keys, Let, map,
 	mapObject, memoize1, merge, min, max, mmap, object, omit, pairs, pick,
-	pluck, range, some, sorted, sortByI, updateIn, uniq, values} =
-	require('../underscore_ext').default;
-var {userServers} = require('./servers');
-var {categoryMore} = require('../colorScales');
+	pluck, range, some, sorted, sortByI, updateIn, uniq, values
+	} from '../underscore_ext.js';
+
+import { userServers } from './servers.js';
+import { categoryMore } from '../colorScales.js';
 
 var type = ({valuetype}) => valuetype === 'category' ? 'coded' : 'float';
 

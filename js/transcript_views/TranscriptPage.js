@@ -1,20 +1,20 @@
-var _ = require('../underscore_ext').default;
-const React = require('react');
+import * as _ from '../underscore_ext.js';
+import React from 'react';
 import {Box, Link} from '@material-ui/core';
-const NameColumn = require('./NameColumn');
-// const {Exons} = require('./Exons');
-const ExonsOnly = require('./ExonsOnly');
-var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
-const GeneSuggest = require('../views/GeneSuggest');
-var {linearTicks} = require('../scale');
+import WarningIcon from '@material-ui/icons/Warning';
+import NameColumn from './NameColumn.js';
+import ExonsOnly from './ExonsOnly.js';
+import { DensityPlot, bottomColor, topColor, plotWidth } from './DensityPlot.js';
+import GeneSuggest from '../views/GeneSuggest.js';
+import { linearTicks } from '../scale.js';
 import nav from '../nav';
-var styles = require('./TranscriptPage.module.css');
-var {StateError} = require('../StateError');
-var {schemaCheckThrow} = require('../schemaCheck');
+import styles from "./TranscriptPage.module.css";
+import { StateError } from '../StateError.js';
+import { schemaCheckThrow } from '../schemaCheck.js';
 import spinner from '../ajax-loader.gif';
-var migrateState = require('../migrateState');
-var {expandState} = require('../compactData');
-var Rx = require('../rx').default;
+import migrateState from '../migrateState.js';
+import { expandState } from '../compactData.js';
+import Rx from '../rx';
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
@@ -26,10 +26,11 @@ function getStatusView(status, onReload) {
 	if (status === 'error') {
 		return (
 			<div className={styles.status}>
-				<i onClick={onReload}
-				   title='Error loading data. Click to reload.'
-				   aria-hidden='true'
-				   className={`material-icons ${styles.errorIcon}`}>warning</i>
+				<WarningIcon
+					onClick={onReload}
+					title="Error loading data. Click to reload."
+					aria-hidden="true"
+					className={styles.errorIcon}/>
 			</div>);
 	}
 	return null;

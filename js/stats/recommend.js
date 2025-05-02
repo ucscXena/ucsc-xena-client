@@ -1,8 +1,8 @@
 
-var {sortBy} = require('../underscore_ext').default;
-var Minhash = require('minhash/src/minhash');
-var rawProbemapHashes = require('json-loader!./probemapMinHashes');
-var rawCohortHashes = require('json-loader!./cohortMinHashes');
+import { sortBy } from '../underscore_ext.js';
+import Minhash from 'minhash/src/minhash';
+import rawProbemapHashes from 'json-loader!./probemapMinHashes';
+import rawCohortHashes from 'json-loader!./cohortMinHashes';
 
 var inflate = list => list.map(
 	({name, hash}) => {
@@ -26,7 +26,6 @@ function recommend(list, hashes, thresh) {
 	return sortBy(scores, 'score').reverse().filter(x => x.score > thresh);
 }
 
-module.exports = {
-	probemap: probes => recommend(probes, probemapHashes, 0.001),
-	cohort: samples => recommend(samples, cohortHashes, 0.001)
-};
+const probemap = probes => recommend(probes, probemapHashes, 0.001);
+const cohort = samples => recommend(samples, cohortHashes, 0.001);
+export { probemap, cohort };

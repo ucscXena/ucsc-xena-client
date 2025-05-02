@@ -13,7 +13,8 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Box} from '@material-ui/core';
 import {xenaColor} from '../xenaColor';
 
@@ -57,4 +58,4 @@ class CardAvatar extends React.Component {
 	}
 }
 
-module.exports = CardAvatar;
+export default CardAvatar;

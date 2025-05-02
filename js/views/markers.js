@@ -1,4 +1,4 @@
-var {extend, map} = require('../underscore_ext').default;
+import { extend, map } from '../underscore_ext.js';
 import {Button, Dialog, DialogActions, DialogContent,
 	DialogTitle} from '@material-ui/core';
 import {el} from '../chart/react-hyper';

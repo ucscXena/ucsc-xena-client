@@ -1,14 +1,16 @@
 
-var _ = require('./underscore_ext').default;
-var {createSelectorCreator, defaultMemoize} = require('reselect');
-var {createFmapSelector} = require('./selectors');
-var widgets = require('./columnWidgets');
-var km = require('./models/km');
-var {searchSamples} = require('./models/searchSamples');
-var isPublicSelector = require('./isPublicSelector');
+import * as _ from './underscore_ext.js';
+import { createSelectorCreator, defaultMemoize } from 'reselect';
+import { createFmapSelector } from './selectors.js';
+import * as widgets from './columnWidgets.js';
+import * as km from './models/km.js';
+import { searchSamples } from './models/searchSamples.js';
+import isPublicSelector from './isPublicSelector.js';
+
 // XXX should move userServers, or maybe put it in a selector
-var {userServers} = require('./controllers/common');
-var {fradixSortL16$64} = require('./xenaWasm');
+import { userServers } from './controllers/common.js';
+
+import { fradixSortL16$64 } from './xenaWasm.js';
 import {defaultWidth} from './controllers/ui';
 
 var minWidth = defaultWidth(0);
@@ -151,11 +153,6 @@ var spreadsheetSelector = selector =>
 
 //
 
-var supportsTies = state => _.getIn(state, ['cohort', 'name'], '').indexOf('TCGA') === 0;
-
-var tiesSelector = state =>
-	_.assoc(state, 'tiesEnabled', supportsTies(state));
-
 var pickUserServers = (obj, servers) => _.pick(obj, userServers({servers}));
 
 var cohortsSelector = createSelector(
@@ -203,7 +200,7 @@ var setWizardProps = selector => state =>
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => tiesSelector(kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state)))))))));
+var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
 
 // This seems odd. Surely there's a better test?

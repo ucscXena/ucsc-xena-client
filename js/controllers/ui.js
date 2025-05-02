@@ -1,17 +1,26 @@
-var _ = require('../underscore_ext').default;
-var Rx = require('../rx').default;
-var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
-var {setFieldType} = require('../models/fieldSpec');
-var {setNotifications} = require('../notifications');
-var {remapFields} = require('../models/searchSamples');
+import * as _ from '../underscore_ext.js';
+import Rx from '../rx';
+
+import {
+    userServers,
+    setCohort,
+    fetchSamples,
+    fetchColumnData,
+    fetchCohortData,
+    fetchSurvival,
+    fetchClustering,
+} from './common.js';
+
+import { setFieldType } from '../models/fieldSpec.js';
+import { setNotifications } from '../notifications.js';
+import { remapFields } from '../models/searchSamples.js';
 import {make, mount, compose} from './utils';
-var {JSONToqueryString} = require('../dom_helper');
-var {parseBookmark} = require('../bookmark');
-var gaEvents = require('../gaEvents');
+import { JSONToqueryString } from '../dom_helper.js';
+import { parseBookmark } from '../bookmark.js';
+import gaEvents from '../gaEvents.js';
 import * as columnsParam from '../columnsParam';
 import {defaultState as chartDefaultState} from '../chart/utils';
-var xenaQuery = require('../xenaQuery');
+import xenaQuery from '../xenaQuery';
 import {fromBitmap} from '../models/bitmap';
 
 function fetchBookmark(serverBus, bookmark) {

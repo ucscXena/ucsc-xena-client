@@ -1,14 +1,17 @@
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import XAutocompleteFormControl from './XAutocompleteFormControl';
 import XAutosuggestInput from './XAutosuggestInput';
-var {Observable, Scheduler} = require('../rx').default;
-var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
-var _ = require('../underscore_ext').default;
-var {rxEvents} = require('../react-utils');
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
+import xenaQuery from '../xenaQuery';
+var {matchPartialField, sparseDataMatchPartialField, refGene} = xenaQuery;
+import * as _ from '../underscore_ext.js';
+import { rxEvents } from '../react-utils.js';
 var limit = 8;
 
 // Styles
@@ -164,4 +167,4 @@ class GeneSuggest extends PureComponent {
 	}
 }
 
-module.exports = GeneSuggest;
+export default GeneSuggest;

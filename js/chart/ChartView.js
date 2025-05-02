@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 import PureComponent from '../PureComponent';
 import {showWizard} from './utils';
 
@@ -21,4 +21,4 @@ class ChartView extends PureComponent {
 	}
 }
 
-module.exports = ChartView;
+export default ChartView;

@@ -1,5 +1,5 @@
 
-require('./base');
+import './base.js';
 import {
 	Box,
 	Button,
@@ -13,21 +13,24 @@ import {
 	ListItem,
 	Typography
 } from '@material-ui/core';
-var React = require('react');
-var Rx = require('./rx').default;
+import React from 'react';
+import Rx from './rx';
 
-var {logout, testHost, testLogin} = require('./xenaQuery');
-var _ = require('./underscore_ext').default;
-var {servers: {localHub}, serverNames} = require('./defaultServers');
-var {parseServer, getHubParams} = require('./hubParams');
+import xenaQuery from './xenaQuery';
+var {logout, testHost, testLogin} = xenaQuery;
+import * as _ from './underscore_ext.js';
+import {servers, serverNames} from './defaultServers';
+var {localHub} = servers;
+import { parseServer, getHubParams } from './hubParams.js';
 import nav from './nav';
 import XTypography, {XTypographyVariants} from './views/XTypography';
 import {xenaColor} from './xenaColor';
-var {encodeObject} = require('./util').default;
+import { encodeObject } from './util.js';
 import PureComponent from './PureComponent';
 
 // Styles
-var styles = require('./hubPage.module.css');
+import styles from "./hubPage.module.css";
+
 var sxHubItem = {
 	gap: 16,
 	'&:hover': {

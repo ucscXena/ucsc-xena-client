@@ -1,5 +1,5 @@
 
-var React = require('react');
+import React from 'react';
 
 var tickPadding = 3;
 function horzLayout(domain, range, scale, tickfn, tickHeight) {
@@ -48,4 +48,4 @@ class Axis extends React.Component {
 	}
 }
 
-module.exports = Axis;
+export default Axis;

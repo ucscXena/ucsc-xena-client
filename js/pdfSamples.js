@@ -1,6 +1,6 @@
-var {drawSamples} = require('./drawSamples');
-var _ = require('./underscore_ext').default;
-var widgets = require('./columnWidgets');
+import { drawSamples } from './drawSamples.js';
+import * as _ from './underscore_ext.js';
+import * as widgets from './columnWidgets.js';
 
 function pdf(id, column, vg, state, i) {
 	let {zoom} = state,

@@ -1,7 +1,7 @@
 /*global define: false */
-var Rx = require('./rx').default;
-var {encodeObject} = require('./util').default;
-var {isArray, merge} = require('./underscore_ext').default;
+import Rx from './rx';
+import { encodeObject } from './util.js';
+import { isArray, merge } from './underscore_ext.js';
 
 function update(host, files, flags) {
 	files = isArray(files) ? files : [files];
@@ -14,11 +14,12 @@ function update(host, files, flags) {
 	};
 }
 
-module.exports = {
-	load: function (host, files, always) {
-		return Rx.Observable.ajax(update(host, files, always ? {always: true} : {}));
-	},
-	delete: function (host, files) {
-		return Rx.Observable.ajax(update(host, files, {delete: true}));
-	}
+const load = function (host, files, always) {
+    return Rx.Observable.ajax(update(host, files, always ? {always: true} : {}));
 };
+
+const deleteDataset = function (host, files) {
+    return Rx.Observable.ajax(update(host, files, {delete: true}));
+};
+
+export { load, deleteDataset };

@@ -1,5 +1,5 @@
 
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 
 var canEdit = ([type]) => type === 'geneSignature';
 
@@ -21,8 +21,4 @@ var signatureField = (fieldName, opts) => ({
 	...opts
 });
 
-module.exports = {
-	setFieldType,
-	signatureField,
-	supportsEdit
-};
+export { setFieldType, signatureField, supportsEdit };

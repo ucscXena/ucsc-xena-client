@@ -9,12 +9,13 @@
 // Core dependencies, components
 import PureComponent from '../PureComponent';
 
-var React = require('react');
-var {Portal} = require('react-overlays');
+import React from 'react';
+import { Portal } from 'react-overlays';
 
 // Styles
-var compStyles = require('./Crosshair.module.css');
-var classNames = require('classnames');
+import compStyles from "./Crosshair.module.css";
+
+import classNames from 'classnames';
 import pickerCursor from './colorize-24px.svg';
 
 var frozen = (props, state) => !props.interactive || state.frozen;
@@ -111,5 +112,5 @@ class Crosshair extends PureComponent {
 	}
 }
 
-module.exports = Crosshair;
+export default Crosshair;
 

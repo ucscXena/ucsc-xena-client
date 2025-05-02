@@ -1,11 +1,11 @@
 
-var Tooltip = require('../views/Tooltip');
+import Tooltip from '../views/Tooltip.js';
 import PureComponent from '../PureComponent';
-var React = require('react');
-var {rxEvents} = require('../react-utils');
-var meta = require('../meta');
-var _ = require('../underscore_ext').default;
-var Rx = require('../rx').default;
+import React from 'react';
+import { rxEvents } from '../react-utils.js';
+import meta from '../meta';
+import * as _ from '../underscore_ext.js';
+import Rx from '../rx';
 
 function addTooltip(Component) {
 	return class extends PureComponent {
@@ -54,4 +54,4 @@ function addTooltip(Component) {
 	};
 }
 
-module.exports = addTooltip;
+export default addTooltip;

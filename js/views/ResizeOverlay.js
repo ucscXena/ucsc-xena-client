@@ -1,10 +1,10 @@
 
-var React = require('react');
-var Resizable = require('react-resizable').Resizable;
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import { Resizable } from 'react-resizable';
+import * as _ from '../underscore_ext.js';
 
 // Styles
-require('./ResizeOverlay.css');
+import './ResizeOverlay.css';
 
 var max = (x, y) => x > y ? x : y;
 var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
@@ -66,4 +66,4 @@ class ResizeOverlay extends React.Component {
 	}
 }
 
-module.exports = ResizeOverlay;
+export default ResizeOverlay;

@@ -11,17 +11,18 @@
 
 // Core dependencies
 import PureComponent from '../PureComponent';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
-var _ = require('../underscore_ext').default;
-var CanvasDrawing = require('../CanvasDrawing');
-var ColCard = require('./ColCard');
-var {drawSamples} = require('../drawSamples');
+import * as _ from '../underscore_ext.js';
+
+import CanvasDrawing from '../CanvasDrawing.js';
+import ColCard from './ColCard.js';
+import { drawSamples } from '../drawSamples.js';
 import ZoomCarriage from './ZoomCarriage';
 
 // Styles
-var compStyles = require('./SampleZoomIndicator.module.css');
+import compStyles from "./SampleZoomIndicator.module.css";
 
 function noZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
@@ -52,6 +53,6 @@ class SampleZoomIndicator extends PureComponent {
 				</ColCard>
 			</div>);
 	}
-};
+}
 
 export default SampleZoomIndicator;

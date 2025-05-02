@@ -1,6 +1,6 @@
 
-var {pluck} = require('./underscore_ext').default;
-var parser = require('./models/geneSignatureParser').parse;
+import { pluck } from './underscore_ext.js';
+import {parse as parser} from './models/geneSignatureParser';
 // Parse a simple list of genes and weights. More complex signatures would
 // be possible, but will require some work writing the xena query.
 //
@@ -21,4 +21,4 @@ function parse(str) {
 	return;
 }
 
-module.exports = parse;
+export default parse;

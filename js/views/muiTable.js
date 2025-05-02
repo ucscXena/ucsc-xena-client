@@ -1,4 +1,4 @@
-var {isArray, isObject, merge} = require('../underscore_ext').default;
+import { isArray, isObject, merge } from '../underscore_ext.js';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';

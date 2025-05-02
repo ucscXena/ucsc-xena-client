@@ -1,6 +1,6 @@
-var _ = require('./underscore_ext').default;
-var {defaultServers, enabledServers} = require('./defaultServers');
-var {getNotifications} = require('./notifications');
+import * as _ from './underscore_ext.js';
+import {defaultServers, enabledServers} from './defaultServers';
+import { getNotifications } from './notifications.js';
 
 var defaultServerState = _.object(defaultServers,
 	defaultServers.map(s => ({user: _.contains(enabledServers, s)})));
@@ -28,6 +28,4 @@ const initialState = {
 	}
 };
 
-module.exports = {
-	initialState,
-};
+export { initialState };

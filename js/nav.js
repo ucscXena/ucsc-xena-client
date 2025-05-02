@@ -18,14 +18,15 @@ import {
 	MuiThemeProvider,
 	StylesProvider
 } from '@material-ui/core';
-var React = require('react');
-var ReactDOM = require('react-dom');
-var _ = require('./underscore_ext').default;
-var {servers: {localHub}} = require('./defaultServers');
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as _ from './underscore_ext.js';
+import {servers} from './defaultServers';
+const {localHub} = servers;
 import * as store from './hiddenOpts';
 import Rx from './rx';
-var meta = require('./meta');
-var BookmarkMenu = require('./views/BookmarkMenu');
+import meta from './meta';
+import BookmarkMenu from './views/BookmarkMenu.js';
 import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
 import {xenaColor} from './xenaColor';
 import {xenaNavTheme} from "./xenaThemeNav";

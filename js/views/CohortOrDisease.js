@@ -1,9 +1,9 @@
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
 import {CohortSuggest} from './CohortSuggest';
-var DiseaseSuggest = require('./DiseaseSuggest2');
-var XRadioGroup = require('./XRadioGroup');
-var {WizardCard} = require('./WizardCard');
+import DiseaseSuggest from './DiseaseSuggest2.js';
+import XRadioGroup from './XRadioGroup.js';
+import { WizardCard } from './WizardCard.js';
 
 class CohortOrDisease extends React.Component {
 	state = {mode: 'cohort', cohort: null, matchedCohorts: []};
@@ -60,4 +60,4 @@ class CohortOrDisease extends React.Component {
 	}
 }
 
-module.exports = CohortOrDisease;
+export default CohortOrDisease;

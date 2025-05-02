@@ -1,12 +1,14 @@
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import {CloseRounded, SearchRounded} from '@material-ui/icons';
+import CloseRounded from '@material-ui/icons/CloseRounded';
+import SearchRounded from '@material-ui/icons/SearchRounded';
 import PureComponent from '../PureComponent';
-var {identity, isEqual, isObject, memoize1, mmap} =
-	require('../underscore_ext').default;
+import { identity, isEqual, isObject, memoize1, mmap } from '../underscore_ext.js';
 import XAutosuggestInput from './XAutosuggestInput';
-var {Observable, Scheduler} = require('../rx').default;
-var {rxEvents} = require('../react-utils');
-var {matchPartialField} = require('../xenaQuery');
+import Rx from '../rx';
+const {Observable, Scheduler} = Rx;
+import { rxEvents } from '../react-utils.js';
+import xenaQuery from '../xenaQuery';
+var {matchPartialField} = xenaQuery;
 import {el} from '../chart/react-hyper';
 
 var xAutosuggestInput = el(XAutosuggestInput);

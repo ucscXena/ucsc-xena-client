@@ -7,11 +7,12 @@
 
 
 // Core dependencies, components
-var React = require('react');
-var classNames = require('classnames');
+import React from 'react';
+
+import classNames from 'classnames';
 
 // Styles
-var compStyles = require('./ZoomOverlay.module.css');
+import compStyles from "./ZoomOverlay.module.css";
 
 class ZoomOverlay extends React.Component {
 	render() {
@@ -53,4 +54,4 @@ class ZoomOverlay extends React.Component {
 	}
 }
 
-module.exports = ZoomOverlay;
+export default ZoomOverlay;

@@ -1,13 +1,18 @@
 
 import PureComponent from './PureComponent';
-var React = require('react');
+import React from 'react';
 import {Box} from '@material-ui/core';
-require('react-resizable/css/styles.css');
-var getColumns = require('./views/Columns');
+import 'react-resizable/css/styles.css';
+import getColumns from './views/Columns.js';
 import SampleZoomIndicator from './views/SampleZoomIndicator';
+// register spreadsheet methods
+import './plotDenseMatrix';
+import './plotMutationVector';
+import './plotSegmented';
+import './plotSamples';
 
 // Styles
-require('./Columns.css'); // XXX switch to js styles
+import './Columns.css'; // XXX switch to js styles
 
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);
@@ -28,4 +33,4 @@ var getSpreadsheet = columnsWrapper => {
 	};
 };
 
-module.exports = getSpreadsheet;
+export default getSpreadsheet;

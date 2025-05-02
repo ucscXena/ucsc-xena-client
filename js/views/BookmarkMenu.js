@@ -12,17 +12,18 @@ import {
 	Tooltip,
 	Typography
 } from '@material-ui/core';
-var React = require('react');
-var _ = require('../underscore_ext').default;
-var Rx = require('../rx').default;
-var {createBookmark, getRecent, setRecent} = require('../bookmark');
-var gaEvents = require('../gaEvents');
-var {compactState} = require('../compactData');
+import React from 'react';
+import * as _ from '../underscore_ext.js';
+import Rx from '../rx';
+import { createBookmark, getRecent, setRecent } from '../bookmark.js';
+import gaEvents from '../gaEvents.js';
+import { compactState } from '../compactData.js';
 import {hidden} from '../nav';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var compStyles = require('./BookmarkMenu.module.css');
+import compStyles from "./BookmarkMenu.module.css";
+
 var sxHelpLink = {
 	display: 'flex',
 	justifyContent: 'flex-end',
@@ -152,9 +153,9 @@ class BookmarkMenu extends React.Component {
 			recentBookmarks = getRecent();
 
 		return (
-			<StylesProvider generateClassName={createGenerateClassName({seed: 'Bookmark'})}>
-				<Button onClick={this.onClick}>Bookmark</Button>
-				<Menu
+            <StylesProvider generateClassName={createGenerateClassName({seed: 'Bookmark'})}>
+                <Button onClick={this.onClick}>Bookmark</Button>
+                <Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
 					getContentAnchorEl={null}
@@ -198,7 +199,7 @@ class BookmarkMenu extends React.Component {
 					<input className={compStyles.bookmarkInput} readOnly={true} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
-				<Menu
+                <Menu
 					anchorEl={anchorEl}
 					anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
 					getContentAnchorEl={null}
@@ -210,8 +211,9 @@ class BookmarkMenu extends React.Component {
 						</MenuItem>
 					))}
 				</Menu>
-			</StylesProvider>);
+            </StylesProvider>
+        );
 	}
 }
 
-module.exports = BookmarkMenu;
+export default BookmarkMenu;

@@ -1,5 +1,5 @@
-var {servers} = require('../defaultServers');
-var Rx = require('../rx').default;
+import {servers} from '../defaultServers';
+import Rx from '../rx';
 var {ajax, create, defer, empty, from, fromEvent, of, zip} = Rx.Observable;
 var EMPTY = empty();
 var {asap} = Rx.Scheduler;
@@ -7,10 +7,10 @@ import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
-var {Let, assocIn, copyStr, getIn, has, iterable} = require('../underscore_ext').default;
+import { Let, assocIn, copyStr, getIn, has, iterable } from '../underscore_ext.js';
 import backPressure from '../import/backPressure';
 import chunkReader from '../import/chunkReader';
-require('./html5-formdata-polyfill'); // for safari
+import './html5-formdata-polyfill'; // for safari
 
 const referenceHost = 'https://reference.xenahubs.net';
 

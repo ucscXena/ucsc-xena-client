@@ -1,9 +1,8 @@
 
 // Utilities for handling errors in async actions.
 
-var Rx = require('../rx').default;
-var _ = require('../underscore_ext').default;
-//var {compositeError} = require('../errors');
+import Rx from '../rx';
+import * as _ from '../underscore_ext.js';
 
 // Put error object on stream, extending with context.
 function reifyErrors(obs, context) {
@@ -28,8 +27,6 @@ var collectResults = _.curry((filter, arr, selector) => {
 		Rx.Observable.of(response);
 });
 
-module.exports = {
-	reifyErrors,
-	collectResults: collectResults(true),
-	collectAlignedResults: collectResults(false)
-};
+const _collectResults = collectResults(true);
+const collectAlignedResults = collectResults(false);
+export { reifyErrors, _collectResults as collectResults, collectAlignedResults };

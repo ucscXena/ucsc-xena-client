@@ -1,6 +1,6 @@
-var React = require('react');
-var Rx = require('../rx').default;
-var _ = require('../underscore_ext').default;
+import React from 'react';
+import Rx from '../rx';
+import * as _ from '../underscore_ext.js';
 
 var styles = {
 	wrapper: {
@@ -86,4 +86,4 @@ class DragSelect extends React.Component {
 	}
 }
 
-module.exports = DragSelect;
+export default DragSelect;

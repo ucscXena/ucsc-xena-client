@@ -13,11 +13,12 @@
 
 // Core dependencies, components
 import {Box, Typography} from '@material-ui/core';
-var React = require('react');
+import React from 'react';
 
 // App dependencies
-var CardAvatar = require('./CardAvatar');
-var {WIZARD_CARD_MAX_HEIGHT} = require('./WizardCard');
+import CardAvatar from './CardAvatar.js';
+
+import { WIZARD_CARD_MAX_HEIGHT } from './WizardCard.js';
 import {xenaColor} from '../xenaColor';
 
 // Styles
@@ -56,4 +57,4 @@ class GhostVariableSelect extends React.Component {
 	}
 }
 
-module.exports = GhostVariableSelect;
+export default GhostVariableSelect;

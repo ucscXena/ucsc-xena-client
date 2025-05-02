@@ -7,9 +7,10 @@
 
 
 // Dependencies
-var {chromRangeFromScreen} = require('./exonLayout');
-var multi = require('./multi');
-var _ = require('./underscore_ext').default;
+import { chromRangeFromScreen } from './exonLayout.js';
+
+import multi from './multi.js';
+import * as _ from './underscore_ext.js';
 
 // Selectors
 var directionSelector = ({direction}) => direction;
@@ -319,4 +320,4 @@ var zoomText = column =>
 	`Zoomed to ${lt1Txt(zoomPct(column))}%` : '';
 
 
-module.exports = {zoomText, ...zoom};
+export default {zoomText, ...zoom};

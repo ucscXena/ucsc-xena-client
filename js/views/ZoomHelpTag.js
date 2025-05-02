@@ -7,13 +7,14 @@
 
 
 // Core dependencies, components
-var React = require('react');
+import React from 'react';
+
 import {Typography} from '@material-ui/core';
-var {Portal} = require('react-overlays');
-var columnZoom = require('../columnZoom');
+import { Portal } from 'react-overlays';
+import columnZoom from '../columnZoom';
 
 // Styles
-var compStyles = require('./ZoomHelpTag.module.css');
+import compStyles from "./ZoomHelpTag.module.css";
 
 // zoom text when user has pressed mouse down but has not yet moved the mouse
 var defaultText = 'Drag to zoom';
@@ -61,4 +62,4 @@ class ZoomHelpTag extends React.Component {
 	}
 }
 
-module.exports = ZoomHelpTag;
+export default ZoomHelpTag;

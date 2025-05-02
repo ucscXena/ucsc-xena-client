@@ -1,7 +1,7 @@
 
 import PureComponent from '../PureComponent';
-var React = require('react');
-var Welcome = require('../views/Welcome');
+import React from 'react';
+import Welcome from '../views/Welcome.js';
 
 var links = [
 	['heatmap', '634da50313613e659e865c2bfb958ea1',

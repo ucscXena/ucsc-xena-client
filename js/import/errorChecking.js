@@ -1,5 +1,5 @@
 
-var _ = require('../underscore_ext').default;
+import * as _ from '../underscore_ext.js';
 import {DATA_TYPE} from './constants';
 
 const {MUTATION_BY_POS, SEGMENTED_CN, GENOMIC, PHENOTYPE} = DATA_TYPE;

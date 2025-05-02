@@ -15,7 +15,4 @@ function zoomOut(index, count, total) {
 	return [nindex, ncount];
 }
 
-module.exports = {
-	zoomIn: zoomIn,
-	zoomOut: zoomOut
-};
+export { zoomIn, zoomOut };

@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext').default;
+import * as _ from './underscore_ext.js';
 
 function permuteCaseArray(str, i = 0) {
 	if (i === str.length) {
@@ -31,8 +31,4 @@ var prefixBitLimit = _.curry((n, str) => {
 	return str.slice(0, l);
 });
 
-module.exports =  {
-	prefixBitLimit,
-	permuteCase,
-	permuteBitCount
-};
+export { prefixBitLimit, permuteCase, permuteBitCount };

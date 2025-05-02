@@ -1,4 +1,4 @@
-var {Let} = require('./underscore_ext').default;
+import { Let } from './underscore_ext.js';
 
 export var eqToString =
 	Let((eqs = ['FUNC_ADD', 'FUNC_SUBTRACT', 'FUNC_REVERSE_SUBTRACT']) =>

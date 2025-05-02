@@ -1,8 +1,8 @@
 import PureComponent from '../PureComponent';
-var _ = require('../underscore_ext').default;
-var React = require('react');
+import * as _ from '../underscore_ext.js';
+import React from 'react';
 
-export var createVignette = (steps, Component) => class extends PureComponent {
+export var createVignette = (steps, Component) => (class extends PureComponent {
 	state = {
 		state: -1
 	}
@@ -34,4 +34,4 @@ export var createVignette = (steps, Component) => class extends PureComponent {
 
 		return <Component {...this.props} {...bubbles} help={methods} />;
 	}
-};
+});
