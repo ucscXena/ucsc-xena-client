@@ -8,9 +8,9 @@ var style = function (c) {
 	return c;
 };
 
-function vgcanvas(el, vgw, vgh) {
+function vgcanvas(el, vgw, vgh, opts = {}) {
 	var fontFamily = 'Verdana,Arial,sans-serif',
-		ctx = el.getContext('2d'),
+		ctx = el.getContext('2d', opts),
 		currentFont,
 
 		// setting font is expensive, so cache it.

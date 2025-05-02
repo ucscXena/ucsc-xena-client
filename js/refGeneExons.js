@@ -178,7 +178,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 			end = 0;
 
 		for (var i = 0; i < data.length; i = i + 4) {
-			if (data.slice(i, i + 3).reduce((a, b) => a + b) === 255 * 3 || data[i + 3] === 0) { // white pixel
+			if (data.slice(i, i + 3).reduce((a, b) => a + b) > 254 * 3 || data[i + 3] === 0) { // near white pixel (account for anti-aliasing)
 				if (start === -1) { // restart
 					start = i;
 				}
@@ -446,7 +446,7 @@ class RefGeneDrawing extends React.Component {
 
 	componentDidMount() {
 		var {width, height} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height, {willReadFrequently: true});
 		this.draw(this.props);
 	}
 
