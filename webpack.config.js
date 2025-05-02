@@ -8,14 +8,42 @@ var postcssPlugins = [
 	require('postcss-modules-values')
 ];
 
-var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
-	[new HtmlWebpackPlugin({
-		title: "UCSC Xena",
-		filename: "index.html",
-		inject: false,
-		//template: "!!blueimp-tmpl-loader!page.template"
-		template: "page.template"
-	})] : [];
+var plugins = [];
+process.argv.indexOf('--disable-html-plugin') === -1 &&
+	plugins.push(
+		new HtmlWebpackPlugin({
+			title: "UCSC Xena",
+			filename: "index.html",
+			inject: false,
+			//template: "!!blueimp-tmpl-loader!page.template"
+			template: "page.template"
+		}));
+
+if (process.argv.indexOf('--statoscope') !== -1) {
+	var StatoscopePlugin = require('@statoscope/webpack-plugin').default;
+	plugins.push(
+		new StatoscopePlugin({
+			saveTo: 'build/statoscope-report.html',
+			saveStatsTo: 'build/stats.json',
+			open: false,
+			statsOptions: {
+				all: false,
+				hash: true,
+				entrypoints: true,
+				chunks: true,
+				chunkModules: true,
+				nestedModules: true,
+				children: true,
+				moduleTrace: true,
+				dependencyTrace: true,
+				chunkOrigins: true,
+				assets: true,
+				reasons: true,
+				performance: true,
+				ids: true
+			},
+		}));
+}
 
 module.exports = {
 	mode: 'development',
@@ -148,7 +176,17 @@ module.exports = {
 			}
 		]
 	},
-	plugins: htmlPlugin.concat([]),
+	plugins: plugins.concat([
+		{
+			// workaround for webpack ignoring SIGINT
+			apply(/*compiler*/) {
+				process.on('SIGINT', () => {
+					console.log('Shutting down Webpack...');
+					process.exit(0); // Force exit
+				});
+			},
+		},
+	]),
 	resolve: {
 		mainFields: ['browser', 'module', 'main'],
 		alias: {
