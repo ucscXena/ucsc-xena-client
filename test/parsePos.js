@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var jv = require('jsverify');
-var parsePos = require('../js/parsePos');
+import parsePos from '../js/parsePos';
 var _ = require('underscore');
 
 var {tuple, oneof, integer, uint32, constant} = jv;

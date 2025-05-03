@@ -3,7 +3,10 @@ var config = require('./webpack.config');
 
 config.output.filename = "testBundle.js";
 config.output.publicPath = "";
-config.entry = {test: 'mocha-loader?delay=true!./test/all.js'};
+// delay was for async loading of xenaWasm, but it's not currently
+// used.
+//config.entry = {test: 'mocha-loader?delay=true!./test/all.js'};
+config.entry = {test: 'mocha-loader!./test/all.js'};
 config.plugins = [
 	new HtmlWebpackPlugin({
 		title: "UCSC Xena",

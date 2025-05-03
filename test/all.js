@@ -8,7 +8,7 @@ require('./plotDenseMatrix');
 require('./plotMutationVector');
 require('./heatmapColors');
 require('./scale');
-require('./underscore_ext').default;
+require('./underscore_ext');
 // this is unreliable in CI
 //require('./fieldFetch');
 //require('./compactData');
@@ -24,7 +24,7 @@ require('./drawHeatmap');
 require('./binpackJSON');
 require('./singleCell');
 require('./fvc');
-
-var xenaWasm = require('../js/xenaWasm');
-xenaWasm.loaded.then(() => run());
+// not currently doing any xeanWasm tests.
+//import * as xenaWasm from '../js/xenaWasm';
+//xenaWasm.loaded.then(() => run());
 require('./query.js');

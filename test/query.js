@@ -1,10 +1,10 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
 
-var {assoc, conj, getIn, identity, Let, omit, updateIn} = require('../js/underscore_ext').default;
+import {assoc, conj, getIn, identity, Let, omit, updateIn} from '../js/underscore_ext';
 var Rx = require('../js/rx').default;
 var {of} = Rx.Observable;
 var {Subject} = Rx;
-var createStore = require('../js/store');
+import createStore from '../js/store';
 var controlRunner = require('../js/controlRunner').default;
 import {make as makeControls, compose} from '../js/controllers/utils';
 import query from '../js/controllers/query';

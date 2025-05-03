@@ -1,5 +1,5 @@
 /*global describe: false, it: false, require: false */
-var _ = require('../js/underscore_ext').default;
+import * as _ from '../js/underscore_ext';
 var assert = require('assert');
 var jsc = require('jsverify');
 

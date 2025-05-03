@@ -1,5 +1,5 @@
 /*global describe: false, it: false, require: false */
-var _ = require('../js/underscore_ext').default;
+import * as _ from '../js/underscore_ext.js';
 //var assert = require('assert');
 var {column} = require('../js/columnWidgets');
 require('../js/plotDenseMatrix');
