@@ -307,8 +307,8 @@ var setParamStudy = (state, params) =>
 
 var setDefaultStudyID = (state, params) =>
 	updateIn(state, ['defaultStudyID'], ds =>
-		(params.navigate !== 'navigate' || params.code ? ds : params.defaultTable) ||
-			'default');
+		(params.navigate !== 'navigate' || params.code || params.inlineState ? ds :
+			params.defaultTable) || 'default');
 
 // compose a list of functions, retaining trailing arguments
 var thread = (...fns) =>
