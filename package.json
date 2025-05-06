@@ -60,7 +60,6 @@
     "glob": "^7.1.1",
     "html-webpack-plugin": "^4.3.0",
     "js-sha1": "^0.6.0",
-    "json-loader": "^0.5.7",
     "jsverify": "^0.7.1",
     "karma": "^5.1.1",
     "karma-chrome-launcher": "^3.1.0",

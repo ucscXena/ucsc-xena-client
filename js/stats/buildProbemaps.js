@@ -46,7 +46,7 @@ function probeList(probemap) {
 }
 
 function buildFilters() {
-	var out = fs.openSync('probemapMinHashes', 'w');
+	var out = fs.openSync('probemapMinHashes.json', 'w');
 	var first = true;
 	probemapList().flatMap(probemaps =>
 			Rx.Observable.merge(...probemaps.map(probeList)))

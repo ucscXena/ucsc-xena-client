@@ -55,7 +55,7 @@ function minHashFromList(list) {
 }
 
 function writeCohortHashes() { //eslint-disable-line no-unused-vars
-	var out = fs.openSync('cohortMinHashes', 'w');
+	var out = fs.openSync('cohortMinHashes.json', 'w');
 	var first = true;
 	cohortList.flatMap(cohorts =>
 			Rx.Observable.merge(
