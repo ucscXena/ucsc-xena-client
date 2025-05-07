@@ -24,7 +24,8 @@ require('./drawHeatmap');
 require('./binpackJSON');
 require('./singleCell');
 require('./fvc');
-// not currently doing any xeanWasm tests.
-//import * as xenaWasm from '../js/xenaWasm';
-//xenaWasm.loaded.then(() => run());
+// need delay for wasm loading, which is used in draw and scale
+// tests.
+import * as xenaWasm from '../js/xenaWasm';
+xenaWasm.loaded.then(() => run());
 require('./query.js');
