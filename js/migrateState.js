@@ -90,8 +90,8 @@ var noViolin = state =>
 
 // new required state in chart, avgState, pctState.
 var noAvg = state =>
-	get(state, 'spreadsheet') ? updateIn(state, ['spreadsheet'], defaultChartState) :
-		state;
+	getIn(state, ['spreadsheet', 'chartState']) ?
+		updateIn(state, ['spreadsheet'], defaultChartState) : state;
 
 // This must be sorted, with later versions appearing last.
 var migrations = [
