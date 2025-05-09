@@ -49,7 +49,7 @@ var setIfNot = (state, path, value) =>
 	v(_.getIn(state, path)) ? state : _.assocIn(state, path, value);
 
 // initialize exp and norm for active columns
-var initSettings = chartState => {
+export var initSettings = chartState => {
 	var ycolumn = chartState.ycolumn;
 	if (v(ycolumn)) {
 		chartState = setIfNot(chartState, ['expressionState', ycolumn], 0);

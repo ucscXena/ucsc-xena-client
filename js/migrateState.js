@@ -13,7 +13,7 @@ var version = 5; // XXX duplicated in store.js?
 var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString,
 	updateIn, without} = require('./underscore_ext').default;
 var {servers: {localHub, oldLocalHub}} = require('./defaultServers');
-import {defaultState as defaultChartState} from './chart/utils.js';
+import {initSettings as initChartState} from './chart/utils.js';
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
@@ -89,7 +89,7 @@ var noViolin = state =>
 // new required state in chart, avgState, pctState.
 var noAvg = state =>
 	getIn(state, ['spreadsheet', 'chartState']) ?
-		updateIn(state, ['spreadsheet'], defaultChartState) : state;
+		updateIn(state, ['spreadsheet', 'chartState'], initChartState) : state;
 
 // This must be sorted, with later versions appearing last.
 var migrations = [
