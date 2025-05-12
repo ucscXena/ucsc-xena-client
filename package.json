@@ -21,10 +21,7 @@
     "build:analyze": "npm run -s build:prod -- --profile --json > stats.json",
     "prebuild": "npm run clean",
     "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js && webpack --config webpack.dist.js",
-    "prepublishOnly": "npm run dist",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run -s cypress/integration/heatmap-spec.js",
-    "cypress:gen": "mocha --require babel-core/register cypress/generators/suite.js"
+    "prepublishOnly": "npm run dist"
   },
   "files": [
     "NOTICE",
@@ -51,7 +48,6 @@
     "chai": "^3.5.0",
     "css-loader": "^4.2.2",
     "csslint": "^0.10.0",
-    "cypress": "^3.1.0",
     "eslint": "^4.19.1",
     "eslint-plugin-react": "^4.3.0",
     "eslint-plugin-ucsc-xena-client": "file:eslint-rules",
