@@ -80,9 +80,11 @@
 
 .sidebar {
 	width: sidebar-width;
+	height: 800px;
+	overflow-y: scroll;
 }
 
-.sidebar > * {
+.sidebar > * + * {
 	margin-top: 10px;
 }
 
