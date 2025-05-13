@@ -4,7 +4,7 @@ var path = require('path');
 
 var postcssPlugins = [
 	require('postcss-for'),
-	require('postcss-cssnext'),
+	require('postcss-preset-env')({ stage: 3 }),
 	require('postcss-modules-values')
 ];
 
@@ -131,8 +131,7 @@ module.exports = {
 						loader: 'postcss-loader',
 						options: {
 							sourceMap: true,
-							sourceComments: true,
-							plugins: () => postcssPlugins
+							postcssOptions: {plugins: postcssPlugins}
 						}
 					}
 				]
@@ -153,7 +152,7 @@ module.exports = {
 						loader: 'postcss-loader',
 						options: {
 							sourceMap: true,
-							plugins: () => postcssPlugins
+							postcssOptions: {plugins: postcssPlugins}
 						}
 					}
 				]

@@ -54,10 +54,10 @@
 }
 
 .welcomeExampleText {
-	/* autoprefixer: off */
+	/* autoprefixer: ignore next */
 	-moz-box-orient: vertical;
+	/* autoprefixer: ignore next */
 	-webkit-box-orient: vertical;
-	/* autoprefixer: on */
 	display: -webkit-box;
 	font-size: 14px;
 	-webkit-line-clamp: 2;
