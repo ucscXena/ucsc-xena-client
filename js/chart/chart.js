@@ -4,7 +4,6 @@ import * as _ from '../underscore_ext.js';
 import gaEvents from '../gaEvents.js';
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
-import statsView from './statsView';
 import {
 	Accordion,
 	AccordionDetails,
@@ -28,6 +27,7 @@ import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,
 	normalizationControl, yExpressionControl, expressionMode} from './chartControls';
 import applyTransforms from './applyTransforms';
+import statsView from './statsView';
 
 // Styles
 import compStyles from "./chart.module.css";
