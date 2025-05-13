@@ -178,7 +178,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 			end = 0;
 
 		for (var i = 0; i < data.length; i = i + 4) {
-			if (data.slice(i, i + 3).reduce((a, b) => a + b) > 254 * 3 || data[i + 3] === 0) { // near white pixel (account for anti-aliasing)
+			if (data.slice(i, i + 3).reduce((a, b) => a + b) > 250 * 3 || data[i + 3] === 0) { // near white pixel (account for anti-aliasing)
 				if (start === -1) { // restart
 					start = i;
 				}

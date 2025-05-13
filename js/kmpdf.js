@@ -123,7 +123,7 @@ function lineGroup(vg, {g, xScale, yScale}) {
 var size = {height: 500, width: 500};
 
 function download({colors, labels, curves}) {
-	Promise.all([import('pdfkit'), import('blob-stream'), import('./vgpdf')
+	Promise.all([import('./pdfkit'), import('blob-stream'), import('./vgpdf')
 	]).then(([pdfkitModule, blobStreamModule, vgpdfModule]) => {
 		const PDFDocument = pdfkitModule.default;
 		const blobStream = blobStreamModule.default;

@@ -73,7 +73,7 @@ function drawColumnLabel(vg, column) {
 
 
 var download = state => {
-	Promise.all([ import('pdfkit'), import('blob-stream'), import('./vgpdf')
+	Promise.all([ import('./pdfkit'), import('blob-stream'), import('./vgpdf')
 	]).then(([pdfkitModule, blobStreamModule, vgpdfModule]) => {
 		const PDFDocument = pdfkitModule.default;
 		const blobStream = blobStreamModule.default;

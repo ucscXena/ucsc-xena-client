@@ -83,13 +83,6 @@ module.exports = {
 					{ loader: 'babel-loader' }
 				]
 			},
-			{
-				test: /pdfkit.js/,
-				use: [
-					{ loader: 'transform-loader', options: { brfs: true } },
-					{ loader: 'babel-loader' }
-				]
-			},
 			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
 			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },
 			{ test: /unicode-trie[/\\]index.js/, loader: "babel-loader" },
@@ -191,10 +184,7 @@ module.exports = {
 			// resolve this completely so the pdfkit alias doesn't break it.
 			'fs': require.resolve('pdfkit/js/virtual-fs.js'),
 			'txml/txml': 'txml/dist/txml',
-			'./connector': path.resolve(__dirname, 'js/connector-dev.js'),
-			// pdfkit 'module' import is broken. Alias it directly to the
-			// 'main' import.
-			'pdfkit': 'pdfkit/js/pdfkit.js'
+			'./connector': path.resolve(__dirname, 'js/connector-dev.js')
 		},
 		symlinks: false,
 		extensions: ['.js', '.jsx', '.json']

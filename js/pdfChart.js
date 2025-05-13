@@ -1,7 +1,7 @@
 import * as _ from './underscore_ext.js';
 
 var download = () => {
-	Promise.all([import('pdfkit'), import('svg-to-pdfkit'), import('blob-stream')
+	Promise.all([import('./pdfkit'), import('svg-to-pdfkit'), import('blob-stream')
 	]).then(([pdfkitModule, SVGtoPDFModule, blobStreamModule]) => {
 		const PDFDocument = pdfkitModule.default;
 		const blobStream = blobStreamModule.default;
