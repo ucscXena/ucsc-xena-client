@@ -153,7 +153,7 @@ var Hub = class extends PureComponent {
 			var login = this.state.login;
 			this.setState({login: _.assoc(login, host, false)});
 		});
-	}
+	};
 
 	setAddHubInputRef = ref => this.newHost = ref;
 

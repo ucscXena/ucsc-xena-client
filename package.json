@@ -48,7 +48,7 @@
     "chai": "^3.5.0",
     "css-loader": "^4.3.0",
     "csslint": "^0.10.0",
-    "eslint": "^4.19.1",
+    "eslint": "^8.57.1",
     "eslint-plugin-react": "^4.3.0",
     "eslint-plugin-ucsc-xena-client": "file:eslint-rules",
     "file-loader": "^6.2.0",

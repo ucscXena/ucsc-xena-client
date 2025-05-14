@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 var el = require('../js/exonLayout');
 var assert = require('assert');
 var _ = require('underscore');

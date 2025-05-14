@@ -120,7 +120,7 @@ class ApplicationContainer extends PureComponent {
 
 	onHighlightSelect = highlight => {
 		this.props.callback(['highlightSelect', highlight]);
-	}
+	};
 
 	onAllowOverSamples = () => {
 		this.props.callback(['allowOverSamples', true]);
@@ -128,7 +128,7 @@ class ApplicationContainer extends PureComponent {
 
 	onPickSamples = () => {
 		this.setState({pickSamples: !this.state.pickSamples});
-	}
+	};
 
 	onPicking = (newTerm, finish) => {
 		var oldSearch = (this.state.oldSearch == null ?
@@ -140,7 +140,7 @@ class ApplicationContainer extends PureComponent {
 			// There's potentially a race here with callback()
 			_.defer(() => this.setState({oldSearch: null}));
 		}
-	}
+	};
 
 	// XXX Change state to appState in Application, for consistency.
 	render() {

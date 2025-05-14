@@ -117,7 +117,7 @@ class XenaDownload extends React.Component {
 
 	onShowAdvanced = () => {
 		this.props.onShowAdvanced(!this.props.advanced);
-	}
+	};
 
 	render() {
 		var {files} = this.state,
@@ -201,19 +201,19 @@ var wrap = Comp => (class extends PureComponent {
 
 	onShowAdvanced = advanced => {
 		this.setState({advanced});
-	}
+	};
 
 	onHide = () => {
 		this.setState({show: false});
-	}
+	};
 
 	onShow = () => {
 		this.setState({show: true});
-	}
+	};
 
 	setCompRef = ref => {
 		this.compRef = ref;
-	}
+	};
 
 	render() {
 		var {advanced, show} = this.state,

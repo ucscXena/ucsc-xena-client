@@ -1,4 +1,4 @@
-/*global require: false, it: false, console: false, describe: false, mocha: false */
+/*global it: false, describe: false, mocha: false */
 
 var _ = require('../js/underscore_ext').default;
 var {isObject, isNumber, isArray, getIn, get, every, pluck} =

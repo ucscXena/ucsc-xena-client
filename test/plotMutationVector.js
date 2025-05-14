@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 //var _ = require('../js/underscore_ext').default;
 //var assert = require('assert');
 var {column} = require('../js/columnWidgets');

@@ -2,7 +2,7 @@
 import { Component } from 'react';
 import { isEqual } from './underscore_ext.js';
 
-var logDiff, logTime; //eslint-disable-line no-unused-vars
+var logDiff, logTime;
 
 if (process.env.NODE_ENV !== 'production') {
 	var diff = (a, b) => {
@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== 'production') {
 			};
 		});
 	};
-	logDiff = function(comp, nextProps, nextState) {
+	logDiff = function(comp, nextProps, nextState) {//eslint-disable-line no-unused-vars
 		if (!isEqual(comp.props, nextProps)) {
 			console.log(comp.constructor.displayName, 'props differ:');
 			diff(comp.props, nextProps);
@@ -44,7 +44,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 	window.timing = {};
 	var add = a => b => (b == null ? 0 : b) + a;
-	logTime = function(comp, tag, a, b) {
+	logTime = function(comp, tag, a, b) {//eslint-disable-line no-unused-vars
 		if (!a || !b || typeof a !==  'object' || typeof b !== 'object') {
 			// missing props or state to compare
 			return isEqual(a, b);

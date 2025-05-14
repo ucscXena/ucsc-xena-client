@@ -30,7 +30,7 @@ class GeneLabel extends PureComponent {
 class GeneLabelAnnotation extends PureComponent {
 	state = {
 		fieldIndex: -1
-	}
+	};
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.sub = this.props.tooltip.subscribe(ev => {
 			this.setState({

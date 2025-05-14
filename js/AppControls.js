@@ -134,7 +134,7 @@ export class AppControls extends PureComponent {
 	onSearchHistory = search => {
 		gaEvents('spreadsheet', 'samplesearch', 'history');
 		this.props.callback(['searchHistory', search]);
-	}
+	};
 
 	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
@@ -150,12 +150,12 @@ export class AppControls extends PureComponent {
 					columnOrder, data, cohortSamples).matches);
 		gaEvents('spreadsheet', 'samplesearch', 'nulls');
 		this.props.callback(['sampleFilter', m]);
-	}
+	};
 
 	onResetSampleFilter = () => {
 		gaEvents('spreadsheet', 'samplesearch', 'clear');
 		this.props.onResetSampleFilter();
-	}
+	};
 
 	onFilterZoom = () => {
 		const {appState: {samples, samplesMatched, zoom: {height}}, callback} = this.props,
@@ -189,7 +189,7 @@ export class AppControls extends PureComponent {
 		var {callback} = this.props;
 		gaEvents('spreadsheet', 'map');
 		callback(['map', true]);
-	}
+	};
 
 
 	onRefresh = () => {
@@ -236,7 +236,7 @@ export class AppControls extends PureComponent {
 		gaEvents('spreadsheet', 'samplesearch',
 			'picking-' + (pickSamples ? 'end' : 'start'));
 		this.props.onPickSamples();
-	}
+	};
 
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, showWelcome,

@@ -356,7 +356,7 @@ class Chart extends PureComponent {
 	onClose = () => {
 		gaEvents('spreadsheet', 'columnChart-close');
 		this.props.callback(['heatmap']);
-	}
+	};
 
 	render() {
 		var {callback, appState: xenaState} = this.props,

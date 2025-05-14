@@ -236,7 +236,7 @@ export default class ChartWizard extends PureComponent {
 				this.setState({chartType: 'boxplot'});
 			}
 		}
-	}
+	};
 	onMode = ev => {
 		var {appState} = this.props,
 			mode = ev.currentTarget.dataset.mode,
@@ -245,7 +245,7 @@ export default class ChartWizard extends PureComponent {
 			ycolumn = nextState?.ycolumn;
 		this.setState({mode, ...nextState});
 		this.getChartType({mode, xcolumn, ycolumn});
-	}
+	};
 	onClose = () => {
 		var {callback, appState: {chartState = {}}} = this.props;
 		callback(['chart-set-state',
@@ -256,10 +256,10 @@ export default class ChartWizard extends PureComponent {
 			gaEvents('spreadsheet', 'columnChart-close');
 		}
 		callback([chartState.another ? 'chart' : 'heatmap']);
-	}
+	};
 	onChart = event => {
 		this.setState({chartType: event.target.value});
-	}
+	};
 	onDone = () => {
 		var {callback, appState} = this.props,
 			{chartState: {colorColumn} = {}} = appState,
@@ -276,7 +276,7 @@ export default class ChartWizard extends PureComponent {
 				'colorColumn', mode === 'scatter' ? colorColumn : undefined,
 				'setColumn', undefined,
 				'another', false)]);
-	}
+	};
 	onX = event => {
 		var xcolumn = event.target.value;
 		var {mode, ycolumn} = this.state;
@@ -286,7 +286,7 @@ export default class ChartWizard extends PureComponent {
 			return;
 		}
 		this.getChartType({mode, xcolumn, ycolumn});
-	}
+	};
 	onY = event => {
 		var ycolumn = event.target.value;
 		var {mode, xcolumn} = this.state;
@@ -296,7 +296,7 @@ export default class ChartWizard extends PureComponent {
 			return;
 		}
 		this.getChartType({mode, xcolumn, ycolumn});
-	}
+	};
 	render() {
 		return page[this.state.mode](this);
 	}

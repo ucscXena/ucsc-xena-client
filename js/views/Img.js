@@ -169,7 +169,7 @@ var currentScale = (levels, zoom, scale) => Math.pow(2, levels - zoom - 1) / sca
 class Img extends PureComponent {
 	onTooltip = ev => {
 		this.props.onTooltip(ev.index);
-	}
+	};
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
 		var zoom = get(this.props.data.viewState, 'zoom', initialZoom(this.props)),

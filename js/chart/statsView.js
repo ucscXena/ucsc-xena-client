@@ -7,10 +7,10 @@ var typography = el(Typography);
 import compStyles from "./chart.module.css"; // XXX prune this for stats
 
 export default el(class extends PureComponent {
-	state = {}
+	state = {};
 	onClick = () => {
 		this.setState({deferred: this.props.stats()});
-	}
+	};
 	componentDidUpdate(prev) {
 		if (this.props.stats !== prev.stats) {
 			this.setState({deferred: null}); //eslint-disable-line react/no-did-update-set-state

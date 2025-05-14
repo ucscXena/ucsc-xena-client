@@ -408,7 +408,7 @@ class KmPlot extends PureComponent {
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-	}
+	};
 
 	onSplits = (ev) => {
 		var {callback} = this.props;
@@ -438,7 +438,7 @@ class KmPlot extends PureComponent {
 		if (group) {
 			this.setState({activeGroup: ev.type === 'mouseout' ? null : group});
 		}
-	}
+	};
 
 	renderNoOverlap() {
 		var {km: {survivalType}, survivalKeys, cohort} = this.props,

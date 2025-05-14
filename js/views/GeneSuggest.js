@@ -97,7 +97,7 @@ class GeneSuggest extends PureComponent {
 	onBlur = () => {
 		this.setState({open: false});
 		this.props.onPending(false);
-	}
+	};
 
 	// Setting pending to true will prevent setting the focus on the
 	// WizardCard component 'Done' button prematurely i.e. while the autocomplete panel remains in use.

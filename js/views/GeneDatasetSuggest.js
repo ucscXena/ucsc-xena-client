@@ -66,14 +66,14 @@ export class GeneDatasetSuggest extends PureComponent {
 	onInputChange = (ev, inputValue/*, reason*/) => {
 		this.setState({inputValue});
 		this.on.change(inputValue);
-	}
+	};
 
 	onReset = () => {
 		var {value} = this.props;
 		if (value) {
 			this.setState({inputValue: getOptionLabel(value)});
 		}
-	}
+	};
 
 	render() {
 		var {onChange, onReset} = this,

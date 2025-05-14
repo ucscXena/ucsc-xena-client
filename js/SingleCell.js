@@ -185,7 +185,7 @@ var chartSelect = el(class extends PureComponent {
 	displayName = 'chartSelect';
 	onMode = ev => {
 		this.setState({mode: ev.target.value});
-	}
+	};
 
 	render() {
 		var {props: {state, onChartMode, onColorByHandlers}} = this,
@@ -283,7 +283,7 @@ var statsAccordion = ({stats}) =>
 
 class MapTabs extends PureComponent {
 	state = {showedNext: !!localStorage.showedNext, showNext: false,
-		showColorBy2: false}
+		showColorBy2: false};
 	componentWillUnmount() {
 		this.showNext && clearTimeout(this.showNext);
 		this.hideNext && clearTimeout(this.hideNext);
@@ -294,14 +294,14 @@ class MapTabs extends PureComponent {
 			this.setState({showedNext: true, showNext: false});
 			localStorage.showedNext = 'true';
 		}
-	}
+	};
 	onShowColorBy2 = () => {
 		this.setState({showColorBy2: true});
-	}
+	};
 	onHideColorBy2 = () => {
 		this.setState({showColorBy2: false});
 		this.props.handlers.onColorByHandlers.colorBy2.onColorBy({mode: ''});
-	}
+	};
 	onDataset = (...args) => {
 		if (!this.state.showedNext) {
 			// For tooltip, trigger when dataset is selected, first time, if user
@@ -315,7 +315,7 @@ class MapTabs extends PureComponent {
 				setTimeout(() => this.setState({showNext: false}), 140 * 1000);
 		}
 		this.props.handlers.onDataset(...args);
-	}
+	};
 	render() {
 		var {onChange, onDataset, onShowColorBy2, onHideColorBy2,
 				state: {showNext, showColorBy2}, props:
@@ -537,13 +537,13 @@ class SingleCellPage extends PureComponent {
 	callback = ([action, ...params]) => {
 		// set scope for actions, to prevent aliasing with other controllers.
 		this.props.callback(['singlecell-' + action, ...params]);
-	}
+	};
 	onViewState = viewState => {
 		this.callback(['view-state', viewState]);
-	}
+	};
 	onEnter = () => {
 		this.callback(['enter']);
-	}
+	};
 	onHighlight = (ev, i) => {
 		// highlight integration when clicked
 		if (ev.type === 'dblclick') {
@@ -551,12 +551,12 @@ class SingleCellPage extends PureComponent {
 		} else {
 			this.setState({highlight: i});
 		}
-	}
+	};
 	onIntegration = () => {
 		var row = this.state.highlight;
 		this.callback(['integration',
 			this.props.state.defaultStudy.studyList[row].study]);
-	}
+	};
 	onDataset = ev => {
 		var {props: {state}} = this,
 			dataset = ev.target.value,
@@ -568,10 +568,10 @@ class SingleCellPage extends PureComponent {
 				dataset.cohort === datasetCohort(state) ? state.colorBy2 : {};
 
 		this.callback(['dataset', dataset, colorBy, colorBy2]);
-	}
+	};
 	onReset = () => {
 		this.callback(['reset']);
-	}
+	};
 	colorByKey(key, colorBy) {
 		this.callback(['colorBy', key, colorBy]);
 	}
@@ -600,68 +600,68 @@ class SingleCellPage extends PureComponent {
 	onRadius = (ev, r) => {
 		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
 		this.callback(['radius', isLabel ? this.props.state.radiusBase : r]);
-	}
+	};
 	onNavigate = (page, params) => {
 		this.props.callback(['navigate', page, params]);
 	};
 	onVisible = (i, checked) => {
 		this.callback(['channel-visible', i, checked]);
-	}
+	};
 	onSegmentationVisible = (i, checked) => {
 		this.callback(['segmentation-visible', i, checked]);
-	}
+	};
 	onChannel = (i, channel) => {
 		this.callback(['channel', i, channel]);
-	}
+	};
 	onOpacity = (i, op) => {
 		this.callback(['channel-opacity', i, op]);
-	}
+	};
 	onBackgroundOpacity = op => {
 		this.callback(['background-opacity', op]);
-	}
+	};
 	onBackgroundVisible = visible => {
 		this.callback(['background-visible', visible]);
-	}
+	};
 	onCancelLogin = origin => {
 		this.callback(['cancel-login', origin]);
-	}
+	};
 	onShowColorPicker = ev => {
 		this.setState({showColorPicker: ev.currentTarget.dataset.field});
-	}
+	};
 	onCloseColorPicker = () => {
 		this.setState({showColorPicker: false});
-	}
+	};
 	onColor = colors => {
 		this.callback(['customColor', this.state.showColorPicker, colors]);
-	}
+	};
 	onShadow = (ev, shadow) => {
 		var isLabel = /MuiSlider-markLabel/.exec(ev.target.className);
 		this.callback(['shadow', isLabel ? defaultShadow : shadow]);
-	}
+	};
 	onTab = tab => {
 		this.callback(['tab', tab]);
-	}
+	};
 	markersKey = key => {
 		this.callback(['show-markers', key, true]);
-	}
+	};
 	markersCloseKey = key => {
 		this.callback(['show-markers', key, false]);
-	}
+	};
 	onChartMode = ev => {
 		this.callback(['chartMode', ev.target.value]);
-	}
+	};
 	onChartType = (_, v) => {
 		this.callback(['chartType', v]);
-	}
+	};
 	onNormalization = i => {
 		this.callback(['chartNormalization', i]);
-	}
+	};
 	onChartInverted = () => {
 		this.callback(['chartInverted']);
-	}
+	};
 	onChartYexp = (_, v) => {
 		this.callback(['chartYExpression', v]);
-	}
+	};
 	onPopout = () => {
 		var {getState} = this.props;
 		var viz = document.getElementById('vizBody');
@@ -669,7 +669,7 @@ class SingleCellPage extends PureComponent {
 
 		window.addEventListener('message', sendState(getState()));
 		window.open('/singlecell/?inline', null, `popup=true,left=100,top=200,width=${width},height=${height}`);
-	}
+	};
 
 	componentDidMount() {
 		const {getState, onImport, state: {isPublic}} = this.props,

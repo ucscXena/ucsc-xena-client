@@ -30,7 +30,7 @@ class WelcomeContainer extends PureComponent {
 	// User interaction with the arrow buttons sets the active link state to the previous or next link.
 	onChangeLink = (increment) => {
 		this.setState({link: this.state.link + increment});
-	}
+	};
 
 	render() {
 		var {link: i} = this.state;

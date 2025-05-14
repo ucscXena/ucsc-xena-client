@@ -41,22 +41,22 @@ var noseg = 'No cell segmentation available';
 export default class ImgControls extends PureComponent {
 	onOpacity = i => (ev, op) => {
 		this.props.onOpacity(i, op);
-	}
+	};
 	onVisible = i => (ev, checked) => {
 		this.props.onVisible(i, checked);
-	}
+	};
 	onChannel = i => (ev, channel) => {
 		this.props.onChannel(i, channel);
-	}
+	};
 	onBackgroundVisible = (ev, checked) => {
 		this.props.onBackgroundVisible(checked);
-	}
+	};
 	onBackgroundOpacity = (ev, op) => {
 		this.props.onBackgroundOpacity(op);
-	}
+	};
 	onSegmentationVisible = i => (ev, checked) => {
 		this.props.onSegmentationVisible(i, checked);
-	}
+	};
 	render() {
 		var {state} = this.props;
 		var image = hasImage(state),

@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 var mv = require('../js/model/mutationVector');
 var assert = require('assert');
 describe('mutationVector', function () {

@@ -51,7 +51,7 @@ class ConceptSuggest extends PureComponent {
 			this.props.onAddTerm(value);
 			this.setState({value: ''});
 		}
-	}
+	};
 
 	getSuggestionValue = suggestion =>  suggestion;
 

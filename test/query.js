@@ -1,4 +1,4 @@
-/*global require: false, it: false, console: false, describe: false, mocha: false */
+/*global it: false, describe: false, mocha: false */
 
 import {assoc, conj, getIn, identity, Let, omit, updateIn} from '../js/underscore_ext';
 var Rx = require('../js/rx').default;

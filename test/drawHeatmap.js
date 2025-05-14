@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 var assert = require('assert');
 import * as _ from '../js/underscore_ext';
 

@@ -156,7 +156,7 @@ class DiseaseSuggest extends PureComponent {
 
 	setInputRef = ref => {
 		this.inputRef = ref;
-	}
+	};
 
 	getMatchedCohorts = (value) => {
 		if (!value) {
@@ -193,7 +193,7 @@ class DiseaseSuggest extends PureComponent {
 		this.setState({value: newValue});
 		var matchedCohorts = this.getMatchedCohorts(newValue);
 		this.props.onSelect(matchedCohorts);
-	}
+	};
 
 	render() {
 		var {filterOptions, onInputChange} = this,

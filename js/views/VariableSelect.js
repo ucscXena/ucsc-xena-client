@@ -476,7 +476,7 @@ class VariableSelect extends PureComponent {
 // We are passed data incrementally as it arrives from the servers,
 // so use a timeout to decide if we should keep waiting.
 class LoadingNotice extends React.Component {
-	state={wait: true};
+	state = {wait: true};
 
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		this.timeout = setTimeout(() => this.setState({wait: false}), 3000);

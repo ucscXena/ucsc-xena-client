@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false, assert: false */
+/*global describe: false, it: false, assert: false */
 
 var assert = require('assert');
 import {colorSpec} from '../js/heatmapColors';

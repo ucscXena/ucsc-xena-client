@@ -1,5 +1,5 @@
 // deprecated. Was used to draw ga4gh annotations.
-/*global require: false, module: false */
+
 import multi from 'multi';
 
 function getType([type]) {

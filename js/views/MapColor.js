@@ -348,7 +348,7 @@ class MapColor extends PureComponent {
 		if (field || !mode) {
 			this.props.handlers.onColorBy(newState);
 		}
-	}
+	};
 	onGene = ({host, name, field}) => {
 		var {state} = this.props,
 			{colnormalization, unit} = getIn(state, ['datasetMetadata', host, name]),
@@ -356,7 +356,7 @@ class MapColor extends PureComponent {
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onGeneSet = ({host, name, field: newField}) => {
 		var {state} = this.props,
 			{colnormalization, unit} = getIn(state, ['datasetMetadata', host, name]),
@@ -365,14 +365,14 @@ class MapColor extends PureComponent {
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onDelete = i => () => {
 		var field = splice(this.state.colorBy.field, i, 1),
 			newState = assoc(this.state.colorBy, 'field', field);
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onCellType = ev => {
 		var type = ev.target.value,
 			{host, name, field} = type,
@@ -380,7 +380,7 @@ class MapColor extends PureComponent {
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onOther = ev => {
 		var other = ev.target.value,
 			{host, name, field, type} = other,
@@ -388,11 +388,11 @@ class MapColor extends PureComponent {
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onProb = ev => {
 		var {host, name} = ev.target.value;
 		this.setState({colorBy: {mode: 'prob', host, name, field: null}});
-	}
+	};
 	onProbCell = ev => {
 		var {colorBy} = this.state,
 			field = ev.target.value,
@@ -400,13 +400,13 @@ class MapColor extends PureComponent {
 
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onSig = ev => {
 		var {host, name, field} = ev.target.value,
 			newState = {mode: 'sig', host, name, field};
 		this.setState({colorBy: newState});
 		this.props.handlers.onColorBy(newState);
-	}
+	};
 	onScale = (ev, params) => {
 		var {state} = this.props;
 		params = isLog(colorScale(state)) ? params.map(pow2m1) : params;
@@ -419,7 +419,7 @@ class MapColor extends PureComponent {
 			params = assoc(scaleValue(state), index, scaleDefaults[index]);
 		}
 		this.props.handlers.onScale(ev, params);
-	}
+	};
 	render() {
 		var {state: {colorBy}, handlers: {onColorBy, onScale, ...handlers}} = this,
 			{state: appState, fieldPred, none = true,

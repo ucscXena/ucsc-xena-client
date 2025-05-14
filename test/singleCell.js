@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 var sc = require('../js/chart/singleCell');
 var {fromBitmap} = require('../js/models/bitmap');
 var assert = require('assert');

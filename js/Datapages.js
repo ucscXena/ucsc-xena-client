@@ -444,7 +444,7 @@ var DatapagesContainer = ({children, ...props}) => {
 var DatasetPage = wrapLaunchHelper(
 	props => getIn(props, ['state', 'params', 'host']) === localHub,
 	class extends PureComponent {
-		static displayName = 'DatasetPage'
+		static displayName = 'DatasetPage';
 		onCohort = (ev) => { navHandler.call(this, ev); };
 
 		onViz = () => {
@@ -550,7 +550,7 @@ var HubPage = wrapLaunchHelper(
 		onImport = () => {
 			this.props.callback(['reset-import-state']);
 			this.props.callback(['navigate', 'import']);
-		}
+		};
 
 		onViz = (cohort) => {
 			if (!cohort) {return;}

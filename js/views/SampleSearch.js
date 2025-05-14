@@ -254,62 +254,62 @@ class Search extends PureComponent {
 
 	setRef = ref => {
 		this.input = ref;
-	}
+	};
 
 	onCaret = () => {
 		var hl = this.input && this.props.offsets ?
 			findSubExpr(this.props.offsets, this.input.selectionStart) :
 			undefined;
 		this.highlight(hl);
-	}
+	};
 
 	onHideCaret = () => {
 		this.highlight(undefined);
-	}
+	};
 
 	onCloseFilterMenu = () => {
 		this.setState({filterMenuEl: null});
-	}
+	};
 
 	onOpenFilterMenu = (event) => {
 		this.setState({filterMenuEl: event.currentTarget});
-	}
+	};
 
 	onOpenHistory = () => {
 		this.setState({historyOpen: true});
-	}
+	};
 
 	onHistory = value => {
 		this.setState({historyOpen: false});
 		this.props.onHistory(value); // move to front of history
 		this.props.onChange(value);
-	}
+	};
 
 	onHideHistory = () => {
 		this.setState({historyOpen: false});
-	}
+	};
 
 	onRemove = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onFilter(true);
 		this.onCloseFilterMenu();
-	}
+	};
 
 	onKeep = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onFilter(false);
 		this.onCloseFilterMenu();
-	}
+	};
 
 	onClear = () => {
 		this.props.onResetSampleFilter();
 		this.onCloseFilterMenu();
-	}
+	};
 
 	onRemoveNulls = () => {
 		this.props.onIntersection();
 		this.onCloseFilterMenu();
-	}
+	};
 
 	onCreateColumn = () => {
 		// have to add to history before the columns reorder, to
@@ -317,13 +317,13 @@ class Search extends PureComponent {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onCreateColumn();
 		this.onCloseFilterMenu();
-	}
+	};
 
 	onZoom = () => {
 		this.props.onHistory(this.state.value.trim());
 		this.props.onZoom();
 		this.onCloseFilterMenu();
-	}
+	};
 
 	render() {
 		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples} = this.props,

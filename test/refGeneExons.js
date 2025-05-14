@@ -1,5 +1,5 @@
 
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 var {findIntervals} = require('../js/refGeneExons');
 var assert = require('assert');
 

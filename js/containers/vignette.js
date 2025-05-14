@@ -5,21 +5,21 @@ import React from 'react';
 export var createVignette = (steps, Component) => (class extends PureComponent {
 	state = {
 		state: -1
-	}
+	};
 
 	start = () => {
 		this.setState({state: 0});
-	}
+	};
 
 	next = () => {
 		var state = this.state.state;
 
 		this.setState({state: state === steps / 2 - 1 ? -1 : state + 1});
-	}
+	};
 
 	cancel = () => {
 		this.setState({state: -1});
-	}
+	};
 
 	render() {
 		var methods = _.pick(this, 'start', 'next', 'cancel'),

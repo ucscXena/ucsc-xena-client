@@ -1,5 +1,5 @@
 // deprecated. Was used to draw ga4gh annotations.
-/*global require: false, module: false */
+
 
 import * as _ from './underscore_ext.js';
 import { matches } from 'static-interval-tree';

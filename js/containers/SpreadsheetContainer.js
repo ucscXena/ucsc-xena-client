@@ -160,7 +160,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => (class extends React.Comp
 		var {data, index, columns, columnOrder, samples} = this.props.appState;
 		return canPickSamples(columns, data, index, samples, columnOrder,
 				id, sampleIndex);
-	}
+	};
 
 	onPickSamplesSelect = (id, zoom, flop, finish) => {
 		// This will be called from a drag-select callback, where 'finish' is

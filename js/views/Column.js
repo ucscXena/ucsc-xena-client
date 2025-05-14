@@ -483,11 +483,11 @@ export default class Column extends PureComponent {
 
 	onColumnMenuClose = () => {
 		this.setState({menuEl: null});
-	}
+	};
 
 	onColumnMenuOpen = (event) => {
 		this.setState({ menuEl: event.currentTarget });
-	}
+	};
 
 	onRemove = () => {
 		this.onColumnMenuClose();
@@ -615,12 +615,12 @@ export default class Column extends PureComponent {
 			sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index));
 
 		return this.props.canPickSamples(this.props.id, sampleIndex);
-	}
+	};
 
 	dragEnabled = ev => {
 		return !this.props.wizardMode &&
 			!(this.props.pickSamples && !this.canPickSamples(ev));
-	}
+	};
 
 	onPickSamplesDrag = selection => {
 		this.toggleInteractive(false);
@@ -628,7 +628,7 @@ export default class Column extends PureComponent {
 		var flop = selection.start.y > selection.end.y;
 		this.setState({dragZoom: {selection: translatedSelection, picking: true}});
 		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop);
-	}
+	};
 
 	onPickSamplesDragSelect  = selection => {
 		this.toggleInteractive(true);
@@ -636,7 +636,7 @@ export default class Column extends PureComponent {
 		var flop = selection.start.y > selection.end.y;
 		this.setState({dragZoom: {}});
 		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop, true);
-	}
+	};
 
 	onDragZoom(selection, zone) {
 		this.toggleInteractive(false);
@@ -749,7 +749,7 @@ export default class Column extends PureComponent {
 			notebook = 'http://analysis.xenahubs.net';
 
 		sendAnalysis(notebook, payload);
-	}
+	};
 
 	onBlitzGSEA = () => {
 		this.onColumnMenuClose();
@@ -765,7 +765,7 @@ export default class Column extends PureComponent {
 			notebook = 'http://blitzGSEA.xenahubs.net';
 
 		sendAnalysis(notebook, payload);
-	}
+	};
 
 	onTumorMap = (tumorMap) => {
 		this.onColumnMenuClose();

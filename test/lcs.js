@@ -1,4 +1,4 @@
-/*global require: false, it: false, console: false, describe: false, mocha: false */
+/*global it: false, describe: false, mocha: false */
 import lcs from '../js/lcs';
 
 var assert = require('assert');

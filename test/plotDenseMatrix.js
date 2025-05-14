@@ -1,4 +1,4 @@
-/*global describe: false, it: false, require: false */
+/*global describe: false, it: false */
 import * as _ from '../js/underscore_ext.js';
 //var assert = require('assert');
 var {column} = require('../js/columnWidgets');

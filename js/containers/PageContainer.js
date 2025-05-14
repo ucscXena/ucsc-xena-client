@@ -41,7 +41,7 @@ var auth = ({state}, onCancelLogin) =>
 
 const notFound = () => <p>Oops... can't find this page</p>;
 export class PageContainer extends PureComponent {
-	state = {error: null}
+	state = {error: null};
 	componentDidUpdate(oldProps, oldState) {
 		if (oldState.error && !isEqual(oldProps.state, this.props.state)) {
 			// If app state has changed, try rendering.
@@ -50,7 +50,7 @@ export class PageContainer extends PureComponent {
 	}
 	onCancelLogin = origin => {
 		this.props.callback(['auth-cancel', origin]);
-	}
+	};
 	render() {
 		var {props} = this,
 			{page} = props.state,

@@ -128,7 +128,7 @@ var currentScale = (zoom, scale) => Math.pow(2, -zoom) / scale;
 class MapDrawing extends PureComponent {
 	onTooltip = ev => {
 		this.props.onTooltip(ev.index);
-	}
+	};
 	onViewState = debounce(400, this.props.onViewState);
 	componentDidMount() {
 		if (this.props.data.columns.length  !== 2) {
@@ -290,7 +290,7 @@ export class Map extends PureComponent {
 		tooltipID: undefined,
 		scale: null,
 		showControls: false
-	}
+	};
 	//	For displaying FPS
 //	componentDidMount() {
 //		this.timer = setInterval(() => {
@@ -304,15 +304,15 @@ export class Map extends PureComponent {
 //	}
 	onFPSRef = FPSRef => {
 		this.FPSRef = FPSRef;
-	}
+	};
 	onDeck = deckGL => {
 		this.deckGL = deckGL;
-	}
+	};
 	onRef = ref => {
 		if (ref) {
 			this.setState({container: ref});
 		}
-	}
+	};
 	onViewState = (viewState, upp) => {
 		var unit = getIn(this.props.state, ['dataset', 'micrometer_per_unit']);
 		if (upp && unit) {
@@ -323,17 +323,17 @@ export class Map extends PureComponent {
 		if (viewState) {
 			this.props.onViewState(omit(viewState, 'transitionDuration', 'transitionInterpolator'));
 		}
-	}
+	};
 	findSample = memoize1((samples, id) => indexOf(samples, id, true));
 	onTooltip = i => {
 		this.setState({tooltipID: getSamples(this.props.state)[i]});
-	}
+	};
 	onClose = () => {
 		this.setState({tooltipID: undefined});
-	}
+	};
 	onControls = () => {
 		this.setState({showControls: !this.state.showControls});
-	}
+	};
 	render() {
 		var handlers = pick(this.props, (v, k) => k.startsWith('on'));
 

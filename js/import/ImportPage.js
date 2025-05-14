@@ -74,7 +74,7 @@ const hasWarnings = ({ warnings }) => (warnings && warnings.length);
 const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
 
 class ImportForm extends React.Component {
-	state = {showMoreErrors: false, showMoreDataTypes: false}
+	state = {showMoreErrors: false, showMoreDataTypes: false};
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress, serverError } = this.props.state || {},
@@ -234,7 +234,7 @@ class ImportForm extends React.Component {
 			ref.inputNode.focus();
 		}
 		this.localCohortRef = ref;
-	}
+	};
 
 	studySelectionPage() {
 		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state,
@@ -399,23 +399,23 @@ class ImportForm extends React.Component {
 		const { cohortRadio } = this.props.state;
 
 		return !!(cohortRadio && this.props.state[cohortRadio]);
-	}
+	};
 
 	isProbesNextPageEnabled = () => {
 		return true;
-	}
+	};
 
 	onWizardBack = () => {
 		this.props.callback(['wizard-page', this.props.wizardHistory.pop()]);
 		this.props.callback(['wizard-page-history', this.props.wizardHistory]);
-	}
+	};
 
 	onWizardNext = (currPageIndex) => () => {
 		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, currPageIndex]]);
 
 		const newPageIndex = getNextPageByDataType(currPageIndex, _.getIn(this.props, ['state', 'dataType']));
 		this.props.callback(['wizard-page', newPageIndex]);
-	}
+	};
 
 	onFileChange = (fileProp) => (evt) => {
 		if (evt.target.files.length > 0) {
@@ -427,7 +427,7 @@ class ImportForm extends React.Component {
 			this.props.callback(['read-file', file]);
 			this.props.callback(['set-status', 'Reading the file...']);
 		}
-	}
+	};
 
 	onCohortRadioChange = event => this.props.callback(['cohort-radio', event.target.value]);
 
@@ -444,7 +444,7 @@ class ImportForm extends React.Component {
 		this.resetFieldsOnDataTypeChange(type);
 		this.setFileFormatForSparse(type);
 		this.props.callback(['data-type', type]);
-	}
+	};
 
 	onPublicCohortChange = cohort => this.props.callback(['import-publicCohort', cohort]);
 
@@ -462,33 +462,33 @@ class ImportForm extends React.Component {
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', PAGES.DATA_TYPE_SELECT]);
 		this.props.callback(['retry-meta-data']);
-	}
+	};
 
 	onRetryFile = () => {
 		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['retry-file', this.props.file]);
-	}
+	};
 
 	onCancelImport = () => {
 		this.props.callback(['navigate', 'datapages', {host: localHub}]);
 		this.props.callback(['reset-import-state']);
-	}
+	};
 
 	onFinishClick = () => {
 		this.props.callback(['navigate', 'datapages', {dataset: this.props.fileName, host: localHub}]);
 		this.props.callback(['reset-import-state']);
-	}
+	};
 
 	onViewDataClick = () => {
 		this.props.onViz();
 		this.props.callback(['reset-import-state']);
-	}
+	};
 
 	onImportMoreData = () => {
 		this.props.callback(['reset-import-state']);
 		this.props.callback(['get-local-cohorts']);
 		this.props.callback(['get-probemaps']);
-	}
+	};
 
 	onImportClick = () => {
 		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, this.props.wizardPage]]);
@@ -496,19 +496,19 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page', PAGES.PROGRESS]);
 		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['import-file']);
-	}
+	};
 
 	onLoadWithWarnings = () => {
 		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['load-with-warnings']);
-	}
+	};
 
 	setFileFormatForSparse = dataType => {
 		if(isMutationOrSegmentedData(dataType)) {
 			const fileFormat = dataType === DATA_TYPE.MUTATION_BY_POS ? FILE_FORMAT.MUTATION_VECTOR : FILE_FORMAT.GENOMIC_SEGMENT;
 			this.props.callback(['file-format', fileFormat]);
 		}
-	}
+	};
 
 	resetFieldsOnDataTypeChange = dataType => {
 		if (isMutationOrSegmentedData(dataType)) {
@@ -519,11 +519,11 @@ class ImportForm extends React.Component {
 		} else {
 			this.props.callback(['assembly', '']);
 		}
-	}
+	};
 
 	resetProbemap = () => {
 		this.props.callback(['probemap', '']);
-	}
+	};
 }
 
 class ImportPage extends React.Component {

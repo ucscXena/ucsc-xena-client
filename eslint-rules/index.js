@@ -23,28 +23,40 @@ function hexToRgba(hex) {
 }
 
 exports.rules = {
-  'no-hex-color-alpha': function (context) {
-    return {
-      // Check string literals
-      Literal: (node) => {
-        // Only process string literals
-        if (typeof node.value !== 'string') {return;}
+  'no-hex-color-alpha': {
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'Disallow 8-digit hex colors with alpha; use rgba() instead for pdfkit compatibility',
+        category: 'Best Practices',
+        recommended: true
+      },
+      fixable: 'code', // Declare that this rule provides code fixes
+      schema: [] // No configuration options
+    },
+    create: function (context) {
+      return {
+        // Check string literals
+        Literal: (node) => {
+          // Only process string literals
+          if (typeof node.value !== 'string') { return; }
 
-        const value = node.value;
+          const value = node.value;
 
-        // Check if it's an 8-digit hex color
-        if (isEightDigitHexColor(value)) {
-          context.report({
-            node,
-            message: 'Avoid 8-digit hex colors with alpha (e.g., "#ff000020"). Use rgba() instead for pdfkit compatibility.',
-            fix: (fixer) => {
-              // Replace the hex string with its rgba equivalent
-              const rgbaValue = hexToRgba(value);
-              return fixer.replaceText(node, `'${rgbaValue}'`);
-            }
-          });
+          // Check if it's an 8-digit hex color
+          if (isEightDigitHexColor(value)) {
+            context.report({
+              node,
+              message: 'Avoid 8-digit hex colors with alpha (e.g., "#ff000020"). Use rgba() instead for pdfkit compatibility.',
+              fix: (fixer) => {
+                // Replace the hex string with its rgba equivalent
+                const rgbaValue = hexToRgba(value);
+                return fixer.replaceText(node, `'${rgbaValue}'`);
+              }
+            });
+          }
         }
-      }
-    };
+      };
+    }
   }
 };

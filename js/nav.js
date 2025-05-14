@@ -185,7 +185,7 @@ class XenaNav extends React.Component {
 	state = {
 		options: {},
 		showHiddenMenu: false,
-	}
+	};
 	componentDidMount() {
 		this.sub = hiddenOpts.subscribe(options => {
 			this.setState({options});
@@ -205,17 +205,17 @@ class XenaNav extends React.Component {
 	// events are broken in prod.
 	onToggle = id => () => {
 		hidden.update(id);
-	}
+	};
 
 	onCloseHiddenMenu = () => {
 		this.setState({showHiddenMenu: false});
-	}
+	};
 
 	forceClose = cb =>
 		(...args) => {
 			this.onCloseHiddenMenu();
 			return cb(...args);
-		}
+		};
 
 	hiddenMenu(items) {
 		return (
@@ -240,7 +240,7 @@ class XenaNav extends React.Component {
 			ev.preventDefault();
 			this.setState({showHiddenMenu: true});
 		}
-	}
+	};
 	render() {
 		var {isPublic, activeLink, getState, onImport} = this.props;
 		var routes = _.map(links, l => {
