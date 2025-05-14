@@ -55,7 +55,7 @@ jobs:
     - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
     - run: export PATH="~/ucscXena/ucsc-xena-client/node_modules/.bin:$PATH"
     - run: node --version
-    - run: npm install -g npm@8
+    - run: sudo npm install -g npm@8
     - run: npm --version
     - run: npm install
     # You can remove the conditional and simply install the requirements file you use
