@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
-    "pretest:headless": "webpack --config webpack.test.js --devtool eval",
+    "pretest:headless": "webpack --config webpack.karma.js --devtool none",
     "test:headless": "karma start --single-run --browsers ChromeHeadless karma.conf.js build/index.html",
     "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
@@ -65,7 +65,7 @@
     "karma-junit-reporter": "^2.0.1",
     "karma-mocha": "^2.0.1",
     "mini-css-extract-plugin": "^0.10.1",
-    "mocha": "^8.1.1",
+    "mocha": "^8.1.2",
     "mocha-loader": "^5.1.5",
     "optimize-css-assets-webpack-plugin": "^5.0.8",
     "pixelmatch": "^4.0.2",

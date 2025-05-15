@@ -16,6 +16,10 @@ module.exports = function(config) {
 	logLevel: config.LOG_INFO,
 	browsers: ['ChromeHeadless'],
 	autoWatch: false,
+	mocha: {
+		delay: true,
+		ui: 'bdd'
+	},
 	// singleRun: false, // Karma captures browsers, runs the tests and exits
 	concurrency: Infinity
 	});
