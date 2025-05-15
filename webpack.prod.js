@@ -1,4 +1,3 @@
-/*global require: false, module: false, process: false */
 var config = require('./webpack.config');
 var path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');

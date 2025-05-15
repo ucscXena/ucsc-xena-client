@@ -1,4 +1,3 @@
-/*global require: false, module: false, __dirname: false */
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 

@@ -1,6 +1,3 @@
-/*global require: false, module: false, __dirname: false */
-'use strict';
-
 /* required for running loadXenaQueries during dist */
 
 var config = require('./webpack.config');
