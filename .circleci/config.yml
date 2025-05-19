@@ -60,6 +60,7 @@ jobs:
     # You can remove the conditional and simply install the requirements file you use
     - run:
         command: |
+          rm -rf env # remove corrupt env
           python -m venv env
           . env/bin/activate
           pip install -r requirements.txt
