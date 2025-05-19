@@ -27,7 +27,7 @@ jobs:
     # To see the list of pre-built images that CircleCI provides for most common languages see
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
-    - image: circleci/python:3.7.9-node-browsers
+    - image: cimg/node:18.20.8-browsers
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
@@ -55,7 +55,6 @@ jobs:
     - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
     - run: export PATH="~/ucscXena/ucsc-xena-client/node_modules/.bin:$PATH"
     - run: node --version
-    - run: sudo npm install -g npm@8
     - run: npm --version
     - run: npm install
     # You can remove the conditional and simply install the requirements file you use
@@ -100,7 +99,7 @@ jobs:
   deploy-dev:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:3.7.9-node-browsers
+    - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -114,7 +113,7 @@ jobs:
   deploy-cc:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:3.7.9-node-browsers
+    - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -128,7 +127,7 @@ jobs:
   deploy-beta:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/python:3.7.9-node-browsers
+    - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
