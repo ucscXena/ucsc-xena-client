@@ -33,7 +33,8 @@ import {singlecellChart, computedProps, chartPropsFromState} from
 	'./views/singlecellChart';
 import mapColor from './views/MapColor';
 import xSelect from './views/xSelect';
-import {item} from './views/Legend.module.css';
+import legendStyles from './views/Legend.module.css';
+var {item} = legendStyles;
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';

@@ -60,10 +60,10 @@
 		(function () {
 			var pages = {
 					<% if (process.env.NODE_ENV !== 'production') { %>
-					docs: <%=JSON.stringify(templateParams.compilation.namedChunks.get('docs').files)%>,
-					bookmarks: <%=JSON.stringify(templateParams.compilation.namedChunks.get('bookmarks').files)%>,
+					docs: <%= JSON.stringify(entryFiles.docs) %>,
+					bookmarks: <%= JSON.stringify(entryFiles.bookmarks) %>,
 					<% } %>
-					heatmap: <%=JSON.stringify(templateParams.compilation.namedChunks.get('heatmap').files)%>
+					heatmap: <%= JSON.stringify(entryFiles.heatmap) %>
 				},
 				path = document.location.pathname,
 				page = (function () {

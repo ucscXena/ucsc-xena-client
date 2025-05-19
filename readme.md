@@ -36,7 +36,7 @@ The build is based on npm and webpack.
  * `cd ucsc-xena-client`
  * `npm install`
  * `npm start`
- * browse to [http://localhost:8080/webpack-dev-server/heatmap/](http://localhost:8080/webpack-dev-server/heatmap/)
+ * browse to [http://localhost:8080/heatmap/](http://localhost:8080/heatmap/)
 
 There may be npm warnings about missing redux libraries, but these can be ignored. We're not using redux. We're
 just using redux tooling.

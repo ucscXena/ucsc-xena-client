@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 
@@ -7,18 +8,27 @@ var postcssPlugins = [
 	require('postcss-modules-values')
 ];
 
-var plugins = [];
+var plugins = [
+	new webpack.ProvidePlugin({
+		Buffer: ['buffer', 'Buffer'],
+		process: 'process/browser'
+	})
+];
+
 process.argv.indexOf('--disable-html-plugin') === -1 &&
 	plugins.push(
 		new HtmlWebpackPlugin({
 			title: "UCSC Xena",
 			filename: "index.html",
 			inject: false,
-			//template: "!!blueimp-tmpl-loader!page.template"
-			template: "page.template"
+			template: "page.template",
+			templateParameters: ({entrypoints}) => ({
+				entryFiles: Object.fromEntries(Array.from(entrypoints.entries()).map(
+					([key, value]) => [key, value.getFiles()]))
+			})
 		}));
 
-if (process.argv.indexOf('--statoscope') !== -1) {
+if (process.env.hasOwnProperty('statoscope')) {
 	var StatoscopePlugin = require('@statoscope/webpack-plugin').default;
 	plugins.push(
 		new StatoscopePlugin({
@@ -26,36 +36,45 @@ if (process.argv.indexOf('--statoscope') !== -1) {
 			saveStatsTo: 'build/stats.json',
 			open: false,
 			statsOptions: {
-				all: false,
-				hash: true,
-				entrypoints: true,
-				chunks: true,
-				chunkModules: true,
-				nestedModules: true,
-				children: true,
-				moduleTrace: true,
-				dependencyTrace: true,
-				chunkOrigins: true,
-				assets: true,
-				reasons: true,
-				performance: true,
-				ids: true
+				all: false, // Disable all stats initially
+				hash: true, // Include compilation hash
+				entrypoints: true, // Include entrypoints information
+				chunks: true, // Include chunks information
+				chunkModules: true, // Include modules within chunks
+				reasons: true, // Include reasons why modules are included
+				ids: true, // Include IDs of modules and chunks
+				dependentModules: true, // Include dependent modules of chunks
+				chunkRelations: true, // Include chunk parents, children, and siblings
+				cachedAssets: true, // Include information about cached assets
+				nestedModules: true, // Include concatenated modules
+				usedExports: true, // Include used exports
+				providedExports: true, // Include provided imports
+				assets: true, // Include assets information
+				chunkOrigins: true, // Include origins of chunks
+				version: true, // Include Webpack version
+				builtAt: true, // Include build timestamp
+				timings: true, // Include timing information
+				performance: true, // Include performance hints
+				//  source: true, // Include module sources (optional, increases stats file size)
 			},
 		}));
 }
 
-module.exports = {
+module.exports = /*env => */({
 	mode: 'development',
 	entry: {heatmap: './js/main', docs: './js/docs', bookmarks: './js/admin/bookmarks.js'},
 	output: {
 		path: __dirname + "/build",
-		publicPath: "../",
-		filename: "[name].js"
+		publicPath: "/",
+		filename: "[name].js",
+		clean: true
 	},
+	devtool: 'eval',
 	devServer: {
-		host: "localhost",
-		publicPath: '/',
-		disableHostCheck: true,
+		static: {
+			directory: path.join(__dirname, 'build'), // or appropriate path
+		},
+		allowedHosts: 'all',
 		historyApiFallback: true,
 		headers: {
 			"Content-Security-Policy-Report-Only": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; connect-src *; img-src * data:; frame-src 'self' ucscxena: https://www.youtube.com https://xenageneset.berkeleybop.io/xena/"
@@ -73,34 +92,34 @@ module.exports = {
 	module: {
 		rules: [
 			{ test: /loadXenaQueries.js$/, loader: "val-loader" },
-			{ test: /\.xq$/, loader: "raw-loader" },
+			{ test: /\.xq$/, type: 'asset/source' },
+
 			//// bunch of special loading required for pdfkit
+			{ test: /\.afm$/, type: 'asset/source' },
+			// bundle and load binary files inside static-assets folder as base64
 			{
-				test: /png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$/,
-				use: [
-					{ loader: 'transform-loader', options: { brfs: true } },
-					{ loader: 'babel-loader' }
-				]
+				test: /src[/\\]static-assets/,
+				type: 'asset/inline',
+				generator: {
+					dataUrl: content => {
+						return content.toString('base64');
+					}
+
+				}
 			},
-			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
-			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },
-			{ test: /unicode-trie[/\\]index.js/, loader: "babel-loader" },
-			{ test: /unicode-trie[/\\]swap.js/, loader: "babel-loader" },
-			{ test: /linebreak[/\\]src[/\\]pairs.js/, loader: "babel-loader" },
+			// load binary files inside lazy-assets folder as an URL
 			{
-				test: /linebreak[/\\]src[/\\]linebreaker.js/,
-				use: [
-					{ loader: 'transform-loader', options: { brfs: true } },
-					{ loader: 'babel-loader' }
-				]
+				test: /src[/\\]lazy-assets/,
+				type: 'asset/resource'
 			},
-			{ test: /unicode-properties[/\\]unicode-properties.browser.cjs.js/, loader: "babel-loader" },
-			{ test: /src[/\\]assets/, loader: "arraybuffer-loader" },
+			//// end of special loading required for pdfkit
+
 			// If a library includes a sourcemap tag the browser will get the
 			// url wrong unless we handle it with source-map-loader. Limit
 			// it to libs that need it, to avoid build overhead.
 			{ test: /rxjs[/\\].*\.js|sockjs-client|underscore[/\\]underscore\.js|react-draggable|showdown[/\\]dist/, enforce: "pre", use: ["source-map-loader"]},
-			{ test: /\.afm$/, loader: "raw-loader" },
+			{ test: /\.wasm$/, use:
+				[{loader: path.resolve('loaders/arraybuffer-loader.js') }] },
 			{
 				test: /\.jsx?$/,
 				include: [
@@ -108,7 +127,7 @@ module.exports = {
 					path.join(__dirname, 'test'),
 					path.join(__dirname, 'doc')
 				],
-				loader: ['babel-loader']
+				loader: 'babel-loader'
 			},
 			{
 				// css modules
@@ -156,10 +175,9 @@ module.exports = {
 					}
 				]
 			},
-			{ test: /\.wasm$/, type: 'javascript/auto', loader: 'arraybuffer-loader' },
 			{
 				test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i,
-				loader: 'file-loader'
+				type: 'asset/resource',
 			}
 		]
 	},
@@ -182,9 +200,15 @@ module.exports = {
 			// resolve this completely so the pdfkit alias doesn't break it.
 			'fs': require.resolve('pdfkit/js/virtual-fs.js'),
 			'txml/txml': 'txml/dist/txml',
-			'./connector': path.resolve(__dirname, 'js/connector-dev.js')
+			'./connector': path.resolve(__dirname, 'js/connector-dev.js'),
 		},
 		symlinks: false,
-		extensions: ['.js', '.jsx', '.json']
+		extensions: ['.js', '.jsx', '.json'],
+		fallback: {
+			stream: require.resolve("stream-browserify"),
+			zlib: require.resolve("browserify-zlib"),
+			buffer: require.resolve("buffer/"),
+			path: require.resolve("path-browserify")
+		}
 	}
-};
+});

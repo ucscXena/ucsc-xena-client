@@ -17,8 +17,8 @@ module.exports = function(config) {
 	browsers: ['ChromeHeadless'],
 	autoWatch: false,
 	mocha: {
-		delay: true,
-		ui: 'bdd'
+		ui: 'bdd',
+		delay: true
 	},
 	// singleRun: false, // Karma captures browsers, runs the tests and exits
 	concurrency: Infinity
