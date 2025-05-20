@@ -1,4 +1,12 @@
-/*global run: false */
+/*global before: false */
+
+// Clear storage to eliminate stale data
+localStorage.clear();
+sessionStorage.clear();
+
+import * as xenaWasm from '../js/xenaWasm';
+before(() => xenaWasm.loaded);
+
 // This needs refactor. Might want to return mutationVector methods in exports,
 // and call widget.*.add elsewhere, so we can test the methods w/o widgets.
 //require('./mutationVector');
@@ -26,6 +34,4 @@ require('./singleCell');
 require('./fvc');
 // need delay for wasm loading, which is used in draw and scale
 // tests.
-import * as xenaWasm from '../js/xenaWasm';
-xenaWasm.loaded.then(() => run());
 require('./query.js');
