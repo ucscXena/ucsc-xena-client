@@ -669,7 +669,7 @@ class SingleCellPage extends PureComponent {
 		var {width, height} = viz.firstElementChild.getBoundingClientRect();
 
 		window.addEventListener('message', sendState(getState()));
-		window.open('/singlecell/?inline', null, `popup=true,left=100,top=200,width=${width},height=${height}`);
+		window.open('/singlecell/?inline', '_blank', `popup=true,left=100,top=200,width=${width},height=${height}`);
 	};
 
 	componentDidMount() {
