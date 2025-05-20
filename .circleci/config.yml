@@ -105,11 +105,10 @@ jobs:
     - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
     steps:
-    - run: sudo apt update
-    - run: sudo apt-get install rsync
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt update
     - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
@@ -121,11 +120,10 @@ jobs:
     - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
     steps:
-    - run: sudo apt update
-    - run: sudo apt-get install rsync
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt update
     - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
@@ -136,12 +134,11 @@ jobs:
     docker:
     - image: cimg/node:18.20.8-browsers
     shell: /bin/bash --login
-    - run: sudo apt update
-    - run: sudo apt-get install rsync
     steps:
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt update
     - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
