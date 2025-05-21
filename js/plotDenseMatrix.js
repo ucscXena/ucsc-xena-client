@@ -12,13 +12,6 @@ import CanvasDrawing from './CanvasDrawing.js';
 import { rxEvents } from './react-utils.js';
 import { drawHeatmap } from './drawHeatmap.js';
 
-// Since there are multiple components in the file we have to use hot
-// explicitly.
-import {hot} from 'react-hot-loader';
-function hotOrNot(component) {
-	return module.hot ? hot(module)(component) : component;
-}
-
 var colorFns = vs => _.map(vs, colorScale);
 
 //
@@ -187,7 +180,7 @@ function renderCodedLegend(props) {
 	return <Legend {...legendProps} onClick={onClick} max={max} inline={inline}/>;
 }
 
-var HeatmapLegend = hotOrNot(class extends PureComponent {
+class HeatmapLegend extends PureComponent {
 	static displayName = 'HeatmapLegend';
 	render() {
 		var {column, onClick, inline, max} = this.props,
@@ -209,19 +202,12 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 		return (props.coded ? renderCodedLegend :
 			renderFloatLegend)(props);
 	}
-});
+};
 
 //
 // plot rendering
 //
-
-
-var HeatmapColumn = hotOrNot(//
-// plot rendering
-//
-
-
-class extends PureComponent {
+class HeatmapColumn extends PureComponent {
 	static displayName = 'DenseMatrix';
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -279,7 +265,7 @@ class extends PureComponent {
 					samples={samples}
 					heatmapData={heatmap}/>);
 	}
-});
+}
 
 var getColumn = props => <HeatmapColumn {...props} />;
 

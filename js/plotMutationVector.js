@@ -21,13 +21,6 @@ import {
 
 import { chromPositionFromScreen } from './exonLayout.js';
 
-// Since there are multiple components in the file we have to use hot
-// explicitly.
-import {hot} from 'react-hot-loader';
-function hotOrNot(component) {
-	return module.hot ? hot(module)(component) : component;
-}
-
 function drawMutationLegend({column}) {
 	if (!column.legend) {
 		return null;
@@ -262,7 +255,7 @@ function tooltip(id, fieldType, fields, layout, nodes, samples, sampleFormat, zo
 			posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y))};
 }
 
-var MutationColumn = hotOrNot(class extends PureComponent {
+class MutationColumn extends PureComponent {
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
@@ -310,7 +303,7 @@ var MutationColumn = hotOrNot(class extends PureComponent {
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-});
+}
 
 widgets.column.add('mutation',
 		props => <MutationColumn draw={drawMutations} {...props} />);

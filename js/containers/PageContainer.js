@@ -13,11 +13,6 @@ import authDialog from '../Auth';
 import {nextAuth, isAuthPending} from '../models/auth';
 import { isEqual, Let } from '../underscore_ext.js';
 
-import {hot} from 'react-hot-loader';
-function hotOrNot(component) {
-	return module.hot ? hot(module)(component) : component;
-}
-
 const pages = {
 	'hub': Hub,
 	'heatmap': Application,
@@ -73,4 +68,4 @@ if (process.env.NODE_ENV !== 'production') {
 	PageContainer.getDerivedStateFromError = error => ({error});
 }
 
-export default hotOrNot(PageContainer);
+export default PageContainer;

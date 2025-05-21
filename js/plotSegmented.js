@@ -12,13 +12,6 @@ import { drawSegmented, toYPx } from './drawSegmented.js';
 import { chromPositionFromScreen } from './exonLayout.js';
 import {colorScale} from './colorScales';
 
-// Since there are multiple components in the file we have to use hot
-// explicitly.
-import {hot} from 'react-hot-loader';
-function hotOrNot(component) {
-	return module.hot ? hot(module)(component) : component;
-}
-
 // might want to use <wbr> here, instead, so cut & paste work better, but that
 // will require a recursive split/flatmap to inject the <wbr> elements.
 var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
@@ -138,7 +131,7 @@ function tooltip(id, fieldType, layout, nodes, samples, sampleFormat, zoom, gene
 			posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y))};
 }
 
-var SegmentedColumn = hotOrNot(class extends PureComponent {
+class SegmentedColumn extends PureComponent {
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
@@ -187,7 +180,7 @@ var SegmentedColumn = hotOrNot(class extends PureComponent {
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-});
+}
 
 widgets.column.add('segmented',
 		props => <SegmentedColumn {...props} />);

@@ -9,13 +9,6 @@ import CanvasDrawing from './CanvasDrawing.js';
 import { rxEvents } from './react-utils.js';
 import { drawSamples } from './drawSamples.js';
 
-// Since there are multiple components in the file we have to use hot
-// explicitly.
-import {hot} from 'react-hot-loader';
-function hotOrNot(component) {
-	return module.hot ? hot(module)(component) : component;
-}
-
 //
 // Tooltip
 //
@@ -44,12 +37,7 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 //
 // plot rendering
 //
-
-var SamplesColumn = hotOrNot(//
-// plot rendering
-//
-
-class extends PureComponent {
+class SamplesColumn extends PureComponent {
 	static displayName = 'Samples';
 	UNSAFE_componentWillMount() {//eslint-disable-line camelcase
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -101,7 +89,7 @@ class extends PureComponent {
 					zoom={zoom}
 					heatmapData={heatmap}/>);
 	}
-});
+}
 
 var getColumn = props => <SamplesColumn {...props} />;
 

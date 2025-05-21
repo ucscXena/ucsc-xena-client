@@ -208,7 +208,8 @@ module.exports = /*env => */({
 			stream: require.resolve("stream-browserify"),
 			zlib: require.resolve("browserify-zlib"),
 			buffer: require.resolve("buffer/"),
-			path: require.resolve("path-browserify")
+			path: require.resolve("path-browserify"),
+			process: require.resolve('process/browser')
 		}
 	}
 });
