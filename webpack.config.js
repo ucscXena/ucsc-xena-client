@@ -71,6 +71,7 @@ module.exports = /*env => */({
 	},
 	devtool: 'eval',
 	devServer: {
+		hot: false,
 		static: {
 			directory: path.join(__dirname, 'build'), // or appropriate path
 		},
