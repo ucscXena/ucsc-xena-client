@@ -97,12 +97,14 @@ var donorFields = servers =>
 
 var empty = {
 	cellType: {},
+	defaultPhenotype: {},
+	donorFields: {},
 	labelTransfer: {},
 	labelTransferProb: {},
+	other: {},
 	signature: {},
 	signatureScore: {},
-	signatureScorePanel: {},
-	other: {}
+	signatureScorePanel: {}
 };
 
 //{'cellType': {[cohort]: [cellType, ...], ...}, ...}}
@@ -113,14 +115,14 @@ export var curatedFields = (cohorts, cohortDatasets, cohortFeatures) =>
 			Let((ds = allCohortDatasets(cohort, cohortDatasets),
 					features = get(cohortFeatures, cohort, {})) =>
 				mapObject({
-					donorFields: donorFields(features),
 					cellType: cellTypeCluster(ds),
+					defaultPhenotype: defaultPhenotype(ds, features),
+					donorFields: donorFields(features),
 					labelTransfer: labelTransfer(ds),
 					labelTransferProb: labelTransferProb(ds),
 					signature: signature(ds),
 					signatureScore: signatureScore(ds),
-					signatureScorePanel: signatureScorePanel(ds),
-					defaultPhenotype: defaultPhenotype(ds, features)
+					signatureScorePanel: signatureScorePanel(ds)
 				}, d => ({[cohort]: d})))));
 
 
