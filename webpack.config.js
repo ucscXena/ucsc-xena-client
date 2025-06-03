@@ -88,6 +88,20 @@ module.exports = /*env => */({
 //				target: 'http://localhost:8000/',
 				pathRewrite: {'^/api': ''}
 			}
+		},
+		client: {
+			overlay: {
+				runtimeErrors: error => {
+					if (error.constructor?.name === 'AjaxError' &&
+							error.message === 'ajax error 0') {
+						return false;
+					}
+					if (error.message === 'AJAX status 0') {
+						return false;
+					}
+					return true;
+				}
+			}
 		}
 	},
 	module: {

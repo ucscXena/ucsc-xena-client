@@ -389,7 +389,7 @@ var getResp = ({resp}) => resp;
 // other client-side failure.
 function tryBPJPost(name, host, ...params) {
 	return doPostBPJ(name, host, ...params).map(getResp)
-		.catch(err => err.xhr.status !== 0 ?
+		.catch(err => err.xhr?.status !== 0 ?
 			Rx.Observable.throw(err, Rx.Scheduler.asap) :
 			doPostJSON(name, host, ...params).map(getResp)
 				.do(() => disposition[host] = 'json')
