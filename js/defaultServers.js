@@ -86,5 +86,7 @@ export const publicServers = [
 	servers.kidsFirstHub,
 	'https://clear.xenahubs.net',
 	'https://kaposi.xenahubs.net',
-	'https://legacy.xenahubs.net'
+        'https://legacy.xenahubs.net',
+    	'https://previewsinglecell.xenahubs.net',
+	'https://tmpsinglecell.xenahubs.net',
 ];
