@@ -816,18 +816,20 @@ function shouldCallDrawChart(prevProps, currentProps) {
 }
 
 class HighchartView extends PureComponent {
+	onResize = () => sizeChartView();
+
 	componentDidMount() {
 		sizeChartView();
 		this.chart = drawChart(this.props.drawProps);
 		this.chart.redraw();
 		this.chart.reflow();
-		window.addEventListener('resize', () => sizeChartView());
+		window.addEventListener('resize', this.onResize);
 	}
 
 	componentWillUnmount() {
 		this.chart?.destroy();
 		this.chart = undefined;
-		window.removeEventListener('resize', () => sizeChartView());
+		window.removeEventListener('resize', this.onResize);
 	}
 
 	componentDidUpdate(prevProps) {

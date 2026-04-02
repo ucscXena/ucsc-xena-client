@@ -647,7 +647,7 @@ function renderExpressionMetricsLegend({chart, isSingleCell}) {
 		colorAxis = chart.colorAxis[0],
 		radius = markerScale?.radius;
 	if (!group || !markerScale || !radius) {return;}
-	if (!colorAxis.min || !colorAxis.max) {return;}
+	if (colorAxis.min == null || colorAxis.max == null) {return;}
 
 	// Destroy the expression metrics legend group, if it exists
 	if (chart.legend.exprGroup) {
