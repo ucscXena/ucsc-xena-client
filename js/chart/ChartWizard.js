@@ -73,6 +73,11 @@ var boxOrDotOrViolinModes = [
 	{label: box({component: 'span', sx: sxModeLabel}, span('Violin plot'), iconI('violin')), value: 'violin'},
 ];
 
+var barOrDotModes = [
+	{label: box({component: 'span', sx: sxModeLabel}, span('Bar chart'), iconI('bar')), value: 'bar'},
+	{label: box({component: 'span', sx: sxModeLabel}, span('Dot plot'), iconI('dot')), value: 'dot'},
+];
+
 var yIsSet = ({ycolumn}) => v(ycolumn);
 var xyIsSet = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 
@@ -96,6 +101,12 @@ var isValid = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 var needType = (state, appState) =>
 	isValid(state) && isFloat(appState.columns, state.ycolumn);
 
+// should ask for bar vs dot if both x and y are categorical
+var needBarOrDot = (state, appState) =>
+	isValid(state) &&
+	!isFloat(appState.columns, state.ycolumn) &&
+	!isFloat(appState.columns, state.xcolumn);
+
 var boxOrDotOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Compare subgroups", onClose,
@@ -110,6 +121,11 @@ var boxOrDotOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 				formControl(formLabel('I want a'),
 					box({component: RadioGroup, name: 'boxOrDotOrViolin', onChange: onChart, row: true, sx: sxRadioGroup, value: state.chartType || 'boxplot'},
 						...boxOrDotOrViolinModes.map(({label, value}) =>
+							formControlLabel({control: <Radio />, key: value, label, value})))) :
+			needBarOrDot(state, appState) ?
+				formControl(formLabel('I want a'),
+					box({component: RadioGroup, name: 'boxOrDotOrViolin', onChange: onChart, row: true, sx: sxRadioGroup, value: state.chartType === 'dot' ? 'dot' : 'bar'},
+						...barOrDotModes.map(({label, value}) =>
 							formControlLabel({control: <Radio />, key: value, label, value})))) :
 				null)));
 
@@ -222,18 +238,32 @@ export default class ChartWizard extends PureComponent {
 		if (mode === 'boxOrDotOrViolin') {
 			var {appState: {columns, data}} = this.props,
 				{chartType} = this.state;
-			if (!isFloat(columns, ycolumn)) {return;}
-			var {fieldList, fields, probes} = columns[ycolumn],
-				codes = _.getIn(columns, [xcolumn, 'codes']),
-				xcodemap = _.getIn(data, [xcolumn, 'codesInView']).map(i => codes[i]),
-				yfields = probes || fieldList || fields;
+			if (isFloat(columns, ycolumn)) {
+				var {fieldList, fields, probes} = columns[ycolumn],
+					codes = _.getIn(columns, [xcolumn, 'codes']),
+					xcodemap = _.getIn(data, [xcolumn, 'codesInView']).map(i => codes[i]),
+					yfields = probes || fieldList || fields;
 
-			if (xcodemap.length * yfields.length > chartTypeThreshold) {
-				if (chartType === 'dot') {return;}
-				this.setState({chartType: 'dot'});
-			} else {
-				if (chartType === 'boxplot') {return;}
-				this.setState({chartType: 'boxplot'});
+				if (xcodemap.length * yfields.length > chartTypeThreshold) {
+					if (chartType === 'dot') {return;}
+					this.setState({chartType: 'dot'});
+				} else {
+					if (chartType === 'boxplot') {return;}
+					this.setState({chartType: 'boxplot'});
+				}
+			} else if (!isFloat(columns, xcolumn)) {
+				var xcodes = _.getIn(columns, [xcolumn, 'codes']),
+					ycodes = _.getIn(columns, [ycolumn, 'codes']),
+					xcodemap2 = _.getIn(data, [xcolumn, 'codesInView']).map(i => xcodes[i]),
+					ycodemap = _.getIn(data, [ycolumn, 'codesInView']).map(i => ycodes[i]);
+
+				if (xcodemap2.length * ycodemap.length > chartTypeThreshold) {
+					if (chartType === 'dot') {return;}
+					this.setState({chartType: 'dot'});
+				} else {
+					if (chartType !== 'dot') {return;}
+					this.setState({chartType: undefined});
+				}
 			}
 		}
 	};

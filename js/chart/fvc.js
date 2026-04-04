@@ -90,4 +90,16 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 	return {totalMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
-export { getMatrices };
+// Compute count and row-normalized percentage matrices for categorical × categorical
+// dot plot. Row = x category (subgroup), column = y category (show data from).
+// observed[yIdx][xIdx], so we transpose to get countMatrix[xIdx][yIdx].
+function getCodedMatrices({observed, xMargin}) {
+	var countMatrix = observed.length
+		? observed[0].map((_, xIdx) => observed.map(row => row[xIdx]))
+		: [];
+	var pctMatrix = countMatrix.map((row, xIdx) =>
+		row.map(count => xMargin[xIdx] ? count / xMargin[xIdx] : NaN));
+	return {countMatrix, pctMatrix};
+}
+
+export { getMatrices, getCodedMatrices };

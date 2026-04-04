@@ -54,6 +54,18 @@ export var chartTypeControl = ({onChange, chartType, hasDot = true}) =>
 		opts: reject(viewOptions, hasDot ? false : {value: 'dot'}),
 		value: chartType});
 
+var barOrDotOptions = [
+	{label: 'bar chart', value: 'bar'},
+	{label: 'dot plot', value: 'dot'},
+];
+
+export var barOrDotControl = ({onChange, chartType}) =>
+	buildDropdown({
+		label: 'Chart type',
+		onChange,
+		opts: barOrDotOptions,
+		value: chartType === 'dot' ? 'dot' : 'bar'});
+
 export var normalizationOptions = [{
 		"value": "none",
 		"label": "none",

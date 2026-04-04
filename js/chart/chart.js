@@ -24,8 +24,9 @@ import { applyExpression } from './singleCell.js';
 import { reOrderFields } from '../models/denseMatrix.js';
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
-import {selectProps, getOpt, buildDropdown, chartTypeControl, normalizationOptions,
-	normalizationControl, yExpressionControl, expressionMode} from './chartControls';
+import {selectProps, getOpt, buildDropdown, barOrDotControl, chartTypeControl,
+	normalizationOptions, normalizationControl, yExpressionControl, expressionMode}
+	from './chartControls';
 import applyTransforms from './applyTransforms';
 import statsView from './statsView';
 
@@ -376,6 +377,7 @@ class Chart extends PureComponent {
 		var HCV = highchartView({drawProps: {...drawProps, chartData}});
 
 		var isDot = isBoxplot(drawProps) && _.get(chartState, 'chartType') === 'dot',
+			isCodedDot = isCodedVCoded(drawProps) && _.get(chartState, 'chartType') === 'dot',
 			isDensity = isDensityPlot(drawProps),
 			doScatter = doScatterColor(drawProps),
 			doAvg = isDensity && 'mean' in yavg && 'median' in yavg,
@@ -391,7 +393,7 @@ class Chart extends PureComponent {
 				onClick: () => set(['inverted'], !inverted), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var yExpression = yneg || !isDot ? null :
+		var yExpression = yneg || !(isDot || isCodedDot) ? null :
 			yExpressionControl({
 				index: chartState.expressionState[ycolumn],
 				onChange: i => set(['expressionState', chartState.ycolumn], i)});
@@ -422,7 +424,12 @@ class Chart extends PureComponent {
 		var switchView = isBoxplot(drawProps) ?
 			chartTypeControl({
 				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
-				chartType, hasDot: !!xfield}) : null;
+				chartType, hasDot: !!xfield}) :
+			isCodedVCoded(drawProps) ?
+			barOrDotControl({
+				onChange: (_, v) => gaChartType(() => set(['chartType'], v))(v),
+				chartType}) :
+			null;
 
 		var avgOpts = filterAvgOptions(avgOptions, yavg),
 		avg = doAvg ?
