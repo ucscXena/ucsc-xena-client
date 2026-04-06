@@ -18,8 +18,8 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
-	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isDot, isLog, log2p1,
-	availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
+	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isCodedDot, isDot, isLog,
+	log2p1, availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
 	setColor, setRadius, shouldSwapAxes} from './models/singlecell';
 import Integrations from './views/Integrations';
 
@@ -38,8 +38,8 @@ var {item} = legendStyles;
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-import {chartTypeControl, normalizationControl, yExpressionControl} from
-	'./chart/chartControls';
+import {barOrDotControl, chartTypeControl, codedExpressionOptions, normalizationControl,
+	yExpressionControl} from './chart/chartControls';
 import statsView from './chart/statsView';
 import {xenaColor} from './xenaColor';
 import {serialize} from './serialize';
@@ -369,6 +369,13 @@ class MapTabs extends PureComponent {
 				isDot(state) ?
 					yExpressionControl({onChange: onChartYexp,
 						value: expressionMode(state)}) : null,
+				isCodedVCoded(state) ?
+					barOrDotControl({onChange: onChartType,
+						chartType: getChartType(state)}) : null,
+				isCodedDot(state) ?
+					yExpressionControl({onChange: onChartYexp,
+						value: getIn(state, ['chartState', 'yexpression']) || 'bulk',
+						opts: codedExpressionOptions}) : null,
 				statsAccordion({stats: getIn(state, ['chartProps', 'stats']) })
 			)
 		);
@@ -459,8 +466,9 @@ var mapLegends = ({state, ...rest}) =>
 		...mapLegend('colorBy2', {state: setBlack(state), ...rest}));
 
 var setDotColor = state =>
-	isDot(state) ? updateIn(state, ['colorBy', 'data', 'scale', ORDINAL.CUSTOM],
-		ord => mapObject(ord, () => xenaColor.BLUE_PRIMARY)) :
+	(isDot(state) || isCodedDot(state)) ?
+		updateIn(state, ['colorBy', 'data', 'scale', ORDINAL.CUSTOM],
+			ord => mapObject(ord, () => xenaColor.BLUE_PRIMARY)) :
 	state;
 
 var floatVCodedLegend = withField(({state, field, handlers: {onShowColorPicker,
@@ -474,8 +482,10 @@ var floatVCodedLegend = withField(({state, field, handlers: {onShowColorPicker,
 var codedVCodedLegend = withField(({state, field, handlers: {onShowColorPicker,
                                                              onColorByHandlers}}) =>
 	fragment(
-		span(legendTitle(state), colorPickerButton({state, onShowColorPicker, field})),
-		legend(state, null, onColorByHandlers)));
+		span(legendTitle(state),
+			isCodedDot(state) ? null :
+				colorPickerButton({state, onShowColorPicker, field})),
+		legend(setDotColor(state), null, onColorByHandlers)));
 
 var legends = ({state, ...rest}) =>
 	!isChartView(state) ? mapLegends({state, ...rest}) :
