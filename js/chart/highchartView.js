@@ -219,6 +219,16 @@ function sortMatrices(xCategories, groups, colors, matrices) {
 			   _.mapObject(matrices, m => reorder(m))];
 }
 
+var allNumeric = arr => arr.every(v => v != null && String(v).trim() !== '' && !isNaN(+v));
+var numericOrder = arr => _.range(arr.length).sort((i, j) => +arr[i] - +arr[j]);
+
+function numericSortCategories(xCategories, groups, colors, matrices) {
+	var order = numericOrder(xCategories),
+		reorder = m => order.map(i => m[i]);
+	return [reorder(xCategories), reorder(groups), reorder(colors),
+		_.mapObject(matrices, m => reorder(m))];
+}
+
 function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	var {boxes, nNumberMatrix} = matrices;
 
@@ -453,7 +463,12 @@ function floatVCodedData({xCategories, colors, ydata, groups, yexpression,
 		yfields, ynonexpressed}) {
 	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 
-	// sort by median of xCategories if yfields.length === 1
+	// sort numerically if all category labels are numbers
+	if (xCategories.length > 0 && allNumeric(xCategories)) {
+		[xCategories, groups, colors, matrices] = numericSortCategories(xCategories,
+			groups, colors, matrices);
+	}
+	// sort by median of xCategories if yfields.length === 1 (overrides numeric sort)
 	if (xCategories.length > 0 && yfields.length === 1) {
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories,
 			groups, colors, matrices);
@@ -631,6 +646,19 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 	var {xbins, ybins, countMatrix, pctMatrix} = chartData,
 		xCategories = Object.keys(xbins).map(k => xcodemap[k]),
 		yCategories = Object.keys(ybins).map(k => ycodemap[k]);
+
+	if (allNumeric(xCategories)) {
+		var xOrder = numericOrder(xCategories);
+		xCategories = xOrder.map(i => xCategories[i]);
+		countMatrix = xOrder.map(i => countMatrix[i]);
+		pctMatrix = xOrder.map(i => pctMatrix[i]);
+	}
+	if (allNumeric(yCategories)) {
+		var yOrder = numericOrder(yCategories);
+		yCategories = yOrder.map(i => yCategories[i]);
+		countMatrix = countMatrix.map(row => yOrder.map(j => row[j]));
+		pctMatrix = pctMatrix.map(row => yOrder.map(j => row[j]));
+	}
 
 	var chartOptions = highchartsHelper.codedDotOptions({
 		inverted,
