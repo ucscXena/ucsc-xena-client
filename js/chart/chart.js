@@ -25,7 +25,7 @@ import { reOrderFields } from '../models/denseMatrix.js';
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
 import {selectProps, getOpt, buildDropdown, barOrDotControl, chartTypeControl,
-	normalizationOptions, normalizationControl, yExpressionControl, expressionMode}
+	normalizationOptions, normalizationControl, yExpressionControl, codedExpressionOptions, expressionMode}
 	from './chartControls';
 import applyTransforms from './applyTransforms';
 import statsView from './statsView';
@@ -396,7 +396,8 @@ class Chart extends PureComponent {
 		var yExpression = yneg || !(isDot || isCodedDot) ? null :
 			yExpressionControl({
 				index: chartState.expressionState[ycolumn],
-				onChange: i => set(['expressionState', chartState.ycolumn], i)});
+				onChange: i => set(['expressionState', chartState.ycolumn], i),
+				...(isCodedDot && {opts: codedExpressionOptions})});
 
 		var yExp = ycodemap ? null :
 			buildDropdown({

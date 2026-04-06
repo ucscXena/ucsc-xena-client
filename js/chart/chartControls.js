@@ -93,6 +93,11 @@ var expressionOptions = [
 	{label: 'single cell count data', value: 'singleCell'}
 ];
 
+var codedExpressionOptions = [
+	{label: 'percentage view', value: 'bulk'},
+	{label: 'count view', value: 'singleCell'}
+];
+
 export function expressionMode(chartState, yneg) {
 	var {chartType, expressionState, ycolumn} = chartState;
 	// 'bulk' expression mode only for chart types other than dot plot
@@ -103,5 +108,7 @@ export function expressionMode(chartState, yneg) {
 	return get(expressionOptions[expressionState[ycolumn]], 'value');
 }
 
-export var yExpressionControl = ({onChange, index, value}) =>
-	buildDropdown({index, value, label: 'View as', onChange, opts: expressionOptions});
+export var yExpressionControl = ({onChange, index, value, opts = expressionOptions}) =>
+	buildDropdown({index, value, label: 'View as', onChange, opts});
+
+export {codedExpressionOptions};
