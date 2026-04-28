@@ -94,8 +94,9 @@ var expressionOptions = [
 ];
 
 var codedExpressionOptions = [
-	{label: 'percentage view', value: 'bulk'},
-	{label: 'count view', value: 'singleCell'}
+	{label: 'row percentage view', value: 'bulk'},
+	{label: 'column percentage view', value: 'column'},
+	{label: 'total percentage view', value: 'singleCell'}
 ];
 
 export function expressionMode(chartState, yneg) {
@@ -105,7 +106,8 @@ export function expressionMode(chartState, yneg) {
 	// 'bulk' expression mode only for negative values
 	if (yneg) {return 'bulk';}
 	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
-	return get(expressionOptions[expressionState[ycolumn]], 'value');
+	var index = expressionState[ycolumn];
+	return get(expressionOptions[index] || codedExpressionOptions[index], 'value') || 'bulk';
 }
 
 export var yExpressionControl = ({onChange, index, value, opts = expressionOptions}) =>

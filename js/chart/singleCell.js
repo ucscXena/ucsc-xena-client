@@ -8,6 +8,7 @@ import * as _ from '../underscore_ext.js';
  */
 var expressionMethods = {
 	bulk: () => null,
+	column: () => null,
 	singleCell: data => _.map(data, d => mapToBitmap(_.range(d.length), i => d[i] <= 0)),
 };
 

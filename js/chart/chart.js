@@ -328,7 +328,12 @@ function chartPropsFromState(xenaState) {
 
 		{yexpOpts, yexp, ydata, yneg, ...yParams} =
 			yParamsFromState(xenaState, ycolumn),
-		{yfields, ynorm, yexpression} = yParams,
+		{yfields, ynorm} = yParams,
+		isCodedDotChart = xcodemap && yParams.ycodemap && chartType === 'dot',
+		yexpression = isCodedDotChart ?
+			_.get(codedExpressionOptions[chartState.expressionState[ycolumn]], 'value', 'bulk') :
+			yParams.yexpression,
+		yParams2 = {...yParams, yexpression},
 
 		{yavg, ...transformedData} =
 			applyTransforms(ydata, yexp, ynorm, xdata, xexp);
@@ -337,7 +342,7 @@ function chartPropsFromState(xenaState) {
 		subtitle: chartSubtitle({cohort, cohortSamples}),
 		cohortSamples, samplesMatched, chartType, inverted,
 		...xParams,
-		...yParams,
+		...yParams2,
 		yavg: selectedMetrics(chartState, addSDs(yavg)),
 		ynonexpressed: applyExpression(ydata, yexpression),
 		...transformedData,

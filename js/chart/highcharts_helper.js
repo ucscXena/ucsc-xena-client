@@ -691,11 +691,10 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function renderCodedDotLegend({chart, isSingleCell}) {
+function renderCodedDotLegend({chart, isSingleCell, isColumn}) {
 	var {legend: {group, legendWidth, padding, title}, markerScale, renderer} = chart,
 		colorAxis = chart.colorAxis[0],
-		radius = markerScale?.radius,
-		maxCount = chart.codedDotMeta?.maxCount;
+		radius = markerScale?.radius;
 	if (!group || !markerScale || !radius) {return;}
 	if (colorAxis.min == null || colorAxis.max == null) {return;}
 	if (chart.legend.exprGroup) {
@@ -708,7 +707,7 @@ function renderCodedDotLegend({chart, isSingleCell}) {
 	var colorAxisTitleEl = title.element.querySelector('text'),
 		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
 		y = yAttribute(colorAxisTitleEl),
-		titleValue = isSingleCell ? 'Count' : '% of row',
+		titleValue = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row',
 		titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
 	renderer.text(titleValue, 0, y).css(titleCSS).add(titleGroup);
 
@@ -720,9 +719,7 @@ function renderCodedDotLegend({chart, isSingleCell}) {
 		y2 = yAttribute(colorAxisLabelEl),
 		{x: bx, width: bw} = exprItemGroup.getBBox(),
 		labelsGroup = renderer.g('metrics-labels').translate(0, relMatrix2.f).add(exprItemGroup),
-		maxLabel = isSingleCell
-			? String(maxCount != null ? maxCount : '')
-			: formatPercentage(colorAxis.max);
+		maxLabel = formatPercentage(colorAxis.max);
 	renderer.text('0', 0, y2).css(labelCSS).add(labelsGroup);
 	renderer.text(maxLabel, bx + bw, y2)
 		.attr({align: 'right'})
@@ -734,6 +731,7 @@ function renderCodedDotLegend({chart, isSingleCell}) {
 
 function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk'}) {
 	var isSingleCell = yexpression === 'singleCell',
+		isColumn = yexpression === 'column',
 		slant = _.Let((m = _.max(_.pluck((inverted ? yAxis : xAxis).categories,
 		                                 'length'))) =>
 			m > 12 ? -40 : -90);
@@ -746,7 +744,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 				},
 				render: function () {
 					var chart = this;
-					renderCodedDotLegend({chart, isSingleCell});
+					renderCodedDotLegend({chart, isSingleCell, isColumn});
 				},
 			},
 			inverted,
@@ -773,7 +771,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			layout: 'horizontal',
 			padding: 8,
 			symbolHeight: markerScale.radius.max * 2,
-			title: {text: '% of row'},
+			title: {text: isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row'},
 		},
 		plotOptions: {
 			scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
@@ -782,10 +780,11 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 		tooltip: {
 			formatter: function () {
 				var {xAxis, yAxis} = this.series,
-					{custom, x, y} = this.point;
+					{custom, x, y} = this.point,
+					pctLabel = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row';
 				return `<div>
 							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
-							<div>% of row: ${formatPercentage(custom.pct)}</div>
+							<div>${pctLabel}: ${formatPercentage(custom.pct)}</div>
 							<div>n = ${custom.count}</div>
 						</div>`;
 			},
