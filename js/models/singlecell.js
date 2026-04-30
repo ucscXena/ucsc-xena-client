@@ -437,9 +437,13 @@ export var defaultShadow = 0.01;
 var chartTypeThreshold = 40;
 
 var defaultChartType = state =>
-	Let((codes = getIn(state, ['chartX', 'data', 'codes'], {}),
-			fields = getIn(state, ['chartY', 'data', 'field', 'field'], [])) =>
-		codes.length * fields.length > chartTypeThreshold ? 'dot' : 'boxplot');
+	getIn(state, ['chartY', 'data', 'codes']) ?
+		Let((xcodes = getIn(state, ['chartX', 'data', 'codes'], {}),
+				ycodes = getIn(state, ['chartY', 'data', 'codes'], {})) =>
+			xcodes.length * ycodes.length > chartTypeThreshold ? 'dot' : 'bar') :
+		Let((codes = getIn(state, ['chartX', 'data', 'codes'], {}),
+				fields = getIn(state, ['chartY', 'data', 'field', 'field'], [])) =>
+			codes.length * fields.length > chartTypeThreshold ? 'dot' : 'boxplot');
 
 var chartTypeKey = state =>
 	JSON.stringify([getIn(state, ['chartY', 'field']),
@@ -456,14 +460,22 @@ export var isBoxplot = state => state.chartMode !== 'dist' &&
 
 export var isDot = state => isBoxplot(state) && getChartType(state) === 'dot';
 
+export var isCodedDot = state => state.chartMode !== 'dist' &&
+	getIn(state.chartY, ['data', 'codes']) && getIn(state.chartX, ['data', 'codes']) &&
+	getChartType(state) === 'dot';
+
 var someNegative = data => min(getIn(data, ['avg', 'min'])) < 0;
 
 // use singlecell expression mode in dot plot if data is not negative, and
 // user hasn't explicitly disabled it.
 export var expressionMode = state =>
 	isDot(state) && !someNegative(getIn(state, ['chartY', 'data'])) &&
-		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ?
-		'singleCell' : 'bulk';
+		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ? 'singleCell' :
+	isCodedDot(state) &&
+		getIn(state, ['chartState', 'yexpression']) === 'singleCell' ? 'singleCell' :
+	isCodedDot(state) &&
+		getIn(state, ['chartState', 'yexpression']) === 'column' ? 'column' :
+	'bulk';
 
 // 'inverted' setting has two subtleties. For dot plot we don't invert
 // axes because we can't plot coded v float. Instead we flop the chart by
@@ -471,7 +483,7 @@ export var expressionMode = state =>
 // here.
 export var isInverted = state => getIn(state, ['chartState', 'inverted']);
 export var shouldSwapAxes = state =>
-	state.chartMode !== 'dist' && !isBoxplot(state) && isInverted(state);
+	state.chartMode !== 'dist' && !isBoxplot(state) && !isCodedDot(state) && isInverted(state);
 export var swapAxes = state =>
 	shouldSwapAxes(state) ?
 		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :

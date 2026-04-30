@@ -48,4 +48,90 @@ describe('fvc', function () {
 			assert.deepEqual(res.totalMatrix, exp);
 		});
 	});
+	describe('#getCodedMatrices', function () {
+		// observed[yIdx][xIdx]: 2 Y categories × 2 X categories
+		// X=0 has 40 total, X=1 has 60 total
+		var observed = [
+				[10, 20],  // Y=0: 10 in X=0, 20 in X=1
+				[30, 40],  // Y=1: 30 in X=0, 40 in X=1
+			],
+			xMargin = [40, 60];
+
+		it('countMatrix should be the transpose of observed', function () {
+			var {countMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			assert.deepEqual(countMatrix, [
+				[10, 30],  // X=0: counts across Y categories
+				[20, 40],  // X=1: counts across Y categories
+			]);
+		});
+		it('row percentage: each row should sum to 1', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			pctMatrix.forEach((row, i) => {
+				var sum = row.reduce((a, b) => a + b, 0);
+				assert.ok(Math.abs(sum - 1) < 1e-10, `row ${i} sums to ${sum}, expected 1`);
+			});
+		});
+		it('row percentage: correct values', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 40) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 40) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 60) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 60) < 1e-10);
+		});
+		it('column percentage: each column should sum to 1', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'column'});
+			var nCols = pctMatrix[0].length;
+			for (var j = 0; j < nCols; j++) {
+				var sum = pctMatrix.reduce((a, row) => a + row[j], 0);
+				assert.ok(Math.abs(sum - 1) < 1e-10, `column ${j} sums to ${sum}, expected 1`);
+			}
+		});
+		it('column percentage: correct values', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'column'});
+			// Y=0 margin = 10+20 = 30, Y=1 margin = 30+40 = 70
+			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 30) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 70) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 30) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 70) < 1e-10);
+		});
+		it('total percentage: all values should sum to 1', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'singleCell'});
+			var sum = pctMatrix.flat().reduce((a, b) => a + b, 0);
+			assert.ok(Math.abs(sum - 1) < 1e-10, `total sums to ${sum}, expected 1`);
+		});
+		it('total percentage: correct values', function () {
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'singleCell'});
+			// total = 40 + 60 = 100
+			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 100) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 100) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 100) < 1e-10);
+			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 100) < 1e-10);
+		});
+		it('row percentage: zero margin produces NaN', function () {
+			var obs = [[0, 5], [3, 4]],
+				margin = [0, 9],
+				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'bulk'});
+			assert.ok(isNaN(pctMatrix[0][0]));
+			assert.ok(isNaN(pctMatrix[0][1]));
+		});
+		it('column percentage: zero column margin produces NaN', function () {
+			var obs = [[0, 0], [3, 4]],
+				margin = [3, 4],
+				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'column'});
+			// Y=0 margin = 0+0 = 0, so column 0 of pctMatrix should be NaN
+			assert.ok(isNaN(pctMatrix[0][0]));
+			assert.ok(isNaN(pctMatrix[1][0]));
+		});
+		it('total percentage: zero total produces NaN', function () {
+			var obs = [[0, 0], [0, 0]],
+				margin = [0, 0],
+				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'singleCell'});
+			pctMatrix.forEach(row => row.forEach(v => assert.ok(isNaN(v))));
+		});
+		it('empty observed returns empty matrices', function () {
+			var {countMatrix, pctMatrix} = fvc.getCodedMatrices({observed: [], xMargin: [], yexpression: 'bulk'});
+			assert.deepEqual(countMatrix, []);
+			assert.deepEqual(pctMatrix, []);
+		});
+	});
 });

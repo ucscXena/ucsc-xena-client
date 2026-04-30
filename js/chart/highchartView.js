@@ -219,6 +219,16 @@ function sortMatrices(xCategories, groups, colors, matrices) {
 			   _.mapObject(matrices, m => reorder(m))];
 }
 
+var allNumeric = arr => arr.every(v => v != null && String(v).trim() !== '' && !isNaN(+v));
+var numericOrder = arr => _.range(arr.length).sort((i, j) => +arr[i] - +arr[j]);
+
+function numericSortCategories(xCategories, groups, colors, matrices) {
+	var order = numericOrder(xCategories),
+		reorder = m => order.map(i => m[i]);
+	return [reorder(xCategories), reorder(groups), reorder(colors),
+		_.mapObject(matrices, m => reorder(m))];
+}
+
 function boxplot({xCategories, matrices, yfields, colors, chart}) {
 	var {boxes, nNumberMatrix} = matrices;
 
@@ -453,7 +463,12 @@ function floatVCodedData({xCategories, colors, ydata, groups, yexpression,
 		yfields, ynonexpressed}) {
 	var matrices = fvc.getMatrices({ydata, groups, yexpression, ynonexpressed});
 
-	// sort by median of xCategories if yfields.length === 1
+	// sort numerically if all category labels are numbers
+	if (xCategories.length > 0 && allNumeric(xCategories)) {
+		[xCategories, groups, colors, matrices] = numericSortCategories(xCategories,
+			groups, colors, matrices);
+	}
+	// sort by median of xCategories if yfields.length === 1 (overrides numeric sort)
 	if (xCategories.length > 0 && yfields.length === 1) {
 		[xCategories, groups, colors, matrices] = sortMatrices(xCategories,
 			groups, colors, matrices);
@@ -583,10 +598,89 @@ function codedVCodedStats({expected, observed}) {
 	}
 }
 
+function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression}) {
+	var isSingleCell = yexpression === 'singleCell',
+		pctValues = pctMatrix.flat().filter(v => !isNaN(v)),
+		minPct = _.min(pctValues),
+		maxPct = _.max(pctValues),
+		pctRng = maxPct - minPct,
+		countValues = countMatrix.flat().filter(v => !isNaN(v)),
+		maxCount = _.max(countValues) || 1,
+		{opacity: {max: maxOpacity = 1, min: minOpacity = 0.2} = {},
+		 radius: {max: maxRadius = 10, min: minRadius = 2} = {}} = chart.markerScale || {};
+
+	chart.codedDotMeta = {isSingleCell, maxCount};
+
+	xCategories.forEach((category, i) => {
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			name: category,
+			data: yCategories.map((_, j) => {
+				var pct = pctMatrix[i][j],
+					count = countMatrix[i][j],
+					normalizedPct = pctRng ? (pct - minPct) / pctRng : 1,
+					radiusMetric = isSingleCell ? count / maxCount : normalizedPct,
+					opacity = isNaN(pct) ? 0 : normalizedPct * (maxOpacity - minOpacity) + minOpacity,
+					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
+					radius = isNaN(radiusMetric) ? minRadius
+						: radiusMetric * (maxRadius - minRadius) + minRadius;
+				return {
+					color,
+					custom: {pct, count},
+					marker: {radius},
+					value: pct,
+					x: j,
+					y: i,
+				};
+			}),
+			showInLegend: false,
+			type: 'scatter',
+		});
+	});
+
+	chart.colorAxis[0].update({min: minPct, max: maxPct, tickPositions: [minPct, maxPct]});
+}
+
+function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
+		chartData, yexpression, inverted, legend = true}) {
+	var {xbins, ybins, countMatrix, pctMatrix} = chartData,
+		xCategories = Object.keys(xbins).map(k => xcodemap[k]),
+		yCategories = Object.keys(ybins).map(k => ycodemap[k]);
+
+	if (allNumeric(xCategories)) {
+		var xOrder = numericOrder(xCategories);
+		xCategories = xOrder.map(i => xCategories[i]);
+		countMatrix = xOrder.map(i => countMatrix[i]);
+		pctMatrix = xOrder.map(i => pctMatrix[i]);
+	}
+	if (allNumeric(yCategories)) {
+		var yOrder = numericOrder(yCategories);
+		yCategories = yOrder.map(i => yCategories[i]);
+		countMatrix = countMatrix.map(row => yOrder.map(j => row[j]));
+		pctMatrix = pctMatrix.map(row => yOrder.map(j => row[j]));
+	}
+
+	var chartOptions = highchartsHelper.codedDotOptions({
+		inverted,
+		xAxis: {categories: yCategories},
+		xAxisTitle: xlabel,
+		yAxis: {categories: xCategories},
+		yAxisTitle: ylabel,
+		legend,
+		yexpression,
+	});
+
+	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
+	codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression});
+	return chart;
+}
+
 function computeCodedVCoded(params) {
-	var chartData = codedVCodedData(params),
-		stats = codedVCodedStats(chartData);
-	return {chartData, stats};
+	var {yexpression} = params,
+		chartData = codedVCodedData(params),
+		stats = codedVCodedStats(chartData),
+		{countMatrix, pctMatrix} = fvc.getCodedMatrices({...chartData, yexpression});
+	return {chartData: {...chartData, countMatrix, pctMatrix}, stats};
 }
 
 function codedVCoded({xcodemap, ycodemap, ycolor,
@@ -799,9 +893,12 @@ var chartMode = params =>
 
 var drawChart = multi(chartMode);
 
+var drawCodedVCoded = params =>
+	params.chartType === 'dot' ? codedVCodedDotplot(params) : codedVCoded(params);
+
 drawChart.add('floatVCoded', floatVCoded);
 drawChart.add('summary', summary);
-drawChart.add('codedVCoded', codedVCoded);
+drawChart.add('codedVCoded', drawCodedVCoded);
 drawChart.add('floatVFloat', floatVFloat);
 
 export var computeChart = multi(chartMode);

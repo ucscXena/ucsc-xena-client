@@ -691,6 +691,125 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
+function renderCodedDotLegend({chart, isSingleCell, isColumn}) {
+	var {legend: {group, legendWidth, padding, title}, markerScale, renderer} = chart,
+		colorAxis = chart.colorAxis[0],
+		radius = markerScale?.radius;
+	if (!group || !markerScale || !radius) {return;}
+	if (colorAxis.min == null || colorAxis.max == null) {return;}
+	if (chart.legend.exprGroup) {
+		chart.legend.exprGroup.destroy();
+	}
+	var exprGroup = renderer.g('legend-metrics').translate(legendWidth + 16, 0).add(group),
+		exprItemGroup = renderer.g('legend-item').translate(padding, 0).add(exprGroup);
+	chart.legend.exprGroup = exprGroup;
+
+	var colorAxisTitleEl = title.element.querySelector('text'),
+		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
+		y = yAttribute(colorAxisTitleEl),
+		titleValue = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row',
+		titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
+	renderer.text(titleValue, 0, y).css(titleCSS).add(titleGroup);
+
+	renderLegendMetrics({chart, exprItemGroup});
+
+	var {labelGroup} = colorAxis,
+		colorAxisLabelEl = labelGroup.element.querySelector('text'),
+		relMatrix2 = relativeMatrix(group.element, colorAxisLabelEl),
+		y2 = yAttribute(colorAxisLabelEl),
+		{x: bx, width: bw} = exprItemGroup.getBBox(),
+		labelsGroup = renderer.g('metrics-labels').translate(0, relMatrix2.f).add(exprItemGroup),
+		maxLabel = formatPercentage(colorAxis.max);
+	renderer.text('0', 0, y2).css(labelCSS).add(labelsGroup);
+	renderer.text(maxLabel, bx + bw, y2)
+		.attr({align: 'right'})
+		.css({...labelCSS, textAlign: 'right'})
+		.add(labelsGroup);
+
+	repositionLegend({chart});
+}
+
+function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk'}) {
+	var isSingleCell = yexpression === 'singleCell',
+		isColumn = yexpression === 'column',
+		slant = _.Let((m = _.max(_.pluck((inverted ? yAxis : xAxis).categories,
+		                                 'length'))) =>
+			m > 12 ? -40 : -90);
+	return {
+		chart: {
+			events: {
+				load: function () {
+					var chart = this;
+					chart.markerScale = markerScale;
+				},
+				render: function () {
+					var chart = this;
+					renderCodedDotLegend({chart, isSingleCell, isColumn});
+				},
+			},
+			inverted,
+			type: 'scatter',
+			zoomType: inverted ? 'y' : 'x',
+		},
+		colorAxis: {
+			max: null,
+			maxColor: xenaColor.BLUE_PRIMARY,
+			min: null,
+			minColor: xenaColor.BLUE_PRIMARY_2,
+			labels: {
+				formatter: function () {
+					var value = this.value,
+						isFirst = this.isFirst,
+						isLast = this.isLast;
+					if (isFirst || isLast) {return formatPercentage(value);}
+				}
+			},
+			showInLegend: true,
+		},
+		legend: {
+			align: 'right',
+			layout: 'horizontal',
+			padding: 8,
+			symbolHeight: markerScale.radius.max * 2,
+			title: {text: isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row'},
+		},
+		plotOptions: {
+			scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
+		},
+		title: {text: ''},
+		tooltip: {
+			formatter: function () {
+				var {xAxis, yAxis} = this.series,
+					{custom, x, y} = this.point,
+					pctLabel = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row';
+				return `<div>
+							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
+							<div>${pctLabel}: ${formatPercentage(custom.pct)}</div>
+							<div>n = ${custom.count}</div>
+						</div>`;
+			},
+			hideDelay: 0,
+			useHTML: true,
+		},
+		xAxis: {
+			categories: xAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? 0 : slant},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: yAxisTitle},
+		},
+		yAxis: {
+			categories: yAxis.categories,
+			gridLineWidth: 0,
+			labels: {rotation: inverted ? slant : 0},
+			lineWidth: 1,
+			tickWidth: 0,
+			title: {text: xAxisTitle},
+		},
+	};
+}
+
 function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk', ynorm }) {
 	var isSingleCell = yexpression === 'singleCell',
 		slant = _.Let((m = _.max(_.pluck((inverted ? yAxis : xAxis).categories,
@@ -889,4 +1008,4 @@ function standardDeviation(values, avg) {
 	return Math.sqrt(squareDiffSum / count);
 }
 
-export { chartOptions, densityChart, standardDeviation, average, columnChartOptions, boxplotOptions, dotOptions, violinOptions, scatterChart, addSeriesToColumn };
+export { chartOptions, densityChart, standardDeviation, average, columnChartOptions, boxplotOptions, codedDotOptions, dotOptions, violinOptions, scatterChart, addSeriesToColumn };

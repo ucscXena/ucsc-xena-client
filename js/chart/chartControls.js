@@ -54,6 +54,18 @@ export var chartTypeControl = ({onChange, chartType, hasDot = true}) =>
 		opts: reject(viewOptions, hasDot ? false : {value: 'dot'}),
 		value: chartType});
 
+var barOrDotOptions = [
+	{label: 'bar chart', value: 'bar'},
+	{label: 'dot plot', value: 'dot'},
+];
+
+export var barOrDotControl = ({onChange, chartType}) =>
+	buildDropdown({
+		label: 'Chart type',
+		onChange,
+		opts: barOrDotOptions,
+		value: chartType === 'dot' ? 'dot' : 'bar'});
+
 export var normalizationOptions = [{
 		"value": "none",
 		"label": "none",
@@ -81,6 +93,12 @@ var expressionOptions = [
 	{label: 'single cell count data', value: 'singleCell'}
 ];
 
+var codedExpressionOptions = [
+	{label: 'row percentage view', value: 'bulk'},
+	{label: 'column percentage view', value: 'column'},
+	{label: 'total percentage view', value: 'singleCell'}
+];
+
 export function expressionMode(chartState, yneg) {
 	var {chartType, expressionState, ycolumn} = chartState;
 	// 'bulk' expression mode only for chart types other than dot plot
@@ -88,8 +106,11 @@ export function expressionMode(chartState, yneg) {
 	// 'bulk' expression mode only for negative values
 	if (yneg) {return 'bulk';}
 	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
-	return get(expressionOptions[expressionState[ycolumn]], 'value');
+	var index = expressionState[ycolumn];
+	return get(expressionOptions[index] || codedExpressionOptions[index], 'value') || 'bulk';
 }
 
-export var yExpressionControl = ({onChange, index, value}) =>
-	buildDropdown({index, value, label: 'View as', onChange, opts: expressionOptions});
+export var yExpressionControl = ({onChange, index, value, opts = expressionOptions}) =>
+	buildDropdown({index, value, label: 'View as', onChange, opts});
+
+export {codedExpressionOptions};
