@@ -793,16 +793,24 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 		},
 		xAxis: {
 			categories: xAxis.categories,
+			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? 0 : slant},
+			labels: {rotation: inverted ? 0 : slant, formatter: function() {
+				var cat = this.axis.categories[this.pos];
+				return cat != null ? cat : '';
+			}},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: yAxisTitle},
 		},
 		yAxis: {
 			categories: yAxis.categories,
+			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? slant : 0},
+			labels: {rotation: inverted ? slant : 0, formatter: function() {
+				var cat = this.axis.categories[this.pos];
+				return cat != null ? cat : '';
+			}},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: xAxisTitle},
@@ -873,16 +881,24 @@ function dotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression
 		},
 		xAxis: {
 			categories: xAxis.categories,
+			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? 0 : slant},
+			labels: {rotation: inverted ? 0 : slant, formatter: function() {
+				var cat = this.axis.categories[this.pos];
+				return cat != null ? cat : '';
+			}},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: yAxisTitle},
 		},
 		yAxis: {
 			categories: yAxis.categories,
+			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? slant : 0},
+			labels: {rotation: inverted ? slant : 0, formatter: function() {
+				var cat = this.axis.categories[this.pos];
+				return cat != null ? cat : '';
+			}},
 			lineWidth: 1,
 			tickWidth: 0,
 			title: {text: xAxisTitle},
