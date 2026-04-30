@@ -113,7 +113,7 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run: HOST=ec2-18-233-160-225.compute-1.amazonaws.com ./deploy
+    - run: HOST=ec2-34-238-245-149.compute-1.amazonaws.com ./deploy
   deploy-cc:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
