@@ -56,7 +56,13 @@
 	box-shadow: none;
 	display: flex;
 	flex-direction: column;
+	margin: 0 !important;
 	min-height: 0;
+}
+
+.chartActionsSecondary::before {
+	display: block !important;
+	opacity: 1 !important;
 }
 
 .chartActionsSecondarySummary {
@@ -65,8 +71,14 @@
 	font-weight: 500;
 	letter-spacing: 0.46px;
 	line-height: 26px;
+	min-height: 0 !important;
 	padding: 16px;
 	text-transform: uppercase;
+}
+
+.chartActionsSecondarySummary :global(.MuiAccordionSummary-content),
+.chartActionsSecondarySummary :global(.MuiAccordionSummary-content.MuiAccordionSummary-expanded) {
+	margin: 0;
 }
 
 .chartActionsSecondaryDetails {
