@@ -27,7 +27,6 @@ import * as store from './hiddenOpts';
 import Rx from './rx';
 import meta from './meta';
 import BookmarkMenu from './views/BookmarkMenu.js';
-import {GENESETS_VIEWER_URL} from './views/GeneSetViewDialog';
 import {xenaColor} from './xenaColor';
 import {xenaNavTheme} from "./xenaThemeNav";
 
@@ -79,12 +78,6 @@ var helpLink = {
 	target: '_blank'
 };
 
-var geneSetsLink = {
-    href: GENESETS_VIEWER_URL,
-    label: 'Gene Sets',
-    target: '_blank'
-};
-
 var pythonLink = {
     href: helproot + 'overview-of-features/accessing-data-through-python',
     label: 'Python',
@@ -126,9 +119,6 @@ class MoreToolsMenu extends React.Component {
 				>
 					<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)}>
 						{pythonLink.label}
-					</MenuItem>
-					<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)}>
-						{geneSetsLink.label}
 					</MenuItem>
 				 </Menu>
 			</>
@@ -268,7 +258,7 @@ class XenaNav extends React.Component {
 					<Box component='nav' sx={sxNav}>
 						{routes.map(({label, ...routeProps}) =>
 							<Box component={NavLink} key={label} sx={sxNavLink} {...routeProps}>{label}</Box>)}
-						{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
+						{getState && activeLink !== 'singlecell' ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
 						<Box component={NavLink} href={helpLink.href} sx={sxNavLink} target={helpLink.target}>Help</Box>
 						<MoreToolsMenu/>
 					</Box>
