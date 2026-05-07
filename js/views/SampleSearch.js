@@ -18,11 +18,6 @@ import HelpBox from '../views/HelpBox';
 import {xenaColor} from '../xenaColor';
 
 // Styles
-var sxHistoryButton = {
-	position: 'absolute',
-	right: 0,
-	top: -12,
-};
 var sxSamplePicker = {
 	marginLeft: 4,
 	'&:hover': {
@@ -163,9 +158,9 @@ var input = comp => {
 			</Box>
 			{showHistoryButton &&
 			<Tooltip title={tooltips.history}>
-				<Box component={IconButton} onClick={comp.onOpenHistory} sx={sxHistoryButton}>
+				<IconButton onClick={comp.onOpenHistory} style={{position: 'absolute', right: 0, top: -12}}>
 					<Icon>arrow_drop_down</Icon>
-				</Box>
+				</IconButton>
 			</Tooltip>}
 			<Menu
 				anchorEl={comp.input}
