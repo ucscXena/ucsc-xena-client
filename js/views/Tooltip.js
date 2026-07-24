@@ -137,7 +137,7 @@ class Tooltip extends PureComponent {
 
 		return (
 			<div>
-				<Box component={Backdrop} open={frozen} sx={{bgcolor: xenaColor.BLACK_12, zIndex: 1200}}/>
+				<Backdrop open={frozen} style={{backgroundColor: xenaColor.BLACK_12, zIndex: 1150}}/>
 				<Box component={Paper} key={sampleID}
 					 className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}
 					 elevation={0} square sx={sxTooltip}>
