@@ -340,7 +340,12 @@ function chartPropsFromState(xenaState) {
 
 	var drawProps = {
 		subtitle: chartSubtitle({cohort, cohortSamples}),
-		cohortSamples, samplesMatched, chartType, inverted,
+		// 'inverted' only makes sense as a plain visual axis-flip for a single
+		// categorical axis (boxplot/dot). For a coded-v-coded dot plot, row/column
+		// percentages are defined relative to xcolumn/ycolumn, not to visual
+		// position, so an inherited 'inverted: true' from a prior chart config
+		// would silently swap which axis's percentages look like "rows".
+		cohortSamples, samplesMatched, chartType, inverted: inverted && !isCodedDotChart,
 		...xParams,
 		...yParams2,
 		yavg: selectedMetrics(chartState, addSDs(yavg)),
