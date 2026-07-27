@@ -660,12 +660,14 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 		pctMatrix = pctMatrix.map(row => yOrder.map(j => row[j]));
 	}
 
+	// Deliberately swapped: render the x column (subgroup) on the vertical
+	// axis and the y column (show data from) on the horizontal axis.
 	var chartOptions = highchartsHelper.codedDotOptions({
 		inverted,
 		xAxis: {categories: yCategories},
-		xAxisTitle: xlabel,
+		xAxisTitle: ylabel,
 		yAxis: {categories: xCategories},
-		yAxisTitle: ylabel,
+		yAxisTitle: xlabel,
 		legend,
 		yexpression,
 	});

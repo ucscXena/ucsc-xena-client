@@ -801,7 +801,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			}},
 			lineWidth: 1,
 			tickWidth: 0,
-			title: {text: yAxisTitle},
+			title: {text: xAxisTitle},
 		},
 		yAxis: {
 			categories: yAxis.categories,
@@ -813,7 +813,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			}},
 			lineWidth: 1,
 			tickWidth: 0,
-			title: {text: xAxisTitle},
+			title: {text: yAxisTitle},
 		},
 	};
 }
