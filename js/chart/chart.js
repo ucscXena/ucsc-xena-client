@@ -331,7 +331,7 @@ function chartPropsFromState(xenaState) {
 		{yfields, ynorm} = yParams,
 		isCodedDotChart = xcodemap && yParams.ycodemap && chartType === 'dot',
 		yexpression = isCodedDotChart ?
-			_.get(codedExpressionOptions[chartState.expressionState[ycolumn]], 'value', 'bulk') :
+			_.get(codedExpressionOptions[chartState.expressionState[ycolumn]], 'value', 'column') :
 			yParams.yexpression,
 		yParams2 = {...yParams, yexpression},
 

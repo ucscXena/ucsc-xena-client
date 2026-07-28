@@ -691,7 +691,7 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function renderCodedDotLegend({chart, isSingleCell, isYNormalized}) {
+function renderCodedDotLegend({chart, isTotal, isRow}) {
 	var {legend: {group, legendWidth, padding, title}, markerScale, renderer} = chart,
 		colorAxis = chart.colorAxis[0],
 		radius = markerScale?.radius;
@@ -707,7 +707,7 @@ function renderCodedDotLegend({chart, isSingleCell, isYNormalized}) {
 	var colorAxisTitleEl = title.element.querySelector('text'),
 		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
 		y = yAttribute(colorAxisTitleEl),
-		titleValue = isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column',
+		titleValue = isTotal ? '% of total' : isRow ? '% of row' : '% of column',
 		titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
 	renderer.text(titleValue, 0, y).css(titleCSS).add(titleGroup);
 
@@ -729,10 +729,9 @@ function renderCodedDotLegend({chart, isSingleCell, isYNormalized}) {
 	repositionLegend({chart});
 }
 
-function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk'}) {
-	var isSingleCell = yexpression === 'singleCell',
-		// 'column' normalizes by yMargin (y column, vertical axis), i.e. "% of row".
-		isYNormalized = yexpression === 'column',
+function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'column'}) {
+	var isTotal = yexpression === 'total',
+		isRow = yexpression === 'row',
 		slant = _.Let((m = _.max(_.pluck(xAxis.categories, 'length'))) =>
 			m > 12 ? -40 : -90);
 	return {
@@ -744,7 +743,7 @@ function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'b
 				},
 				render: function () {
 					var chart = this;
-					renderCodedDotLegend({chart, isSingleCell, isYNormalized});
+					renderCodedDotLegend({chart, isTotal, isRow});
 				},
 			},
 			type: 'scatter',
@@ -770,7 +769,7 @@ function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'b
 			layout: 'horizontal',
 			padding: 8,
 			symbolHeight: markerScale.radius.max * 2,
-			title: {text: isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column'},
+			title: {text: isTotal ? '% of total' : isRow ? '% of row' : '% of column'},
 		},
 		plotOptions: {
 			scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
@@ -780,7 +779,7 @@ function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'b
 			formatter: function () {
 				var {xAxis, yAxis} = this.series,
 					{custom, x, y} = this.point,
-					pctLabel = isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column';
+					pctLabel = isTotal ? '% of total' : isRow ? '% of row' : '% of column';
 				return `<div>
 							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
 							<div>${pctLabel}: ${formatPercentage(custom.pct)}</div>

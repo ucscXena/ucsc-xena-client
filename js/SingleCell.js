@@ -374,7 +374,7 @@ class MapTabs extends PureComponent {
 						chartType: getChartType(state)}) : null,
 				isCodedDot(state) ?
 					yExpressionControl({onChange: onChartYexp,
-						value: getIn(state, ['chartState', 'yexpression']) || 'bulk',
+						value: getIn(state, ['chartState', 'yexpression']) || 'column',
 						opts: codedExpressionOptions}) : null,
 				statsAccordion({stats: getIn(state, ['chartProps', 'stats']) })
 			)

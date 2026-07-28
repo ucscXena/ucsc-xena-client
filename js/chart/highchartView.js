@@ -599,7 +599,7 @@ function codedVCodedStats({expected, observed}) {
 }
 
 function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression}) {
-	var isSingleCell = yexpression === 'singleCell',
+	var isTotal = yexpression === 'total',
 		pctValues = pctMatrix.flat().filter(v => !isNaN(v)),
 		minPct = _.min(pctValues),
 		maxPct = _.max(pctValues),
@@ -609,7 +609,7 @@ function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, 
 		{opacity: {max: maxOpacity = 1, min: minOpacity = 0.2} = {},
 		 radius: {max: maxRadius = 10, min: minRadius = 2} = {}} = chart.markerScale || {};
 
-	chart.codedDotMeta = {isSingleCell, maxCount};
+	chart.codedDotMeta = {isTotal, maxCount};
 
 	xCategories.forEach((category, i) => {
 		highchartsHelper.addSeriesToColumn({
@@ -619,7 +619,7 @@ function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, 
 				var pct = pctMatrix[i][j],
 					count = countMatrix[i][j],
 					normalizedPct = pctRng ? (pct - minPct) / pctRng : 1,
-					radiusMetric = isSingleCell ? count / maxCount : normalizedPct,
+					radiusMetric = isTotal ? count / maxCount : normalizedPct,
 					opacity = isNaN(pct) ? 0 : normalizedPct * (maxOpacity - minOpacity) + minOpacity,
 					color = Highcharts.color(defaultColor).setOpacity(opacity).get(),
 					radius = isNaN(radiusMetric) ? minRadius
