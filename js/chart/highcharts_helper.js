@@ -691,7 +691,7 @@ var legendTitle = {
 // Define a min and max radius (in pixels) for the dot plot symbol, and a min and max opacity for the dot plot color.
 var markerScale = {opacity: {max: 1, min: 0.2}, radius: {max: 10, min: 2}};
 
-function renderCodedDotLegend({chart, isSingleCell, isColumn}) {
+function renderCodedDotLegend({chart, isSingleCell, isYNormalized}) {
 	var {legend: {group, legendWidth, padding, title}, markerScale, renderer} = chart,
 		colorAxis = chart.colorAxis[0],
 		radius = markerScale?.radius;
@@ -707,7 +707,7 @@ function renderCodedDotLegend({chart, isSingleCell, isColumn}) {
 	var colorAxisTitleEl = title.element.querySelector('text'),
 		relMatrix = relativeMatrix(group.element, colorAxisTitleEl),
 		y = yAttribute(colorAxisTitleEl),
-		titleValue = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row',
+		titleValue = isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column',
 		titleGroup = renderer.g('legend-title').translate(padding, relMatrix.f).add(exprGroup);
 	renderer.text(titleValue, 0, y).css(titleCSS).add(titleGroup);
 
@@ -729,11 +729,11 @@ function renderCodedDotLegend({chart, isSingleCell, isColumn}) {
 	repositionLegend({chart});
 }
 
-function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk'}) {
+function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'bulk'}) {
 	var isSingleCell = yexpression === 'singleCell',
-		isColumn = yexpression === 'column',
-		slant = _.Let((m = _.max(_.pluck((inverted ? yAxis : xAxis).categories,
-		                                 'length'))) =>
+		// 'column' normalizes by yMargin (y column, vertical axis), i.e. "% of row".
+		isYNormalized = yexpression === 'column',
+		slant = _.Let((m = _.max(_.pluck(xAxis.categories, 'length'))) =>
 			m > 12 ? -40 : -90);
 	return {
 		chart: {
@@ -744,12 +744,11 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 				},
 				render: function () {
 					var chart = this;
-					renderCodedDotLegend({chart, isSingleCell, isColumn});
+					renderCodedDotLegend({chart, isSingleCell, isYNormalized});
 				},
 			},
-			inverted,
 			type: 'scatter',
-			zoomType: inverted ? 'y' : 'x',
+			zoomType: 'x',
 		},
 		colorAxis: {
 			max: null,
@@ -771,7 +770,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			layout: 'horizontal',
 			padding: 8,
 			symbolHeight: markerScale.radius.max * 2,
-			title: {text: isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row'},
+			title: {text: isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column'},
 		},
 		plotOptions: {
 			scatter: {boostThreshold: 0, marker: {symbol: 'circle'}},
@@ -781,7 +780,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			formatter: function () {
 				var {xAxis, yAxis} = this.series,
 					{custom, x, y} = this.point,
-					pctLabel = isSingleCell ? '% of total' : isColumn ? '% of column' : '% of row';
+					pctLabel = isSingleCell ? '% of total' : isYNormalized ? '% of row' : '% of column';
 				return `<div>
 							<b>${xAxis.categories[x]}: ${yAxis.categories[y]}</b>
 							<div>${pctLabel}: ${formatPercentage(custom.pct)}</div>
@@ -795,7 +794,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			categories: xAxis.categories,
 			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? 0 : slant, formatter: function() {
+			labels: {rotation: slant, formatter: function() {
 				var cat = this.axis.categories[this.pos];
 				return cat != null ? cat : '';
 			}},
@@ -807,7 +806,7 @@ function codedDotOptions({inverted, xAxis, xAxisTitle, yAxis, yAxisTitle, yexpre
 			categories: yAxis.categories,
 			type: 'category',
 			gridLineWidth: 0,
-			labels: {rotation: inverted ? slant : 0, formatter: function() {
+			labels: {rotation: 0, formatter: function() {
 				var cat = this.axis.categories[this.pos];
 				return cat != null ? cat : '';
 			}},

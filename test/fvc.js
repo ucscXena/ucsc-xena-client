@@ -64,21 +64,21 @@ describe('fvc', function () {
 				[20, 40],  // X=1: counts across Y categories
 			]);
 		});
-		it('row percentage: each row should sum to 1', function () {
+		it("'bulk': each xIdx group (each pctMatrix row) sums to 1", function () {
 			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
 			pctMatrix.forEach((row, i) => {
 				var sum = row.reduce((a, b) => a + b, 0);
 				assert.ok(Math.abs(sum - 1) < 1e-10, `row ${i} sums to ${sum}, expected 1`);
 			});
 		});
-		it('row percentage: correct values', function () {
+		it("'bulk': correct values", function () {
 			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
 			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 40) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 40) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 60) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 60) < 1e-10);
 		});
-		it('column percentage: each column should sum to 1', function () {
+		it("'column': each yIdx group (each pctMatrix column) sums to 1", function () {
 			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'column'});
 			var nCols = pctMatrix[0].length;
 			for (var j = 0; j < nCols; j++) {
@@ -86,7 +86,7 @@ describe('fvc', function () {
 				assert.ok(Math.abs(sum - 1) < 1e-10, `column ${j} sums to ${sum}, expected 1`);
 			}
 		});
-		it('column percentage: correct values', function () {
+		it("'column': correct values", function () {
 			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'column'});
 			// Y=0 margin = 10+20 = 30, Y=1 margin = 30+40 = 70
 			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 30) < 1e-10);
@@ -107,14 +107,14 @@ describe('fvc', function () {
 			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 100) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 100) < 1e-10);
 		});
-		it('row percentage: zero margin produces NaN', function () {
+		it("'bulk': zero margin produces NaN", function () {
 			var obs = [[0, 5], [3, 4]],
 				margin = [0, 9],
 				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'bulk'});
 			assert.ok(isNaN(pctMatrix[0][0]));
 			assert.ok(isNaN(pctMatrix[0][1]));
 		});
-		it('column percentage: zero column margin produces NaN', function () {
+		it("'column': zero margin produces NaN", function () {
 			var obs = [[0, 0], [3, 4]],
 				margin = [3, 4],
 				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'column'});

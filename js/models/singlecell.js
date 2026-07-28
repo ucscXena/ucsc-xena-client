@@ -477,13 +477,16 @@ export var expressionMode = state =>
 		getIn(state, ['chartState', 'yexpression']) === 'column' ? 'column' :
 	'bulk';
 
-// 'inverted' setting has two subtleties. For dot plot we don't invert
-// axes because we can't plot coded v float. Instead we flop the chart by
-// passing 'inverted' to the renderer. For other plots we invert the axes
-// here.
+// 'inverted' setting has two subtleties. For a coded-v-float dot plot
+// (isDot) we can't swap chartX/chartY -- the dot plot requires a coded x
+// and a float y, and swapping would break that. Instead we flop the chart
+// visually by passing 'inverted' to the renderer. For coded-v-coded dot
+// plots (isCodedDot) both axes are coded, so swapping is always valid, and
+// we do a real chartX/chartY swap here instead (matching the analogous
+// xcolumn/ycolumn swap in the spreadsheet view's chart.js).
 export var isInverted = state => getIn(state, ['chartState', 'inverted']);
 export var shouldSwapAxes = state =>
-	state.chartMode !== 'dist' && !isBoxplot(state) && !isCodedDot(state) && isInverted(state);
+	state.chartMode !== 'dist' && !isBoxplot(state) && isInverted(state);
 export var swapAxes = state =>
 	shouldSwapAxes(state) ?
 		assoc(state, 'chartY', get(state, 'chartX'), 'chartX', get(state, 'chartY')) :

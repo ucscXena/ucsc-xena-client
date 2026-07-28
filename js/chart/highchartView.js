@@ -629,8 +629,8 @@ function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, 
 					custom: {pct, count},
 					marker: {radius},
 					value: pct,
-					x: j,
-					y: i,
+					x: i,
+					y: j,
 				};
 			}),
 			showInLegend: false,
@@ -642,7 +642,7 @@ function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, 
 }
 
 function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
-		chartData, yexpression, inverted, legend = true}) {
+		chartData, yexpression, legend = true}) {
 	var {xbins, ybins, countMatrix, pctMatrix} = chartData,
 		xCategories = Object.keys(xbins).map(k => xcodemap[k]),
 		yCategories = Object.keys(ybins).map(k => ycodemap[k]);
@@ -660,14 +660,15 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 		pctMatrix = pctMatrix.map(row => yOrder.map(j => row[j]));
 	}
 
-	// Deliberately swapped: render the x column (subgroup) on the vertical
-	// axis and the y column (show data from) on the horizontal axis.
+	// Row/column percentages are computed relative to xcolumn/ycolumn
+	// (fvc.js#getCodedMatrices), not to visual position, so this chart is
+	// never flipped. Both callers (spreadsheet, singlecell) have their own
+	// unrelated 'inverted' toggle for other chart types; neither applies here.
 	var chartOptions = highchartsHelper.codedDotOptions({
-		inverted,
-		xAxis: {categories: yCategories},
-		xAxisTitle: ylabel,
-		yAxis: {categories: xCategories},
-		yAxisTitle: xlabel,
+		xAxis: {categories: xCategories},
+		xAxisTitle: xlabel,
+		yAxis: {categories: yCategories},
+		yAxisTitle: ylabel,
 		legend,
 		yexpression,
 	});

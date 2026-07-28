@@ -93,9 +93,12 @@ var expressionOptions = [
 	{label: 'single cell count data', value: 'singleCell'}
 ];
 
+// 'bulk' normalizes by xMargin (x column on the horizontal axis), which
+// visually is "% of column"; 'column' normalizes by yMargin (y column on
+// the vertical axis), which visually is "% of row". See fvc.js#getCodedMatrices.
 var codedExpressionOptions = [
-	{label: 'row percentage view', value: 'bulk'},
-	{label: 'column percentage view', value: 'column'},
+	{label: 'column percentage view', value: 'bulk'},
+	{label: 'row percentage view', value: 'column'},
 	{label: 'total percentage view', value: 'singleCell'}
 ];
 

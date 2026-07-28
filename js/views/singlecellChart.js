@@ -85,13 +85,16 @@ export function chartPropsFromState(state0) {
 	if (!hasData(state0)) {
 		return;
 	}
-	// 'inverted' setting has two subtleties. For dot plot we don't invert axes
-	// because we can't plot coded v float. Instead we flop the chart by
-	// passing 'inverted' to the renderer. For other plots we invert the axes
-	// here.  Additionally, for dot plot we default to inverted depending on
-	// cardinality of the two axes, so when the user selects inverted we may
-	// already be inverted. The desired inverted state is the default xor the
-	// user setting, as below.
+	// The user's 'inverted' toggle (chartState.inverted) means different
+	// things depending on chart type -- see models/singlecell.js#shouldSwapAxes.
+	// For coded-v-coded (isCodedDot), swapAxes above does a real chartX/chartY
+	// swap, so axes are already correct here; the 'inverted' computed below is
+	// only consumed by the coded-v-float (isDot) renderer, which can't do a
+	// real data swap (it requires a coded x and a float y) and instead flops
+	// the chart visually. For that case we default to inverted based on
+	// cardinality of the two axes, so when the user toggles it we may already
+	// be inverted -- the desired state is the default xor'd with the user's
+	// toggle, below.
 	var state = swapAxes(state0),
 		ydata = getIn(state, ['chartY', 'data', 'req', 'values']),
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),

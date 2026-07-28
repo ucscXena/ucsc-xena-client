@@ -90,9 +90,13 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 	return {totalMatrix, expressionMatrix, meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
-// Compute count and row- or column-normalized percentage matrices for categorical × categorical
-// dot plot. Row = x category (subgroup), column = y category (show data from).
+// Compute count and percentage matrices for categorical x categorical dot plot.
 // observed[yIdx][xIdx], so we transpose to get countMatrix[xIdx][yIdx].
+// yexpression 'bulk' normalizes by xMargin (each xIdx sums to 1);
+// 'column' normalizes by yMargin (each yIdx sums to 1); 'singleCell' by the grand total.
+// x is rendered on the horizontal axis and y on the vertical axis (highchartView.js
+// #codedVCodedDotplot), so 'bulk' is visually "% of column" and 'column' is
+// visually "% of row" -- see chartControls.js#codedExpressionOptions.
 function getCodedMatrices({observed, xMargin, yexpression}) {
 	var countMatrix = observed.length
 		? observed[0].map((_, xIdx) => observed.map(row => row[xIdx]))
