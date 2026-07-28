@@ -445,9 +445,15 @@ var defaultChartType = state =>
 				fields = getIn(state, ['chartY', 'data', 'field', 'field'], [])) =>
 			codes.length * fields.length > chartTypeThreshold ? 'dot' : 'boxplot');
 
+// Order-independent: for a coded-v-coded pair, swapping which field is x vs y
+// (shouldSwapAxes) must not change which stored chart-type choice applies --
+// the bar/dot preference belongs to the *pair* of fields, not to which one is
+// currently assigned to x. Otherwise "Swap X and Y" silently reverts an
+// explicit 'dot' choice to the cardinality-based default, because the key
+// flips to one that was never set.
 var chartTypeKey = state =>
-	JSON.stringify([getIn(state, ['chartY', 'field']),
-		getIn(state, ['chartX', 'field'])]);
+	JSON.stringify([getIn(state, ['chartY', 'field']), getIn(state, ['chartX', 'field'])]
+		.sort((a, b) => JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
 
 export var getChartType = state =>
 	getIn(state, ['chartType', chartTypeKey(state)], defaultChartType(state));
