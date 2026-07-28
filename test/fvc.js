@@ -58,21 +58,21 @@ describe('fvc', function () {
 			xMargin = [40, 60];
 
 		it('countMatrix should be the transpose of observed', function () {
-			var {countMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			var {countMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'row'});
 			assert.deepEqual(countMatrix, [
 				[10, 30],  // X=0: counts across Y categories
 				[20, 40],  // X=1: counts across Y categories
 			]);
 		});
 		it('row percentage: each row should sum to 1', function () {
-			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'row'});
 			pctMatrix.forEach((row, i) => {
 				var sum = row.reduce((a, b) => a + b, 0);
 				assert.ok(Math.abs(sum - 1) < 1e-10, `row ${i} sums to ${sum}, expected 1`);
 			});
 		});
 		it('row percentage: correct values', function () {
-			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk'});
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'row'});
 			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 40) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 40) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[1][0] - 20 / 60) < 1e-10);
@@ -95,12 +95,12 @@ describe('fvc', function () {
 			assert.ok(Math.abs(pctMatrix[1][1] - 40 / 70) < 1e-10);
 		});
 		it('total percentage: all values should sum to 1', function () {
-			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'singleCell'});
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'total'});
 			var sum = pctMatrix.flat().reduce((a, b) => a + b, 0);
 			assert.ok(Math.abs(sum - 1) < 1e-10, `total sums to ${sum}, expected 1`);
 		});
 		it('total percentage: correct values', function () {
-			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'singleCell'});
+			var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'total'});
 			// total = 40 + 60 = 100
 			assert.ok(Math.abs(pctMatrix[0][0] - 10 / 100) < 1e-10);
 			assert.ok(Math.abs(pctMatrix[0][1] - 30 / 100) < 1e-10);
@@ -110,7 +110,7 @@ describe('fvc', function () {
 		it('row percentage: zero margin produces NaN', function () {
 			var obs = [[0, 5], [3, 4]],
 				margin = [0, 9],
-				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'bulk'});
+				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'row'});
 			assert.ok(isNaN(pctMatrix[0][0]));
 			assert.ok(isNaN(pctMatrix[0][1]));
 		});
@@ -125,11 +125,11 @@ describe('fvc', function () {
 		it('total percentage: zero total produces NaN', function () {
 			var obs = [[0, 0], [0, 0]],
 				margin = [0, 0],
-				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'singleCell'});
+				{pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'total'});
 			pctMatrix.forEach(row => row.forEach(v => assert.ok(isNaN(v))));
 		});
 		it('empty observed returns empty matrices', function () {
-			var {countMatrix, pctMatrix} = fvc.getCodedMatrices({observed: [], xMargin: [], yexpression: 'bulk'});
+			var {countMatrix, pctMatrix} = fvc.getCodedMatrices({observed: [], xMargin: [], yexpression: 'row'});
 			assert.deepEqual(countMatrix, []);
 			assert.deepEqual(pctMatrix, []);
 		});
@@ -138,7 +138,7 @@ describe('fvc', function () {
 		// column % divides by xMargin (outer xIdx).
 		describe('inverted=true (single cell default)', function () {
 			it('row percentage: each column (yCategory) should sum to 1', function () {
-				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk', inverted: true});
+				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'row', inverted: true});
 				var nCols = pctMatrix[0].length;
 				for (var j = 0; j < nCols; j++) {
 					var sum = pctMatrix.reduce((a, row) => a + row[j], 0);
@@ -146,7 +146,7 @@ describe('fvc', function () {
 				}
 			});
 			it('row percentage: correct values using yMargin', function () {
-				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'bulk', inverted: true});
+				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'row', inverted: true});
 				// yMargin = [10+20, 30+40] = [30, 70]
 				assert.ok(Math.abs(pctMatrix[0][0] - 10 / 30) < 1e-10);
 				assert.ok(Math.abs(pctMatrix[0][1] - 30 / 70) < 1e-10);
@@ -177,12 +177,12 @@ describe('fvc', function () {
 						[29, 99, 98], // yIdx=1: other rows in the column
 					],
 					margin = [552, 100, 100]; // xMargin: col totals (523+29=552, 1+99=100, 2+98=100)
-				var {pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'bulk', inverted: true});
+				var {pctMatrix} = fvc.getCodedMatrices({observed: obs, xMargin: margin, yexpression: 'row', inverted: true});
 				// yMargin[0] = 523+1+2 = 526
 				assert.ok(Math.abs(pctMatrix[0][0] - 523 / 526) < 1e-10, `expected ${523 / 526}, got ${pctMatrix[0][0]}`);
 			});
 			it('total percentage: unchanged by inverted (grand total is same)', function () {
-				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'singleCell', inverted: true});
+				var {pctMatrix} = fvc.getCodedMatrices({observed, xMargin, yexpression: 'total', inverted: true});
 				var sum = pctMatrix.flat().reduce((a, b) => a + b, 0);
 				assert.ok(Math.abs(sum - 1) < 1e-10, `total sums to ${sum}, expected 1`);
 			});

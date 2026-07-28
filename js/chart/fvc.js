@@ -99,7 +99,7 @@ function getCodedMatrices({observed, xMargin, yexpression, inverted}) {
 		: [];
 	var yMargin = observed.map(row => _.sum(row));
 	var pctMatrix;
-	if (yexpression === 'singleCell') {
+	if (yexpression === 'total') {
 		var total = _.sum(xMargin);
 		pctMatrix = countMatrix.map(row =>
 			row.map(count => total ? count / total : NaN));

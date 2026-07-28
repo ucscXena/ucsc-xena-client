@@ -94,9 +94,9 @@ var expressionOptions = [
 ];
 
 var codedExpressionOptions = [
-	{label: 'row percentage view', value: 'bulk'},
+	{label: 'row percentage view', value: 'row'},
 	{label: 'column percentage view', value: 'column'},
-	{label: 'total percentage view', value: 'singleCell'}
+	{label: 'total percentage view', value: 'total'}
 ];
 
 export function expressionMode(chartState, yneg) {

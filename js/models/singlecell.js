@@ -472,9 +472,10 @@ export var expressionMode = state =>
 	isDot(state) && !someNegative(getIn(state, ['chartY', 'data'])) &&
 		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ? 'singleCell' :
 	isCodedDot(state) &&
-		getIn(state, ['chartState', 'yexpression']) === 'singleCell' ? 'singleCell' :
+		getIn(state, ['chartState', 'yexpression']) === 'total' ? 'total' :
 	isCodedDot(state) &&
 		getIn(state, ['chartState', 'yexpression']) === 'column' ? 'column' :
+	isCodedDot(state) ? 'row' :
 	'bulk';
 
 // 'inverted' setting has two subtleties. For dot plot we don't invert

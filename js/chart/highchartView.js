@@ -599,7 +599,7 @@ function codedVCodedStats({expected, observed}) {
 }
 
 function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression}) {
-	var isSingleCell = yexpression === 'singleCell',
+	var isSingleCell = yexpression === 'total',
 		pctValues = pctMatrix.flat().filter(v => !isNaN(v)),
 		minPct = _.min(pctValues),
 		maxPct = _.max(pctValues),
