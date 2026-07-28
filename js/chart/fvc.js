@@ -93,22 +93,32 @@ function getMatrices({ydata, groups, yexpression, ynonexpressed}) {
 // Compute count and row- or column-normalized percentage matrices for categorical × categorical
 // dot plot. Row = x category (subgroup), column = y category (show data from).
 // observed[yIdx][xIdx], so we transpose to get countMatrix[xIdx][yIdx].
-function getCodedMatrices({observed, xMargin, yexpression}) {
+function getCodedMatrices({observed, xMargin, yexpression, inverted}) {
 	var countMatrix = observed.length
 		? observed[0].map((_, xIdx) => observed.map(row => row[xIdx]))
 		: [];
+	var yMargin = observed.map(row => _.sum(row));
 	var pctMatrix;
 	if (yexpression === 'singleCell') {
 		var total = _.sum(xMargin);
 		pctMatrix = countMatrix.map(row =>
 			row.map(count => total ? count / total : NaN));
 	} else if (yexpression === 'column') {
-		var yMargin = observed.map(row => _.sum(row));
-		pctMatrix = countMatrix.map(row =>
-			row.map((count, yIdx) => yMargin[yIdx] ? count / yMargin[yIdx] : NaN));
+		// column% denominator: xCategories are columns when not inverted (yMargin by inner yIdx),
+		// and xCategories are rows when inverted (xMargin by outer xIdx)
+		pctMatrix = inverted
+			? countMatrix.map((row, xIdx) =>
+				row.map(count => xMargin[xIdx] ? count / xMargin[xIdx] : NaN))
+			: countMatrix.map(row =>
+				row.map((count, yIdx) => yMargin[yIdx] ? count / yMargin[yIdx] : NaN));
 	} else {
-		pctMatrix = countMatrix.map((row, xIdx) =>
-			row.map(count => xMargin[xIdx] ? count / xMargin[xIdx] : NaN));
+		// row% denominator: xCategories are rows when not inverted (xMargin by outer xIdx),
+		// and yCategories are rows when inverted (yMargin by inner yIdx)
+		pctMatrix = inverted
+			? countMatrix.map(row =>
+				row.map((count, yIdx) => yMargin[yIdx] ? count / yMargin[yIdx] : NaN))
+			: countMatrix.map((row, xIdx) =>
+				row.map(count => xMargin[xIdx] ? count / xMargin[xIdx] : NaN));
 	}
 	return {countMatrix, pctMatrix};
 }

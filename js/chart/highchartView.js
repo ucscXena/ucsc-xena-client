@@ -678,10 +678,10 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 }
 
 function computeCodedVCoded(params) {
-	var {yexpression} = params,
+	var {yexpression, inverted} = params,
 		chartData = codedVCodedData(params),
 		stats = codedVCodedStats(chartData),
-		{countMatrix, pctMatrix} = fvc.getCodedMatrices({...chartData, yexpression});
+		{countMatrix, pctMatrix} = fvc.getCodedMatrices({...chartData, yexpression, inverted});
 	return {chartData: {...chartData, countMatrix, pctMatrix}, stats};
 }
 
