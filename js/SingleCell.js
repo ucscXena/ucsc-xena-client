@@ -20,7 +20,7 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType,
 	getData, getDataSubType, getShareOf, hasColor, hasColorBy, hasDataset,
 	hasImage, isCodedDot, isDot, isLog, log2p1, availableMaps, mergeColor, ORDINAL,
-	otherValue, phenoValue, probValue, setColor, setRadius, shouldSwapAxes} from
+	otherValue, phenoValue, probValue, setColor, setRadius} from
 	'./models/singlecell';
 import Integrations from './views/Integrations';
 
@@ -491,8 +491,8 @@ var legends = ({state, ...rest}) =>
 	!isChartView(state) ? mapLegends({state, ...rest}) :
 	!hasColorBy(state.chartX) || !hasColorBy(state.chartY) ? null :
 	isCodedVCoded(state) ?
-		codedVCodedLegend(shouldSwapAxes(state) ? 'chartX' : 'chartY',
-		                  {state, ...rest}) :
+		fragment(codedVCodedLegend('chartX', {state, ...rest}),
+		         codedVCodedLegend('chartY', {state, ...rest})) :
 	floatVCodedLegend('chartX', {state, ...rest});
 
 var viz = ({handlers: {onReset, onPopout, onTooltip, onViewState, onCode, onShadow,
