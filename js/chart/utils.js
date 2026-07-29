@@ -48,6 +48,14 @@ export var suitableColumns = ({columnOrder, columns, data}, allowMulti) =>
 var setIfNot = (state, path, value) =>
 	v(_.getIn(state, path)) ? state : _.assocIn(state, path, value);
 
+// Order-independent identity for an (xcolumn, ycolumn) pair -- swapping which
+// column is x vs y (the 'Swap X and Y' button, for coded-v-coded and scatter)
+// must not change this, since the coded-v-coded row/column/total% view is a
+// property of the *pair* being compared, not of whichever column currently
+// happens to be assigned to y. See models/singlecell.js#fieldPairKey for the
+// analogous concept in the singlecell view.
+export var columnPairKey = (a, b) => [a, b].sort().join('|');
+
 // initialize exp and norm for active columns
 export var initSettings = chartState => {
 	var ycolumn = chartState.ycolumn;
@@ -61,6 +69,9 @@ export var initSettings = chartState => {
 	var xcolumn = chartState.xcolumn;
 	if (v(xcolumn)) {
 		chartState = setIfNot(chartState, ['expState', xcolumn], 0);
+	}
+	if (v(xcolumn) && v(ycolumn)) {
+		chartState = setIfNot(chartState, ['shareOfState', columnPairKey(xcolumn, ycolumn)], 0);
 	}
 	return chartState;
 };

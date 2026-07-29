@@ -1,8 +1,8 @@
 import { assocIn, get, getIn, isArray, isEqual, Let } from '../underscore_ext.js';
 import {cellTypeValue, colorByMode, datasetCohort, expressionMode,
-	getChartType, getDataSubType, getSamples, hasColor, isInverted,
-	otherValue, phenoValue, probValue, probPanelValue, sigPanelValue, swapAxes} from
-	'../models/singlecell';
+	getChartType, getDataSubType, getSamples, hasColor, isCodedDot, isInverted,
+	otherValue, phenoValue, probValue, probPanelValue, shareOfMode, sigPanelValue,
+	swapAxes} from '../models/singlecell';
 import {colorScale} from '../colorScales';
 import {computeChart, highchartView} from '../chart/highchartView';
 import styles from './singlecellChart.module.css';
@@ -100,6 +100,7 @@ export function chartPropsFromState(state0) {
 		xcodemap = getIn(state, ['chartX', 'data', 'codes']),
 		inverted = ydata.length < get(xcodemap, 'length', 1),
 		yexpression = expressionMode(state),
+		shareOf = isCodedDot(state) && shareOfMode(state),
 		ycodemap = getIn(state, ['chartY', 'data', 'codes']);
 
 	return {
@@ -115,6 +116,7 @@ export function chartPropsFromState(state0) {
 		yfields: ensureArray(getIn(state, ['chartY', 'data', 'field', 'field'])),
 		ylabel: axisTitle(state, 'chartY'),
 		yexpression,
+		shareOf,
 		ynorm: !ycodemap && getNormalizationValue(state),
 
 		xcodemap,

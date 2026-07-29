@@ -445,21 +445,23 @@ var defaultChartType = state =>
 				fields = getIn(state, ['chartY', 'data', 'field', 'field'], [])) =>
 			codes.length * fields.length > chartTypeThreshold ? 'dot' : 'boxplot');
 
-// Order-independent: for a coded-v-coded pair, swapping which field is x vs y
-// (shouldSwapAxes) must not change which stored chart-type choice applies --
-// the bar/dot preference belongs to the *pair* of fields, not to which one is
-// currently assigned to x. Otherwise "Swap X and Y" silently reverts an
-// explicit 'dot' choice to the cardinality-based default, because the key
-// flips to one that was never set.
-var chartTypeKey = state =>
+// Order-independent identity for the (chartX, chartY) field pair -- swapping
+// which field is x vs y (shouldSwapAxes) must not change this, since some
+// settings (bar/dot chart-type choice, coded-v-coded row/column/total% view)
+// are properties of the *pair* being compared, not of whichever field
+// currently happens to be assigned to x. Keying such settings by a single
+// field (or worse, by ycolumn alone) means "Swap X and Y" silently reverts
+// them to a default/unrelated value, because the key flips to one that was
+// never set.
+export var fieldPairKey = state =>
 	JSON.stringify([getIn(state, ['chartY', 'field']), getIn(state, ['chartX', 'field'])]
 		.sort((a, b) => JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
 
 export var getChartType = state =>
-	getIn(state, ['chartType', chartTypeKey(state)], defaultChartType(state));
+	getIn(state, ['chartType', fieldPairKey(state)], defaultChartType(state));
 
 export var setChartType = (state, chartType) =>
-	assocIn(state, ['chartType', chartTypeKey(state)], chartType);
+	assocIn(state, ['chartType', fieldPairKey(state)], chartType);
 
 export var isBoxplot = state => state.chartMode !== 'dist' &&
 	getIn(state.chartY, ['data', 'field']) && !getIn(state.chartY, ['data', 'codes']);
@@ -472,16 +474,38 @@ export var isCodedDot = state => state.chartMode !== 'dist' &&
 
 var someNegative = data => min(getIn(data, ['avg', 'min'])) < 0;
 
+// The coded-v-coded dot plot's row/column/total% view -- what share of a
+// subgroup/category each dot represents. Unrelated to gene expression; it's
+// a property of the (x, y) pair being compared (see fieldPairKey), not of
+// either column's data. Has its own state, action (chartShareOf), and
+// control (shareOfControl) -- entirely separate from the continuous
+// bulk/singleCell "expression" concept below, which is a property of the y
+// column's own data (does zero mean "not detected"), same reasoning as
+// expState in the spreadsheet view.
+export var getShareOf = state =>
+	getIn(state, ['chartState', 'shareOfState', fieldPairKey(state)]);
+
+export var setShareOf = (state, value) =>
+	assocIn(state, ['chartState', 'shareOfState', fieldPairKey(state)], value);
+
+export var shareOfMode = state =>
+	getShareOf(state) === 'total' ? 'total' :
+	getShareOf(state) === 'row' ? 'row' :
+	'column';
+
+var yFieldKey = state => JSON.stringify(getIn(state, ['chartY', 'field']));
+
+var getYExpression = state =>
+	getIn(state, ['chartState', 'expressionState', yFieldKey(state)]);
+
+export var setYExpression = (state, value) =>
+	assocIn(state, ['chartState', 'expressionState', yFieldKey(state)], value);
+
 // use singlecell expression mode in dot plot if data is not negative, and
 // user hasn't explicitly disabled it.
 export var expressionMode = state =>
 	isDot(state) && !someNegative(getIn(state, ['chartY', 'data'])) &&
-		getIn(state, ['chartState', 'yexpression']) !== 'bulk' ? 'singleCell' :
-	isCodedDot(state) &&
-		getIn(state, ['chartState', 'yexpression']) === 'total' ? 'total' :
-	isCodedDot(state) &&
-		getIn(state, ['chartState', 'yexpression']) === 'row' ? 'row' :
-	isCodedDot(state) ? 'column' :
+		getYExpression(state) !== 'bulk' ? 'singleCell' :
 	'bulk';
 
 // 'inverted' setting has two subtleties. For a coded-v-float dot plot

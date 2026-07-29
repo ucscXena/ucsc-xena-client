@@ -15,7 +15,8 @@ var {ajax, of} = Rx.Observable;
 var {asap} = Rx.Scheduler;
 import {allCohorts, allDefaultCohortNames, datasetCohort, getSamples,
 	getScale, hasColorBy, hasDataset, hasImage, isLog, log2p1, pow2m1,
-	setChartType, studyList, userServerCohorts} from '../models/singlecell';
+	setChartType, setShareOf, setYExpression, studyList, userServerCohorts} from
+	'../models/singlecell';
 import {isAuthPending} from '../models/auth';
 import {scaleParams} from '../colorScales';
 import * as widgets from '../columnWidgets.js';
@@ -293,7 +294,8 @@ var controls = actionPrefix({
 		Let(({host, name} = getIn(state, ['chartY', 'field'])) =>
 			assocIn(state, ['chartState', 'normalization', host, name], i)),
 	chartInverted: state => updateIn(state, ['chartState', 'inverted'], x => !x),
-	chartYExpression: (state, x) => assocIn(state, ['chartState', 'yexpression'], x)
+	chartYExpression: (state, x) => setYExpression(state, x),
+	chartShareOf: (state, x) => setShareOf(state, x)
 });
 
 var resetIntegration = (state = {}, params) =>

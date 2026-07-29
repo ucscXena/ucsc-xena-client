@@ -14,6 +14,7 @@ import compStyles from "./highchartView.module.css";
 
 import {kde} from '../models/kde';
 import * as fvc from './fvc.js';
+import { getCodedMatrices } from './codedVCoded.js';
 import { groupValues } from './dataUtils.js';
 var defaultColor = xenaColor.BLUE_PRIMARY;
 
@@ -598,8 +599,8 @@ function codedVCodedStats({expected, observed}) {
 	}
 }
 
-function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression}) {
-	var isTotal = yexpression === 'total',
+function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, shareOf}) {
+	var isTotal = shareOf === 'total',
 		pctValues = pctMatrix.flat().filter(v => !isNaN(v)),
 		minPct = _.min(pctValues),
 		maxPct = _.max(pctValues),
@@ -642,7 +643,7 @@ function codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, 
 }
 
 function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
-		chartData, yexpression, legend = true}) {
+		chartData, shareOf, legend = true}) {
 	var {xbins, ybins, countMatrix, pctMatrix} = chartData,
 		xCategories = Object.keys(xbins).map(k => xcodemap[k]),
 		yCategories = Object.keys(ybins).map(k => ycodemap[k]);
@@ -661,8 +662,8 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 	}
 
 	// Row/column percentages are computed relative to xcolumn/ycolumn
-	// (fvc.js#getCodedMatrices), not to visual position, so this chart is
-	// never flipped. Both callers (spreadsheet, singlecell) have their own
+	// (codedVCoded.js#getCodedMatrices), not to visual position, so this chart
+	// is never flipped. Both callers (spreadsheet, singlecell) have their own
 	// unrelated 'inverted' toggle for other chart types; neither applies here.
 	var chartOptions = highchartsHelper.codedDotOptions({
 		xAxis: {categories: xCategories},
@@ -670,19 +671,19 @@ function codedVCodedDotplot({xcodemap, ycodemap, xlabel, ylabel, subtitle,
 		yAxis: {categories: yCategories},
 		yAxisTitle: ylabel,
 		legend,
-		yexpression,
+		shareOf,
 	});
 
 	var chart = newChart(chartOptions, {subtitle: {text: subtitle}});
-	codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, yexpression});
+	codedDotplot({chart, xCategories, yCategories, countMatrix, pctMatrix, shareOf});
 	return chart;
 }
 
 function computeCodedVCoded(params) {
-	var {yexpression} = params,
+	var {shareOf} = params,
 		chartData = codedVCodedData(params),
 		stats = codedVCodedStats(chartData),
-		{countMatrix, pctMatrix} = fvc.getCodedMatrices({...chartData, yexpression});
+		{countMatrix, pctMatrix} = getCodedMatrices({...chartData, shareOf});
 	return {chartData: {...chartData, countMatrix, pctMatrix}, stats};
 }
 

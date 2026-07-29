@@ -93,16 +93,6 @@ var expressionOptions = [
 	{label: 'single cell count data', value: 'singleCell'}
 ];
 
-// 'column' normalizes by xMargin (x column on the horizontal axis); 'row'
-// normalizes by yMargin (y column on the vertical axis). See fvc.js#getCodedMatrices.
-// Distinct value names from expressionOptions above (continuous 'bulk'/'singleCell')
-// even though the UI concept is unrelated -- they used to collide.
-var codedExpressionOptions = [
-	{label: 'column percentage view', value: 'column'},
-	{label: 'row percentage view', value: 'row'},
-	{label: 'total percentage view', value: 'total'}
-];
-
 export function expressionMode(chartState, yneg) {
 	var {chartType, expressionState, ycolumn} = chartState;
 	// 'bulk' expression mode only for chart types other than dot plot
@@ -111,10 +101,23 @@ export function expressionMode(chartState, yneg) {
 	if (yneg) {return 'bulk';}
 	// 'bulk' or 'singleCell' expression mode is available for dot plots with positive values
 	var index = expressionState[ycolumn];
-	return get(expressionOptions[index] || codedExpressionOptions[index], 'value') || 'bulk';
+	return get(expressionOptions[index], 'value') || 'bulk';
 }
 
-export var yExpressionControl = ({onChange, index, value, opts = expressionOptions}) =>
-	buildDropdown({index, value, label: 'View as', onChange, opts});
+export var yExpressionControl = ({onChange, index, value}) =>
+	buildDropdown({index, value, label: 'View as', onChange, opts: expressionOptions});
 
-export {codedExpressionOptions};
+// The coded-v-coded dot plot's row/column/total% view -- what share of a
+// subgroup/category each dot represents. Unrelated to gene expression, so
+// kept fully separate from expressionOptions/expressionMode/yExpressionControl
+// above: own options, own control. 'column' normalizes by xMargin (x column
+// on the horizontal axis); 'row' normalizes by yMargin (y column on the
+// vertical axis). See codedVCoded.js#getCodedMatrices.
+export var shareOfOptions = [
+	{label: 'column percentage view', value: 'column'},
+	{label: 'row percentage view', value: 'row'},
+	{label: 'total percentage view', value: 'total'}
+];
+
+export var shareOfControl = ({onChange, index, value}) =>
+	buildDropdown({index, value, label: 'View as', onChange, opts: shareOfOptions});

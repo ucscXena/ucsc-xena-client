@@ -5,8 +5,8 @@ import * as _ from '../underscore_ext.js';
  * Methods for computing non-expressed indices.
  * "bulk" mode returns null.
  * "singleCell" mode returns, for each data array, a bitmap where bits are set for indices where the value is ≤ 0.
- * "column"/"row"/"total" are the coded-v-coded dot plot's percentage-view modes
- * (chartControls.js#codedExpressionOptions) -- unrelated to single-cell detection, and always a no-op here.
+ * "column"/"row"/"total" are the coded-v-coded dot plot's shareOf (percentage-view) modes
+ * (chartControls.js#shareOfOptions) -- unrelated to single-cell detection, and always a no-op here.
  */
 var expressionMethods = {
 	bulk: () => null,

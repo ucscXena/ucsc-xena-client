@@ -17,10 +17,11 @@ import {Accordion, AccordionDetails, AccordionSummary, Card, Button, createTheme
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import styles from './SingleCell.module.css';
 import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
-	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType, getData,
-	getDataSubType, hasColor, hasColorBy, hasDataset, hasImage, isCodedDot, isDot, isLog,
-	log2p1, availableMaps, mergeColor, ORDINAL, otherValue, phenoValue, probValue,
-	setColor, setRadius, shouldSwapAxes} from './models/singlecell';
+	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType,
+	getData, getDataSubType, getShareOf, hasColor, hasColorBy, hasDataset,
+	hasImage, isCodedDot, isDot, isLog, log2p1, availableMaps, mergeColor, ORDINAL,
+	otherValue, phenoValue, probValue, setColor, setRadius, shouldSwapAxes} from
+	'./models/singlecell';
 import Integrations from './views/Integrations';
 
 import {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
@@ -38,7 +39,7 @@ var {item} = legendStyles;
 import ImgControls from './views/ImgControls';
 import markers from './views/markers';
 import colorPicker from './views/colorPicker';
-import {barOrDotControl, chartTypeControl, codedExpressionOptions, normalizationControl,
+import {barOrDotControl, chartTypeControl, normalizationControl, shareOfControl,
 	yExpressionControl} from './chart/chartControls';
 import statsView from './chart/statsView';
 import {xenaColor} from './xenaColor';
@@ -322,7 +323,7 @@ class MapTabs extends PureComponent {
 				state: {showNext, showColorBy2}, props:
 				{handlers: {onOpacity, onVisible, onSegmentationVisible, onChannel,
 				onChartType, onBackgroundOpacity, onBackgroundVisible, onChartInverted,
-				onChartYexp, onColorByHandlers, onChartMode, onNormalization},
+				onChartYexp, onChartShareOf, onColorByHandlers, onChartMode, onNormalization},
 					state}} = this,
 			{tab: value = 0} = state,
 			showImg = !!hasImage(state),
@@ -373,9 +374,8 @@ class MapTabs extends PureComponent {
 					barOrDotControl({onChange: onChartType,
 						chartType: getChartType(state)}) : null,
 				isCodedDot(state) ?
-					yExpressionControl({onChange: onChartYexp,
-						value: getIn(state, ['chartState', 'yexpression']) || 'column',
-						opts: codedExpressionOptions}) : null,
+					shareOfControl({onChange: onChartShareOf,
+						value: getShareOf(state) || 'column'}) : null,
 				statsAccordion({stats: getIn(state, ['chartProps', 'stats']) })
 			)
 		);
@@ -672,6 +672,9 @@ class SingleCellPage extends PureComponent {
 	};
 	onChartYexp = (_, v) => {
 		this.callback(['chartYExpression', v]);
+	};
+	onChartShareOf = (_, v) => {
+		this.callback(['chartShareOf', v]);
 	};
 	onPopout = () => {
 		var {getState} = this.props;

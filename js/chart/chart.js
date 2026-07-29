@@ -3,7 +3,7 @@ import { RGBToHex } from '../color_helper.js';
 import * as _ from '../underscore_ext.js';
 import gaEvents from '../gaEvents.js';
 import multi from '../multi';
-import {suitableColumns, columnLabel, v} from './utils.js';
+import {suitableColumns, columnLabel, columnPairKey, v} from './utils.js';
 import {
 	Accordion,
 	AccordionDetails,
@@ -25,8 +25,8 @@ import { reOrderFields } from '../models/denseMatrix.js';
 import {computeChart, highchartView, isCodedVCoded, isFloatVCoded, isSummary,
 	summaryMode} from './highchartView';
 import {selectProps, getOpt, buildDropdown, barOrDotControl, chartTypeControl,
-	normalizationOptions, normalizationControl, yExpressionControl, codedExpressionOptions, expressionMode}
-	from './chartControls';
+	normalizationOptions, normalizationControl, yExpressionControl, shareOfControl,
+	shareOfOptions, expressionMode} from './chartControls';
 import applyTransforms from './applyTransforms';
 import statsView from './statsView';
 
@@ -330,10 +330,9 @@ function chartPropsFromState(xenaState) {
 			yParamsFromState(xenaState, ycolumn),
 		{yfields, ynorm} = yParams,
 		isCodedDotChart = xcodemap && yParams.ycodemap && chartType === 'dot',
-		yexpression = isCodedDotChart ?
-			_.get(codedExpressionOptions[chartState.expressionState[ycolumn]], 'value', 'column') :
-			yParams.yexpression,
-		yParams2 = {...yParams, yexpression},
+		shareOf = isCodedDotChart &&
+			_.get(shareOfOptions[
+				chartState.shareOfState[columnPairKey(xcolumn, ycolumn)]], 'value', 'column'),
 
 		{yavg, ...transformedData} =
 			applyTransforms(ydata, yexp, ynorm, xdata, xexp);
@@ -342,9 +341,10 @@ function chartPropsFromState(xenaState) {
 		subtitle: chartSubtitle({cohort, cohortSamples}),
 		cohortSamples, samplesMatched, chartType, inverted,
 		...xParams,
-		...yParams2,
+		...yParams,
+		shareOf,
 		yavg: selectedMetrics(chartState, addSDs(yavg)),
-		ynonexpressed: applyExpression(ydata, yexpression),
+		ynonexpressed: applyExpression(ydata, yParams.yexpression),
 		...transformedData,
 		...scatterProps(xenaState, {xfield, xcodemap, yfields, colorColumn})
 	};
@@ -398,11 +398,16 @@ class Chart extends PureComponent {
 				onClick: () => set(['inverted'], !inverted), variant: 'contained'},
 				'Swap X and Y') : null;
 
-		var yExpression = yneg || !(isDot || isCodedDot) ? null :
+		var yExpression = yneg || !isDot ? null :
 			yExpressionControl({
 				index: chartState.expressionState[ycolumn],
-				onChange: i => set(['expressionState', chartState.ycolumn], i),
-				...(isCodedDot && {opts: codedExpressionOptions})});
+				onChange: i => set(['expressionState', chartState.ycolumn], i)});
+
+		var shareOf = !isCodedDot ? null :
+			shareOfControl({
+				index: chartState.shareOfState[columnPairKey(xcolumn, ycolumn)],
+				onChange: i => set(['shareOfState',
+					columnPairKey(chartState.xcolumn, chartState.ycolumn)], i)});
 
 		var yExp = ycodemap ? null :
 			buildDropdown({
@@ -486,7 +491,7 @@ class Chart extends PureComponent {
 								onClick: gaAnother(() => set(['another'], true)),
 								variant: 'contained'},
 								'Make another graph'),
-							swapAxes, invertAxes, switchView, yExpression),
+							swapAxes, invertAxes, switchView, yExpression, shareOf),
 						avg, pct, colorAxisDiv && colorAxisDiv),
 					yExp && advOpt, chartStats));
 	};

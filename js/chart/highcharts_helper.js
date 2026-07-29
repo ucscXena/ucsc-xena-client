@@ -729,9 +729,9 @@ function renderCodedDotLegend({chart, isTotal, isRow}) {
 	repositionLegend({chart});
 }
 
-function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, yexpression = 'column'}) {
-	var isTotal = yexpression === 'total',
-		isRow = yexpression === 'row',
+function codedDotOptions({xAxis, xAxisTitle, yAxis, yAxisTitle, shareOf = 'column'}) {
+	var isTotal = shareOf === 'total',
+		isRow = shareOf === 'row',
 		slant = _.Let((m = _.max(_.pluck(xAxis.categories, 'length'))) =>
 			m > 12 ? -40 : -90);
 	return {
