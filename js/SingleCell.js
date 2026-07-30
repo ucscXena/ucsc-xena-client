@@ -20,8 +20,8 @@ import {allCohorts, cellTypeMarkers, cellTypeValue, cohortFields, colorByMode,
 	datasetCohort, defaultColor, defaultShadow, expressionMode, getChartType,
 	getData, getDataSubType, getShareOf, hasColor, hasColorBy, hasDataset,
 	hasImage, isCodedDot, isDot, isLog, log2p1, availableMaps, mergeColor, ORDINAL,
-	otherValue, phenoValue, probValue, setColor, setRadius} from
-	'./models/singlecell';
+	otherValue, phenoValue, probPanelValue, probValue, setColor, setRadius,
+	sigPanelValue} from './models/singlecell';
 import Integrations from './views/Integrations';
 
 import {assoc, assocIn, conj, constant, contains, find, get, getIn, groupBy,
@@ -432,6 +432,8 @@ var legendTitleMode = {
 			`${field.join(', ')} - ${getDataSubType(state, host, name)}`) : '',
 	other: state => otherValue(state).field,
 	pheno: state => phenoValue(state).label,
+	sigPanel: state => sigPanelValue(state).label,
+	probPanel: state => probPanelValue(state).label,
 	null: () => ''
 };
 
